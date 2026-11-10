@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Собирает проект через bin/build и запускает модульные тесты Qt Test.
+# Аргументы передаются тестовому бинарнику (например, -v2 или имя функции).
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+root_dir="$(cd -P -- "${script_dir}/.." && pwd -P)"
+build_dir="${root_dir}/build"
+
+"${script_dir}/build"
+
+test_dir="${build_dir}/tests"
+test_bin="${test_dir}/rasklad_tests"
+
+if [[ ! -x "${test_bin}" ]]; then
+    echo "bin/test: тестовый бинарник не найден: ${test_bin}" >&2
+    exit 1
+fi
+
+# Ядро не требует GUI; тесты запускаются из каталога сборки.
+cd -- "${test_dir}"
+exec "${test_bin}" "$@"

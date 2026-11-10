@@ -1,0 +1,15 @@
+# Чистое ядро без GUI, I/O и системного ввода.
+TEMPLATE = lib
+TARGET = rasklad_core
+
+QT = core
+CONFIG += staticlib c++17 warn_on
+CONFIG -= app_bundle
+
+DEFINES += \
+    QT_NO_CAST_FROM_ASCII \
+    QT_NO_CAST_TO_ASCII \
+    QT_NO_KEYWORDS
+
+HEADERS += layoutconverter.h
+SOURCES += layoutconverter.cpp
