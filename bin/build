@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Теневая сборка в <корень>/build. Без сети, root и установки пакетов.
+# Каталоги определяются от пути скрипта; текущий каталог не влияет на результат.
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+root_dir="$(cd -P -- "${script_dir}/.." && pwd -P)"
+build_dir="${root_dir}/build"
+
+if [[ ! -f "${root_dir}/rasklad.pro" ]]; then
+    echo "bin/build: rasklad.pro не найден в ${root_dir}" >&2
+    exit 1
+fi
+
+# build/ должен быть настоящим каталогом внутри проекта, а не ссылкой наружу.
+if [[ -L "${build_dir}" ]]; then
+    echo "bin/build: ${build_dir} является символической ссылкой; отказ" >&2
+    exit 1
+fi
+
+mkdir -p -- "${build_dir}"
+cd -- "${build_dir}"
+
+qmake6 -o Makefile "${root_dir}/rasklad.pro"
+
+jobs="$(nproc 2>/dev/null || echo 1)"
+make -j"${jobs}"
