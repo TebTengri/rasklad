@@ -11,5 +11,5 @@ DEFINES += \
     QT_NO_CAST_TO_ASCII \
     QT_NO_KEYWORDS
 
-HEADERS += layoutconverter.h
-SOURCES += layoutconverter.cpp
+HEADERS += layoutconverter.h ngramdetector.h
+SOURCES += layoutconverter.cpp ngramdetector.cpp

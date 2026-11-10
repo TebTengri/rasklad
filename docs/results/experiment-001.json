@@ -1,0 +1,822 @@
+{
+    "ambiguity": {
+        "ambiguousKeyCount": 103,
+        "calibrationRole": "ambiguous tokens are SAFETY NEGATIVES: in threshold selection any Correct on an ambiguous token counts as a false correction and never as recovered; they are never forced positives",
+        "evaluationRole": "reported per method as ambiguousChanged, unsafeChangesIncludingAmbiguous and ambiguousSafetyNegatives; excluded from valid/wrong precision and recall",
+        "oracleLimitation": "labels come from membership in the FULL source dictionaries, i.e. oracle metadata a deployed detector does not have. Because split groups are key-prefix based, an ambiguous key lies in one split for both languages, so the label is also derivable from that split alone; ambiguity against words absent from both dictionaries is not detected",
+        "training": "ambiguous train types are kept in both languages"
+    },
+    "calibration": {
+        "eligibleAmbiguousSafetyNegatives": 0,
+        "eligibleTokens": 73602,
+        "selectionRule": "maximize recovered non-ambiguous wrong-layout tokens subject to zero false corrections on calibration tokens, where any Correct on an ambiguous token is a false correction; ties keep the stricter thresholds; if no setting recovers anything, the policy is disabled (always abstain). Test split is not used. Thresholds are experiment outputs, not production-safe values.",
+        "singleD": {
+            "calibrationCounts": {
+                "abstainRate": 0.02866593164277839,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 96,
+                    "changed": 0,
+                    "count": 96,
+                    "keep": 0,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 0
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 386,
+                        "validCount": 386,
+                        "validKeep": 0,
+                        "wrongAbstain": 386,
+                        "wrongCorrections": 0,
+                        "wrongCount": 386,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 0.018477758756555527,
+                        "correctionRecall": 0.9815222412434444,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 36121,
+                        "unsupported": 0,
+                        "validAbstain": 680,
+                        "validCount": 36801,
+                        "validKeep": 36121,
+                        "wrongAbstain": 680,
+                        "wrongCorrections": 0,
+                        "wrongCount": 36801,
+                        "wrongKeep": 0
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0.02866593164277839,
+                        "correctionRecall": 0.9497191396081655,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 6932,
+                        "unsupported": 0,
+                        "validAbstain": 699,
+                        "validCount": 29888,
+                        "validKeep": 29189,
+                        "wrongAbstain": 367,
+                        "wrongCorrections": 0,
+                        "wrongCount": 7299,
+                        "wrongKeep": 0
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0.02866593164277839,
+                        "correctionRecall": 0.976612687366167,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 29189,
+                        "unsupported": 0,
+                        "validAbstain": 367,
+                        "validCount": 7299,
+                        "validKeep": 6932,
+                        "wrongAbstain": 699,
+                        "wrongCorrections": 0,
+                        "wrongCount": 29888,
+                        "wrongKeep": 0
+                    }
+                },
+                "correctionRecall": 0.9713340683572216,
+                "falseCorrections": 0,
+                "precision": 1,
+                "recovered": 36121,
+                "unsafeChangesIncludingAmbiguous": 0,
+                "unsupported": 0,
+                "validAbstain": 1066,
+                "validCount": 37187,
+                "validKeep": 36121,
+                "wrongAbstain": 1066,
+                "wrongCorrections": 0,
+                "wrongCount": 37187,
+                "wrongKeep": 0
+            },
+            "enabled": true,
+            "gap": 2.5,
+            "grid": "gap = 0.25*i, i = 32..0",
+            "gridSize": 33,
+            "selectedGridCounts": {
+                "ambiguousCorrections": 0,
+                "falseCorrectionsIncludingAmbiguous": 0,
+                "recovered": 36121
+            }
+        },
+        "twoScore": {
+            "calibrationCounts": {
+                "abstainRate": 0.06558743646973404,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 96,
+                    "changed": 0,
+                    "count": 96,
+                    "keep": 0,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 0
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 386,
+                        "validCount": 386,
+                        "validKeep": 0,
+                        "wrongAbstain": 386,
+                        "wrongCorrections": 0,
+                        "wrongCount": 386,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 0.0557865275400125,
+                        "correctionRecall": 0.9815222412434444,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 36121,
+                        "unsupported": 0,
+                        "validAbstain": 3434,
+                        "validCount": 36801,
+                        "validKeep": 33367,
+                        "wrongAbstain": 672,
+                        "wrongCorrections": 0,
+                        "wrongCount": 36801,
+                        "wrongKeep": 8
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0.08976255142926291,
+                        "correctionRecall": 0.9497191396081655,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 6932,
+                        "unsupported": 0,
+                        "validAbstain": 2971,
+                        "validCount": 29888,
+                        "validKeep": 26917,
+                        "wrongAbstain": 367,
+                        "wrongCorrections": 0,
+                        "wrongCount": 7299,
+                        "wrongKeep": 0
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0.04141232151020518,
+                        "correctionRecall": 0.976612687366167,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 29189,
+                        "unsupported": 0,
+                        "validAbstain": 849,
+                        "validCount": 7299,
+                        "validKeep": 6450,
+                        "wrongAbstain": 691,
+                        "wrongCorrections": 0,
+                        "wrongCount": 29888,
+                        "wrongKeep": 8
+                    }
+                },
+                "correctionRecall": 0.9713340683572216,
+                "falseCorrections": 0,
+                "precision": 1,
+                "recovered": 36121,
+                "unsafeChangesIncludingAmbiguous": 0,
+                "unsupported": 0,
+                "validAbstain": 3820,
+                "validCount": 37187,
+                "validKeep": 33367,
+                "wrongAbstain": 1058,
+                "wrongCorrections": 0,
+                "wrongCount": 37187,
+                "wrongKeep": 8
+            },
+            "enabled": true,
+            "gap": 2.5,
+            "grid": "gap = 0.5*g, g = 8..0; minAlternative = -2..-24; maxObserved = -24..-2 (step 1)",
+            "gridSize": 4761,
+            "maxObserved": -9,
+            "minAlternative": -13,
+            "selectedGridCounts": {
+                "ambiguousCorrections": 0,
+                "falseCorrectionsIncludingAmbiguous": 0,
+                "recovered": 36121
+            }
+        }
+    },
+    "data": {
+        "en": {
+            "acceptedTypes": 47828,
+            "bomStripped": false,
+            "canonicalFailures": 0,
+            "crlfLines": 0,
+            "duplicatesAfterLowercase": 1305,
+            "emptyLines": 0,
+            "entryLines": 49568,
+            "fileSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+            "filteredListSha256": "7b9e9cd50e8d4d24b9139b3df28c6a54cc180d54ba127681424978a00d9d977e",
+            "headerCount": 49568,
+            "rawBytes": 551762,
+            "rejectedLength": 0,
+            "rejectedMultiword": 0,
+            "rejectedNotLetters": 435
+        },
+        "processing": "Hunspell .dic stems only: count header must equal record count, /flags stripped, affixes NOT expanded, .aff and corpus frequencies NOT used; each lowercase type counted once",
+        "ru": {
+            "acceptedTypes": 146229,
+            "bomStripped": false,
+            "canonicalFailures": 0,
+            "crlfLines": 0,
+            "duplicatesAfterLowercase": 40,
+            "emptyLines": 0,
+            "entryLines": 146269,
+            "fileSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+            "filteredListSha256": "46191cbc6df3c2fb5a0ab63f1808b18fdfe773a15813dd3013230091412d2341",
+            "headerCount": 146269,
+            "rawBytes": 3473191,
+            "rejectedLength": 0,
+            "rejectedMultiword": 0,
+            "rejectedNotLetters": 0
+        }
+    },
+    "experiment": "SYS-232 offline n-gram wrong-layout detector",
+    "manifest": {
+        "note": "source bytes and SHA-256 and notice SHA-256 matched the manifest before any parsing or training; results are limited to the manifest scope",
+        "noticesVerified": true,
+        "releaseApproved": false,
+        "schemaVersion": 1,
+        "scope": "local-experiment-only",
+        "sha256": "29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20",
+        "sourcesVerified": true,
+        "status": "approved-local-experiment",
+        "upstreamCommit": "c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb"
+    },
+    "model": {
+        "accumulator": "int32, worst case 33*3*127",
+        "alpha": 0.5,
+        "alphabet": 35,
+        "artifact": "serialized in memory only; no model file is written",
+        "formatVersion": 1,
+        "formula": "For language L and keys k1..kn, sequence BOS BOS k1..kn EOS. For each predicted symbol c with context (a,b): Q_L = sum over orders of w_n * round(8 * ln P_n), P_1(c) = (N(c)+0.5)/(N+35*0.5), P_2(c|b) = (N(b,c)+0.5)/(N(b)+35*0.5), P_3(c|a,b) = (N(a,b,c)+0.5)/(N(a,b)+35*0.5), each clamped to [-127,0]; w = (1,1,1). S_L = sum Q_L / (8 * (n+1)). S_L is a weighted log-score, not a calibrated probability.",
+        "scale": 8,
+        "serializationRoundTrip": true,
+        "shortTokenPolicy": "tokens with fewer than 4 keys always abstain in n-gram and exact policies",
+        "skippedTrainingSequences": 0,
+        "trainingTypesEn": 34025,
+        "trainingTypesRu": 97632
+    },
+    "normalizationVersion": "v1: strict-utf8, strip-bom, strip-cr, cut-at-slash-or-tab, lowercase, letter-only, 1..32",
+    "scope": "local experiment over dictionary word types; not production quality; release of data and weights not approved; no artifacts written by this tool",
+    "sizes": {
+        "referenceDictionaries": {
+            "boundary": "filteredUtf8Bytes = sorted lowercase types joined by newline; qCompress is a storage reference only, not an inference structure and not RSS",
+            "en": {
+                "full": {
+                    "filteredUtf8Bytes": 422535,
+                    "qCompressLevel9Bytes": 146643,
+                    "types": 47828
+                },
+                "rawFileBytes": 551762,
+                "trainOnly": {
+                    "filteredUtf8Bytes": 300504,
+                    "qCompressLevel9Bytes": 103998,
+                    "types": 34025
+                }
+            },
+            "ru": {
+                "full": {
+                    "filteredUtf8Bytes": 3153531,
+                    "qCompressLevel9Bytes": 539343,
+                    "types": 146229
+                },
+                "rawFileBytes": 3473191,
+                "trainOnly": {
+                    "filteredUtf8Bytes": 2103798,
+                    "qCompressLevel9Bytes": 363070,
+                    "types": 97632
+                }
+            }
+        },
+        "serializedModelBytes": 88290,
+        "serializedModelQCompressBytes": 28901,
+        "weightBytes": 88270
+    },
+    "splits": {
+        "calibration": {
+            "en": 7323,
+            "enAmbiguous": 24,
+            "ru": 29912,
+            "ruAmbiguous": 24
+        },
+        "groupingLimitation": "prefix-3 grouping is a proxy for morphological families, not proven lemma disjointness",
+        "leaks": {
+            "canonicalKeyLeaks": 0,
+            "leakFree": true,
+            "policy": "any leak aborts the run with exit code 3",
+            "wordLeaks": 0,
+            "wrongLayoutMappingLeaks": 0
+        },
+        "rule": "SHA-256(seed || 0x00 || first 3 canonical keys), first 8 bytes big-endian mod 100: [0,70) train, [70,85) calibration, [85,100) test; split happens before wrong-layout augmentation; one group is in one split for both languages",
+        "seed": "rasklad-SYS-232-split-v1",
+        "test": {
+            "en": 6480,
+            "enAmbiguous": 15,
+            "ru": 18685,
+            "ruAmbiguous": 15
+        },
+        "train": {
+            "en": 34025,
+            "enAmbiguous": 64,
+            "ru": 97632,
+            "ruAmbiguous": 64
+        }
+    },
+    "test": {
+        "evaluationMix": "balanced synthetic error mix: every test word type yields one valid token and one wrong-layout copy with explicit source layout; precision here is NOT deployment precision and depends on the artificial 1:1 ratio",
+        "methods": {
+            "alwaysKeep": {
+                "abstainRate": 0,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 0,
+                    "changed": 0,
+                    "count": 60,
+                    "keep": 60,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 8
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 0,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 0,
+                        "validCount": 375,
+                        "validKeep": 375,
+                        "wrongAbstain": 0,
+                        "wrongCorrections": 0,
+                        "wrongCount": 375,
+                        "wrongKeep": 375
+                    },
+                    "len4plus": {
+                        "abstainRate": 0,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 0,
+                        "validCount": 24760,
+                        "validKeep": 24760,
+                        "wrongAbstain": 0,
+                        "wrongCorrections": 0,
+                        "wrongCount": 24760,
+                        "wrongKeep": 24760
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 0,
+                        "validCount": 18670,
+                        "validKeep": 18670,
+                        "wrongAbstain": 0,
+                        "wrongCorrections": 0,
+                        "wrongCount": 6465,
+                        "wrongKeep": 6465
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 0,
+                        "validCount": 6465,
+                        "validKeep": 6465,
+                        "wrongAbstain": 0,
+                        "wrongCorrections": 0,
+                        "wrongCount": 18670,
+                        "wrongKeep": 18670
+                    }
+                },
+                "correctionRecall": 0,
+                "falseCorrections": 0,
+                "precision": null,
+                "recovered": 0,
+                "unsafeChangesIncludingAmbiguous": 0,
+                "unsupported": 0,
+                "validAbstain": 0,
+                "validCount": 25135,
+                "validKeep": 25135,
+                "wrongAbstain": 0,
+                "wrongCorrections": 0,
+                "wrongCount": 25135,
+                "wrongKeep": 25135
+            },
+            "fullReferenceExact": {
+                "abstainRate": 0.01491943505072608,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 52,
+                    "changed": 0,
+                    "count": 60,
+                    "keep": 8,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 8
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 375,
+                        "validCount": 375,
+                        "validKeep": 0,
+                        "wrongAbstain": 375,
+                        "wrongCorrections": 0,
+                        "wrongCount": 375,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 0,
+                        "correctionRecall": 1,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 24760,
+                        "unsupported": 0,
+                        "validAbstain": 0,
+                        "validCount": 24760,
+                        "validKeep": 24760,
+                        "wrongAbstain": 0,
+                        "wrongCorrections": 0,
+                        "wrongCount": 24760,
+                        "wrongKeep": 0
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0.01491943505072608,
+                        "correctionRecall": 0.9693735498839907,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 6267,
+                        "unsupported": 0,
+                        "validAbstain": 177,
+                        "validCount": 18670,
+                        "validKeep": 18493,
+                        "wrongAbstain": 198,
+                        "wrongCorrections": 0,
+                        "wrongCount": 6465,
+                        "wrongKeep": 0
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0.01491943505072608,
+                        "correctionRecall": 0.9905195500803428,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 18493,
+                        "unsupported": 0,
+                        "validAbstain": 198,
+                        "validCount": 6465,
+                        "validKeep": 6267,
+                        "wrongAbstain": 177,
+                        "wrongCorrections": 0,
+                        "wrongCount": 18670,
+                        "wrongKeep": 0
+                    }
+                },
+                "correctionRecall": 0.9850805649492739,
+                "falseCorrections": 0,
+                "note": "reference only: membership in the FULL source dictionaries, which contain the test words, same >=4-key gate; advantaged on a dictionary-derived holdout and does not show generalization to unseen words. QSet in memory, not an optimized FST/DAFSA",
+                "precision": 1,
+                "recovered": 24760,
+                "unsafeChangesIncludingAmbiguous": 0,
+                "unsupported": 0,
+                "validAbstain": 375,
+                "validCount": 25135,
+                "validKeep": 24760,
+                "wrongAbstain": 375,
+                "wrongCorrections": 0,
+                "wrongCount": 25135,
+                "wrongKeep": 0
+            },
+            "singleD": {
+                "abstainRate": 0.04810025860354088,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 60,
+                    "changed": 0,
+                    "count": 60,
+                    "keep": 0,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 8
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 375,
+                        "validCount": 375,
+                        "validKeep": 0,
+                        "wrongAbstain": 375,
+                        "wrongCorrections": 0,
+                        "wrongCount": 375,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 0.03368336025848142,
+                        "correctionRecall": 0.9661147011308562,
+                        "falseCorrections": 5,
+                        "precision": 0.9997910223188163,
+                        "recovered": 23921,
+                        "unsupported": 0,
+                        "validAbstain": 834,
+                        "validCount": 24760,
+                        "validKeep": 23921,
+                        "wrongAbstain": 834,
+                        "wrongCorrections": 0,
+                        "wrongCount": 24760,
+                        "wrongKeep": 5
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0.04810025860354088,
+                        "correctionRecall": 0.9489559164733179,
+                        "falseCorrections": 5,
+                        "precision": 0.999185667752443,
+                        "recovered": 6135,
+                        "unsupported": 0,
+                        "validAbstain": 879,
+                        "validCount": 18670,
+                        "validKeep": 17786,
+                        "wrongAbstain": 330,
+                        "wrongCorrections": 0,
+                        "wrongCount": 6465,
+                        "wrongKeep": 0
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0.04810025860354088,
+                        "correctionRecall": 0.9526513122656668,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 17786,
+                        "unsupported": 0,
+                        "validAbstain": 330,
+                        "validCount": 6465,
+                        "validKeep": 6135,
+                        "wrongAbstain": 879,
+                        "wrongCorrections": 0,
+                        "wrongCount": 18670,
+                        "wrongKeep": 5
+                    }
+                },
+                "correctionRecall": 0.9517008155957828,
+                "falseCorrections": 5,
+                "precision": 0.9997910223188163,
+                "recovered": 23921,
+                "unsafeChangesIncludingAmbiguous": 5,
+                "unsupported": 0,
+                "validAbstain": 1209,
+                "validCount": 25135,
+                "validKeep": 23921,
+                "wrongAbstain": 1209,
+                "wrongCorrections": 0,
+                "wrongCount": 25135,
+                "wrongKeep": 5
+            },
+            "trainOnlyExact": {
+                "abstainRate": 1,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 60,
+                    "changed": 0,
+                    "count": 60,
+                    "keep": 0,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 8
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 375,
+                        "validCount": 375,
+                        "validKeep": 0,
+                        "wrongAbstain": 375,
+                        "wrongCorrections": 0,
+                        "wrongCount": 375,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 24760,
+                        "validCount": 24760,
+                        "validKeep": 0,
+                        "wrongAbstain": 24760,
+                        "wrongCorrections": 0,
+                        "wrongCount": 24760,
+                        "wrongKeep": 0
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 18670,
+                        "validCount": 18670,
+                        "validKeep": 0,
+                        "wrongAbstain": 6465,
+                        "wrongCorrections": 0,
+                        "wrongCount": 6465,
+                        "wrongKeep": 0
+                    },
+                    "typedInUs": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 6465,
+                        "validCount": 6465,
+                        "validKeep": 0,
+                        "wrongAbstain": 18670,
+                        "wrongCorrections": 0,
+                        "wrongCount": 18670,
+                        "wrongKeep": 0
+                    }
+                },
+                "correctionRecall": 0,
+                "falseCorrections": 0,
+                "note": "exact membership in train-split dictionaries only, same >=4-key gate; splits are key-disjoint, so test coverage is expected to be (near) zero by construction",
+                "precision": null,
+                "recovered": 0,
+                "unsafeChangesIncludingAmbiguous": 0,
+                "unsupported": 0,
+                "validAbstain": 25135,
+                "validCount": 25135,
+                "validKeep": 0,
+                "wrongAbstain": 25135,
+                "wrongCorrections": 0,
+                "wrongCount": 25135,
+                "wrongKeep": 0
+            },
+            "twoScore": {
+                "abstainRate": 0.09852794907499503,
+                "ambiguousChanged": 0,
+                "ambiguousSafetyNegatives": {
+                    "abstain": 56,
+                    "changed": 0,
+                    "count": 60,
+                    "keep": 4,
+                    "len4plusChanged": 0,
+                    "len4plusCount": 8
+                },
+                "byLength": {
+                    "len1to3": {
+                        "abstainRate": 1,
+                        "correctionRecall": 0,
+                        "falseCorrections": 0,
+                        "precision": null,
+                        "recovered": 0,
+                        "unsupported": 0,
+                        "validAbstain": 375,
+                        "validCount": 375,
+                        "validKeep": 0,
+                        "wrongAbstain": 375,
+                        "wrongCorrections": 0,
+                        "wrongCount": 375,
+                        "wrongKeep": 0
+                    },
+                    "len4plus": {
+                        "abstainRate": 0.08487479806138934,
+                        "correctionRecall": 0.9661147011308562,
+                        "falseCorrections": 5,
+                        "precision": 0.9997910223188163,
+                        "recovered": 23921,
+                        "unsupported": 0,
+                        "validAbstain": 3382,
+                        "validCount": 24760,
+                        "validKeep": 21373,
+                        "wrongAbstain": 821,
+                        "wrongCorrections": 0,
+                        "wrongCount": 24760,
+                        "wrongKeep": 18
+                    }
+                },
+                "bySourceLayout": {
+                    "note": "typedInUs: valid = EN words, wrong = RU words typed in us; typedInRu: valid = RU words, wrong = EN words typed in ru; ambiguous tokens are reported only in ambiguousSafetyNegatives",
+                    "typedInRu": {
+                        "abstainRate": 0.12627809826934552,
+                        "correctionRecall": 0.9489559164733179,
+                        "falseCorrections": 5,
+                        "precision": 0.999185667752443,
+                        "recovered": 6135,
+                        "unsupported": 0,
+                        "validAbstain": 2845,
+                        "validCount": 18670,
+                        "validKeep": 15820,
+                        "wrongAbstain": 329,
+                        "wrongCorrections": 0,
+                        "wrongCount": 6465,
+                        "wrongKeep": 1
+                    },
+                    "typedInUs": {
+                        "abstainRate": 0.07077779988064452,
+                        "correctionRecall": 0.9526513122656668,
+                        "falseCorrections": 0,
+                        "precision": 1,
+                        "recovered": 17786,
+                        "unsupported": 0,
+                        "validAbstain": 912,
+                        "validCount": 6465,
+                        "validKeep": 5553,
+                        "wrongAbstain": 867,
+                        "wrongCorrections": 0,
+                        "wrongCount": 18670,
+                        "wrongKeep": 17
+                    }
+                },
+                "correctionRecall": 0.9517008155957828,
+                "falseCorrections": 5,
+                "precision": 0.9997910223188163,
+                "recovered": 23921,
+                "unsafeChangesIncludingAmbiguous": 5,
+                "unsupported": 0,
+                "validAbstain": 3757,
+                "validCount": 25135,
+                "validKeep": 21373,
+                "wrongAbstain": 1196,
+                "wrongCorrections": 0,
+                "wrongCount": 25135,
+                "wrongKeep": 18
+            }
+        },
+        "metricDefinitions": "falseCorrections = Correct on non-ambiguous valid; recovered = Correct on non-ambiguous wrong whose conversion equals the intended word; wrongCorrections = Correct on wrong with different output; ambiguousChanged = Correct on any ambiguous token (safety negative); unsafeChangesIncludingAmbiguous = falseCorrections + wrongCorrections + ambiguousChanged; precision = recovered/(recovered+falseCorrections+wrongCorrections), null if denominator is 0; correctionRecall = recovered/wrongCount",
+        "tokenCount": 50330
+    },
+    "timings": {
+        "calibrationMs": 6683,
+        "prepareMs": 11191,
+        "testMs": 145,
+        "trainingMs": 8,
+        "warmLatency": {
+            "maxNs": 3446.8125,
+            "note": "warm, single thread, mean of repeats per token, timer overhead included; cold start and RSS are not measured",
+            "p50Ns": 680.65625,
+            "p95Ns": 1270.53125,
+            "p99Ns": 1693.8125,
+            "path": "canonicalizeToken + NgramModel::score + decideTwoScore with calibrated thresholds",
+            "repeatsPerToken": 32,
+            "sampleRule": "every k-th test token in deterministic order, at most 2000; one warm-up pass",
+            "sampleTokens": 2000,
+            "twoScoreEnabled": true
+        }
+    }
+}

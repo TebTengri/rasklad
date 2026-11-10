@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Собирает проект через bin/build и запускает модульные тесты Qt Test.
-# Аргументы передаются тестовому бинарнику (например, -v2 или имя функции).
+# Собирает проект через bin/build и запускает модульные тесты Qt Test:
+# сначала rasklad_tests (ядро преобразования), затем detector_tests
+# (экспериментальный детектор SYS-232). Аргументы передаются обоим
+# бинарникам (например, -v2); имя тестовой функции подходит только одному.
 set -euo pipefail
 
 script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -11,12 +13,17 @@ build_dir="${root_dir}/build"
 
 test_dir="${build_dir}/tests"
 test_bin="${test_dir}/rasklad_tests"
+detector_dir="${build_dir}/tests/detector"
+detector_bin="${detector_dir}/detector_tests"
 
-if [[ ! -x "${test_bin}" ]]; then
-    echo "bin/test: тестовый бинарник не найден: ${test_bin}" >&2
-    exit 1
-fi
+for bin in "${test_bin}" "${detector_bin}"; do
+    if [[ ! -x "${bin}" ]]; then
+        echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
+        exit 1
+    fi
+done
 
-# Ядро не требует GUI; тесты запускаются из каталога сборки.
-cd -- "${test_dir}"
-exec "${test_bin}" "$@"
+# Тесты не требуют GUI и внешних словарей; запускаются из каталога сборки.
+(cd -- "${test_dir}" && "${test_bin}" "$@")
+cd -- "${detector_dir}"
+exec "${detector_bin}" "$@"
