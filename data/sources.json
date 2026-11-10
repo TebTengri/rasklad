@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-10",
+  "reviewer": "Codex; primary upstream notices reviewed",
+  "repository": "https://github.com/LibreOffice/dictionaries",
+  "commit": "c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb",
+  "scope": "local-experiment-only",
+  "status": "approved-local-experiment",
+  "release_approved": false,
+  "training_sources": [
+    {
+      "language": "ru",
+      "path": "ru_RU/ru_RU.dic",
+      "url": "https://raw.githubusercontent.com/LibreOffice/dictionaries/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/ru_RU/ru_RU.dic",
+      "notice": "data/notices/ru_RU.README.txt",
+      "notice_sha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+      "sha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+      "allowed_operations": [
+        "local filtering",
+        "local model training",
+        "local calibration and evaluation"
+      ],
+      "obligations": [
+        "retain full upstream notices with local copies and derivatives",
+        "mark filtered data and generated artifacts as modified",
+        "do not use authors names for endorsement",
+        "no release until separate data/weight review"
+      ],
+      "cache_path": "build/experiment-data/ru.dic",
+      "bytes": 3473191
+    },
+    {
+      "language": "en",
+      "path": "en/en_US.dic",
+      "url": "https://raw.githubusercontent.com/LibreOffice/dictionaries/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/en/en_US.dic",
+      "notice": "data/notices/en_US.README.txt",
+      "notice_sha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+      "sha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+      "allowed_operations": [
+        "local filtering",
+        "local model training",
+        "local calibration and evaluation"
+      ],
+      "obligations": [
+        "retain full upstream notices with local copies and derivatives",
+        "mark filtered data and generated artifacts as modified",
+        "do not use authors names for endorsement",
+        "no release until separate data/weight review"
+      ],
+      "cache_path": "build/experiment-data/en.dic",
+      "bytes": 551762
+    }
+  ],
+  "evaluation_limitations": [
+    "dictionary-type samples, not frequency-weighted natural input",
+    "no independently sourced natural-text test corpus approved yet",
+    "prefix grouping is a family proxy, not complete lemma disjointness"
+  ],
+  "derivative_artifacts": "build/ only; not committed, not approved for distribution"
+}
