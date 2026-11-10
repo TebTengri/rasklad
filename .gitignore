@@ -1,0 +1,9 @@
+/build/
+*.o
+*.user
+.qmake.stash
+Makefile
+.env
+.env.*
+!.env.example
+*.log
