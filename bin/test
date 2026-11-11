@@ -3,7 +3,8 @@
 # сначала rasklad_tests (ядро преобразования), затем detector_tests
 # (экспериментальный детектор SYS-232), затем benchmark_tests (helper'ы
 # независимой оценки SYS-233), затем context_tests (политики контекста
-# SYS-237, без Hunspell) и, если доступна Hunspell, domain_tests и
+# SYS-237, без Hunspell), router_tests (router-политики SYS-238, без
+# Hunspell) и, если доступна Hunspell, domain_tests и
 # morphology_tests. Аргументы передаются всем бинарникам
 # (например, -v2); имя тестовой функции подходит только одному.
 set -euo pipefail
@@ -23,8 +24,11 @@ benchmark_bin="${benchmark_dir}/benchmark_tests"
 # SYS-237: политики контекста опыта 005; без Hunspell, собираются всегда.
 context_dir="${build_dir}/tests/context"
 context_bin="${context_dir}/context_tests"
+# SYS-238: router-политики опыта 006; без Hunspell, собираются всегда.
+router_dir="${build_dir}/tests/router"
+router_bin="${router_dir}/router_tests"
 
-for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}"; do
+for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}" "${router_bin}"; do
     if [[ ! -x "${bin}" ]]; then
         echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
         exit 1
@@ -36,6 +40,7 @@ done
 (cd -- "${detector_dir}" && "${detector_bin}" "$@")
 (cd -- "${benchmark_dir}" && "${benchmark_bin}" "$@")
 (cd -- "${context_dir}" && "${context_bin}" "$@")
+(cd -- "${router_dir}" && "${router_bin}" "$@")
 
 if pkg-config --exists hunspell; then
     morphology_dir="${build_dir}/tests/morphology"

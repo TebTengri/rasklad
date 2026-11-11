@@ -38,3 +38,7 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 ## Контекстный контроль005
 
 [Паспорт](evaluation-005-sources.json) и [review](notices/CONTEXT-005-REVIEW.md): прежние approved dictionary/model inputs, собственные короткие prefixes из протокола, отдельные features/labels только build/. Это synthetic mechanism test, не natural corpus и не частота ошибок пользователя. Все notices/MODIFICATIONS сохраняются; release_approved=false. Никакого дообучения или пользовательской истории.
+
+## Естественные префиксы 006
+
+[Паспорт](evaluation-006-sources.json) и [review](notices/NATURAL-CONTEXT-006-REVIEW.md): новые ranks20..39 того же pinned Rust Book pool, disjoint документы развития/контроля и исключение старых20. Истинный предыдущий текст сохранён, ответы не выводятся из context vote. Single/burst/unknown — явно искусственные сценарии. Features и labels разделены по shards и остаются в build/. Обновления источников/обучение/выпуск не разрешены этим local-only допуском. [Методика](../docs/EXPERIMENT-006-METHOD.md), [принятый ADR](../docs/ADR-001-DETECTOR-ROUTING.md).

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "experiment": "SYS-238 experiment006 natural-prefix routing decision",
+  "freeze_date": "2026-11-11",
+  "scope": "local evaluation; fixed policies; natural source contexts with synthetic wrong-layout augmentation; no model training, user input, installation or deployment",
+  "selection": {
+    "pool": "data/experiment-004-document-pool.json",
+    "pool_sha256": "a43f910e0ad5f4bf239f809567aa6558aa0860aa2c568dc7960da5ba14b39242",
+    "ranking": "same SHA256(rasklad-SYS-236-doc-v1+NUL+UTF8(path)) then path as004",
+    "old_diagnostic_ranks": "0..19 excluded",
+    "development_ranks": "20..29 per language",
+    "holdout_ranks": "30..39 per language",
+    "source_versions": "same pinned EN/RU commits in004 pool; same translated technical domain, not independent new genre",
+    "no_tuning": "development descriptive only; all policies/thresholds fixed before source fetch; no source outcome-based exclusions"
+  },
+  "preparation": {
+    "markdown": "same bounded source-level FENCE/inline_spans and TRIM from prepare_technical_evaluation; no renderer/includes/links/code execution",
+    "prefix": "last4 trimmed original prose tokens, causal only; clear on blank line and before/after protected span/fence; maintain across nonblank prose lines; prefix tokens>32UTF16 or control chars become empty barriers, not skipped",
+    "layout": "oracle RU33 character present=>ru, otherwiseus; English terms in RU prose Keep as originally written",
+    "target": "if >32UTF16 replace feature target by U+FFFD unsupported sentinel, retain original exact-token hash in labels/types; all targets retained in totals; supported guard>=4 for router methods; legacy scriptContext keeps005 guard>=2",
+    "kinds": [
+      "valid: original prose, goldKeep",
+      "protected: original marked code, goldKeep; prefix cleared",
+      "single: native-letter-only prose word1..32 converted to opposite layout, original prefix unchanged, goldCorrect",
+      "burst: same wrong target; preceding4 tokens entirely in target intended alphabet also converted, other tokens unchanged, goldCorrect; stress augmentation, not prevalence",
+      "unknown: same wrong-looking single target/prefix but unknown field, goldKeep as no-action safety constraint; separate from natural valid"
+    ],
+    "features": "same12columns as005; source membership full/control from verified Hunspell, old stem shared ambiguity, old pinned model/full baseline actions; no label/kind/split/docID input; shards<=8MiB/100000rows; original targetword hashes only separate labels"
+  },
+  "policies": [
+    "alwaysKeep",
+    "safeFull",
+    "safeConfirmed",
+    "contextConfirmed",
+    "hybrid",
+    "contextHybrid",
+    "proposalsOnly",
+    "scriptContext"
+  ],
+  "routing": {
+    "common_gate": "except alwaysKeep/legacy scriptContext, protected=>Keep,unknown=>Abstain,unsupported or keycount<4=>Abstain,fullObserved=>Keep,sharedAmbiguous=>Abstain, then candidate logic",
+    "safeFull": "if fullAlternative=>Correct elseAbstain",
+    "safeConfirmed": "if fullAlternative && tokenModelAction==C=>Correct elseAbstain",
+    "contextConfirmed": "same safeConfirmed but Correct only if005 last2 anchor vote points to alternative; otherwiseAbstain",
+    "hybrid": "if fullAlternative: modelC=>Correct elseSuggest; else modelC=>Suggest elseAbstain",
+    "contextHybrid": "same hybrid, but model-only (fullAlternative false) Suggest requires005 context vote pointing to alternative; dictionary-disagreement Suggest unchanged",
+    "proposalsOnly": "contextHybrid with everyCorrect replacedbySuggest",
+    "scriptContext": "exact005 contextAuto on originalFeatureRow, no new exceptions; reported short/long separately; does not use common router gate"
+  },
+  "budgets": {
+    "auto": "holdout per source document-language EN/RU and pooled: <=1false auto per10000eligible natural valid prose occurrences AND original exact-word types withANYfalse acrosscontexts; ZEROauto onprotected/unknown; ZEROauto on shared-ambiguous naturalKeep; >=50% recovery for eligible unambiguous single ANDburst (occurrences and wordtypes withANYrecovery). AmbiguousCorrect mayabstain; no impossible conflict-pair recovery demand; zero denominator insufficient",
+    "proactive_proposals": "<=1falseSuggest per10000eligible naturalvalid occurrences ANDwordtypes(anyfalseS); ZEROproposals protected/unknown; >0correctSuggest beyondautomatic baseline. No suggestion precision inferred from synthetic class prevalence",
+    "units": "occurrences; exactfeature+role/gold types; wordTypes=(sourceLang,kind,typedLayout,originalExactTokenHash), any-event counts. No first-occurrence type trick for context-dependent outcomes",
+    "slices": "split,sourceLang,kind,sharedambiguity,short2..3/long4+, borrowedASCIItermsinRUprose; source docs and wordoverlap shown; rawvalid falseall lengths also reported",
+    "statistics": "descriptive same-source translated textbooks; correlated words/documents; no IID guarantees or production precision"
+  },
+  "architecture_decision": {
+    "auto_default": "if safeConfirmed passes all auto budgets and its nonambiguous recall penalty vs safeFull <=10 percentagepoints in each single/burst per language, choose dictionary+model-confirmation router for algorithm candidate; prefer this conservative candidate evenif safeFull also passes, informed by003 hard negatives. Otherwise choose manual-only default; do not tune thresholds or silently promote safeFull",
+    "mandatory_context": "require contextConfirmed prevents>0falseauto vs safeConfirmed AND recovery loss<=5pp in BOTHsingle ANDburst perlanguage; otherwise context not an auto prerequisite",
+    "proactive_suggestions": "enable only if contextHybrid passes proposal budget and offers>0correctS; require it prevents>0falseS vs hybrid and retains>=50%correctS before crediting context filter. Otherwise suggestions on explicit user request only, no automatic popups",
+    "system_boundary": "chosen algorithm doesNOTauthorize desktop auto-input. Initial user-facing route explicit selection/manual preview+undo; auto requires independently validated safe field/context, focus recheck and cancel/undo protocol. Unknown/protected always no action. No hook/install in this experiment",
+    "artifact": "write docs/ADR-001-DETECTOR-ROUTING.md with exact decision table, candidate/deferral status, resources/dependencies/privacy, tests and unresolved input boundary; do not merely open another experiment"
+  },
+  "inputs": {
+    "model_sha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+    "morphology_manifest": "data/morphology-003-sources.json",
+    "feature_schema": "reuse pure context005 parseFeatures per shard unchanged; CLI006 verifies new protocol/manifest and selected shard; labels neveropened"
+  },
+  "limits": {
+    "source_bytes": 1048576,
+    "max_shards": 32,
+    "shard_bytes": 8388608,
+    "shard_rows": 100000,
+    "manifest_bytes": 65536,
+    "protocol_bytes": 32768
+  },
+  "publication": "public code/passports/fullnotices/aggregate reports/ADR; rawsource/features/labels/actions/model onlyignoredbuild; release_approved=false",
+  "roles": "Claude implements pure router+sharded label-blind QtCore driver/tests; Codex sources/data/independent audit/evaluation/ADR; author blind to new corpus and outcomes"
+}
