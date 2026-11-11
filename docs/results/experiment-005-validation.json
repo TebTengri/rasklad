@@ -1,0 +1,18 @@
+{
+  "negativeCliCases": 18,
+  "labelReferenceIgnored": true,
+  "wallSeconds": 0.014096127997618169,
+  "networkNamespace": true,
+  "projectReadOnly": true,
+  "homeOrNeighborsMounted": false,
+  "actionSha256": "ba0a9e454e9905c04e282fbbc13e9d73b35120827f890ef5f5073290afec868c",
+  "qtTestsPassed": 486,
+  "pythonReviewerTestsPassed": 5,
+  "previousPythonTestsPassed": 12,
+  "independentPolicyRowsMatched": 3952,
+  "independentRecount": {
+    "primaryCounterFieldsMatched": 5040,
+    "budgetVerdictsMatched": 120
+  },
+  "contextCliDirectHunspellDependency": false
+}

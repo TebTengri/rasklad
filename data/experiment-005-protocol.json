@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "experiment": "SYS-237 experiment005 causal-script-context and intent collisions",
+  "freeze_date": "2026-11-11",
+  "scope": "offline synthetic mechanism test, not natural-text accuracy; no training/input/history/install",
+  "sources": {
+    "dictionary_manifest": "data/sources.json",
+    "morphology_manifest": "data/morphology-003-sources.json",
+    "model": "unchanged experiment002 artifacts and frozen thresholds; use existing domain_decisions for token baselines",
+    "new_natural_corpus": false,
+    "publication": "derived tokens/prefixes/features/labels/actions only ignored build; public code/passports/notices/aggregates"
+  },
+  "selection": {
+    "ambiguity_pool": "intersection of original lowercase letter-only stem key sets, keys length2..32; no filtering by model decisions or desired result",
+    "split": "SHA256(UTF8(rasklad-SYS-237-pair-v1)+NUL+keybytes); first8 big-endian %100 <35 development else holdout; same key all cases same split",
+    "controls": "per split and native language, first12 hash-ranked canonical stem keys length4..12 with full-native accepted and converted full-other rejected; rank by same digest; no score/action filtering",
+    "context_groups": {
+      "development": {
+        "en": [
+          [
+            "please",
+            "write"
+          ],
+          [
+            "carefully",
+            "enter"
+          ]
+        ],
+        "ru": [
+          [
+            "прошу",
+            "записать"
+          ],
+          [
+            "сейчас",
+            "добавьте"
+          ]
+        ]
+      },
+      "holdout": {
+        "en": [
+          [
+            "simple",
+            "example"
+          ],
+          [
+            "local",
+            "message"
+          ],
+          [
+            "useful",
+            "phrase"
+          ]
+        ],
+        "ru": [
+          [
+            "нужно",
+            "указать"
+          ],
+          [
+            "верная",
+            "запись"
+          ],
+          [
+            "новая",
+            "строка"
+          ]
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "ambiguity_per_key_direction_anchor": [
+      "nativeKeep: agreeing typed-layout anchors, intent Keep",
+      "switchCorrect: opposite-language anchors, intent Correct",
+      "borrowKeep: EXACT SAME observable features as switchCorrect, intent Keep; unmarked deliberate borrowing/identifier",
+      "protectedKeep: opposite-language anchors, field protected, intent Keep",
+      "unknownKeep: opposite-language anchors, field unknown, intent Keep",
+      "mixedKeep: first anchor opposite, second native, prose, intent Keep",
+      "emptyKeep: no anchors, prose, intent Keep"
+    ],
+    "control_per_key_anchor": [
+      "nativeKeep: original word/native anchors/prose, Keep",
+      "switchCorrect: wrong-layout copy/native anchors/prose, Correct",
+      "protectedKeep: same wrong-looking text in known protected field, Keep",
+      "unknownKeep: same wrong-looking text/unknown field, Keep"
+    ]
+  },
+  "observables": {
+    "feature_fields": [
+      "layout",
+      "target",
+      "left1",
+      "left2",
+      "left3",
+      "left4",
+      "field",
+      "fullObserved",
+      "fullAlternative",
+      "sharedAmbiguous",
+      "tokenModelAction",
+      "tokenFullAction"
+    ],
+    "left_padding": "unused leading slots empty; two supplied anchors occupy left3/left4; no future words",
+    "field_values": [
+      "prose",
+      "protected",
+      "unknown"
+    ],
+    "membership": "direct case-preserving full Hunspell accepts for observed/converted; sharedAmbiguous = stemBoth OR controlBoth OR fullBoth, queried even for length2..3; token baselines retain original >=4 guard",
+    "labels": "separate file ordinal/split/keyGroup/scenario/goldKeepOrCorrect/ambiguousOrControl/collisionPair; never input to C++ policies"
+  },
+  "policies": [
+    "alwaysKeep",
+    "tokenTwoScore",
+    "tokenHunspell",
+    "contextAuto",
+    "guardedContextAuto",
+    "contextSuggest"
+  ],
+  "context_rule": {
+    "target": "canonical supported length2..32; this is a preregistered relaxation for the NEW context methods only; old methods unchanged",
+    "anchors": "last2 slots each native ASCII EN or RU33 letters, length4..32; both same script => vote; otherwise no vote. First2 slots ignored in this simple control. No word semantics/identity learned",
+    "gate": "protected => Keep; unknown => Abstain; invalid target or no anchor vote => Abstain",
+    "auto": "after gate: fullObserved && !fullAlternative => Keep; fullAlternative => Keep if vote == typed layout and fullObserved else Correct if vote != typed layout else Abstain; neither => Abstain",
+    "guarded": "same gate; sharedAmbiguous => Abstain; otherwise contextAuto",
+    "suggest": "same contextAuto but replace Correct by Suggest; Suggest never modifies text"
+  },
+  "metrics": {
+    "partitions": "development and holdout separately; every policy, not selecting a winner",
+    "counts": "occurrences plus unique exact feature+gold category types; roles proseKeep,protectedKeep,unknownKeep,ambiguousCorrect,controlCorrect separately; suggestions and false suggestions separate from auto changes",
+    "budgets": "ZERO automatic changes on proseKeep/protectedKeep/unknownKeep, including borrowKeep; ZERO false auto changes on ambiguous Keep; >=50% auto recovery on ambiguous switchCorrect AND >=50% on controlCorrect per typed layout and pooled in holdout. Report all components; zero denominator insufficient. Suggest never counts as auto recovery",
+    "collision": "switchCorrect and borrowKeep share every observable byte; one deterministic action identical. For every pair, auto recovery on Correct plus preservation on Keep <=1. Report matched pair count and invariant for every policy; do not call conflicting intent inferable",
+    "ordinary_context": "nativeKeep vs switchCorrect have different prefixes; count successful context switches separately from collision failures; no real-language generalization claimed",
+    "leakage": "no model/threshold/exception tuning on holdout; split lexical keygroups and anchors disjoint; target decision labels/scenario IDs absent from feature input",
+    "confidence": "synthetic correlated cases, no natural frequency, no IID confidence/production precision claims"
+  },
+  "hypotheses": {
+    "C1": "token-only action identical for same target/layout under different contexts, and cannot satisfy both intents of an identical-observable collision; structural invariant, not learned-model benchmark",
+    "C2": "script context enables >0 ambiguous switchCorrect recoveries vs tokenHunspell; disclose ALL added Keep-intent errors. If only constructed-template effect, say so",
+    "C3": "shared-ambiguity veto prevents contextAuto borrow errors but loses corresponding ambiguous recoveries; unknown/protected never changed by context variants",
+    "C4": "suggest mode preserves text while recording correct and false proposals; no auto-safety claim from suggestion recall",
+    "C5": "all preregistered strict budget components reported; passing any subset is not approval"
+  },
+  "limits": {
+    "feature_bytes": 8388608,
+    "feature_rows": 100000,
+    "field_utf16": 32,
+    "protocol_bytes": 32768
+  },
+  "provenance": "Claude implements pure context policy and bounded feature CLI, Codex authors synthetic generator/labels, independent audit/aggregation. Policy author must not read generated feature/label files or outcomes before implementation."
+}
