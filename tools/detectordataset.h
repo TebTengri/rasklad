@@ -19,6 +19,12 @@ namespace rasklad::experiment {
 
 // Верхняя граница размера входного файла .dic.
 inline constexpr qint64 kMaxDicBytes = 64LL * 1024 * 1024;
+// Верхняя граница строк записей после заголовка (включая пустые; пустой
+// хвост после финального '\n' не считается). Проверяется подсчётом '\n' в
+// сырых байтах до декодирования и split(), чтобы поток переводов строк в
+// пределах kMaxDicBytes не порождал миллионы QStringView и записей QSet.
+// Предел выше размера одобренных словарей и не меняет их разбор.
+inline constexpr qint64 kMaxDicRecords = 250000;
 // Слова длиннее отбрасываются (совпадает с пределом канонизации).
 inline constexpr int kMaxWordChars = kMaxTokenKeys;
 
@@ -42,6 +48,8 @@ enum class DicError {
     CountMismatch,
     // Значение DetectorLanguage вне перечисления.
     InvalidLanguage,
+    // Строк записей больше kMaxDicRecords.
+    TooManyRecords,
 };
 
 // Сообщение без содержимого файла.

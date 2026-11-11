@@ -1,0 +1,482 @@
+{
+  "model": {
+    "loop": {
+      "probe": {
+        "artifactBytes": 88290,
+        "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+        "checksum": "1934c4533eefed83",
+        "deserializeNs": 87041,
+        "iterations": 200000,
+        "loadNs": 180194,
+        "loopNs": 420423450,
+        "mode": "model",
+        "nsPerOperation": 32.84558203125,
+        "operations": 12800000,
+        "readNs": 93062,
+        "residentTableBytes": 88270,
+        "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+        "syntheticKeys": 64
+      },
+      "observer": {
+        "childWallNs": 428385996,
+        "peakRssKiB": 14292,
+        "lastObservedRssKiB": 14272,
+        "lateLoopMedianRssKiB": 14272.0,
+        "samples": 198,
+        "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+        "coldScope": "fresh process, filesystem cache not flushed"
+      }
+    },
+    "freshProcessRuns": [
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 76211,
+          "iterations": 0,
+          "loadNs": 171448,
+          "loopNs": 40,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 95146,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6988375,
+          "peakRssKiB": 14276,
+          "lastObservedRssKiB": 14276,
+          "lateLoopMedianRssKiB": 4400,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 78866,
+          "iterations": 0,
+          "loadNs": 172991,
+          "loopNs": 90,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 94025,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6866830,
+          "peakRssKiB": 14276,
+          "lastObservedRssKiB": 14276,
+          "lateLoopMedianRssKiB": 4464,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 81973,
+          "iterations": 0,
+          "loadNs": 176348,
+          "loopNs": 71,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 94285,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6951978,
+          "peakRssKiB": 5760,
+          "lastObservedRssKiB": 5760,
+          "lateLoopMedianRssKiB": 3576,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 77834,
+          "iterations": 0,
+          "loadNs": 175415,
+          "loopNs": 40,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 97491,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6861139,
+          "peakRssKiB": 14148,
+          "lastObservedRssKiB": 14148,
+          "lateLoopMedianRssKiB": 4420,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 75580,
+          "iterations": 0,
+          "loadNs": 165848,
+          "loopNs": 80,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 90178,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6976424,
+          "peakRssKiB": 14296,
+          "lastObservedRssKiB": 14296,
+          "lateLoopMedianRssKiB": 4412,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 78025,
+          "iterations": 0,
+          "loadNs": 204731,
+          "loopNs": 50,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 126626,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 7021246,
+          "peakRssKiB": 11308,
+          "lastObservedRssKiB": 11308,
+          "lateLoopMedianRssKiB": 3732,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 88290,
+          "artifactSha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 122107,
+          "iterations": 0,
+          "loadNs": 216302,
+          "loopNs": 71,
+          "mode": "model",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 94085,
+          "residentTableBytes": 88270,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 6844418,
+          "peakRssKiB": 14332,
+          "lastObservedRssKiB": 14332,
+          "lateLoopMedianRssKiB": 4320,
+          "samples": 3,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      }
+    ],
+    "freshProcessWallMedianNs": 6951978,
+    "freshProcessLoadMedianNs": 175415,
+    "cache": "filesystem cache not flushed; fresh process, not guaranteed cold OS cache",
+    "rssScope": "actual predictor child RSS including shared libraries, not incremental memory; late-loop median after raw input bytes freed; peak includes loading/validation"
+  },
+  "exact": {
+    "loop": {
+      "probe": {
+        "artifactBytes": 1200379,
+        "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+        "checksum": "7798e3b589d4c383",
+        "deserializeNs": 6585387,
+        "iterations": 200000,
+        "keyCounts": [
+          47828,
+          146229
+        ],
+        "loadNs": 6913406,
+        "loopNs": 1536341093,
+        "mode": "exact",
+        "nsPerOperation": 120.026647890625,
+        "operations": 12800000,
+        "readNs": 327899,
+        "residentStructureBytes": 1600601,
+        "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+        "syntheticKeys": 64
+      },
+      "observer": {
+        "childWallNs": 1550941382,
+        "peakRssKiB": 19664,
+        "lastObservedRssKiB": 15184,
+        "lateLoopMedianRssKiB": 15812.0,
+        "samples": 719,
+        "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+        "coldScope": "fresh process, filesystem cache not flushed"
+      }
+    },
+    "freshProcessRuns": [
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5923206,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 6314393,
+          "loopNs": 50,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 391086,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13336067,
+          "peakRssKiB": 19804,
+          "lastObservedRssKiB": 19804,
+          "lateLoopMedianRssKiB": 17464.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5491735,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 5810226,
+          "loopNs": 60,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 318391,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13326018,
+          "peakRssKiB": 19548,
+          "lastObservedRssKiB": 16100,
+          "lateLoopMedianRssKiB": 16368.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5481025,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 5788596,
+          "loopNs": 70,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 307481,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13473282,
+          "peakRssKiB": 19864,
+          "lastObservedRssKiB": 19864,
+          "lateLoopMedianRssKiB": 17216.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5915261,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 6424907,
+          "loopNs": 50,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 509556,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13375911,
+          "peakRssKiB": 19440,
+          "lastObservedRssKiB": 19440,
+          "lateLoopMedianRssKiB": 16410.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5493238,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 5786593,
+          "loopNs": 70,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 293275,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13280194,
+          "peakRssKiB": 19624,
+          "lastObservedRssKiB": 15004,
+          "lateLoopMedianRssKiB": 15822.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5566374,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 5900253,
+          "loopNs": 70,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 333789,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13507796,
+          "peakRssKiB": 19840,
+          "lastObservedRssKiB": 19840,
+          "lateLoopMedianRssKiB": 17320.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "artifactBytes": 1200379,
+          "artifactSha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+          "checksum": "14650fb0739d0383",
+          "deserializeNs": 5569719,
+          "iterations": 0,
+          "keyCounts": [
+            47828,
+            146229
+          ],
+          "loadNs": 5882059,
+          "loopNs": 80,
+          "mode": "exact",
+          "nsPerOperation": null,
+          "operations": 0,
+          "readNs": 312219,
+          "residentStructureBytes": 1600601,
+          "scope": "inference-only probe: loads one serialized artifact, frees the raw file bytes and keeps only the loaded structure until exit; no dictionaries, corpora or training lists are read. loadNs = read + deserialize; OS page-cache state is unknown. RSS is not measured here: measure this process externally.",
+          "syntheticKeys": 64
+        },
+        "observer": {
+          "childWallNs": 13449738,
+          "peakRssKiB": 19784,
+          "lastObservedRssKiB": 19784,
+          "lateLoopMedianRssKiB": 17384.0,
+          "samples": 6,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      }
+    ],
+    "freshProcessWallMedianNs": 13375911,
+    "freshProcessLoadMedianNs": 5882059,
+    "cache": "filesystem cache not flushed; fresh process, not guaranteed cold OS cache",
+    "rssScope": "actual predictor child RSS including shared libraries, not incremental memory; late-loop median after raw input bytes freed; peak includes loading/validation"
+  }
+}

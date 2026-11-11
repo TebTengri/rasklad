@@ -36,6 +36,9 @@ def main():
     raw = decoder.decompress(compressed, max_length=32 * 1024 * 1024 + 1)
     if len(raw) > 32 * 1024 * 1024 or not decoder.eof or decoder.unused_data:
         raise ValueError('invalid or oversized compressed stream')
+    record_lines = raw.count(b'\n') + (0 if raw.endswith(b'\n') else 1)
+    if record_lines > 250000:
+        raise ValueError('record count limit exceeded')
     rows = raw.decode('utf-8').splitlines()
     prepared = []
     ids = set()
