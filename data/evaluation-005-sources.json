@@ -10,8 +10,18 @@
     "new_external_corpus": false,
     "templates": "synthetic literal prefix lists from protocol; not naturally sampled text"
   },
-  "features": null,
-  "labels": null,
+  "features": {
+    "path": "build/experiment-005-data/features.tsv",
+    "sha256": "63744c5b9e4fafc60d0705395cd81fa9c6da08fabd449bc0dfcf74651195c1fa",
+    "bytes": 181231,
+    "rows": 3952
+  },
+  "labels": {
+    "path": "build/experiment-005-data/labels.jsonl",
+    "sha256": "a543b47752023c265f68b0df9f5db76f0b3b6b0022a7f392321c05373828d369",
+    "bytes": 974894,
+    "rows": 3952
+  },
   "notices": [
     {
       "notice": "data/notices/CONTEXT-005-REVIEW.md",
@@ -37,5 +47,18 @@
       "notice": "data/notices/Hunspell-license.myspell.txt",
       "notice_sha256": "dcda061adeed22b26f276c01ec374f930789ae0d684e5aa8f8be309dd680ff20"
     }
-  ]
+  ],
+  "selection_summary": {
+    "ambiguityKeys": 95,
+    "ambiguityKeyPartitions": {
+      "development": 37,
+      "holdout": 58
+    },
+    "ambiguityLongKeys": 5,
+    "controlKeysPerSplitLanguage": 12,
+    "tokenBaselineRowsIndependentlyMatched": 286,
+    "rows": 3952,
+    "keyGroupOverlap": 0,
+    "anchorVocabularyOverlap": 0
+  }
 }
