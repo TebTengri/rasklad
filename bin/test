@@ -29,5 +29,17 @@ done
 # Тесты не требуют GUI, внешних словарей и корпуса; запускаются из каталога сборки.
 (cd -- "${test_dir}" && "${test_bin}" "$@")
 (cd -- "${detector_dir}" && "${detector_bin}" "$@")
-cd -- "${benchmark_dir}"
-exec "${benchmark_bin}" "$@"
+(cd -- "${benchmark_dir}" && "${benchmark_bin}" "$@")
+
+if pkg-config --exists hunspell; then
+    morphology_dir="${build_dir}/tests/morphology"
+    morphology_bin="${morphology_dir}/morphology_tests"
+    if [[ ! -x "${morphology_bin}" ]]; then
+        echo "bin/test: morphology_tests не собран при доступной Hunspell" >&2
+        exit 1
+    fi
+    cd -- "${morphology_dir}"
+    exec "${morphology_bin}" "$@"
+else
+    echo "bin/test: morphology_tests пропущен — pkg-config hunspell недоступен" >&2
+fi
