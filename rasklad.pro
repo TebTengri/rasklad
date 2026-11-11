@@ -31,6 +31,13 @@ packagesExist(hunspell) {
     morphology_benchmark.file = tools/morphology_benchmark.pro
     morphology_benchmark.makefile = Makefile.morphology_benchmark
     morphology_benchmark.depends = core
+    # Опыт 004 (SYS-236): developer-only per-case CLI и его синтетические тесты.
+    SUBDIRS += domain_tests domain_decisions
+    domain_tests.file = tests/domain/domain_tests.pro
+    domain_tests.depends = core
+    domain_decisions.file = tools/domain_decisions.pro
+    domain_decisions.makefile = Makefile.domain_decisions
+    domain_decisions.depends = core
 } else {
-    message("rasklad: pkg-config hunspell not found; SYS-235 morphology targets are skipped")
+    message("rasklad: pkg-config hunspell not found; SYS-235/236 morphology and domain targets are skipped")
 }
