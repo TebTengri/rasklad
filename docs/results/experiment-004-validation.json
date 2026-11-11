@@ -1,0 +1,13 @@
+{
+  "negativeCliChecks": 15,
+  "wallSeconds": 1.0674880860024132,
+  "networkNamespace": true,
+  "projectReadOnly": true,
+  "homeAndNeighborsMounted": false,
+  "qtTestsPassed": 463,
+  "pythonTestsPassed": 12,
+  "independentRowsMatched": 82712,
+  "allNinePoliciesMatched": true,
+  "all27LanguageBudgetVerdictsMatched": true,
+  "sourceCandidateMetadataExportPreservedCaseHash": true
+}

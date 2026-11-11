@@ -42,3 +42,5 @@
 Справочные первичные источники: [Creative Commons: данные и лицензии](https://creativecommons.org/faq/), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
 Для опыта 003 отдельно проверены .aff EN/RU и Hunspell 1.7.5: data/morphology-003-sources.json и data/notices/MORPHOLOGY-003-REVIEW.md. Разрешён только локальный контроль spell и PFX/SFX-ablation с сохранением остальных байтов, notices и пометки модификаций. Новые данные/библиотека не добавлены в пакет. Новый отложенный блок того же Tatoeba snapshot используется только для оценки; это не новый жанр и не разрешение на пользовательскую историю.
+
+Для опыта004 отдельно допущены pinned EN/RU Markdown главы Rust Book только для local evaluation: data/evaluation-004-sources.json и data/notices/TECHNICAL-004-REVIEW.md. Сохранены полные первичные notices; candidate path metadata опубликованы отдельно для replay, исходные тексты и case/action TSV только в build/. Нет обучения или разрешения на выпуск данных/моделей. Oracle code-protection не является подтверждением безопасного системного контекста.

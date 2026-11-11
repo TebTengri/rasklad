@@ -38,8 +38,16 @@ if pkg-config --exists hunspell; then
         echo "bin/test: morphology_tests не собран при доступной Hunspell" >&2
         exit 1
     fi
+    # SYS-236: синтетические тесты helper'ов опыта 004 (без корпуса и Hunspell-вызовов).
+    domain_dir="${build_dir}/tests/domain"
+    domain_bin="${domain_dir}/domain_tests"
+    if [[ ! -x "${domain_bin}" ]]; then
+        echo "bin/test: domain_tests не собран при доступной Hunspell" >&2
+        exit 1
+    fi
+    (cd -- "${domain_dir}" && "${domain_bin}" "$@")
     cd -- "${morphology_dir}"
     exec "${morphology_bin}" "$@"
 else
-    echo "bin/test: morphology_tests пропущен — pkg-config hunspell недоступен" >&2
+    echo "bin/test: morphology_tests и domain_tests пропущены — pkg-config hunspell недоступен" >&2
 fi
