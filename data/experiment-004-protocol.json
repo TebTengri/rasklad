@@ -14,7 +14,7 @@
         "1bec6512e7475b20919b6266dc8596ba71298ff9"
       ]
     },
-    "candidates": "blob paths matching ^src/ch[0-9]{2}[^/]*[.]md$; exclude no content based on detector outcomes",
+    "candidates": "EN blob paths matching ^src/ch[0-9]{2}[^/]*[.]md$; RU ^rustbook-ru/src/ch[0-9]{2}[^/]*[.]md$; exclude no content based on detector outcomes",
     "ranking": "SHA256(UTF8(rasklad-SYS-236-doc-v1)+NUL+UTF8(path)); unsigned digest then path",
     "take_per_language": 20,
     "max_source_bytes": 1048576

@@ -13,3 +13,5 @@ SYS-236, 2026-11-11. Полный [протокол](../data/experiment-004-prot
 D1: confirmation уменьшает unsafe против full ценой recoveries; равенство → inconclusive. D2: fallback даёт paired recoveries сверх full с обязательным учётом added false/ambiguous/code changes. D3: protection предотвращает >0 protected changes без изменения prose; если raw changes отсутствуют, выигрыш не доказан. D4: screen всех вариантов pass/fail/insufficient без подбора победного порога. Нового жанра недостаточно для допуска автоматического ввода; этот test после опыта становится диагностическим.
 
 Claude пишет C++; Codex готовит данные, независимо проверяет и публикует агрегаты. Никаких изменений ввода, системы, автозапуска и истории; source/derived/model только ignored build/. Публичны только код, паспорта, notices и агрегаты.
+
+Уточнение путей до corpus access: дерево RU хранит перевод в rustbook-ru/src/, а не в src/. Regex уточнён только по metadata списка путей; chapter contents и outcomes ещё не получены. Выбор — hash полного пути, те же 20 файлов на язык.
