@@ -1,0 +1,462 @@
+{
+  "schema_version": 1,
+  "status": "approved-local-evaluation",
+  "scope": "local-evaluation-only",
+  "release_approved": false,
+  "protocol_sha256": "9e1c9a17f9eb1ca1eb1f19643ae987bf98e2ed610611d12aaf2168964cf603e2",
+  "repositories": {
+    "en": {
+      "repository": "rust-lang/book",
+      "commit": "2771df165f092a4fbb9f46b5b2e7450f19010adb",
+      "treeSha256": "50bf261375bcc5859577636c83af637f6ae652ff55c3c778c4d050b13eb7fc65"
+    },
+    "ru": {
+      "repository": "rust-lang-ru/book",
+      "commit": "1bec6512e7475b20919b6266dc8596ba71298ff9",
+      "treeSha256": "1168c34016979ec5520ff7f90b88f974f63dbd44c74e58586adbbca1d94cf51f"
+    }
+  },
+  "documents": [
+    {
+      "index": 0,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch11-02-running-tests.md",
+      "upstream_path": "src/ch11-02-running-tests.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch11-02-running-tests.md",
+      "sha256": "4c2cbb5c746e0c91c91d40b178025135bf126175c957110f0fa4368613388960",
+      "bytes": 8133,
+      "git_blob_sha1": "788ff64596763a1686478f0bb9fe5d3ff6ed3d05"
+    },
+    {
+      "index": 1,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch19-02-refutability.md",
+      "upstream_path": "src/ch19-02-refutability.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch19-02-refutability.md",
+      "sha256": "815644eaa08948e0adb23fe62c64d1359cd1f6eddbb923af294f7028f5b9e5e2",
+      "bytes": 4380,
+      "git_blob_sha1": "8c71a330e40f8e0f85f9de5c19787659276b8be4"
+    },
+    {
+      "index": 2,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch05-01-defining-structs.md",
+      "upstream_path": "src/ch05-01-defining-structs.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch05-01-defining-structs.md",
+      "sha256": "344424e680093f9fd0291e895cd1002c5645a769d3b928de541d78148b93caa7",
+      "bytes": 13693,
+      "git_blob_sha1": "66da9389568e8505e5cfd2611a087d251e7e273b"
+    },
+    {
+      "index": 3,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch03-02-data-types.md",
+      "upstream_path": "src/ch03-02-data-types.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch03-02-data-types.md",
+      "sha256": "edd88c0a5be94e0b804d01121bab8d70f6732d75bfc988052d855e8b44920a90",
+      "bytes": 17272,
+      "git_blob_sha1": "b95f01913d25096145df62f13cd67b903fa2d11b"
+    },
+    {
+      "index": 4,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch03-04-comments.md",
+      "upstream_path": "src/ch03-04-comments.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch03-04-comments.md",
+      "sha256": "82b0aac1db631041ec36dc64c6eb115c2a34e0deb062464ee0ed86203b044372",
+      "bytes": 1529,
+      "git_blob_sha1": "fdcdbd48a1f6b3fe2764f1ee3828dbbaf3acc6d8"
+    },
+    {
+      "index": 5,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch01-02-hello-world.md",
+      "upstream_path": "src/ch01-02-hello-world.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch01-02-hello-world.md",
+      "sha256": "645189892417cf5431fafb29c4e9b413db2c8cb07fb99e993efaf3c3e9d7a143",
+      "bytes": 7690,
+      "git_blob_sha1": "a70b2db6d39201822c1e77379dca127d19e446d2"
+    },
+    {
+      "index": 6,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch11-00-testing.md",
+      "upstream_path": "src/ch11-00-testing.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch11-00-testing.md",
+      "sha256": "c65a2080c43a9f3d83a351779e059c6203b2c48285835c9fd277f7465fbd5192",
+      "bytes": 1987,
+      "git_blob_sha1": "110d3d28b1b00fadb441a4a38aa9ab6fb1fb926a"
+    },
+    {
+      "index": 7,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch01-03-hello-cargo.md",
+      "upstream_path": "src/ch01-03-hello-cargo.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch01-03-hello-cargo.md",
+      "sha256": "61369f359b84b646fc3773eb569a26bc18ba6edb4cf2be06a84472c7054c0e39",
+      "bytes": 11025,
+      "git_blob_sha1": "70898e1180cd0c7a5af47e81809bee08b358bb49"
+    },
+    {
+      "index": 8,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch20-05-macros.md",
+      "upstream_path": "src/ch20-05-macros.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch20-05-macros.md",
+      "sha256": "403fb3429c4c11ef118a31477aae7ce73cfcc0a2776289faac1a797c7f57f173",
+      "bytes": 24927,
+      "git_blob_sha1": "6d2e48f5a295d1d7d774e422eebce4def3431bca"
+    },
+    {
+      "index": 9,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch15-00-smart-pointers.md",
+      "upstream_path": "src/ch15-00-smart-pointers.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch15-00-smart-pointers.md",
+      "sha256": "adf324198a3eb791ba5828cee69a201f3f2e6f8493280bfb5c897e8b50fca0f1",
+      "bytes": 2687,
+      "git_blob_sha1": "8e0c0e89d8335a5233614edd6606b25969a5c9dc"
+    },
+    {
+      "index": 10,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch17-06-futures-tasks-threads.md",
+      "upstream_path": "src/ch17-06-futures-tasks-threads.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch17-06-futures-tasks-threads.md",
+      "sha256": "1d6018f020d01dc2f9d460765e995e587025029ef66c41a64b98dd61926b74cd",
+      "bytes": 5828,
+      "git_blob_sha1": "a2d801c0f32c382613cee30fb8b4d5ab692a49cd"
+    },
+    {
+      "index": 11,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch12-05-working-with-environment-variables.md",
+      "upstream_path": "src/ch12-05-working-with-environment-variables.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch12-05-working-with-environment-variables.md",
+      "sha256": "83185725d64339fa71448b45152abf9cc2c5efb33db6aacda25de9d5b7b456b5",
+      "bytes": 9541,
+      "git_blob_sha1": "39c3dade8ac1624c43ad1afb8291445480d70efc"
+    },
+    {
+      "index": 12,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch18-03-oo-design-patterns.md",
+      "upstream_path": "src/ch18-03-oo-design-patterns.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch18-03-oo-design-patterns.md",
+      "sha256": "2f87e2bda9a748c973642b0c7f9ded2ac0467059a708aecabe7bd11e08eb305a",
+      "bytes": 28054,
+      "git_blob_sha1": "e6e5943861596eece465934879b5793969446b84"
+    },
+    {
+      "index": 13,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch17-04-streams.md",
+      "upstream_path": "src/ch17-04-streams.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch17-04-streams.md",
+      "sha256": "b494f9019a1e9a79992db4c056377995227764d2822bb8cd0f86d51ce4a08655",
+      "bytes": 5159,
+      "git_blob_sha1": "b7cb2f543f4026744e0a419521430fbb41b574fa"
+    },
+    {
+      "index": 14,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch10-02-traits.md",
+      "upstream_path": "src/ch10-02-traits.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch10-02-traits.md",
+      "sha256": "705ae11758c687175e47104a302a9b5f694d04d683bffc28dcc61ffe9a0dc80e",
+      "bytes": 18682,
+      "git_blob_sha1": "1698cda0d3eeba1fb6197887316d0fa62cab445e"
+    },
+    {
+      "index": 15,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch10-00-generics.md",
+      "upstream_path": "src/ch10-00-generics.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch10-00-generics.md",
+      "sha256": "d020e896ebc0b986fcddcbab0511462ebb9e4ca4b6ebdb456b2993041f2614af",
+      "bytes": 5738,
+      "git_blob_sha1": "7e1055fdc6da7151589d119a142a8b9236782107"
+    },
+    {
+      "index": 16,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch05-00-structs.md",
+      "upstream_path": "src/ch05-00-structs.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch05-00-structs.md",
+      "sha256": "f868f22d0149966b0d0b7191ce20318bf12981275cb0e393dbcd52caaab8b173",
+      "bytes": 859,
+      "git_blob_sha1": "4c0f7d35b9ffd406cf16fcc52542c49ad1991d22"
+    },
+    {
+      "index": 17,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch13-04-performance.md",
+      "upstream_path": "src/ch13-04-performance.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch13-04-performance.md",
+      "sha256": "200b43a32e2bef5de723b6211bb0e6b6ca01461093ccb5c277bad1954bad0de0",
+      "bytes": 2871,
+      "git_blob_sha1": "cdc2f98fd4dde99c752d4ce636354a1a30a22628"
+    },
+    {
+      "index": 18,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch19-00-patterns.md",
+      "upstream_path": "src/ch19-00-patterns.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch19-00-patterns.md",
+      "sha256": "6fcb23c2cc53ff1a4ea10ae3ba914a75678fa6b3cfc56645b22b1893b4fabb6d",
+      "bytes": 1436,
+      "git_blob_sha1": "ad6976ca77f9ecdaa50628acacd3dcd2eed6d635"
+    },
+    {
+      "index": 19,
+      "language": "en",
+      "path": "build/experiment-004-data/raw/en/ch06-01-defining-an-enum.md",
+      "upstream_path": "src/ch06-01-defining-an-enum.md",
+      "url": "https://raw.githubusercontent.com/rust-lang/book/2771df165f092a4fbb9f46b5b2e7450f19010adb/src/ch06-01-defining-an-enum.md",
+      "sha256": "d0958df229fd25f89f140896449ce69bbd6f40db8398a99e4a53635dba0438f2",
+      "bytes": 15757,
+      "git_blob_sha1": "74e460d1e464693be3c7b9246b38d66489aa0aae"
+    },
+    {
+      "index": 20,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch07-02-defining-modules-to-control-scope-and-privacy.md",
+      "upstream_path": "rustbook-ru/src/ch07-02-defining-modules-to-control-scope-and-privacy.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch07-02-defining-modules-to-control-scope-and-privacy.md",
+      "sha256": "b8c88fea17e69daef7a149c1f78fb9add87e034a0855d91c45b37ae3671f726c",
+      "bytes": 13682,
+      "git_blob_sha1": "8146d75cd310327d277452a632079ce4b72352cb"
+    },
+    {
+      "index": 21,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch16-04-extensible-concurrency-sync-and-send.md",
+      "upstream_path": "rustbook-ru/src/ch16-04-extensible-concurrency-sync-and-send.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch16-04-extensible-concurrency-sync-and-send.md",
+      "sha256": "0fe17eed6a5d0070eb7e392c15ec6edf2e803d1e6dbcd30837e3dd9e63506ef1",
+      "bytes": 8797,
+      "git_blob_sha1": "dbbd0ba49a5074df9bacbd1322c9b6c451939196"
+    },
+    {
+      "index": 22,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch07-01-packages-and-crates.md",
+      "upstream_path": "rustbook-ru/src/ch07-01-packages-and-crates.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch07-01-packages-and-crates.md",
+      "sha256": "4a1a706ae44ac0044b1c87a09e78e53534aa995f2a1545950994aa503f616701",
+      "bytes": 6828,
+      "git_blob_sha1": "03a2fc130ac6893f459736c08547d03ae0e4b022"
+    },
+    {
+      "index": 23,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch01-00-getting-started.md",
+      "upstream_path": "rustbook-ru/src/ch01-00-getting-started.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch01-00-getting-started.md",
+      "sha256": "8060caf2bb4627e3bd925298eb1036b0f5f8b62972c97c234706b5ba1ed4f69f",
+      "bytes": 531,
+      "git_blob_sha1": "1a47499d76b1cd7ae26b98acb34821d601146ed7"
+    },
+    {
+      "index": 24,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch17-00-oop.md",
+      "upstream_path": "rustbook-ru/src/ch17-00-oop.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch17-00-oop.md",
+      "sha256": "fff0d1db1ea5d3500c93dfd4521a4fbe74b26f29565f4e1dae99fcfb62f45d81",
+      "bytes": 1751,
+      "git_blob_sha1": "bc71f9e0a77def63ab74d8ab437d66c89c9268b7"
+    },
+    {
+      "index": 25,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch15-00-smart-pointers.md",
+      "upstream_path": "rustbook-ru/src/ch15-00-smart-pointers.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch15-00-smart-pointers.md",
+      "sha256": "645b0e3233b1bfa371152ec11a83bdc4572dff995f044774f2063e95f3caf280",
+      "bytes": 5984,
+      "git_blob_sha1": "9f45c433dea9210a77ff70de53d9dfad5ab7a0d6"
+    },
+    {
+      "index": 26,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch01-02-hello-world.md",
+      "upstream_path": "rustbook-ru/src/ch01-02-hello-world.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch01-02-hello-world.md",
+      "sha256": "74122731598766efbb599960a8dd889b248ddeaf8e94a0bed58a2ed1e3e0c20f",
+      "bytes": 12378,
+      "git_blob_sha1": "cf20cd6771f284ef997c5da7a16546de86dd8e69"
+    },
+    {
+      "index": 27,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch20-02-slow-requests.md",
+      "upstream_path": "rustbook-ru/src/ch20-02-slow-requests.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch20-02-slow-requests.md",
+      "sha256": "40b5f9f6999a35f16a30b6ce4addbfe4bd199d3f4b4f46b61c856181025db79a",
+      "bytes": 8411,
+      "git_blob_sha1": "596a1b75050c96c6aa8fc181d97d2b487d2cf256"
+    },
+    {
+      "index": 28,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch15-02-deref.md",
+      "upstream_path": "rustbook-ru/src/ch15-02-deref.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch15-02-deref.md",
+      "sha256": "9eecc4f0dba4e6dda45e4c4421d7adcc8ca8089579c70c65039489adca43afc3",
+      "bytes": 23924,
+      "git_blob_sha1": "003156d1ee9b1ba602a0b565489f5e23f0b56737"
+    },
+    {
+      "index": 29,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch13-00-functional-features.md",
+      "upstream_path": "rustbook-ru/src/ch13-00-functional-features.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch13-00-functional-features.md",
+      "sha256": "1649e901ef8ff1aa30af6b784e434d3649ebdea6afd9f31140d60486536020ff",
+      "bytes": 2357,
+      "git_blob_sha1": "68904f1c6ebc91cd48997090f949f7038abbefc1"
+    },
+    {
+      "index": 30,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch12-06-writing-to-stderr-instead-of-stdout.md",
+      "upstream_path": "rustbook-ru/src/ch12-06-writing-to-stderr-instead-of-stdout.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch12-06-writing-to-stderr-instead-of-stdout.md",
+      "sha256": "bf2427306790c7ab1db80bc98d79ff178d621b1c945a449b288a5abb884d96f7",
+      "bytes": 7851,
+      "git_blob_sha1": "6742bc83656b72a8d14c54602b6101ed79ccae59"
+    },
+    {
+      "index": 31,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch19-03-advanced-traits.md",
+      "upstream_path": "rustbook-ru/src/ch19-03-advanced-traits.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch19-03-advanced-traits.md",
+      "sha256": "598dff10fea5db5b024ba5d583ca59b45f22930488017b4d82c297185089fc41",
+      "bytes": 35500,
+      "git_blob_sha1": "602274d56b4b1b61c3de779a0cb7b648286c22fe"
+    },
+    {
+      "index": 32,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch19-00-advanced-features.md",
+      "upstream_path": "rustbook-ru/src/ch19-00-advanced-features.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch19-00-advanced-features.md",
+      "sha256": "604723f240675902a73aee2775b61a9d561e22d571cd97fa66c8c3402ba08365",
+      "bytes": 2246,
+      "git_blob_sha1": "1019b1b7ea569c834e5ef5dab8ccd7cdd87561ec"
+    },
+    {
+      "index": 33,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch15-01-box.md",
+      "upstream_path": "rustbook-ru/src/ch15-01-box.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch15-01-box.md",
+      "sha256": "8d80830a047da442623ced9cf00db910d3b8ef3cdbba2ad803d90826d096e30a",
+      "bytes": 21872,
+      "git_blob_sha1": "8be84c5bafa27d67eddb84e961a435b1249882c5"
+    },
+    {
+      "index": 34,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch06-00-enums.md",
+      "upstream_path": "rustbook-ru/src/ch06-00-enums.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch06-00-enums.md",
+      "sha256": "7518bf4df30f45ca976260e1a8584c0f6beac540577351b3c311db993e46195d",
+      "bytes": 1268,
+      "git_blob_sha1": "30d0d1b4849246eba31a411ef9e9d26d7afc4484"
+    },
+    {
+      "index": 35,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch12-02-reading-a-file.md",
+      "upstream_path": "rustbook-ru/src/ch12-02-reading-a-file.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch12-02-reading-a-file.md",
+      "sha256": "b0982a9787bd87bbbe7fe366d318c111c8e00b01bd662a412557ccb2e05addd0",
+      "bytes": 4112,
+      "git_blob_sha1": "1d18b36c1f5b6803a0e155a6e0c2d83e5a31cb82"
+    },
+    {
+      "index": 36,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch03-02-data-types.md",
+      "upstream_path": "rustbook-ru/src/ch03-02-data-types.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch03-02-data-types.md",
+      "sha256": "dbbb1497790fd802995da4792bfa1b80a43aba4f900f611d0c482c35cd16c419",
+      "bytes": 28983,
+      "git_blob_sha1": "7416c48083ccd5acb27f8fac6ba14a798930006d"
+    },
+    {
+      "index": 37,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch08-02-strings.md",
+      "upstream_path": "rustbook-ru/src/ch08-02-strings.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch08-02-strings.md",
+      "sha256": "cfe8d1c4dbba4ec9cbcb279bf0a4b86338fd746ec564d18f3735fff8f20e8fe7",
+      "bytes": 29876,
+      "git_blob_sha1": "2f6ac9518ccc5f3b7cfe838169c5554d65bcc3a5"
+    },
+    {
+      "index": 38,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch14-00-more-about-cargo.md",
+      "upstream_path": "rustbook-ru/src/ch14-00-more-about-cargo.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch14-00-more-about-cargo.md",
+      "sha256": "dfd212bdb96eebba803c34b1bae05c333c13bff93cfb298e0320b5c50f1cc4bd",
+      "bytes": 1309,
+      "git_blob_sha1": "16edde5e96dd4e2734ecfd1f7e16e355c83b376a"
+    },
+    {
+      "index": 39,
+      "language": "ru",
+      "path": "build/experiment-004-data/raw/ru/ch03-04-comments.md",
+      "upstream_path": "rustbook-ru/src/ch03-04-comments.md",
+      "url": "https://raw.githubusercontent.com/rust-lang-ru/book/1bec6512e7475b20919b6266dc8596ba71298ff9/rustbook-ru/src/ch03-04-comments.md",
+      "sha256": "ffe78db086bee3279a82f2989bb729fdf0c7c813ba8cdfb12b366ffb192e9203",
+      "bytes": 2484,
+      "git_blob_sha1": "4b5fac44d5a388ac5aecd7a7580584cac49dc568"
+    }
+  ],
+  "notices": [
+    {
+      "notice": "data/notices/RustBook-en-LICENSE-MIT.txt",
+      "notice_sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    {
+      "notice": "data/notices/RustBook-en-LICENSE-APACHE.txt",
+      "notice_sha256": "0f2763086f981043fb18879abfa15e75ecfc188219ef9eba4483f45ce7438e1c"
+    },
+    {
+      "notice": "data/notices/RustBook-en-COPYRIGHT.txt",
+      "notice_sha256": "5acc946020b533f2ebfbbc87a35e56ab05dd48c269675cf20e289e0357e27fe8"
+    },
+    {
+      "notice": "data/notices/RustBook-ru-LICENSE-MIT.txt",
+      "notice_sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    {
+      "notice": "data/notices/RustBook-ru-LICENSE-APACHE.txt",
+      "notice_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    {
+      "notice": "data/notices/RustBook-ru-COPYRIGHT.txt",
+      "notice_sha256": "48693c3dcfa04729482e9bfc00cb8c248e4e94caff295441fee7d9b12d7030b3"
+    },
+    {
+      "notice": "data/notices/TECHNICAL-004-REVIEW.md",
+      "notice_sha256": "b8faf8d4046606f05c0c8ad13f69452101217c709d706129f1389341e98d9e63"
+    }
+  ],
+  "limitations": [
+    "technical textbook, not user typing",
+    "RU and EN are correlated translations/topics",
+    "selected files only; no includes, dependencies or source code executed"
+  ],
+  "cases": {
+    "path": "build/experiment-004-data/cases.tsv",
+    "sha256": "17e6f078256fc0cd9d306b52900aa65cf5f66ec6af296dcea53ae00ac138c480",
+    "bytes": 2657598,
+    "rows": 82712
+  }
+}
