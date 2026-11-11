@@ -13,7 +13,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/prepare_technical_evaluation.py \
     --manifest /absolute/project/path/data/evaluation-004-sources.json
 ```
 
-Скрипт принимает только паспорт этого проекта, проверяет точный hash протокола, tree selection, все source hashes/Git blobs; создаёт только новый `build/experiment-004-data/cases.tsv`, обновляет в паспорте только cases ref. В уже подготовленном публичном паспорте ref заполнен: для replay восстановить исходные байты по хешам и создать локальную рабочую копию паспорта с `cases:null` на отдельной ветке, затем проверить полученный ref с опубликованным. Подготовка повторно не перезаписывает существующие cases.
+Скрипт принимает только паспорт этого проекта, проверяет точный hash протокола, selection из опубликованного candidate pool, все source hashes/Git blobs; создаёт только новый `build/experiment-004-data/cases.tsv`, обновляет в паспорте только cases ref. В уже подготовленном публичном паспорте ref заполнен: для replay восстановить исходные байты по хешам и создать локальную рабочую копию паспорта с `cases:null` на отдельной ветке, затем проверить полученный ref с опубликованным. Подготовка повторно не перезаписывает существующие cases.
 
 Bounded source <=1MiB, cases <=64MiB/500000 rows. Шесть TSV полей: document index0..39, document language en/ru, role valid/protected/wrong, typed layout us/ru, text, expected. Строки LF, strict UTF-8; text/expected <=4096UTF16. Expected равен text для valid/protected; wrong обратным преобразованием обязан восстановить expected, native-letter-only длиной1..32. Сам TSV содержит слова и остаётся только в build/.
 
@@ -48,11 +48,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/summarize_technical_evaluation.py \
     --manifest data/evaluation-004-sources.json \
     --decisions build/experiment-004-actions.tsv \
     --output build/experiment-004.json
+PYTHONDONTWRITEBYTECODE=1 python3 tools/audit_technical_aggregates.py \
+    --report build/experiment-004.json --audit build/experiment-004-audit.json
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/technical -p 'test_*.py'
 ```
+
+Вывод audit можно сохранить в build/experiment-004-audit.json (только aggregate counters). Дополнительный audit_technical_aggregates.py сверяет primary counters и все27 verdicts.
 
 Audit получает ANSI base/Shift mapping из установленного XKB us/ru через libxkbcommon, отдельно вычисляет canonical keys, ngram scores, routing и code gate, сверяет каждую строку и обратимость. Hunspell backend тот же через ctypes: это независимая проверка драйвера, не независимый лингвистический движок. Ни audit, ни report generator не подбирают параметры.
 
 Агрегаты: occurrences/exact-case types для языка документа, pooled и каждого из40 документов без имён/текстов; code/prose отдельно, false changes на подходящих словах, wrong recovery/ambiguity, парные добавленные и потерянные действия, document macro rates и все screen outcomes. Тип = (document language, role, typed layout, exact text); global types не складываются по документам, per-document types считаются локально. Срез языка относится к источнику, не гарантированному языку отдельного термина. Overlap с Tatoeba002/003 только диагностический, никогда не меняет набор или решения. Старый snapshot отдельно проверяется по старому паспорту.
 
 Исследовательский budget применён ко всем9 вариантам без выбора лучшего порога; отсутствие ошибок не доказывает безопасность. Нет IID confidence и оценки deployment precision. Для изолированного прогона используется внешняя bwrap оболочка с `--unshare-all`, read-only `/usr` и проектом, отдельными proc/dev/tmp и HOME=/tmp; home/соседние проекты не монтируются. CLI сам namespace не создаёт и сеть не использует.
+
+Для replay опубликован [candidate-only pool](../data/experiment-004-document-pool.json) с путями/Git blob IDs исходных pre-outcome деревьев. Это экспорт метаданных после оценки, без новых текстов/выбора; исходные hashes tree cache и выборка остаются в паспорте. Он позволяет не зависеть от будущего порядка JSON-полей GitHub API. Подготовка проверяет hash pool и заново ранжирует те же пути; производные case bytes повторно сверены с первоначальным SHA-256 без изменения корпуса или политик.

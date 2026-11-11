@@ -128,6 +128,10 @@ def audit(root, decisions_path):
     for i, (row, actual) in enumerate(zip(rows, decisions)):
         doc, language, role, source, text, expected = row.split('\t')
         layout = 0 if source == 'us' else 1
+        if role != 'wrong' and layout != int(any(ch.lower() in ru for ch in text)):
+            raise ValueError('reference script-layout oracle differs')
+        if language != m['documents'][int(doc)]['language']:
+            raise ValueError('reference document-language label differs')
         keys = canonical(text, layout)
         eligible = keys is not None and len(keys) >= 4
         ambiguous = keys is not None and keys in full[0] and keys in full[1]

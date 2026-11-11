@@ -1,0 +1,1046 @@
+{
+  "schema_version": 1,
+  "purpose": "candidate path metadata only; exported from pre-outcome cached Git trees, no source text",
+  "en": {
+    "repository": "rust-lang/book",
+    "commit": "2771df165f092a4fbb9f46b5b2e7450f19010adb",
+    "candidates": [
+      {
+        "path": "src/ch00-00-introduction.md",
+        "sha": "4dfa272fcc54d5c3707735fdf5ac1dc174f19704",
+        "size": 10839
+      },
+      {
+        "path": "src/ch01-00-getting-started.md",
+        "sha": "ccb10e884e8f05b98b9fa125c6f2e61d5a0eb4b0",
+        "size": 303
+      },
+      {
+        "path": "src/ch01-01-installation.md",
+        "sha": "a9e03f534aec9791f6b8200068376fa5678a576c",
+        "size": 6660
+      },
+      {
+        "path": "src/ch01-02-hello-world.md",
+        "sha": "a70b2db6d39201822c1e77379dca127d19e446d2",
+        "size": 7690
+      },
+      {
+        "path": "src/ch01-03-hello-cargo.md",
+        "sha": "70898e1180cd0c7a5af47e81809bee08b358bb49",
+        "size": 11025
+      },
+      {
+        "path": "src/ch02-00-guessing-game-tutorial.md",
+        "sha": "f118eb5455f20aa14128056733a0182869d816d8",
+        "size": 40398
+      },
+      {
+        "path": "src/ch03-00-common-programming-concepts.md",
+        "sha": "722a95fb11c24f6bb1b1e2f2f80cc00041ae13cd",
+        "size": 1183
+      },
+      {
+        "path": "src/ch03-01-variables-and-mutability.md",
+        "sha": "ed15afc0fd46a011578cdf41b3e4f03a5e3257fc",
+        "size": 9435
+      },
+      {
+        "path": "src/ch03-02-data-types.md",
+        "sha": "b95f01913d25096145df62f13cd67b903fa2d11b",
+        "size": 17272
+      },
+      {
+        "path": "src/ch03-03-how-functions-work.md",
+        "sha": "5f9e512da29756cecd3cc61ce8e4d2f653a75a43",
+        "size": 10772
+      },
+      {
+        "path": "src/ch03-04-comments.md",
+        "sha": "fdcdbd48a1f6b3fe2764f1ee3828dbbaf3acc6d8",
+        "size": 1529
+      },
+      {
+        "path": "src/ch03-05-control-flow.md",
+        "sha": "6bde6748fe27baf0aafcfb70b82b99ca340b06c7",
+        "size": 17064
+      },
+      {
+        "path": "src/ch04-00-understanding-ownership.md",
+        "sha": "52eda6a12f0a69dbbead2ac2b38818c401e25f88",
+        "size": 406
+      },
+      {
+        "path": "src/ch04-01-what-is-ownership.md",
+        "sha": "aa8fc61b00c415da53ce62396ee2ff49c4cb2bb6",
+        "size": 25352
+      },
+      {
+        "path": "src/ch04-02-references-and-borrowing.md",
+        "sha": "8c37601d57cfe6cd1c9c4fe51c48dee18cf2c711",
+        "size": 10608
+      },
+      {
+        "path": "src/ch04-03-slices.md",
+        "sha": "7f145baf1d943371c460b46996621b28418d9736",
+        "size": 13237
+      },
+      {
+        "path": "src/ch05-00-structs.md",
+        "sha": "4c0f7d35b9ffd406cf16fcc52542c49ad1991d22",
+        "size": 859
+      },
+      {
+        "path": "src/ch05-01-defining-structs.md",
+        "sha": "66da9389568e8505e5cfd2611a087d251e7e273b",
+        "size": 13693
+      },
+      {
+        "path": "src/ch05-02-example-structs.md",
+        "sha": "fe59bb402e7a1d62f94c272adbb9987ecd8e2779",
+        "size": 11585
+      },
+      {
+        "path": "src/ch05-03-method-syntax.md",
+        "sha": "fe0c7e3a2fea2340c79d557b198cb07fa94ae5bc",
+        "size": 12204
+      },
+      {
+        "path": "src/ch06-00-enums.md",
+        "sha": "982e62c2b4bc689d22535cdf4780fa21cc16d309",
+        "size": 670
+      },
+      {
+        "path": "src/ch06-01-defining-an-enum.md",
+        "sha": "74e460d1e464693be3c7b9246b38d66489aa0aae",
+        "size": 15757
+      },
+      {
+        "path": "src/ch06-02-match.md",
+        "sha": "e96ec79ba39867da137efd4d963cdcbb33dfeda1",
+        "size": 12595
+      },
+      {
+        "path": "src/ch06-03-if-let.md",
+        "sha": "06b517e2ae2b72e5c9e40c5ff9aae85d6dfa84d4",
+        "size": 6634
+      },
+      {
+        "path": "src/ch07-00-managing-growing-projects-with-packages-crates-and-modules.md",
+        "sha": "8c6d7fb6631495ef7f6e27bc32c95bfa0345fe99",
+        "size": 2970
+      },
+      {
+        "path": "src/ch07-01-packages-and-crates.md",
+        "sha": "63e6d4142655c9601083608ebb31655aece3303d",
+        "size": 3806
+      },
+      {
+        "path": "src/ch07-02-defining-modules-to-control-scope-and-privacy.md",
+        "sha": "5dc3197e8257b951f1c7af2a72cadf0aeeb5c880",
+        "size": 8018
+      },
+      {
+        "path": "src/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.md",
+        "sha": "d1249fc368f01c2310d834e5e7a646aa93a7d6c7",
+        "size": 15311
+      },
+      {
+        "path": "src/ch07-04-bringing-paths-into-scope-with-the-use-keyword.md",
+        "sha": "83820e2fee7945c9871f18c0613e4ef78d19ea1c",
+        "size": 13686
+      },
+      {
+        "path": "src/ch07-05-separating-modules-into-different-files.md",
+        "sha": "ed3f49f7b3246fdd3d3eb528c11cfe4152832c1d",
+        "size": 6077
+      },
+      {
+        "path": "src/ch08-00-common-collections.md",
+        "sha": "550ee2c0904e225aba46ba702b63dd69d46f5950",
+        "size": 1355
+      },
+      {
+        "path": "src/ch08-01-vectors.md",
+        "sha": "25b8f67bf76f9baf77712665f4b55e2543df291a",
+        "size": 11646
+      },
+      {
+        "path": "src/ch08-02-strings.md",
+        "sha": "7e73a9073e7d944474638577109eeecb116b897c",
+        "size": 17635
+      },
+      {
+        "path": "src/ch08-03-hash-maps.md",
+        "sha": "696216245f1274ffa97abb786235246628c5b1e2",
+        "size": 11627
+      },
+      {
+        "path": "src/ch09-00-error-handling.md",
+        "sha": "f32061c4ff6a2750b2b68ea768ea142f9e289663",
+        "size": 1378
+      },
+      {
+        "path": "src/ch09-01-unrecoverable-errors-with-panic.md",
+        "sha": "f74ad3206c0ece21e235117561c217ca9dfb590a",
+        "size": 8520
+      },
+      {
+        "path": "src/ch09-02-recoverable-errors-with-result.md",
+        "sha": "fa26509d7a910d71ca8080e11d87697565a37eaa",
+        "size": 26432
+      },
+      {
+        "path": "src/ch09-03-to-panic-or-not-to-panic.md",
+        "sha": "256c367f5fee96813bd3fee2abdc70044be4fcc7",
+        "size": 13532
+      },
+      {
+        "path": "src/ch10-00-generics.md",
+        "sha": "7e1055fdc6da7151589d119a142a8b9236782107",
+        "size": 5738
+      },
+      {
+        "path": "src/ch10-01-syntax.md",
+        "sha": "8a13a252e0ef1e5b65c50be39afe6fd7bf977483",
+        "size": 14580
+      },
+      {
+        "path": "src/ch10-02-traits.md",
+        "sha": "1698cda0d3eeba1fb6197887316d0fa62cab445e",
+        "size": 18682
+      },
+      {
+        "path": "src/ch10-03-lifetime-syntax.md",
+        "sha": "fc38d7415106494f003db0518bf8b4565c5e231a",
+        "size": 30935
+      },
+      {
+        "path": "src/ch11-00-testing.md",
+        "sha": "110d3d28b1b00fadb441a4a38aa9ab6fb1fb926a",
+        "size": 1987
+      },
+      {
+        "path": "src/ch11-01-writing-tests.md",
+        "sha": "e071b4c3295fe1689561a8236910a8b370bead09",
+        "size": 25511
+      },
+      {
+        "path": "src/ch11-02-running-tests.md",
+        "sha": "788ff64596763a1686478f0bb9fe5d3ff6ed3d05",
+        "size": 8133
+      },
+      {
+        "path": "src/ch11-03-test-organization.md",
+        "sha": "dad604f6d039e06b43c3ada875447411dfdbc476",
+        "size": 12716
+      },
+      {
+        "path": "src/ch12-00-an-io-project.md",
+        "sha": "67650f12de313c935c88f08b649d5e41f078c0fa",
+        "size": 2497
+      },
+      {
+        "path": "src/ch12-01-accepting-command-line-arguments.md",
+        "sha": "46f2f37f007f13bb2ce58740179e5abd55e4ab6f",
+        "size": 6275
+      },
+      {
+        "path": "src/ch12-02-reading-a-file.md",
+        "sha": "ce2eae5cc6a4741b2a04d2008acb24dea63c3a22",
+        "size": 2372
+      },
+      {
+        "path": "src/ch12-03-improving-error-handling-and-modularity.md",
+        "sha": "5d3db28dac75623cff6ed97d392deb9218792546",
+        "size": 25414
+      },
+      {
+        "path": "src/ch12-04-testing-the-librarys-functionality.md",
+        "sha": "b5b5e4d997d9998f561c02af070c0ff376270902",
+        "size": 9800
+      },
+      {
+        "path": "src/ch12-05-working-with-environment-variables.md",
+        "sha": "39c3dade8ac1624c43ad1afb8291445480d70efc",
+        "size": 9541
+      },
+      {
+        "path": "src/ch12-06-writing-to-stderr-instead-of-stdout.md",
+        "sha": "dcd55777b9ed90d04e842c23a07357a4ed2d5f83",
+        "size": 4451
+      },
+      {
+        "path": "src/ch13-00-functional-features.md",
+        "sha": "2ed6770a989450ecf392c5c173704ead53a317ce",
+        "size": 1242
+      },
+      {
+        "path": "src/ch13-01-closures.md",
+        "sha": "ecda1acff5cfecdcc955d1256c9f185e6b99dea4",
+        "size": 20936
+      },
+      {
+        "path": "src/ch13-02-iterators.md",
+        "sha": "cc51553dd90dd6d0b0707fc61740bf300d2c9ccc",
+        "size": 10151
+      },
+      {
+        "path": "src/ch13-03-improving-our-io-project.md",
+        "sha": "6bfeb97705ae85131e8813ba6d42c22ce188fda8",
+        "size": 9090
+      },
+      {
+        "path": "src/ch13-04-performance.md",
+        "sha": "cdc2f98fd4dde99c752d4ce636354a1a30a22628",
+        "size": 2871
+      },
+      {
+        "path": "src/ch14-00-more-about-cargo.md",
+        "sha": "59408b8e9a616b283ee6929c993109138b5a9256",
+        "size": 718
+      },
+      {
+        "path": "src/ch14-01-release-profiles.md",
+        "sha": "4bbb2d390a26d858bdaf0baaa77463216559dac5",
+        "size": 3018
+      },
+      {
+        "path": "src/ch14-02-publishing-to-crates-io.md",
+        "sha": "2af90dc9a1d97661731ea96c01910d1afc1b89f4",
+        "size": 21548
+      },
+      {
+        "path": "src/ch14-03-cargo-workspaces.md",
+        "sha": "16a1a26227eb3bca5a86c1875c08f0868bce75e4",
+        "size": 14191
+      },
+      {
+        "path": "src/ch14-04-installing-binaries.md",
+        "sha": "40fc633e6c4996545eb0e356d407ed6a545c365b",
+        "size": 2175
+      },
+      {
+        "path": "src/ch14-05-extending-cargo.md",
+        "sha": "b351d7fff72aa30500d733bd91f5ac691f87278b",
+        "size": 977
+      },
+      {
+        "path": "src/ch15-00-smart-pointers.md",
+        "sha": "8e0c0e89d8335a5233614edd6606b25969a5c9dc",
+        "size": 2687
+      },
+      {
+        "path": "src/ch15-01-box.md",
+        "sha": "723d2c9364b08b57a2f82ca0b1fdc06ca5121e4e",
+        "size": 13269
+      },
+      {
+        "path": "src/ch15-02-deref.md",
+        "sha": "7a8339602ae70f7075a56ddc6de32f97d89871f0",
+        "size": 14476
+      },
+      {
+        "path": "src/ch15-03-drop.md",
+        "sha": "58b244b77b7802b65bde6eb15e08657c762403ac",
+        "size": 7158
+      },
+      {
+        "path": "src/ch15-04-rc.md",
+        "sha": "9b5f7f86eb49d1937905a85ffd65922e4ba03f2a",
+        "size": 8911
+      },
+      {
+        "path": "src/ch15-05-interior-mutability.md",
+        "sha": "2bc04a770cbe1f4c5102dc1777c8064d5d5aa704",
+        "size": 18548
+      },
+      {
+        "path": "src/ch15-06-reference-cycles.md",
+        "sha": "1c11b02a4d206abe7f3d7d025528de2de2825bb7",
+        "size": 16080
+      },
+      {
+        "path": "src/ch16-00-concurrency.md",
+        "sha": "95b1562f1df7247d415a7a98b147f1675fe0c478",
+        "size": 3010
+      },
+      {
+        "path": "src/ch16-01-threads.md",
+        "sha": "6a1e3d40633dc1803a7ff5e1118695d27b746f3b",
+        "size": 12564
+      },
+      {
+        "path": "src/ch16-02-message-passing.md",
+        "sha": "75bb15724b89a474f3465ce4cab96ee420423b7f",
+        "size": 11867
+      },
+      {
+        "path": "src/ch16-03-shared-state.md",
+        "sha": "621f74b4089ac68353b5264b2ebbe098a668e8e0",
+        "size": 12519
+      },
+      {
+        "path": "src/ch16-04-extensible-concurrency-sync-and-send.md",
+        "sha": "a866b6174ff5d7a84eaa80c236f27634f3dea170",
+        "size": 5153
+      },
+      {
+        "path": "src/ch17-00-async-await.md",
+        "sha": "8564b1e41d1c701f6217c1321716625955f8c111",
+        "size": 9734
+      },
+      {
+        "path": "src/ch17-01-futures-and-syntax.md",
+        "sha": "4ac55c467a6174d2564abd5fd2e51423de65ef19",
+        "size": 19958
+      },
+      {
+        "path": "src/ch17-02-concurrency-with-async.md",
+        "sha": "783053702a2cb4b6dc584e77b7591c1fa1dbd2f2",
+        "size": 19550
+      },
+      {
+        "path": "src/ch17-03-more-futures.md",
+        "sha": "893385d585502a0d0e04b4fd9cfdedd639f7ecff",
+        "size": 10329
+      },
+      {
+        "path": "src/ch17-04-streams.md",
+        "sha": "b7cb2f543f4026744e0a419521430fbb41b574fa",
+        "size": 5159
+      },
+      {
+        "path": "src/ch17-05-traits-for-async.md",
+        "sha": "7f2b66bd4db768795ecd5e5c6531309efa4b51b7",
+        "size": 27754
+      },
+      {
+        "path": "src/ch17-06-futures-tasks-threads.md",
+        "sha": "a2d801c0f32c382613cee30fb8b4d5ab692a49cd",
+        "size": 5828
+      },
+      {
+        "path": "src/ch18-00-oop.md",
+        "sha": "b55c0cf0f30062ea13161654533636ca98fa92d8",
+        "size": 1004
+      },
+      {
+        "path": "src/ch18-01-what-is-oo.md",
+        "sha": "482c7fd756e6a63a137cf8d1230f991c78e9953f",
+        "size": 8203
+      },
+      {
+        "path": "src/ch18-02-trait-objects.md",
+        "sha": "aee4e1e1427cd3b749bb0168de6575cb81f0a08b",
+        "size": 13160
+      },
+      {
+        "path": "src/ch18-03-oo-design-patterns.md",
+        "sha": "e6e5943861596eece465934879b5793969446b84",
+        "size": 28054
+      },
+      {
+        "path": "src/ch19-00-patterns.md",
+        "sha": "ad6976ca77f9ecdaa50628acacd3dcd2eed6d635",
+        "size": 1436
+      },
+      {
+        "path": "src/ch19-01-all-the-places-for-patterns.md",
+        "sha": "1a6d21eb549669eb2bea087bb83cc101ff9630a4",
+        "size": 11039
+      },
+      {
+        "path": "src/ch19-02-refutability.md",
+        "sha": "8c71a330e40f8e0f85f9de5c19787659276b8be4",
+        "size": 4380
+      },
+      {
+        "path": "src/ch19-03-pattern-syntax.md",
+        "sha": "92a3cc40869ff5bca2a2f04d1315bd592f7364f9",
+        "size": 27808
+      },
+      {
+        "path": "src/ch20-00-advanced-features.md",
+        "sha": "6754bce3f198f1aa8be3af3febe18de1b3544ffe",
+        "size": 1178
+      },
+      {
+        "path": "src/ch20-01-unsafe-rust.md",
+        "sha": "12f9fb6f271d5f87f53847b183bfed6f135efab6",
+        "size": 28212
+      },
+      {
+        "path": "src/ch20-02-advanced-traits.md",
+        "sha": "a16d5c83477f68a68a9159fd4d68e05c214f321c",
+        "size": 22062
+      },
+      {
+        "path": "src/ch20-03-advanced-types.md",
+        "sha": "02e418f36b7ddcdc6a6a9fd76b13e3658399fa7a",
+        "size": 14390
+      },
+      {
+        "path": "src/ch20-04-advanced-functions-and-closures.md",
+        "sha": "72aa6a25b269afaa8572d11b5722363065c3df23",
+        "size": 8215
+      },
+      {
+        "path": "src/ch20-05-macros.md",
+        "sha": "6d2e48f5a295d1d7d774e422eebce4def3431bca",
+        "size": 24927
+      },
+      {
+        "path": "src/ch21-00-final-project-a-web-server.md",
+        "sha": "32cede1cc1241ce7e52f36ad16f85e8016fae1a5",
+        "size": 2123
+      },
+      {
+        "path": "src/ch21-01-single-threaded.md",
+        "sha": "fabac99ca447decb6924fe165f47035dafa6f35c",
+        "size": 21877
+      },
+      {
+        "path": "src/ch21-02-multithreaded.md",
+        "sha": "c13249556db26aa513844dcd27b759cafce4afdf",
+        "size": 33854
+      },
+      {
+        "path": "src/ch21-03-graceful-shutdown-and-cleanup.md",
+        "sha": "cfce45283bd2beabf69b5b21ca1f4225a7c37c8b",
+        "size": 10563
+      }
+    ]
+  },
+  "ru": {
+    "repository": "rust-lang-ru/book",
+    "commit": "1bec6512e7475b20919b6266dc8596ba71298ff9",
+    "candidates": [
+      {
+        "path": "rustbook-ru/src/ch00-00-introduction.md",
+        "sha": "7627894ba694cccd4868b85e13eed5267401a9b9",
+        "size": 18769
+      },
+      {
+        "path": "rustbook-ru/src/ch01-00-getting-started.md",
+        "sha": "1a47499d76b1cd7ae26b98acb34821d601146ed7",
+        "size": 531
+      },
+      {
+        "path": "rustbook-ru/src/ch01-00-introduction.md",
+        "sha": "46057883f9784fa6014e694339d035116c0ecbe9",
+        "size": 4306
+      },
+      {
+        "path": "rustbook-ru/src/ch01-01-installation.md",
+        "sha": "f0f3787663878d55a6a5e9eba30e35c838ec1a4c",
+        "size": 8770
+      },
+      {
+        "path": "rustbook-ru/src/ch01-02-hello-world.md",
+        "sha": "cf20cd6771f284ef997c5da7a16546de86dd8e69",
+        "size": 12378
+      },
+      {
+        "path": "rustbook-ru/src/ch01-03-hello-cargo.md",
+        "sha": "f021319be13b9378a9b406595b01328868643252",
+        "size": 18732
+      },
+      {
+        "path": "rustbook-ru/src/ch02-00-guessing-game-tutorial.md",
+        "sha": "0c63860182da579c3de424e1915768d745babfcb",
+        "size": 63489
+      },
+      {
+        "path": "rustbook-ru/src/ch03-00-common-programming-concepts.md",
+        "sha": "b78b0bdf42dcb3d79865ddd5b849ba6d474d3e8c",
+        "size": 2251
+      },
+      {
+        "path": "rustbook-ru/src/ch03-01-variables-and-mutability.md",
+        "sha": "b8b399599ef30fed18e9603d57ab878daab83fd5",
+        "size": 15905
+      },
+      {
+        "path": "rustbook-ru/src/ch03-02-data-types.md",
+        "sha": "7416c48083ccd5acb27f8fac6ba14a798930006d",
+        "size": 28983
+      },
+      {
+        "path": "rustbook-ru/src/ch03-03-how-functions-work.md",
+        "sha": "2744386da1c5f6075010bf4d069823b46ac7381e",
+        "size": 17055
+      },
+      {
+        "path": "rustbook-ru/src/ch03-04-comments.md",
+        "sha": "4b5fac44d5a388ac5aecd7a7580584cac49dc568",
+        "size": 2484
+      },
+      {
+        "path": "rustbook-ru/src/ch03-05-control-flow.md",
+        "sha": "efe54f50a76d8f881da3dbe310acf7efe5679008",
+        "size": 26971
+      },
+      {
+        "path": "rustbook-ru/src/ch04-00-understanding-ownership.md",
+        "sha": "5d8a57c44dcaff448ba2543ee6d3e58d977b91f2",
+        "size": 750
+      },
+      {
+        "path": "rustbook-ru/src/ch04-01-what-is-ownership.md",
+        "sha": "6eef7816721d858fa5ef272d6f08c2eb02949517",
+        "size": 42865
+      },
+      {
+        "path": "rustbook-ru/src/ch04-02-references-and-borrowing.md",
+        "sha": "f8d0803a253b694d71cad23a7a2e2f669dbe2bb0",
+        "size": 17413
+      },
+      {
+        "path": "rustbook-ru/src/ch04-03-slices.md",
+        "sha": "2e6b714e15d2c8596d349b53017c0070fa29f317",
+        "size": 20688
+      },
+      {
+        "path": "rustbook-ru/src/ch05-00-structs.md",
+        "sha": "9da33488f01224c94670c5e40022a8943c0ba42c",
+        "size": 1845
+      },
+      {
+        "path": "rustbook-ru/src/ch05-01-defining-structs.md",
+        "sha": "315c38ffd2bcff0a773d326f34cc54bbe7733ece",
+        "size": 21661
+      },
+      {
+        "path": "rustbook-ru/src/ch05-02-example-structs.md",
+        "sha": "461aeec777a1340796c99c300fe46d7a9503cc68",
+        "size": 18748
+      },
+      {
+        "path": "rustbook-ru/src/ch05-03-method-syntax.md",
+        "sha": "c8770c87bcb7822d93c8999e89205d72be01b26c",
+        "size": 20208
+      },
+      {
+        "path": "rustbook-ru/src/ch06-00-enums.md",
+        "sha": "30d0d1b4849246eba31a411ef9e9d26d7afc4484",
+        "size": 1268
+      },
+      {
+        "path": "rustbook-ru/src/ch06-01-defining-an-enum.md",
+        "sha": "e7b4740d4f59c1ae8578d147746340aa7145d730",
+        "size": 28609
+      },
+      {
+        "path": "rustbook-ru/src/ch06-02-match.md",
+        "sha": "f40cf3a6de440bc69f27c5fcfe8186282845af3e",
+        "size": 22196
+      },
+      {
+        "path": "rustbook-ru/src/ch06-03-if-let.md",
+        "sha": "f99d680dbace194c0d41805e6d24584884bfa80e",
+        "size": 7345
+      },
+      {
+        "path": "rustbook-ru/src/ch07-00-managing-growing-projects-with-packages-crates-and-modules.md",
+        "sha": "55f8a3d3fe90593d88ab9d866853d55ed0eef7ab",
+        "size": 6209
+      },
+      {
+        "path": "rustbook-ru/src/ch07-00-modules.md",
+        "sha": "c12a7cd8048319f3ffd42ab9435f104c49b8e73f",
+        "size": 1976
+      },
+      {
+        "path": "rustbook-ru/src/ch07-01-mod-and-the-filesystem.md",
+        "sha": "a31fe6b51c94a08260817c3878181f9b65554099",
+        "size": 12904
+      },
+      {
+        "path": "rustbook-ru/src/ch07-01-packages-and-crates.md",
+        "sha": "03a2fc130ac6893f459736c08547d03ae0e4b022",
+        "size": 6828
+      },
+      {
+        "path": "rustbook-ru/src/ch07-02-controlling-visibility-with-pub.md",
+        "sha": "bf3f067560f560c40220b9d7388ce1ca64006365",
+        "size": 9667
+      },
+      {
+        "path": "rustbook-ru/src/ch07-02-defining-modules-to-control-scope-and-privacy.md",
+        "sha": "8146d75cd310327d277452a632079ce4b72352cb",
+        "size": 13682
+      },
+      {
+        "path": "rustbook-ru/src/ch07-03-importing-names-with-use.md",
+        "sha": "0291f9f80961464fa1a0f06b971a0551b30e7078",
+        "size": 10302
+      },
+      {
+        "path": "rustbook-ru/src/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.md",
+        "sha": "a1de9eb40e0701487e5f1e83d951cfdf35ff182a",
+        "size": 27185
+      },
+      {
+        "path": "rustbook-ru/src/ch07-04-bringing-paths-into-scope-with-the-use-keyword.md",
+        "sha": "58f930bff611068c82958ecf5b288df2b3cdb923",
+        "size": 22737
+      },
+      {
+        "path": "rustbook-ru/src/ch07-05-separating-modules-into-different-files.md",
+        "sha": "853f52dd71c3ef1149f4a7fa00c2fcc29c611ae3",
+        "size": 10345
+      },
+      {
+        "path": "rustbook-ru/src/ch08-00-common-collections.md",
+        "sha": "08598269f3f2419e439a47af131360d8498c1012",
+        "size": 2680
+      },
+      {
+        "path": "rustbook-ru/src/ch08-01-vectors.md",
+        "sha": "ed94cdf02cce96566f379c19977537a4fa405723",
+        "size": 21269
+      },
+      {
+        "path": "rustbook-ru/src/ch08-02-strings.md",
+        "sha": "2f6ac9518ccc5f3b7cfe838169c5554d65bcc3a5",
+        "size": 29876
+      },
+      {
+        "path": "rustbook-ru/src/ch08-03-hash-maps.md",
+        "sha": "ff4db8a1ecc47a9473aefaefc4e55e3216d904ac",
+        "size": 19783
+      },
+      {
+        "path": "rustbook-ru/src/ch09-00-error-handling.md",
+        "sha": "3c695e3c321915b6c00753c59e8ccfd5f1bf6c96",
+        "size": 2798
+      },
+      {
+        "path": "rustbook-ru/src/ch09-01-unrecoverable-errors-with-panic.md",
+        "sha": "214006de80c07b9e8ecaa6e439865d6735eba3b8",
+        "size": 14526
+      },
+      {
+        "path": "rustbook-ru/src/ch09-02-recoverable-errors-with-result.md",
+        "sha": "34b6d46b181de1d30ce3019f7cc7dbd42128987b",
+        "size": 43405
+      },
+      {
+        "path": "rustbook-ru/src/ch09-03-to-panic-or-not-to-panic.md",
+        "sha": "c1cbfe3d3a9a27630069c41316983c260b79d132",
+        "size": 24338
+      },
+      {
+        "path": "rustbook-ru/src/ch10-00-generics.md",
+        "sha": "35e5660a6498f48b35d26f10ac1aae99bfa27b0b",
+        "size": 10854
+      },
+      {
+        "path": "rustbook-ru/src/ch10-01-syntax.md",
+        "sha": "400e9bc831447b6dd8bbf2145430680fc1b6abe8",
+        "size": 26309
+      },
+      {
+        "path": "rustbook-ru/src/ch10-02-traits.md",
+        "sha": "c597add1c3d1626fe2564ee95b49461a090c5e64",
+        "size": 31591
+      },
+      {
+        "path": "rustbook-ru/src/ch10-03-lifetime-syntax.md",
+        "sha": "fe5483307061793b5ef67613b0a512e37876eaac",
+        "size": 54668
+      },
+      {
+        "path": "rustbook-ru/src/ch11-00-testing.md",
+        "sha": "250f0d309405d862caffc2d27d84192b79c915cc",
+        "size": 3666
+      },
+      {
+        "path": "rustbook-ru/src/ch11-01-writing-tests.md",
+        "sha": "ddff091eba4c30a71e620c4715173a5ae1649bc5",
+        "size": 42090
+      },
+      {
+        "path": "rustbook-ru/src/ch11-02-running-tests.md",
+        "sha": "3dc8f77629411ef48af37e075a62e8810b8ecefb",
+        "size": 13735
+      },
+      {
+        "path": "rustbook-ru/src/ch11-03-test-organization.md",
+        "sha": "2f7ecaac66b9e5aa2fcbfadc3606ee58b7b0ef0b",
+        "size": 22590
+      },
+      {
+        "path": "rustbook-ru/src/ch12-00-an-io-project.md",
+        "sha": "941c9556c3bd6de45628b049bcecdf9d9db4aa2b",
+        "size": 4441
+      },
+      {
+        "path": "rustbook-ru/src/ch12-01-accepting-command-line-arguments.md",
+        "sha": "7e85a7c43039e4f605a67bd771574f3431410662",
+        "size": 10886
+      },
+      {
+        "path": "rustbook-ru/src/ch12-02-reading-a-file.md",
+        "sha": "1d18b36c1f5b6803a0e155a6e0c2d83e5a31cb82",
+        "size": 4112
+      },
+      {
+        "path": "rustbook-ru/src/ch12-03-improving-error-handling-and-modularity.md",
+        "sha": "7e9062958e5f043c4519b21ef80edec0eed88edb",
+        "size": 41876
+      },
+      {
+        "path": "rustbook-ru/src/ch12-04-testing-the-librarys-functionality.md",
+        "sha": "720241186cff540703525ba60e08800737ecf166",
+        "size": 17339
+      },
+      {
+        "path": "rustbook-ru/src/ch12-05-working-with-environment-variables.md",
+        "sha": "d5c7e2a003e43b820b0b31ca8afe4ce28ab813ee",
+        "size": 15953
+      },
+      {
+        "path": "rustbook-ru/src/ch12-06-writing-to-stderr-instead-of-stdout.md",
+        "sha": "6742bc83656b72a8d14c54602b6101ed79ccae59",
+        "size": 7851
+      },
+      {
+        "path": "rustbook-ru/src/ch13-00-functional-features.md",
+        "sha": "68904f1c6ebc91cd48997090f949f7038abbefc1",
+        "size": 2357
+      },
+      {
+        "path": "rustbook-ru/src/ch13-01-closures.md",
+        "sha": "932970ebedc6c38c6a73c6670cbf6f38249a150e",
+        "size": 35742
+      },
+      {
+        "path": "rustbook-ru/src/ch13-02-iterators.md",
+        "sha": "8cba6b3174d4194bdfc28c5367286fbfd296975b",
+        "size": 17456
+      },
+      {
+        "path": "rustbook-ru/src/ch13-03-improving-our-io-project.md",
+        "sha": "459ea2fbd8d32f49eb99b32821656587a3851663",
+        "size": 13396
+      },
+      {
+        "path": "rustbook-ru/src/ch13-04-performance.md",
+        "sha": "87fdf57758fdbd34286cccbb820a4d708e8af309",
+        "size": 8532
+      },
+      {
+        "path": "rustbook-ru/src/ch14-00-more-about-cargo.md",
+        "sha": "16edde5e96dd4e2734ecfd1f7e16e355c83b376a",
+        "size": 1309
+      },
+      {
+        "path": "rustbook-ru/src/ch14-01-release-profiles.md",
+        "sha": "052c3621713d1ffb426af730793e2d0548ca5c4d",
+        "size": 5234
+      },
+      {
+        "path": "rustbook-ru/src/ch14-02-publishing-to-crates-io.md",
+        "sha": "c28cbeb7a49db76dbedf2769d0618f248e88f938",
+        "size": 34639
+      },
+      {
+        "path": "rustbook-ru/src/ch14-03-cargo-workspaces.md",
+        "sha": "ff313b2a68acbc753fb3057237671fcc6bee2ed7",
+        "size": 19097
+      },
+      {
+        "path": "rustbook-ru/src/ch14-04-installing-binaries.md",
+        "sha": "351d4180a3e03100628c0372c7828205822796f5",
+        "size": 3619
+      },
+      {
+        "path": "rustbook-ru/src/ch14-05-extending-cargo.md",
+        "sha": "4d9e16dbd205c069c81421185af881851b150b9e",
+        "size": 1819
+      },
+      {
+        "path": "rustbook-ru/src/ch15-00-smart-pointers.md",
+        "sha": "9f45c433dea9210a77ff70de53d9dfad5ab7a0d6",
+        "size": 5984
+      },
+      {
+        "path": "rustbook-ru/src/ch15-01-box.md",
+        "sha": "8be84c5bafa27d67eddb84e961a435b1249882c5",
+        "size": 21872
+      },
+      {
+        "path": "rustbook-ru/src/ch15-02-deref.md",
+        "sha": "003156d1ee9b1ba602a0b565489f5e23f0b56737",
+        "size": 23924
+      },
+      {
+        "path": "rustbook-ru/src/ch15-03-drop.md",
+        "sha": "7145bb815524ba4015551fb890fc7acf4d0b6872",
+        "size": 12606
+      },
+      {
+        "path": "rustbook-ru/src/ch15-04-rc.md",
+        "sha": "393704658ef348ea4751242088b074af9ac29cfc",
+        "size": 14342
+      },
+      {
+        "path": "rustbook-ru/src/ch15-05-interior-mutability.md",
+        "sha": "0a24c367c542de6fa31d77d171f2f770d5ee083d",
+        "size": 33246
+      },
+      {
+        "path": "rustbook-ru/src/ch15-06-reference-cycles.md",
+        "sha": "606a3fad5e1b23a582fcdf98469f75667c709e21",
+        "size": 27223
+      },
+      {
+        "path": "rustbook-ru/src/ch16-00-concurrency.md",
+        "sha": "3f0b9f810b71ac9ed88ae008e85b469d0eebea88",
+        "size": 6020
+      },
+      {
+        "path": "rustbook-ru/src/ch16-01-threads.md",
+        "sha": "a497a5090ae0d77db80938296c6714438e9d6b1b",
+        "size": 20689
+      },
+      {
+        "path": "rustbook-ru/src/ch16-02-message-passing.md",
+        "sha": "08e0962a42284eb4f95bd3684422eb7a3418a1b0",
+        "size": 20558
+      },
+      {
+        "path": "rustbook-ru/src/ch16-03-shared-state.md",
+        "sha": "3b8bbaee73e8376b862d33678947db88c58464bf",
+        "size": 23868
+      },
+      {
+        "path": "rustbook-ru/src/ch16-04-extensible-concurrency-sync-and-send.md",
+        "sha": "dbbd0ba49a5074df9bacbd1322c9b6c451939196",
+        "size": 8797
+      },
+      {
+        "path": "rustbook-ru/src/ch17-00-oop.md",
+        "sha": "bc71f9e0a77def63ab74d8ab437d66c89c9268b7",
+        "size": 1751
+      },
+      {
+        "path": "rustbook-ru/src/ch17-01-what-is-oo.md",
+        "sha": "e8c54ec16e6468f095ffd6f97dde2cd6326e594c",
+        "size": 15418
+      },
+      {
+        "path": "rustbook-ru/src/ch17-02-trait-objects.md",
+        "sha": "8ad1b623c94a5d88426f49ac4cf4e90266a72f0c",
+        "size": 23143
+      },
+      {
+        "path": "rustbook-ru/src/ch17-03-oo-design-patterns.md",
+        "sha": "c0355c99a6d9319f833aee91e1e09d6b85d7bc04",
+        "size": 48553
+      },
+      {
+        "path": "rustbook-ru/src/ch18-00-patterns.md",
+        "sha": "f302e77a4d930746bfc030024037813445140b8c",
+        "size": 2839
+      },
+      {
+        "path": "rustbook-ru/src/ch18-01-all-the-places-for-patterns.md",
+        "sha": "9dfb51fb0b18ed13c849a7f6ecb7bef35bd0a00f",
+        "size": 17877
+      },
+      {
+        "path": "rustbook-ru/src/ch18-02-refutability.md",
+        "sha": "31a8fdffc6161c1bc3aca293bb7a32bdd6617d24",
+        "size": 7907
+      },
+      {
+        "path": "rustbook-ru/src/ch18-03-pattern-syntax.md",
+        "sha": "993e2a2d182087961e0765e90cfe59c40bbae46c",
+        "size": 47210
+      },
+      {
+        "path": "rustbook-ru/src/ch19-00-advanced-features.md",
+        "sha": "1019b1b7ea569c834e5ef5dab8ccd7cdd87561ec",
+        "size": 2246
+      },
+      {
+        "path": "rustbook-ru/src/ch19-01-unsafe-rust.md",
+        "sha": "00f5bc9562747978923e8ac227a2d5e607ac1633",
+        "size": 41293
+      },
+      {
+        "path": "rustbook-ru/src/ch19-02-advanced-lifetimes.md",
+        "sha": "595e6546b5005e6ac465ddb50edc3751af78d005",
+        "size": 16039
+      },
+      {
+        "path": "rustbook-ru/src/ch19-03-advanced-traits.md",
+        "sha": "602274d56b4b1b61c3de779a0cb7b648286c22fe",
+        "size": 35500
+      },
+      {
+        "path": "rustbook-ru/src/ch19-04-advanced-types.md",
+        "sha": "4467ab8c2d6ed76ffe410036f7f8eb3d3001d150",
+        "size": 23150
+      },
+      {
+        "path": "rustbook-ru/src/ch19-05-advanced-functions-and-closures.md",
+        "sha": "cad42dce9d9b5ac9e7bac2ef8adcf5bf1cf883ec",
+        "size": 10172
+      },
+      {
+        "path": "rustbook-ru/src/ch19-06-macros.md",
+        "sha": "40f1f44f5ad45a530d78c5aaf9e50b1f6e5447b7",
+        "size": 42406
+      },
+      {
+        "path": "rustbook-ru/src/ch20-00-final-project-a-web-server.md",
+        "sha": "50961fb27cf48b5ea7ec95a07bcb0f66b7cd27c9",
+        "size": 2927
+      },
+      {
+        "path": "rustbook-ru/src/ch20-01-single-threaded.md",
+        "sha": "dfcdffa26e33941aa1b4d284f95e2ad938900982",
+        "size": 36385
+      },
+      {
+        "path": "rustbook-ru/src/ch20-02-multithreaded.md",
+        "sha": "d137c8e027a1fb07197c0e135e633e9023b76bd3",
+        "size": 57126
+      },
+      {
+        "path": "rustbook-ru/src/ch20-02-slow-requests.md",
+        "sha": "596a1b75050c96c6aa8fc181d97d2b487d2cf256",
+        "size": 8411
+      },
+      {
+        "path": "rustbook-ru/src/ch20-03-designing-the-interface.md",
+        "sha": "a2e2dae8b033516a234fb092a372cf10acae8355",
+        "size": 12550
+      },
+      {
+        "path": "rustbook-ru/src/ch20-03-graceful-shutdown-and-cleanup.md",
+        "sha": "c3d213c2f30a1727f13ede8d5c9c5776f618c816",
+        "size": 17506
+      },
+      {
+        "path": "rustbook-ru/src/ch20-04-storing-threads.md",
+        "sha": "e5b31bc07e75599e692cbbe4d64fc28c8623e383",
+        "size": 10561
+      },
+      {
+        "path": "rustbook-ru/src/ch20-05-sending-requests-via-channels.md",
+        "sha": "ed7f870f6151c9b5ef0fed27dbb6b677aae4cfb5",
+        "size": 17454
+      },
+      {
+        "path": "rustbook-ru/src/ch20-06-graceful-shutdown-and-cleanup.md",
+        "sha": "c05a316b3ccffe95205b5a45898579eec9892ebe",
+        "size": 18904
+      }
+    ]
+  }
+}

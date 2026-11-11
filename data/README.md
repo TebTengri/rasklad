@@ -30,3 +30,7 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 ## Морфологический контроль 003
 
 Отдельно допущены pinned .aff той же версии LibreOffice и уже установленная Hunspell 1.7.5 для локального spell-эксперимента. См. [паспорт](morphology-003-sources.json), [первичный review](notices/MORPHOLOGY-003-REVIEW.md), [команды](../docs/EXPERIMENT-003-METHOD.md). Общий допуск .dic не использовался вместо проверки .aff/библиотеки. Сохранены полные MPL 1.1 и MySpell notices; библиотека не модифицируется и не распространяется. Control удаляет только PFX/SFX строки, остальные bytes сохранены; исходники не меняются. Всё в build/, с notices и MODIFICATIONS; release_approved=false. Тест — новый блок прежнего CC0 snapshot, без обучения/калибровки.
+
+## Технический домен 004
+
+Отдельный local-evaluation-only допуск: 20 EN глав Rust Book и20 RU глав перевода по hash-ranking путей, pinned commits и полные notices. [Паспорт](evaluation-004-sources.json), [review](notices/TECHNICAL-004-REVIEW.md), [протокол](experiment-004-protocol.json). Источники и derived case/action TSV только в build/. Нет выполнения Markdown/includes/кода, обучения или выпуска; release_approved=false.

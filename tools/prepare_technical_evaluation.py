@@ -113,15 +113,20 @@ def prepare(root, manifest_path):
     documents = manifest['documents']
     if len(documents) != 40 or [d['index'] for d in documents] != list(range(40)):
         raise ValueError('document selection mismatch')
-    # Recompute path ranking against the separately cached tree metadata.
+    # The public candidate-only snapshot exports the original cached tree paths.
+    # It avoids depending on GitHub API JSON key ordering during later replay.
+    pool_ref = manifest['candidate_pool']
+    if pool_ref['path'] != 'data/experiment-004-document-pool.json':
+        raise ValueError('unexpected pool path')
+    pool = json.loads(checked_bytes(root / pool_ref['path'], pool_ref['bytes'], pool_ref['sha256'], 1048576))
     for lang in ['en', 'ru']:
-        tree = root / f'build/experiment-004-data/{lang}-tree.json'
-        raw = tree.read_bytes()
-        if hashlib.sha256(raw).hexdigest() != manifest['repositories'][lang]['treeSha256']:
-            raise ValueError('tree metadata changed')
+        if (pool[lang]['repository'] != manifest['repositories'][lang]['repository']
+                or pool[lang]['commit'] != manifest['repositories'][lang]['commit']):
+            raise ValueError('candidate pool version differs')
         prefix = 'src/' if lang == 'en' else 'rustbook-ru/src/'
-        candidates = [x for x in json.loads(raw)['tree'] if x['type'] == 'blob'
-                      and re.fullmatch(re.escape(prefix) + r'ch[0-9]{2}[^/]*[.]md', x['path'])]
+        candidates = pool[lang]['candidates']
+        if not all(re.fullmatch(re.escape(prefix) + r'ch[0-9]{2}[^/]*[.]md', x['path']) for x in candidates):
+            raise ValueError('candidate path outside protocol')
         selected = sorted(candidates, key=lambda x: (
             hashlib.sha256(b'rasklad-SYS-236-doc-v1\0' + x['path'].encode()).digest(), x['path']))[:20]
         actual = [d for d in documents if d['language'] == lang]

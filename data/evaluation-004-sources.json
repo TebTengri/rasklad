@@ -458,5 +458,11 @@
     "sha256": "17e6f078256fc0cd9d306b52900aa65cf5f66ec6af296dcea53ae00ac138c480",
     "bytes": 2657598,
     "rows": 82712
+  },
+  "candidate_pool": {
+    "path": "data/experiment-004-document-pool.json",
+    "sha256": "a43f910e0ad5f4bf239f809567aa6558aa0860aa2c568dc7960da5ba14b39242",
+    "bytes": 32538,
+    "exported_after_evaluation": "metadata-only reproducibility export; original pre-outcome tree hashes and selection remain unchanged"
   }
 }

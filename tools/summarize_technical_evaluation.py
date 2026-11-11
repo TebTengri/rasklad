@@ -32,10 +32,12 @@ def outcome(role, ambiguous, eligible, action):
 
 def rates(group):
     result = {role: dict(group.get(role, {})) for role in ['valid', 'protected', 'wrong', 'ambiguousWrong']}
-    for x in result.values():
+    for role, x in result.items():
         for key in ['count', 'eligible', 'changes', 'eligibleChanges', 'recovered', 'eligibleRecovered', 'unsafe', 'K', 'C', 'A']:
             x.setdefault(key, 0)
-        x['falsePer10000Eligible'] = (10000 * x['eligibleChanges'] / x['eligible']) if x['eligible'] else None
+        x['changesPer10000Eligible'] = (10000 * x['eligibleChanges'] / x['eligible']) if x['eligible'] else None
+        if role != 'wrong':
+            x['falsePer10000Eligible'] = x['changesPer10000Eligible']
     wrong = result['wrong']
     wrong['eligibleRecoveryRate'] = wrong['eligibleRecovered'] / wrong['eligible'] if wrong['eligible'] else None
     result['unsafeTotal'] = sum(result[r]['unsafe'] for r in ['valid', 'protected', 'ambiguousWrong'])
@@ -58,9 +60,9 @@ def summarize(root, manifest, decisions):
             or manifest.get('scope') != 'local-evaluation-only'
             or manifest.get('release_approved') is not False):
         raise ValueError('manifest is not approved')
-    if (decisions_path.stat().st_size > 32 * 1024 * 1024
-            or decisions_path.resolve() != decisions_path.absolute()
-            or not decisions_path.absolute().is_relative_to(root / 'build')):
+    if (decisions.stat().st_size > 32 * 1024 * 1024
+            or decisions.resolve() != decisions.absolute()
+            or not decisions.absolute().is_relative_to(root / 'build')):
         raise ValueError('decision input outside boundary')
     p = (root / 'data/experiment-004-protocol.json').read_bytes()
     if hashlib.sha256(p).hexdigest() != PROTOCOL_SHA or manifest['protocol_sha256'] != PROTOCOL_SHA:
