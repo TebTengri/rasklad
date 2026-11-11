@@ -2,7 +2,9 @@
 # Собирает проект через bin/build и запускает модульные тесты Qt Test:
 # сначала rasklad_tests (ядро преобразования), затем detector_tests
 # (экспериментальный детектор SYS-232), затем benchmark_tests (helper'ы
-# независимой оценки SYS-233). Аргументы передаются всем бинарникам
+# независимой оценки SYS-233), затем context_tests (политики контекста
+# SYS-237, без Hunspell) и, если доступна Hunspell, domain_tests и
+# morphology_tests. Аргументы передаются всем бинарникам
 # (например, -v2); имя тестовой функции подходит только одному.
 set -euo pipefail
 
@@ -18,8 +20,11 @@ detector_dir="${build_dir}/tests/detector"
 detector_bin="${detector_dir}/detector_tests"
 benchmark_dir="${build_dir}/tests/benchmark"
 benchmark_bin="${benchmark_dir}/benchmark_tests"
+# SYS-237: политики контекста опыта 005; без Hunspell, собираются всегда.
+context_dir="${build_dir}/tests/context"
+context_bin="${context_dir}/context_tests"
 
-for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}"; do
+for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}"; do
     if [[ ! -x "${bin}" ]]; then
         echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
         exit 1
@@ -30,6 +35,7 @@ done
 (cd -- "${test_dir}" && "${test_bin}" "$@")
 (cd -- "${detector_dir}" && "${detector_bin}" "$@")
 (cd -- "${benchmark_dir}" && "${benchmark_bin}" "$@")
+(cd -- "${context_dir}" && "${context_bin}" "$@")
 
 if pkg-config --exists hunspell; then
     morphology_dir="${build_dir}/tests/morphology"

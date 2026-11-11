@@ -21,6 +21,15 @@ detector_benchmark.file = tools/detector_benchmark.pro
 detector_benchmark.makefile = Makefile.detector_benchmark
 detector_benchmark.depends = core
 
+# Опыт 005 (SYS-237): политики контекста без Hunspell, модели и словарей;
+# собираются всегда. Тесты — build/tests/context, CLI — build/tools.
+SUBDIRS += context_tests context_decisions
+context_tests.file = tests/context/context_tests.pro
+context_tests.depends = core
+context_decisions.file = tools/context_decisions.pro
+context_decisions.makefile = Makefile.context_decisions
+context_decisions.depends = core
+
 # Эксперимент 003 (SYS-235): только если уже установлена Hunspell с
 # pkg-config. Ничего не скачивается и не устанавливается; без неё цели
 # пропускаются, а bin/test сообщает, что зависимость недоступна.
