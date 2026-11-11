@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "experiment": "SYS-233 experiment 002",
+  "freeze_date": "2026-11-11",
+  "seed": "rasklad-SYS-233-holdout-v1",
+  "model_training": "experiment-001 train split only; original add-alpha/int8 algorithm unchanged",
+  "thresholds": {
+    "singleD": {
+      "gap": 2.5
+    },
+    "twoScore": {
+      "gap": 2.5,
+      "minAlternative": -13,
+      "maxObserved": -9
+    }
+  },
+  "sentence_selection": {
+    "limit_per_language": 5000,
+    "rule": "deduplicate exact text keeping smallest numeric ID; rank SHA256(seed + NUL + ASCII sentence ID); take smallest ranks before token filtering"
+  },
+  "tokenization": {
+    "rule": "split on Unicode whitespace, trim outer characters from the fixed set; retain internal punctuation; no model-dependent filtering",
+    "outer_trim_characters": ".!?;:,()[]{}\"«»“”„",
+    "limitation": "oracle token boundaries before wrong-layout conversion; not end-to-end keyboard segmentation"
+  },
+  "short_token_minimum": 4,
+  "methods": [
+    "alwaysKeep",
+    "exactTrain",
+    "exactFull",
+    "singleD",
+    "twoScore",
+    "exactFullThenTwoScore",
+    "twoScoreConfirmedByExactFull"
+  ],
+  "cascade_rules": {
+    "exactFullThenTwoScore": "observed exact hit -> Keep; else alternative exact hit -> Correct; else twoScore",
+    "twoScoreConfirmedByExactFull": "observed exact hit -> Keep; else Correct only if twoScore says Correct AND alternative exact hit; otherwise Abstain"
+  },
+  "wrong_generation": "only native-language letter-only tokens of length 1..32; generate after selection and tokenization; retain case",
+  "ambiguity": "if canonical key belongs to both full dictionaries, any change counts unsafe; report separately, never forced positive",
+  "metrics": [
+    "valid false changes per occurrence and unique type",
+    "wrong recovered/abstain",
+    "unsafe ambiguity changes",
+    "per-language/length/membership-known-vs-OOV",
+    "expected precision at 0.1%,1%,5% synthetic wrong-layout prevalence; not measured deployment precision"
+  ],
+  "challenge": {
+    "version": 1,
+    "noise_per_layout": 256,
+    "noise_lengths": [
+      4,
+      16
+    ],
+    "noise_seed": "rasklad-SYS-233-noise-v1",
+    "rule": "synthetic intent-Keep noise; exclude dictionary hits; also all full-lexicon ambiguous keys with length>=4 and original fixture code/URL/name tokens"
+  },
+  "hypotheses": {
+    "H1": "compact model adds OOV recovery over exactTrain/Full",
+    "H2": "exactFullThenTwoScore improves recovery over exactFull without adding unsafe changes",
+    "H3": "twoScoreConfirmedByExactFull reduces false changes versus exactFull at a coverage cost",
+    "H4": "twoScore beats singleD on hard negatives at nonzero useful recovery"
+  },
+  "decision_gate": {
+    "automatic_input": "disabled regardless of this experiment",
+    "continuation": "report each hypothesis as supported/refuted/inconclusive on this sample; incremental recovery counts only alongside incremental unsafe changes; no threshold tuning on new test; do not claim proof of absence of false corrections"
+  },
+  "resource_method": "front-coded exact blocks vs ngram serialization; fresh inference-only child processes, current RSS/peak/cold startup scoped explicitly; no lexicon/training data retained in probe; warm latency separate"
+}

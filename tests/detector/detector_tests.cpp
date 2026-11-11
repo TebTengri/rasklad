@@ -182,6 +182,7 @@ private Q_SLOTS:
     void dicBadHeaders_data();
     void dicBadHeaders();
     void dicTooLarge();
+    void dicTooManyRecords();
     void dicInvalidLanguage();
 
     // ---- Разделение ----
@@ -817,6 +818,47 @@ void DetectorTests::dicTooLarge()
 {
     const DicParseResult r = parseHunspellDic(QByteArray(kMaxDicBytes + 1, 'a'), DetectorLanguage::En);
     QCOMPARE(int(r.error), int(DicError::TooLarge));
+}
+
+void DetectorTests::dicTooManyRecords()
+{
+    const qsizetype limit = qsizetype(kMaxDicRecords);
+    // Ровно kMaxDicRecords строк записей с согласованным заголовком
+    // принимаются: с финальным '\n' и без него (хвост — запись).
+    QByteArray atLimit = QByteArray::number(kMaxDicRecords) + '\n';
+    atLimit.append(QByteArray(limit, '\n'));
+    const DicParseResult accepted = parseHunspellDic(atLimit, DetectorLanguage::En);
+    QCOMPARE(int(accepted.error), int(DicError::None));
+    QCOMPARE(accepted.report.entryLines, kMaxDicRecords);
+    QVERIFY(accepted.words.isEmpty());
+
+    QByteArray atLimitNoFinal = QByteArray::number(kMaxDicRecords) + '\n';
+    atLimitNoFinal.append(QByteArray(limit - 1, '\n'));
+    atLimitNoFinal.append('a');
+    const DicParseResult acceptedNoFinal = parseHunspellDic(atLimitNoFinal, DetectorLanguage::En);
+    QCOMPARE(int(acceptedNoFinal.error), int(DicError::None));
+    QCOMPARE(acceptedNoFinal.words, QStringList({QStringLiteral("a")}));
+
+    // На одну строку больше — отказ, хотя заголовок согласован и без
+    // предела разбор был бы успешным.
+    QByteArray over = QByteArray::number(kMaxDicRecords + 1) + '\n';
+    over.append(QByteArray(limit + 1, '\n'));
+    const DicParseResult flood = parseHunspellDic(over, DetectorLanguage::En);
+    QCOMPARE(int(flood.error), int(DicError::TooManyRecords));
+    QVERIFY(flood.words.isEmpty());
+    QCOMPARE(flood.report.entryLines, qint64(0));
+
+    QByteArray overNoFinal = QByteArray::number(kMaxDicRecords + 1) + '\n';
+    overNoFinal.append(QByteArray(limit, '\n'));
+    overNoFinal.append('a');
+    QCOMPARE(int(parseHunspellDic(overNoFinal, DetectorLanguage::En).error), int(DicError::TooManyRecords));
+
+    // Подсчёт идёт до декодирования: некорректный UTF-8 не меняет отказ.
+    QByteArray invalid("1\n");
+    invalid.append(QByteArray(limit + 1, '\n'));
+    invalid.append('\xFF');
+    QCOMPARE(int(parseHunspellDic(invalid, DetectorLanguage::En).error), int(DicError::TooManyRecords));
+    QVERIFY(!dicErrorText(DicError::TooManyRecords).isEmpty());
 }
 
 void DetectorTests::dicInvalidLanguage()

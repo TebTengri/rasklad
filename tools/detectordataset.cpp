@@ -85,6 +85,8 @@ QString dicErrorText(DicError error)
         return QStringLiteral("record count does not match Hunspell count header");
     case DicError::InvalidLanguage:
         return QStringLiteral("invalid language");
+    case DicError::TooManyRecords:
+        return QStringLiteral("file exceeds record count limit");
     }
     return QStringLiteral("unknown error");
 }
@@ -100,6 +102,15 @@ DicParseResult parseHunspellDic(const QByteArray &data, DetectorLanguage languag
     }
     if (data.size() > kMaxDicBytes) {
         result.error = DicError::TooLarge;
+        return result;
+    }
+    // До декодирования и split(): байт 0x0A в UTF-8 встречается только как
+    // '\n'. Строки записей — все строки после заголовка, кроме пустого
+    // хвоста после финального '\n'.
+    const qint64 newlines = data.count('\n');
+    const qint64 entryLines = data.endsWith('\n') ? newlines - 1 : newlines;
+    if (entryLines > kMaxDicRecords) {
+        result.error = DicError::TooManyRecords;
         return result;
     }
 

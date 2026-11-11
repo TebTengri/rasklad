@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Собирает проект через bin/build и запускает модульные тесты Qt Test:
 # сначала rasklad_tests (ядро преобразования), затем detector_tests
-# (экспериментальный детектор SYS-232). Аргументы передаются обоим
-# бинарникам (например, -v2); имя тестовой функции подходит только одному.
+# (экспериментальный детектор SYS-232), затем benchmark_tests (helper'ы
+# независимой оценки SYS-233). Аргументы передаются всем бинарникам
+# (например, -v2); имя тестовой функции подходит только одному.
 set -euo pipefail
 
 script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -15,15 +16,18 @@ test_dir="${build_dir}/tests"
 test_bin="${test_dir}/rasklad_tests"
 detector_dir="${build_dir}/tests/detector"
 detector_bin="${detector_dir}/detector_tests"
+benchmark_dir="${build_dir}/tests/benchmark"
+benchmark_bin="${benchmark_dir}/benchmark_tests"
 
-for bin in "${test_bin}" "${detector_bin}"; do
+for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}"; do
     if [[ ! -x "${bin}" ]]; then
         echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
         exit 1
     fi
 done
 
-# Тесты не требуют GUI и внешних словарей; запускаются из каталога сборки.
+# Тесты не требуют GUI, внешних словарей и корпуса; запускаются из каталога сборки.
 (cd -- "${test_dir}" && "${test_bin}" "$@")
-cd -- "${detector_dir}"
-exec "${detector_bin}" "$@"
+(cd -- "${detector_dir}" && "${detector_bin}" "$@")
+cd -- "${benchmark_dir}"
+exec "${benchmark_bin}" "$@"

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-11",
+  "reviewer": "Codex; primary terms/CC0 reviewed before download",
+  "status": "approved-local-evaluation",
+  "scope": "local-evaluation-only",
+  "release_approved": false,
+  "snapshot_date": "2026-11-07",
+  "license": "CC0-1.0",
+  "allowed_operations": [
+    "local decompression",
+    "deterministic selection",
+    "local evaluation only; no training/calibration"
+  ],
+  "evaluation_sources": [
+    {
+      "language": "en",
+      "iso_language": "eng",
+      "url": "https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_CC0.tsv.bz2",
+      "cache_path": "build/experiment-002-data/en.tsv",
+      "sha256": "d727d33c6a5413d2914c956f4a4407e2b8e2d883234fc50031b8a8d3e4dc9f51",
+      "bytes": 3905880,
+      "notice": "data/notices/Tatoeba-CC0-REVIEW.md",
+      "notice_sha256": "bdb2705b49605ed798d3b9ce0aa22170c60f10fcbb241c1fccfff0e608b1dc40",
+      "upstream_sha256": "4ee3a45aeab4262809833d8901ce43024dd2d6e676b84a0c9aae1bc96cf34f60",
+      "upstream_bytes": 4736180,
+      "preprocessing": "decompress strict UTF-8; validate 4th column timestamp and remove only timestamp; retain first 3 TSV columns, LF records",
+      "compressed_sha256": "c2e2edd063a31cbbc8e416a4858225e934bbb0afff485031821e59f230ccf1ca",
+      "compressed_bytes": 1288689,
+      "rows": 41515
+    },
+    {
+      "language": "ru",
+      "iso_language": "rus",
+      "url": "https://downloads.tatoeba.org/exports/per_language/rus/rus_sentences_CC0.tsv.bz2",
+      "cache_path": "build/experiment-002-data/ru.tsv",
+      "sha256": "ff666b61f7d4b7dd0c9dd8050e237f4eec53da8c92e3ae9e38811b990bdcccdf",
+      "bytes": 2556080,
+      "notice": "data/notices/Tatoeba-CC0-REVIEW.md",
+      "notice_sha256": "bdb2705b49605ed798d3b9ce0aa22170c60f10fcbb241c1fccfff0e608b1dc40",
+      "upstream_sha256": "a5b0e99822a1037a6ade076b10b7583253ddf6bbc4d108c3cd58eba4d9436f44",
+      "upstream_bytes": 3018020,
+      "preprocessing": "decompress strict UTF-8; validate 4th column timestamp and remove only timestamp; retain first 3 TSV columns, LF records",
+      "compressed_sha256": "948c48efbcdbcd7c41bf8856acbd177712a347c8654521d4581b2ef732cddff9",
+      "compressed_bytes": 516239,
+      "rows": 23097
+    }
+  ],
+  "license_notice": "data/notices/CC0-1.0.txt",
+  "license_notice_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+}
