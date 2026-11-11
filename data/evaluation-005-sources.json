@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "approved-local-synthetic-evaluation",
+  "scope": "local-evaluation-only",
+  "release_approved": false,
+  "protocol_sha256": "265757d6d538c400c95243996d853a9e71f77f96892c34510d26beb0c3e23e8b",
+  "sources": {
+    "training_manifest_sha256": "29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20",
+    "morphology_manifest_sha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413",
+    "new_external_corpus": false,
+    "templates": "synthetic literal prefix lists from protocol; not naturally sampled text"
+  },
+  "features": null,
+  "labels": null,
+  "notices": [
+    {
+      "notice": "data/notices/CONTEXT-005-REVIEW.md",
+      "notice_sha256": "672c53eb317f087c900e2e7ef07d99d03c63385c1aef4c4fcae5d979d7f0ef8e"
+    },
+    {
+      "notice": "data/notices/en_US.README.txt",
+      "notice_sha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+    },
+    {
+      "notice": "data/notices/ru_RU.README.txt",
+      "notice_sha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+    },
+    {
+      "notice": "data/notices/MORPHOLOGY-003-REVIEW.md",
+      "notice_sha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61"
+    },
+    {
+      "notice": "data/notices/Hunspell-COPYING.MPL.txt",
+      "notice_sha256": "53692a2ed6c6a2c6ec9b32dd0b820dfae91e0a1fcdf625ca9ed0bdf8705fcc4f"
+    },
+    {
+      "notice": "data/notices/Hunspell-license.myspell.txt",
+      "notice_sha256": "dcda061adeed22b26f276c01ec374f930789ae0d684e5aa8f8be309dd680ff20"
+    }
+  ]
+}
