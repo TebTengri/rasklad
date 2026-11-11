@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "experiment": "SYS-236 experiment004 technical-domain fixed-policy stress test",
+  "freeze_date": "2026-11-11",
+  "scope": "local evaluation only; no input, telemetry, installation, training or threshold selection",
+  "selection": {
+    "repositories": {
+      "en": [
+        "rust-lang/book",
+        "2771df165f092a4fbb9f46b5b2e7450f19010adb"
+      ],
+      "ru": [
+        "rust-lang-ru/book",
+        "1bec6512e7475b20919b6266dc8596ba71298ff9"
+      ]
+    },
+    "candidates": "blob paths matching ^src/ch[0-9]{2}[^/]*[.]md$; exclude no content based on detector outcomes",
+    "ranking": "SHA256(UTF8(rasklad-SYS-236-doc-v1)+NUL+UTF8(path)); unsigned digest then path",
+    "take_per_language": 20,
+    "max_source_bytes": 1048576
+  },
+  "segmentation": {
+    "fenced_code": "line with at most3 leading ASCII spaces followed by >=3 backticks or tildes opens fence; same marker and >= opening length closes; all interior lines protected; opening/closing lines excluded",
+    "inline_code": "outside fences, runs of backticks paired with next equal-length run on same line; contents protected; unmatched run treated as prose",
+    "other_markdown": "retained literally; no link/HTML/include execution or fetching; no Markdown renderer",
+    "tokens": "split spans on Unicode whitespace; strip only .!?;:,()[]{}\"«»“”„ from both ends; retain other punctuation and case; exclude empty; fail if token exceeds4096 UTF16 or total rows500000",
+    "typed_layout": "oracle: if token contains any Cyrillic RU letter then ru; otherwise us (ASCII Latin terms in Russian prose remain us); mixed unsupported not silently translated",
+    "wrong_copies": "only prose tokens entirely ASCII EN letters or RU33 letters, length1..32; convert to opposite layout preserving case; no artificial corruption of protected code",
+    "labels": "valid and protected always intent Keep even when dictionaries disagree; wrong eligible recovery only if NOT (stemBoth OR controlBoth OR fullBoth); ambiguous wrong changes unsafe; roundtrip must equal original"
+  },
+  "model": {
+    "path": "build/experiment-002-artifacts/detector-model.rskn",
+    "sha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+    "bytes": 88290,
+    "thresholds": "exact frozen values from data/experiment-002-protocol.json; never refit"
+  },
+  "stem": {
+    "path": "build/experiment-002-artifacts/exact-full-lexicons.rskp",
+    "sha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871",
+    "bytes": 1200379
+  },
+  "morphology_manifest": "data/morphology-003-sources.json",
+  "methods": [
+    "alwaysKeep",
+    "twoScore",
+    "hunspellFull",
+    "modelConfirmedMorph",
+    "morphThenModel",
+    "protectedTwoScore",
+    "protectedHunspellFull",
+    "protectedConfirmedMorph",
+    "protectedMorphThenModel"
+  ],
+  "protected_policy": "protected variants force Keep on labelled code; prose actions identical to their base. This is oracle markup context, not a validated keyboard-input context detector.",
+  "metrics": {
+    "primary": "eligible valid/protected (supported >=4) false changes per language and pooled; all valid false changes also reported; wrong unambiguous eligible recovery; ambiguous wrong unsafe separately",
+    "types": "unique(document language, role, typed layout, exact text); document counts/rates and macro summaries; no IID confidence claims",
+    "budget": "research screen only: <=1 false change per10000 eligible valid prose occurrences AND <=1 per10000 eligible valid prose exact types, per language AND pooled; zero protected code changes; >=50% eligible unambiguous wrong recovery per language AND pooled; insufficient if any denominator zero",
+    "no_selection": "evaluate every preregistered policy; do not select thresholds or exceptions from this test; passing screen is not production approval",
+    "overlap": "measure exact source hash duplication across language and old Tatoeba valid exact token overlap; translated books share topics; not independent RU/EN sources"
+  },
+  "hypotheses": {
+    "D1": "confirmedMorph fewer unsafe natural actions than full with reported lost recoveries, occurrences and types; equal errors => inconclusive",
+    "D2": "model fallback adds eligible recoveries beyond full; added false/ambiguous/code changes mandatory; no free-safety inference",
+    "D3": "oracle code protection prevents >0 raw protected changes while prose actions identical; if no changes initially then benefit inconclusive",
+    "D4": "apply frozen budget to all methods, publish every pass/fail/insufficient by language; no production precision inferred"
+  },
+  "publication": "only source passports/notices/code/aggregate counts, hashes; no corpus, token text, per-case actions, user data or model weights"
+}
