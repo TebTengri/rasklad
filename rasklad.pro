@@ -20,3 +20,17 @@ benchmark_tests.depends = core
 detector_benchmark.file = tools/detector_benchmark.pro
 detector_benchmark.makefile = Makefile.detector_benchmark
 detector_benchmark.depends = core
+
+# Эксперимент 003 (SYS-235): только если уже установлена Hunspell с
+# pkg-config. Ничего не скачивается и не устанавливается; без неё цели
+# пропускаются, а bin/test сообщает, что зависимость недоступна.
+packagesExist(hunspell) {
+    SUBDIRS += morphology_tests morphology_benchmark
+    morphology_tests.file = tests/morphology/morphology_tests.pro
+    morphology_tests.depends = core
+    morphology_benchmark.file = tools/morphology_benchmark.pro
+    morphology_benchmark.makefile = Makefile.morphology_benchmark
+    morphology_benchmark.depends = core
+} else {
+    message("rasklad: pkg-config hunspell not found; SYS-235 morphology targets are skipped")
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "experiment": "SYS-235 experiment 003 morphology control",
+  "freeze_date": "2026-11-11",
+  "holdout": {
+    "seed": "rasklad-SYS-233-holdout-v1",
+    "dedup": "exact text keep smallest numeric ID",
+    "rule": "rank exactly as experiment002; reserve first5000(language) as old diagnostic set; new test ranks5000..9999 zero-based",
+    "offset": 5000,
+    "count_per_language": 5000,
+    "source": "same pinned Tatoeba CC0 snapshot as002; distinct sentence IDs/texts, correlated source/templates; not new-domain independence"
+  },
+  "tokenization": "same fixed tokenizer and wrong generation as experiment002; case preserved; >=4 decision gate",
+  "model": "original experiment001 train only, no algorithm or parameter changes",
+  "model_sha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8",
+  "thresholds": {
+    "gap": 2.5,
+    "minAlternative": -13,
+    "maxObserved": -9
+  },
+  "morphology": {
+    "engine": "installed Hunspell1.7.5 C API spell only; UTF-8; no suggestions/analyze/generation",
+    "full": "original pinned aff+dic; native case and flags retained",
+    "control": "same dic and aff with all PFX/SFX directive rows removed; other directives, case and compound rules preserved",
+    "warning": "control still has case, compounds and other semantics; call it noPfxSfx, not no-morphology"
+  },
+  "methods": [
+    "alwaysKeep",
+    "stemExact",
+    "twoScore",
+    "stemThenModel",
+    "modelConfirmedStem",
+    "hunspellNoPfxSfx",
+    "hunspellFull",
+    "morphThenModel",
+    "modelConfirmedMorph"
+  ],
+  "rules": {
+    "exact": "observed hit Keep; else alternative hit Correct; else Abstain",
+    "fallback": "exact decision unless Abstain; then twoScore",
+    "confirmation": "observed hit Keep; otherwise Correct only if alt hit and twoScore Correct; otherwise Abstain"
+  },
+  "ambiguity": "union of stem-both, noPfxSfx-both, full-morph-both on actual case-preserved candidate pair; use same label for every method; any Correct unsafe, never recovered; separately show raw valid change totals",
+  "hypotheses": {
+    "M1": "full affix engine improves correct-word acceptance/recovery over noPfxSfx control; count added false changes",
+    "M2": "morphFull closes recovery gap to compact twoScore without extra unsafe changes; explicit paired deltas",
+    "M3": "twoScore confirmation reduces morphFull unsafe changes at recovery cost",
+    "M4": "morphThenModel still adds useful OOV recovery; quantify unsafe additions"
+  },
+  "challenge": "same original fixtures and noise sequence as002 (exclude old full stem lexicons only, not new morph acceptance); same645 cases; also report new morph ambiguity labels; do not choose new negatives using test results",
+  "metrics": "occurrences plus exact case-preserved unique types for all methods (Hunspell case semantics); not directly comparable to002 canonical-folded types; language/length; word acceptance and pairwise changes vs control, stems, model, morph; full coverage denominators and unsafe counts; illustrative PPV at0.1%,1%,5% wrong prevalence",
+  "resources": "fresh probe pair of full Hunspell engines using only approved aff/dic; no corpus/model/train lists; actual child RSS and load wall, warm uncached membership, explicit .aff+.dic and shared-lib sizes; no expansion to all forms",
+  "decision": "no system input; no threshold or exception tuning after viewing new block; supported/refuted/inconclusive for each hypothesis only on sample; no world novelty or deployment safety claims",
+  "release_approved": false
+}

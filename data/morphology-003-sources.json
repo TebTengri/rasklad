@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-11",
+  "status": "approved-local-morphology",
+  "scope": "local-experiment-only",
+  "release_approved": false,
+  "repository": "https://github.com/LibreOffice/dictionaries",
+  "commit": "c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb",
+  "hunspell": {
+    "version": "1.7.5",
+    "library_path": "/usr/lib/libhunspell-1.7.so.0.2.1",
+    "library_sha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+    "library_bytes": 546936,
+    "notice": "data/notices/MORPHOLOGY-003-REVIEW.md",
+    "notice_sha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+    "license_choice_for_local_use": "MPL-1.1 plus MySpell BSD notice; no library distribution",
+    "additional_notices": [
+      {
+        "notice": "data/notices/Hunspell-COPYING.MPL.txt",
+        "notice_sha256": "53692a2ed6c6a2c6ec9b32dd0b820dfae91e0a1fcdf625ca9ed0bdf8705fcc4f"
+      },
+      {
+        "notice": "data/notices/Hunspell-license.myspell.txt",
+        "notice_sha256": "dcda061adeed22b26f276c01ec374f930789ae0d684e5aa8f8be309dd680ff20"
+      }
+    ]
+  },
+  "languages": [
+    {
+      "language": "en",
+      "dic_path": "build/experiment-data/en.dic",
+      "dic_sha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+      "dic_bytes": 551762,
+      "aff_path": "build/experiment-003-data/en.aff",
+      "aff_sha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+      "aff_bytes": 3205,
+      "control_aff_path": "build/experiment-003-data/control/en.aff",
+      "control_aff_sha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+      "control_aff_bytes": 1460,
+      "notice": "data/notices/en_US.README.txt",
+      "notice_sha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+      "upstream_url": "https://raw.githubusercontent.com/LibreOffice/dictionaries/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/en/en_US.aff",
+      "removedPfxSfxLines": 73
+    },
+    {
+      "language": "ru",
+      "dic_path": "build/experiment-data/ru.dic",
+      "dic_sha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+      "dic_bytes": 3473191,
+      "aff_path": "build/experiment-003-data/ru.aff",
+      "aff_sha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+      "aff_bytes": 71236,
+      "control_aff_path": "build/experiment-003-data/control/ru.aff",
+      "control_aff_sha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+      "control_aff_bytes": 162,
+      "notice": "data/notices/ru_RU.README.txt",
+      "notice_sha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+      "upstream_url": "https://raw.githubusercontent.com/LibreOffice/dictionaries/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/ru_RU/ru_RU.aff",
+      "removedPfxSfxLines": 1606
+    }
+  ]
+}

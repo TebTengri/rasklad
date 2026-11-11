@@ -1,0 +1,970 @@
+{
+  "hunspell": {
+    "loop": {
+      "probe": {
+        "checksum": "e71ac5edeba87383",
+        "dependency": {
+          "additionalNotices": 2,
+          "fullPairAffPlusDicBytes": 4099394,
+          "hunspellVersionHeader": "1.7.5",
+          "hunspellVersionLibrary": "1.7.5",
+          "languages": {
+            "en": {
+              "affBytes": 3205,
+              "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+              "dicBytes": 551762,
+              "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+              "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+            },
+            "ru": {
+              "affBytes": 71236,
+              "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+              "dicBytes": 3473191,
+              "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+              "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+            }
+          },
+          "libraryBytes": 546936,
+          "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+          "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+          "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+          "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+        },
+        "engines": "fullPair",
+        "iterations": 2000,
+        "loadNs": 40125638,
+        "loopNs": 371396930,
+        "mode": "hunspell",
+        "nsPerSpellCall": 1450.7692578125,
+        "recheckNs": 6692538,
+        "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+        "spellCalls": 256000,
+        "syntheticTokens": 64,
+        "verifyNs": 8361023
+      },
+      "observer": {
+        "childWallNs": 438040080,
+        "peakRssKiB": 28636,
+        "lastObservedRssKiB": 28636,
+        "lateLoopMedianRssKiB": 28488.0,
+        "samples": 199,
+        "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+        "coldScope": "fresh process, filesystem cache not flushed"
+      }
+    },
+    "freshProcessRuns": [
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 39088023,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6487270,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8813788
+        },
+        "observer": {
+          "childWallNs": 64997519,
+          "peakRssKiB": 28620,
+          "lastObservedRssKiB": 28620,
+          "lateLoopMedianRssKiB": 22220,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 39839736,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6639706,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8461757
+        },
+        "observer": {
+          "childWallNs": 63762091,
+          "peakRssKiB": 28592,
+          "lastObservedRssKiB": 28592,
+          "lateLoopMedianRssKiB": 22256,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 39010643,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6600129,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8586158
+        },
+        "observer": {
+          "childWallNs": 64998160,
+          "peakRssKiB": 28604,
+          "lastObservedRssKiB": 28604,
+          "lateLoopMedianRssKiB": 22264,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 39315311,
+          "loopNs": 20,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6478323,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8518808
+        },
+        "observer": {
+          "childWallNs": 64729581,
+          "peakRssKiB": 28600,
+          "lastObservedRssKiB": 28600,
+          "lateLoopMedianRssKiB": 22200,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 39692808,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6542767,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8374068
+        },
+        "observer": {
+          "childWallNs": 65202219,
+          "peakRssKiB": 28652,
+          "lastObservedRssKiB": 28652,
+          "lateLoopMedianRssKiB": 22188,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 40094965,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 7132377,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8946885
+        },
+        "observer": {
+          "childWallNs": 67157557,
+          "peakRssKiB": 28596,
+          "lastObservedRssKiB": 28596,
+          "lateLoopMedianRssKiB": 22100.0,
+          "samples": 30,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "fullPair",
+          "iterations": 0,
+          "loadNs": 44112641,
+          "loopNs": 30,
+          "mode": "hunspell",
+          "nsPerSpellCall": null,
+          "recheckNs": 6480988,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8402842
+        },
+        "observer": {
+          "childWallNs": 69301642,
+          "peakRssKiB": 28588,
+          "lastObservedRssKiB": 28588,
+          "lateLoopMedianRssKiB": 23084.0,
+          "samples": 32,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      }
+    ],
+    "freshProcessWallMedianNs": 64998160,
+    "freshProcessLoadMedianNs": 39692808,
+    "cache": "filesystem cache not flushed; fresh process, not guaranteed cold OS cache",
+    "rssScope": "actual predictor child RSS including shared libraries, not incremental memory; late-loop median after raw input bytes freed; peak includes loading/validation"
+  },
+  "control": {
+    "loop": {
+      "probe": {
+        "checksum": "e71ac5edeba87383",
+        "dependency": {
+          "additionalNotices": 2,
+          "controlPairAffPlusDicBytes": 4026575,
+          "fullPairAffPlusDicBytes": 4099394,
+          "hunspellVersionHeader": "1.7.5",
+          "hunspellVersionLibrary": "1.7.5",
+          "languages": {
+            "en": {
+              "affBytes": 3205,
+              "affRows": 209,
+              "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+              "controlAffBytes": 1460,
+              "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+              "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+              "dicBytes": 551762,
+              "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+              "keptRows": 136,
+              "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+              "removedPfxRows": 14,
+              "removedSfxRows": 59
+            },
+            "ru": {
+              "affBytes": 71236,
+              "affRows": 1633,
+              "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+              "controlAffBytes": 162,
+              "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+              "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+              "dicBytes": 3473191,
+              "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+              "keptRows": 27,
+              "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+              "removedPfxRows": 0,
+              "removedSfxRows": 1606
+            }
+          },
+          "libraryBytes": 546936,
+          "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+          "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+          "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+          "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+        },
+        "engines": "controlPairNoPfxSfx",
+        "iterations": 2000,
+        "loadNs": 42976235,
+        "loopNs": 288225649,
+        "mode": "control",
+        "nsPerSpellCall": 1125.88144140625,
+        "recheckNs": 6805475,
+        "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+        "spellCalls": 256000,
+        "syntheticTokens": 64,
+        "verifyNs": 8737099
+      },
+      "observer": {
+        "childWallNs": 356722404,
+        "peakRssKiB": 28448,
+        "lastObservedRssKiB": 28448,
+        "lateLoopMedianRssKiB": 28172.0,
+        "samples": 164,
+        "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+        "coldScope": "fresh process, filesystem cache not flushed"
+      }
+    },
+    "freshProcessRuns": [
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 38068478,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6603355,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8477517
+        },
+        "observer": {
+          "childWallNs": 62687467,
+          "peakRssKiB": 28236,
+          "lastObservedRssKiB": 28236,
+          "lateLoopMedianRssKiB": 21948.0,
+          "samples": 28,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 39389100,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6884498,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8635132
+        },
+        "observer": {
+          "childWallNs": 65235262,
+          "peakRssKiB": 28208,
+          "lastObservedRssKiB": 28208,
+          "lateLoopMedianRssKiB": 22176,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 44098934,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6752122,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8551601
+        },
+        "observer": {
+          "childWallNs": 69217659,
+          "peakRssKiB": 28212,
+          "lastObservedRssKiB": 28212,
+          "lateLoopMedianRssKiB": 22108,
+          "samples": 31,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 43046798,
+          "loopNs": 40,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6591150,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8573112
+        },
+        "observer": {
+          "childWallNs": 69164072,
+          "peakRssKiB": 28284,
+          "lastObservedRssKiB": 28284,
+          "lateLoopMedianRssKiB": 22188,
+          "samples": 31,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 39656393,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6670303,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8950461
+        },
+        "observer": {
+          "childWallNs": 64993498,
+          "peakRssKiB": 28256,
+          "lastObservedRssKiB": 28256,
+          "lateLoopMedianRssKiB": 21904,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 40431340,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6807127,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8630873
+        },
+        "observer": {
+          "childWallNs": 65077019,
+          "peakRssKiB": 28276,
+          "lastObservedRssKiB": 28276,
+          "lateLoopMedianRssKiB": 22180,
+          "samples": 29,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      },
+      {
+        "probe": {
+          "checksum": "14650fb0739d0383",
+          "dependency": {
+            "additionalNotices": 2,
+            "controlPairAffPlusDicBytes": 4026575,
+            "fullPairAffPlusDicBytes": 4099394,
+            "hunspellVersionHeader": "1.7.5",
+            "hunspellVersionLibrary": "1.7.5",
+            "languages": {
+              "en": {
+                "affBytes": 3205,
+                "affRows": 209,
+                "affSha256": "e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e",
+                "controlAffBytes": 1460,
+                "controlAffSha256": "60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 551762,
+                "dicSha256": "f0b1a234bd178bdd01875b2a392a9647f888b8fe879f79c52aae62c2759b3647",
+                "keptRows": 136,
+                "noticeSha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371",
+                "removedPfxRows": 14,
+                "removedSfxRows": 59
+              },
+              "ru": {
+                "affBytes": 71236,
+                "affRows": 1633,
+                "affSha256": "38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7",
+                "controlAffBytes": 162,
+                "controlAffSha256": "097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19",
+                "controlVerified": "control aff bytes equal deterministic removal of exact PFX/SFX rows",
+                "dicBytes": 3473191,
+                "dicSha256": "f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc",
+                "keptRows": 27,
+                "noticeSha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52",
+                "removedPfxRows": 0,
+                "removedSfxRows": 1606
+              }
+            },
+            "libraryBytes": 546936,
+            "libraryNoticeSha256": "953d284b146176fb5482c6acbacf33eebc60ab37dbc9d7112cb900c752923d61",
+            "librarySha256": "6e4982568935899084a06b6b19b9399fc5b74e1de108285dfbe1bf028c063162",
+            "linkage": "installed system shared library, dynamically linked; verified by dladdr(&Hunspell_create) canonical path, size and SHA-256 before any Hunspell_create; not redistributed, not part of the application bundle",
+            "morphologyManifestSha256": "590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"
+          },
+          "engines": "controlPairNoPfxSfx",
+          "iterations": 0,
+          "loadNs": 41848911,
+          "loopNs": 30,
+          "mode": "control",
+          "nsPerSpellCall": null,
+          "recheckNs": 6863947,
+          "scope": "resource probe: reads only the morphology manifest, its notices, the loaded Hunspell library and the listed aff/dic files (control mode also reads the source aff to verify the control derivation); no corpus, model or training lists. loadNs = two Hunspell_create calls; the engines stay alive until exit. 64 fixed synthetic key strings (us ASCII / ru Cyrillic), explicitly not evaluation data; each iteration makes two direct uncached Hunspell_spell calls per token. OS page-cache state is unknown. RSS is not measured here: measure this child process externally. No expansion of all word forms.",
+          "spellCalls": 0,
+          "syntheticTokens": 64,
+          "verifyNs": 8729614
+        },
+        "observer": {
+          "childWallNs": 67178852,
+          "peakRssKiB": 28264,
+          "lastObservedRssKiB": 28264,
+          "lateLoopMedianRssKiB": 22200.0,
+          "samples": 30,
+          "method": "/proc/<actual predictor child PID>/status VmHWM and VmRSS; 2ms sampling; no supervisor RSS",
+          "coldScope": "fresh process, filesystem cache not flushed"
+        }
+      }
+    ],
+    "freshProcessWallMedianNs": 65235262,
+    "freshProcessLoadMedianNs": 40431340,
+    "cache": "filesystem cache not flushed; fresh process, not guaranteed cold OS cache",
+    "rssScope": "actual predictor child RSS including shared libraries, not incremental memory; late-loop median after raw input bytes freed; peak includes loading/validation"
+  }
+}
