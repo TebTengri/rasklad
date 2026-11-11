@@ -42,6 +42,25 @@ class NaturalRouterMetricsTests(unittest.TestCase):
         self.assertEqual((combined&m.FIELD_BITS['count']).bit_count(),1)
         self.assertFalse(safe&m.FIELD_BITS['eligibleFalseAuto'])
 
+    def test_architecture_selection_and_recall_loss_fallback(self):
+        import copy
+        report={'methods':{}}
+        for name,rate in [('safeFull',0.98),('safeConfirmed',0.90),('contextConfirmed',0.90),('hybrid',0.90),('contextHybrid',0.90)]:
+            report['methods'][name]={}
+            for scope in ['holdout/en','holdout/ru','holdout/pooled']:
+                unit={'valid':{'falseAuto':0,'falseSuggest':0},
+                      'single':{'ordinaryRecoveryRate':rate,'correctSuggest':1},
+                      'burst':{'ordinaryRecoveryRate':rate,'correctSuggest':1}}
+                report['methods'][name][scope]={'occurrences':copy.deepcopy(unit),'wordTypes':copy.deepcopy(unit),
+                                              'autoScreen':{'status':'pass'},'proposalScreen':{'status':'pass'}}
+        m.architecture(report)
+        self.assertEqual(report['architecture']['algorithmCandidate'],'safeConfirmed')
+        self.assertFalse(report['architecture']['mandatoryContext'])  # zero measured safety gain
+        self.assertFalse(report['architecture']['contextFilterCredited'])
+        report['methods']['safeConfirmed']['holdout/ru']['wordTypes']['single']['ordinaryRecoveryRate']=0.85
+        m.architecture(report)
+        self.assertEqual(report['architecture']['algorithmCandidate'],'manualOnly')
+
     def test_unicode_alias_not_an_anchor(self):
         self.assertEqual(m.anchor('KIND'),'-')
         self.assertEqual(m.anchor('ЁЛОЧКА'),'R')

@@ -1,0 +1,25 @@
+{
+  "negativeCliChecks": 23,
+  "labelsIgnored": true,
+  "unselectedShardNotRead": true,
+  "shards": 3,
+  "rows": 221090,
+  "wallSeconds": 0.8400990010050009,
+  "networkNamespace": true,
+  "projectReadOnly": true,
+  "homeOrNeighborsMounted": false,
+  "actionSha256": [
+    "c6c80e261cedd8bf317105870f878668e5d3432dad162754f68b6f9056514a3a",
+    "5e89e664d7f2a0bf08ccb6d30fd60026390a179d79a63aad433f4aa5178f64d1",
+    "80e40ca0e67dce0bbc99785bc2246acf160dbf1eade3be3fd748834afca1ba9d"
+  ],
+  "qtTestsPassed": 508,
+  "newPythonTestsPassed": 11,
+  "previousPythonTestsPassed": 17,
+  "independentRowsMatched": 221090,
+  "independentPrimaryRecount": {
+    "primaryCounterFieldsMatched": 7392,
+    "primaryScreenVerdictsMatched": 96
+  },
+  "cppCompileFix": "namespace qualifications for ADL collision only; no behavior/protocol change"
+}
