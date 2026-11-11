@@ -34,3 +34,7 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 ## Технический домен 004
 
 Отдельный local-evaluation-only допуск: 20 EN глав Rust Book и20 RU глав перевода по hash-ranking путей, pinned commits и полные notices. [Паспорт](evaluation-004-sources.json), [review](notices/TECHNICAL-004-REVIEW.md), [протокол](experiment-004-protocol.json). Источники и derived case/action TSV только в build/. Нет выполнения Markdown/includes/кода, обучения или выпуска; release_approved=false.
+
+## Контекстный контроль005
+
+[Паспорт](evaluation-005-sources.json) и [review](notices/CONTEXT-005-REVIEW.md): прежние approved dictionary/model inputs, собственные короткие prefixes из протокола, отдельные features/labels только build/. Это synthetic mechanism test, не natural corpus и не частота ошибок пользователя. Все notices/MODIFICATIONS сохраняются; release_approved=false. Никакого дообучения или пользовательской истории.

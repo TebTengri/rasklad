@@ -64,12 +64,13 @@ def delta(label, action):
 
 
 def budget(groups):
-    required = ['proseKeep', 'protectedKeep', 'unknownKeep', 'ambiguousCorrect', 'controlCorrect']
-    if any(not groups[x]['count'] for x in required) or not groups['ambiguousKeep']['count']:
-        return {'status': 'insufficient'}
-    checks = {name + 'ZeroFalse': groups[name]['falseAuto'] == 0 for name in ['proseKeep','protectedKeep','unknownKeep','ambiguousKeep']}
-    checks.update({name + 'AtLeastHalf': groups[name]['autoRecovered'] * 2 >= groups[name]['count'] for name in ['ambiguousCorrect','controlCorrect']})
-    return {'status': 'pass' if all(checks.values()) else 'fail', 'checks': checks}
+    required = ['proseKeep', 'protectedKeep', 'unknownKeep', 'ambiguousKeep', 'ambiguousCorrect', 'controlCorrect']
+    checks = {name + 'ZeroFalse': (groups[name]['falseAuto'] == 0 if groups[name]['count'] else None)
+              for name in ['proseKeep','protectedKeep','unknownKeep','ambiguousKeep']}
+    checks.update({name + 'AtLeastHalf': (groups[name]['autoRecovered'] * 2 >= groups[name]['count'] if groups[name]['count'] else None)
+                   for name in ['ambiguousCorrect','controlCorrect']})
+    status = 'insufficient' if any(not groups[x]['count'] for x in required) else 'pass' if all(checks.values()) else 'fail'
+    return {'status': status, 'checks': checks}
 
 
 def run(root, decisions):
