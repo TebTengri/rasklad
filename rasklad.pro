@@ -30,6 +30,15 @@ context_decisions.file = tools/context_decisions.pro
 context_decisions.makefile = Makefile.context_decisions
 context_decisions.depends = core
 
+# Опыт 006 (SYS-238): router-политики над признаками 005 без Hunspell, модели
+# и словарей; собираются всегда. Тесты — build/tests/router, CLI — build/tools.
+SUBDIRS += router_tests router_decisions
+router_tests.file = tests/router/router_tests.pro
+router_tests.depends = core
+router_decisions.file = tools/router_decisions.pro
+router_decisions.makefile = Makefile.router_decisions
+router_decisions.depends = core
+
 # Эксперимент 003 (SYS-235): только если уже установлена Hunspell с
 # pkg-config. Ничего не скачивается и не устанавливается; без неё цели
 # пропускаются, а bin/test сообщает, что зависимость недоступна.
