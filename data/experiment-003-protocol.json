@@ -48,7 +48,7 @@
     "M4": "morphThenModel still adds useful OOV recovery; quantify unsafe additions"
   },
   "challenge": "same original fixtures and noise sequence as002 (exclude old full stem lexicons only, not new morph acceptance); same645 cases; also report new morph ambiguity labels; do not choose new negatives using test results",
-  "metrics": "occurrences plus canonical unique types; language/length; word acceptance and pairwise changes vs control, stems, model, morph; full coverage denominators and unsafe counts; illustrative PPV at0.1%,1%,5% wrong prevalence",
+  "metrics": "occurrences plus exact case-preserved unique types for all methods (Hunspell case semantics); not directly comparable to002 canonical-folded types; language/length; word acceptance and pairwise changes vs control, stems, model, morph; full coverage denominators and unsafe counts; illustrative PPV at0.1%,1%,5% wrong prevalence",
   "resources": "fresh probe pair of full Hunspell engines using only approved aff/dic; no corpus/model/train lists; actual child RSS and load wall, warm uncached membership, explicit .aff+.dic and shared-lib sizes; no expansion to all forms",
   "decision": "no system input; no threshold or exception tuning after viewing new block; supported/refuted/inconclusive for each hypothesis only on sample; no world novelty or deployment safety claims",
   "release_approved": false
