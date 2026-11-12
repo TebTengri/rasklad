@@ -1,0 +1,172 @@
+{
+  "review": "INPUT-BOUNDARY-REVIEW-001",
+  "date": "2026-11-12",
+  "issue": "SYS-223",
+  "method": "static selected-file review; upstream source and tests not executed",
+  "files": [
+    {
+      "project": "uaswitcher",
+      "repo": "deimoc/UASwitcher",
+      "commit": "e1456de66551185b89ca8fbc69e496e8e55345df",
+      "path": "LICENSE",
+      "sha256": "89e712fa012d49b497e9b5ae6ac7050db40df2d5da6c9f82751d47c0cf422bbf",
+      "bytes": 1063
+    },
+    {
+      "project": "uaswitcher",
+      "repo": "deimoc/UASwitcher",
+      "commit": "e1456de66551185b89ca8fbc69e496e8e55345df",
+      "path": "Sources/UASwitcher/KeyboardMonitor.swift",
+      "sha256": "97f8a3d582cc76716f3d9b254f3a5fb9c22d7f9bc4ff16bd92c40b0cc0b4d87d",
+      "bytes": 26764
+    },
+    {
+      "project": "uaswitcher",
+      "repo": "deimoc/UASwitcher",
+      "commit": "e1456de66551185b89ca8fbc69e496e8e55345df",
+      "path": "Sources/UASwitcher/AutoSwitch.swift",
+      "sha256": "933e7ff004a25f62cf94325b31af4998179d0f1ff9f4e853c3cba7d8c23c7c57",
+      "bytes": 10829
+    },
+    {
+      "project": "uaswitcher",
+      "repo": "deimoc/UASwitcher",
+      "commit": "e1456de66551185b89ca8fbc69e496e8e55345df",
+      "path": "Sources/UASwitcher/TextConverter.swift",
+      "sha256": "c26b8e2da2f5472f76f726a1493a4bf9532fb0127ef4a6af259bab47ede09e48",
+      "bytes": 19096
+    },
+    {
+      "project": "uaswitcher",
+      "repo": "deimoc/UASwitcher",
+      "commit": "e1456de66551185b89ca8fbc69e496e8e55345df",
+      "path": "Sources/UASwitcher/AppDelegate.swift",
+      "sha256": "caef77d8ef277b43dc4f377eda92fb7be659313ebb766db32fa944e1460746a0",
+      "bytes": 44326
+    },
+    {
+      "project": "mahou",
+      "repo": "iamkarlson/Mahou",
+      "commit": "73d33680967821c338c9ceb67bfe71eae1564747",
+      "path": "LICENSE.md",
+      "sha256": "addb1c67a9dc2334f5d3f5ee416451266cf040d787070903cca6b9d99d6331a3",
+      "bytes": 18111
+    },
+    {
+      "project": "mahou",
+      "repo": "iamkarlson/Mahou",
+      "commit": "73d33680967821c338c9ceb67bfe71eae1564747",
+      "path": "Mahou/Classes/KMHook.cs",
+      "sha256": "c4678bf1c7be39d2a8b67673f25f42924d6f1c0f69fbf52a1b67c6a1afbb52cc",
+      "bytes": 40109
+    },
+    {
+      "project": "mahou",
+      "repo": "iamkarlson/Mahou",
+      "commit": "73d33680967821c338c9ceb67bfe71eae1564747",
+      "path": "Mahou/Classes/KInputs.cs",
+      "sha256": "3cb90655843650c0a7d6bf32678100c112636196b5bc1a5be5c22c81bb8fb7ee",
+      "bytes": 4916
+    },
+    {
+      "project": "xneur",
+      "repo": "AndrewCrewKuznetsov/xneur-devel",
+      "commit": "5a964810103cf73783f8f8ebb2998be8a5b91eda",
+      "path": "xneur/COPYING",
+      "sha256": "231f7edcc7352d7734a96eef0b8030f77982678c516876fcb81e25b32d68564c",
+      "bytes": 18002
+    },
+    {
+      "project": "xneur",
+      "repo": "AndrewCrewKuznetsov/xneur-devel",
+      "commit": "5a964810103cf73783f8f8ebb2998be8a5b91eda",
+      "path": "xneur/lib/main/program.c",
+      "sha256": "d5f0c8ed10ff81feda4e5a222081e839a96404c1302dec9d6186dfe90c82a0ed",
+      "bytes": 87429
+    },
+    {
+      "project": "xneur",
+      "repo": "AndrewCrewKuznetsov/xneur-devel",
+      "commit": "5a964810103cf73783f8f8ebb2998be8a5b91eda",
+      "path": "xneur/lib/main/event.c",
+      "sha256": "92a8ca81f1dc558bb76daa1fff2352c44b8436d847e9f74cd7c062bb483b50ec",
+      "bytes": 8567
+    },
+    {
+      "project": "xneur",
+      "repo": "AndrewCrewKuznetsov/xneur-devel",
+      "commit": "5a964810103cf73783f8f8ebb2998be8a5b91eda",
+      "path": "xneur/lib/main/focus.c",
+      "sha256": "f0d836d8de7e4cfb50c041853c93a0441434b545e0fc035d0075c2b0c4f07042",
+      "bytes": 9128
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "LICENSE",
+      "sha256": "87ece383f3915eb0712d435fda259c7a6974a2e6a55ee551dd23680a0ac6455b",
+      "bytes": 1066
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/actuator.py",
+      "sha256": "fc26075b919507f5fb19400bf2fbcadb126f54f781037aff6f272ef5a9f7d836",
+      "bytes": 27112
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/controller.py",
+      "sha256": "fd81100219c3b668b809a9a3081667eed2be087494d02791249133933e3d296f",
+      "bytes": 110788
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/textops.py",
+      "sha256": "84f7bcd566927c0b502218ff5da711f644b7dcc36494ea1aeeb9401009aac19a",
+      "bytes": 8324
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/editable.py",
+      "sha256": "9f67fadc03335bd42e1eed0f316dd6f1ed4a5ff193ed8161b5d7777b49453363",
+      "bytes": 27201
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/keys.py",
+      "sha256": "18159c6f386ac08b8d84f82a30b693f593508733c6610dc121c1392e5bbf5e7e",
+      "bytes": 7942
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "wayswitch/backends/hyprland.py",
+      "sha256": "60a64c4471af871c8ae256cc77f58c4bbb6c6518afc0a8de4ccacbf40a4f745c",
+      "bytes": 10932
+    },
+    {
+      "project": "wayswitch",
+      "repo": "Wetoshkin/WaySwitch",
+      "commit": "e18db27c74ab85c0240e261d9b3a5d3d16b89779",
+      "path": "tests/test_native_execution.py",
+      "sha256": "b9f463857db327f0edc0be2e9660064db733d169212fb69e6064ad84744f2214",
+      "bytes": 27079
+    }
+  ],
+  "foreign_code_integrated": false,
+  "system_input_enabled": false,
+  "queue_safety_proven": false,
+  "production_backend_selected": false
+}
