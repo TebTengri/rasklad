@@ -55,7 +55,9 @@ mkdir -p -- "${gen_dir}"
 
 cd -- "${lab_dir}"
 qmake6 -o Makefile "INPUT_LAB_GENERATED=${gen_dir}" "${pro_file}"
-jobs="$(nproc 2>/dev/null || echo 1)"
+jobs="${RASKLAD_BUILD_JOBS:-2}"
+[[ "${jobs}" =~ ^[1-9][0-9]?$ ]] && (( jobs <= 64 )) \
+    || fail "RASKLAD_BUILD_JOBS должен быть целым числом от 1 до 64"
 make -j"${jobs}"
 
 test_bin="${lab_dir}/input_lab_tests"

@@ -1,0 +1,106 @@
+{
+  "audit": "PROJECT-AUDIT-001",
+  "date": "2026-11-12",
+  "base_commit": "9a86c77461e24d930bf75d6de9665b62ac4ec7b6",
+  "scope": "rasklad own source and named local tests, not whole OS or full transitive dependency CVE/legal audit",
+  "tests": {
+    "qt": {
+      "passed": 602,
+      "failed": 0,
+      "skipped": 1
+    },
+    "wire": {
+      "passed": 30,
+      "failed": 0
+    },
+    "nested_runner_mocked": {
+      "passed": 22,
+      "failed": 0
+    }
+  },
+  "history_signatures": {
+    "git_blobs_scanned": 286,
+    "blobs_over_16MiB_skipped": 0,
+    "largest_blob_bytes": 1385056,
+    "pattern_match_counts": {
+      "private_key": 0,
+      "github_token": 0,
+      "aws_key_id": 0,
+      "anthropic_key": 0,
+      "openai_key": 0,
+      "credential_url": 0
+    },
+    "limitations": "signature patterns only, not an entropy scan or proof of no secrets; matched contents never output"
+  },
+  "notice_integrity": {
+    "notice_pin_pairs_checked": 15,
+    "mismatch_count": 0,
+    "mismatched_notice_paths": []
+  },
+  "resources": {
+    "mode": "manual-empty-document",
+    "alive_for_6s": true,
+    "peak_rss_kib": 65580,
+    "last_rss_kib": 65580,
+    "samples": 293,
+    "late_cpu_seconds": 0.0,
+    "late_wall_seconds": 1.977,
+    "exit_after_stop": -15,
+    "stderr_bytes": 0,
+    "network": "private namespace",
+    "display": "offscreen/software",
+    "limits": {
+      "address_space_mib": 1024,
+      "cpu_seconds": 5,
+      "wall_seconds": 6,
+      "nice": 10,
+      "file_or_memfd_mib": 64
+    }
+  },
+  "compositor_preflight": {
+    "status": "plan_only",
+    "executable_checks_passed": true
+  },
+  "config_verification": {
+    "configVerifiedInSandbox": true,
+    "returnCode": 0,
+    "displayOrInputClientConnected": false
+  },
+  "compositor_smoke": {
+    "elapsedMs": 102,
+    "executables": {
+      "Hyprland": "ok",
+      "bwrap": "ok"
+    },
+    "exitCode": 134,
+    "mode": "smoke",
+    "sandboxSafetyProven": false,
+    "sandboxStarted": true,
+    "status": "exited",
+    "tested": true
+  },
+  "github": {
+    "public": true,
+    "pr_required": true,
+    "admin_enforcement": true,
+    "approvals_required": 0,
+    "force_push_allowed": false,
+    "deletion_allowed": false,
+    "actions_enabled": false,
+    "secret_scanning_enabled": true,
+    "push_protection_enabled": true,
+    "dependabot_security_updates_enabled": false
+  },
+  "automatic_system_input_enabled": false,
+  "release_approved": false,
+  "project_license": "owner decision pending",
+  "data_release_approved": false,
+  "dependency_patch_status": "not proven for installed binaries; specific unused API paths reviewed, not full CVE scan",
+  "open_limits": [
+    "same-UID and root are outside app isolation",
+    "accepted-document limit is not a hard peak-memory cap",
+    "text may persist in swap/core/clipboard manager",
+    "legacy developer profiling helpers do not have a general untrusted-process supervisor",
+    "real compositor/client race and field safety not tested"
+  ]
+}
