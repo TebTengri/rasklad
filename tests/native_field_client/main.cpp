@@ -3,9 +3,10 @@
 // Types invented words with synthetic key events delivered to its OWN window
 // (no real input devices), then asserts on the actual field contents.
 // Expected strings are independent hardcoded literals (not converter output).
-// stdout: exactly one compact JSON line of booleans + scenario label; never field text.
+// stdout: bounded metadata-only phase ACKs and one final JSON report; never field text.
 #include <QGuiApplication>
 #include <QInputMethod>
+#include <QObject>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeyEvent>
@@ -24,7 +25,9 @@
 
 static const char *const kScenarios[] = {"baseline", "prefix", "reverse",
                                          "typing-race", "focus-race", "selection-race",
-                                         "post-send-race"};
+                                         "post-send-race", "keyboard-before-edit",
+                                         "keyboard-after-edit", "keyboard-acked-edit",
+                                         "keyboard-applied-before-edit", "keyboard-guarded-after-key"};
 static QString g_scenario;
 static QSocketNotifier *g_stdinNotifier = nullptr;
 static bool g_handshakeDone = false;
@@ -109,13 +112,43 @@ static bool writeAck(const char *ack)
     return w == ssize_t(n);
 }
 
-static void typeText(const QString &s);
+static bool keyboardScenario()
+{
+    return g_scenario.startsWith(QLatin1String("keyboard-"));
+}
+
+// Observes only synthetic events delivered to our own fixture client. Stores
+// counts/order, never event text. Installed before opening the fixture window.
+class DeliveryObserver final : public QObject {
+public:
+    using QObject::QObject;
+    bool eventFilter(QObject *object, QEvent *event) override {
+        if (!keyboardScenario() || !g_out.value("keyboard_resumed").toBool())
+            return false;
+        if (event->type() == QEvent::InputMethod && !m_editSeen) {
+            m_editSeen = true;
+            g_out.insert("edit_observed_before_keyboard", !m_keySeen);
+        }
+        if (object == g_win && event->type() == QEvent::KeyPress) {
+            const auto *key = static_cast<QKeyEvent *>(event);
+            if (key->key() == Qt::Key_X && key->nativeScanCode() != 0 && key->spontaneous()) {
+                m_keySeen = true;
+                g_out.insert("native_keyboard_x_seen", true);
+            }
+        }
+        return false;
+    }
+private:
+    bool m_editSeen = false;
+    bool m_keySeen = false;
+};
+
 
 // post-send-race: parent says "prepare" right before sending its edit. We ACK and
 // then block here (no Qt event loop, so the queued Wayland edit is NOT applied)
 // until "mutate". We then edit our own field synthetically, which advances the
-// text-input-v3 commit serial, ACK, and return to the loop where Qt must discard
-// the now-stale edit.
+// text-input-v3 commit serial, ACK, and return to the loop. The safety test
+// deliberately requires preservation; Qt applies the stale edit in LAB-003.
 static void onStdinCommand()
 {
     g_stdinNotifier->setEnabled(false); // one-shot; never re-enabled
@@ -124,6 +157,26 @@ static void onStdinCommand()
     g_handshakeDone = true;
     if (!readExactCommand("prepare\n", 200) || !writeAck("{\"phase\":\"ready\"}\n"))
         return;
+    if (keyboardScenario()) {
+        if (!readExactCommand("resume\n", 700))
+            return;
+        g_out.insert("keyboard_resumed", true);
+        if (!writeAck("{\"phase\":\"resumed\"}\n"))
+            return;
+        if (g_scenario == "keyboard-acked-edit" || g_scenario == "keyboard-applied-before-edit" || g_scenario == "keyboard-guarded-after-key") {
+            QTimer::singleShot(50, [] {
+                QQuickItem *normal = field("normalField");
+                const bool keyFirst = g_scenario != "keyboard-acked-edit";
+                const QString expected = keyFirst ? QStringLiteral("ghbdtn x") : QString::fromUtf8("привет ");
+                const bool applied = normal && normal->hasActiveFocus()
+                    && normal->property("text").toString() == expected
+                    && normal->property("selectedText").toString().isEmpty();
+                g_out.insert(keyFirst ? "key_ack_verified" : "edit_ack_verified", applied);
+                writeAck(applied ? (keyFirst ? "{\"phase\":\"key_applied\"}\n" : "{\"phase\":\"applied\"}\n") : "{\"phase\":\"not_applied\"}\n");
+            });
+        }
+        return;
+    }
     g_out.insert(QStringLiteral("post_send_prepared"), true);
     if (!readExactCommand("mutate\n", 700))
         return;
@@ -150,6 +203,10 @@ static void finish(int code = 0)
     if (g_scenario == "focus-race") passed = passed && yes("marker_unchanged");
     if (g_scenario == "post-send-race")
         passed = passed && yes("post_send_prepared") && yes("post_send_mutated");
+    if (keyboardScenario())
+        passed = passed && yes("keyboard_resumed") && yes("native_keyboard_x_seen");
+    if (g_scenario == "keyboard-acked-edit") passed = passed && yes("edit_ack_verified");
+    if (g_scenario == "keyboard-applied-before-edit" || g_scenario == "keyboard-guarded-after-key") passed = passed && yes("key_ack_verified");
     g_out.insert(QStringLiteral("field_assertions_passed"), passed);
     const QByteArray line = QJsonDocument(g_out).toJson(QJsonDocument::Compact);
     std::fwrite(line.constData(), 1, size_t(line.size()), stdout);
@@ -192,6 +249,12 @@ int main(int argc, char **argv)
     } else if (g_scenario == "typing-race" || g_scenario == "post-send-race") {
         g_typed = QStringLiteral("ghbdtn ");
         g_expected = QStringLiteral("ghbdtn x");
+    } else if (g_scenario == "keyboard-applied-before-edit" || g_scenario == "keyboard-guarded-after-key") {
+        g_typed = QStringLiteral("ghbdtn ");
+        g_expected = QStringLiteral("ghbdtn x"); // preservation criterion, not expected corruption
+    } else if (keyboardScenario()) {
+        g_typed = QStringLiteral("ghbdtn ");
+        g_expected = QString::fromUtf8("привет x");
     } else if (g_scenario == "baseline") {
         g_typed = QStringLiteral("ghbdtn ");
         g_expected = QString::fromUtf8("привет ");
@@ -210,7 +273,7 @@ int main(int argc, char **argv)
         std::fputs("{\"fixture_environment_valid\":false,\"completed\":false}\n", stdout);
         return 2;
     }
-    if (g_scenario == "post-send-race") {
+    if (g_scenario == "post-send-race" || keyboardScenario()) {
         struct stat input{};
         if (::fstat(STDIN_FILENO, &input) != 0 || !S_ISFIFO(input.st_mode)) {
             std::fputs("{\"fixture_pipe_valid\":false,\"completed\":false}\n", stdout);
@@ -218,6 +281,8 @@ int main(int argc, char **argv)
         }
     }
     QGuiApplication app(argc, argv);
+    DeliveryObserver observer;
+    app.installEventFilter(&observer);
     g_out = {{"completed", false},
              {"scenario", g_scenario},
              {"scenario_valid", true},
@@ -235,7 +300,7 @@ int main(int argc, char **argv)
              {"secret_field_unchanged", false},
              {"post_send_prepared", false},
              {"post_send_mutated", false}};
-    if (g_scenario == "post-send-race") {
+    if (g_scenario == "post-send-race" || keyboardScenario()) {
         g_stdinNotifier = new QSocketNotifier(STDIN_FILENO, QSocketNotifier::Read, &app);
         QObject::connect(g_stdinNotifier, &QSocketNotifier::activated, [] { onStdinCommand(); });
     }
@@ -268,10 +333,20 @@ int main(int argc, char **argv)
         g_out.insert(QStringLiteral("window_active"), g_win->isActive());
         g_out.insert(QStringLiteral("focus_is_normal"), QGuiApplication::focusObject() == n);
         g_out.insert(QStringLiteral("input_context_visible"), QGuiApplication::inputMethod()->isVisible());
-        typeText(g_typed);
-        // Checked synchronously: compositor round-trip cannot have happened yet.
-        g_out.insert(QStringLiteral("normal_typed_as_expected_before_fix"),
-                     n && n->property("text").toString() == g_typed);
+        if (keyboardScenario()) {
+            // Ask the private server for a fixed synthetic word through wl_keyboard.
+            writeAck("{\"phase\":\"word_ready\"}\n");
+            QTimer::singleShot(150, [] {
+                QQuickItem *normal = field("normalField");
+                g_out.insert("normal_typed_as_expected_before_fix",
+                    normal && normal->property("text").toString() == g_typed);
+            });
+        } else {
+            typeText(g_typed);
+            // Synchronous local-event control from LAB-003.
+            g_out.insert(QStringLiteral("normal_typed_as_expected_before_fix"),
+                         n && n->property("text").toString() == g_typed);
+        }
     });
     // Stage 2b (1.8 s): race actions inside the parent's 300 ms plan window.
     QTimer::singleShot(1800, [] {
