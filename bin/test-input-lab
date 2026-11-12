@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# SYS-223: сборка и запуск изолированной developer-лаборатории input-method-v2
+# (tests/input_lab). Не входит в bin/build и bin/test, не связана с приложением.
+# Сервер и клиент libwayland работают в одном тестовом процессе через socketpair:
+# без слушающего сокета, без подключения к сеансу, без устройств и seat-а,
+# только вымышленный текст. Без root, сети, установки и изменения настроек.
+# Аргументы передаются тестовому бинарнику (например, -v2 или имя функции).
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+root_dir="$(cd -P -- "${script_dir}/.." && pwd -P)"
+build_dir="${root_dir}/build"
+lab_dir="${build_dir}/input_lab"
+gen_dir="${lab_dir}/generated"
+pro_file="${root_dir}/tests/input_lab/input_lab_tests.pro"
+xml="${root_dir}/tests/input_lab/protocol/input-method-unstable-v2.xml"
+# Закреплён в tests/input_lab/protocol/README.md (wlroots 0855cdacb2eeeff35849e2e9c4db0aa996d78d10).
+xml_sha256="99414dbad9458e71aa1fa01bc45f94ca6685787bfcb4d98948f72c1b45b60703"
+
+fail() {
+    echo "bin/test-input-lab: $*" >&2
+    exit 1
+}
+
+[[ -f "${pro_file}" ]] || fail "не найден ${pro_file}"
+[[ -f "${xml}" ]] || fail "не найден ${xml}"
+
+# build/ и build/input_lab должны быть настоящими каталогами внутри проекта.
+for dir in "${build_dir}" "${lab_dir}" "${gen_dir}"; do
+    if [[ -L "${dir}" ]]; then
+        fail "${dir} является символической ссылкой; отказ"
+    fi
+done
+
+actual_sha256="$(sha256sum -- "${xml}")"
+actual_sha256="${actual_sha256%% *}"
+[[ "${actual_sha256}" == "${xml_sha256}" ]] \
+    || fail "SHA-256 вендорного XML не совпадает с закреплённым (${actual_sha256}); отказ"
+
+command -v pkg-config >/dev/null 2>&1 || fail "pkg-config недоступен"
+pkg-config --exists wayland-server wayland-client \
+    || fail "pkg-config не находит wayland-server и wayland-client"
+
+scanner="$(pkg-config --variable=wayland_scanner wayland-scanner 2>/dev/null || true)"
+if [[ -z "${scanner}" ]]; then
+    scanner="$(command -v wayland-scanner || true)"
+fi
+[[ -n "${scanner}" && -x "${scanner}" ]] || fail "wayland-scanner не найден"
+
+mkdir -p -- "${gen_dir}"
+# Сгенерированный код — только в build/; в Git не попадает.
+"${scanner}" server-header "${xml}" "${gen_dir}/input-method-unstable-v2-server-protocol.h"
+"${scanner}" client-header "${xml}" "${gen_dir}/input-method-unstable-v2-client-protocol.h"
+"${scanner}" private-code "${xml}" "${gen_dir}/input-method-unstable-v2-protocol.c"
+
+cd -- "${lab_dir}"
+qmake6 -o Makefile "INPUT_LAB_GENERATED=${gen_dir}" "${pro_file}"
+jobs="$(nproc 2>/dev/null || echo 1)"
+make -j"${jobs}"
+
+test_bin="${lab_dir}/input_lab_tests"
+[[ -x "${test_bin}" ]] || fail "тестовый бинарник не найден: ${test_bin}"
+
+# Изоляция от сеанса: лаборатория не использует эти переменные; без
+# XDG_RUNTIME_DIR и WAYLAND_DISPLAY случайный wl_display_connect(NULL) не найдёт
+# сокет рабочего стола, без WAYLAND_DEBUG payload не печатается в stderr.
+exec env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET -u WAYLAND_DEBUG -u XDG_RUNTIME_DIR \
+    -u DISPLAY "${test_bin}" "$@"
