@@ -1,0 +1,328 @@
+// Developer-only native field assertion client. Real Qt Quick window with two real
+// fields, connected only to the private compositor socket given by the parent.
+// Types invented words with synthetic key events delivered to its OWN window
+// (no real input devices), then asserts on the actual field contents.
+// Expected strings are independent hardcoded literals (not converter output).
+// stdout: exactly one compact JSON line of booleans + scenario label; never field text.
+#include <QGuiApplication>
+#include <QInputMethod>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QKeyEvent>
+#include <QQmlApplicationEngine>
+#include <QQuickItem>
+#include <QQuickWindow>
+#include <QSocketNotifier>
+#include <QTimer>
+#include <cerrno>
+#include <chrono>
+#include <cstdio>
+#include <cstring>
+#include <poll.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+static const char *const kScenarios[] = {"baseline", "prefix", "reverse",
+                                         "typing-race", "focus-race", "selection-race",
+                                         "post-send-race"};
+static QString g_scenario;
+static QSocketNotifier *g_stdinNotifier = nullptr;
+static bool g_handshakeDone = false;
+
+static const QString kSecretTyped = QStringLiteral("ghbdtn ");      // same ASCII word, all scenarios
+static const QString kMarker = QStringLiteral("zqxmarker");          // invented focus-race preset
+
+static QString g_typed;     // what stage 2 types into the normal field
+static QString g_expected;  // hardcoded expected final normal-field text
+
+static QQuickWindow *g_win = nullptr;
+static QJsonObject g_out;
+
+static QQuickItem *field(const char *name)
+{
+    return g_win ? g_win->findChild<QQuickItem *>(QLatin1String(name)) : nullptr;
+}
+
+static void focusField(QQuickItem *item)
+{
+    if (!item)
+        return;
+    g_win->requestActivate();
+    QMetaObject::invokeMethod(item, "forceActiveFocus");
+    QGuiApplication::inputMethod()->update(Qt::ImQueryAll);
+}
+
+// Synthetic key events sent only to our own QQuickWindow (no devices, no grabs).
+static void typeText(const QString &s)
+{
+    for (QChar c : s) {
+        int key = int(Qt::Key_unknown);
+        if (c == u' ')
+            key = int(Qt::Key_Space);
+        else if (c >= u'a' && c <= u'z')
+            key = int(Qt::Key_A) + (c.unicode() - 'a');
+        QKeyEvent press(QEvent::KeyPress, key, Qt::NoModifier, QString(c));
+        QKeyEvent release(QEvent::KeyRelease, key, Qt::NoModifier, QString(c));
+        QCoreApplication::sendEvent(g_win, &press);
+        QCoreApplication::sendEvent(g_win, &release);
+    }
+    // Make sure the platform input context pushes fresh surrounding text.
+    QGuiApplication::inputMethod()->update(Qt::ImQueryAll);
+}
+
+// Reads one '\n'-terminated whitelisted command from stdin, at most 16 bytes,
+// with a steady_clock deadline (EINTR-safe). Returns true only on exact match.
+static bool readExactCommand(const char *expected, int budgetMs)
+{
+    using clock = std::chrono::steady_clock;
+    const auto deadline = clock::now() + std::chrono::milliseconds(budgetMs);
+    char buf[16];
+    size_t len = 0;
+    while (len < sizeof(buf)) {
+        const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+            deadline - clock::now()).count();
+        if (left <= 0)
+            return false;
+        pollfd pfd{STDIN_FILENO, POLLIN, 0};
+        const int r = ::poll(&pfd, 1, int(left));
+        if (r < 0 && errno == EINTR)
+            continue;
+        if (r <= 0 || !(pfd.revents & POLLIN))
+            return false; // timeout, error or hangup
+        const ssize_t n = ::read(STDIN_FILENO, buf + len, 1);
+        if (n < 0 && errno == EINTR)
+            continue;
+        if (n != 1)
+            return false;
+        if (buf[len++] == '\n')
+            return len == std::strlen(expected) && std::memcmp(buf, expected, len) == 0;
+    }
+    return false; // oversized
+}
+
+static bool writeAck(const char *ack)
+{
+    const size_t n = std::strlen(ack); // < PIPE_BUF, atomic
+    std::fflush(stdout);
+    ssize_t w;
+    do { w = ::write(STDOUT_FILENO, ack, n); } while (w < 0 && errno == EINTR);
+    return w == ssize_t(n);
+}
+
+static void typeText(const QString &s);
+
+// post-send-race: parent says "prepare" right before sending its edit. We ACK and
+// then block here (no Qt event loop, so the queued Wayland edit is NOT applied)
+// until "mutate". We then edit our own field synthetically, which advances the
+// text-input-v3 commit serial, ACK, and return to the loop where Qt must discard
+// the now-stale edit.
+static void onStdinCommand()
+{
+    g_stdinNotifier->setEnabled(false); // one-shot; never re-enabled
+    if (g_handshakeDone)
+        return;
+    g_handshakeDone = true;
+    if (!readExactCommand("prepare\n", 200) || !writeAck("{\"phase\":\"ready\"}\n"))
+        return;
+    g_out.insert(QStringLiteral("post_send_prepared"), true);
+    if (!readExactCommand("mutate\n", 700))
+        return;
+    typeText(QStringLiteral("x"));
+    QGuiApplication::inputMethod()->update(Qt::ImQueryAll);
+    QQuickItem *normal = field("normalField");
+    const bool localMatches = normal && normal->property("text").toString() == g_typed + QLatin1Char('x');
+    g_out.insert(QStringLiteral("post_send_local_before_dispatch_matches"), localMatches);
+    const bool ackSent = writeAck(localMatches ? "{\"phase\":\"mutated\"}\n" : "{\"phase\":\"mutation_failed\"}\n");
+    if (localMatches && ackSent)
+        g_out.insert(QStringLiteral("post_send_mutated"), true);
+}
+
+static void finish(int code = 0)
+{
+    g_out.insert(QStringLiteral("completed"), code == 0);
+    auto yes = [](const char *key) { return g_out.value(QLatin1String(key)).toBool(false); };
+    bool passed = yes("window_ready") && yes("normal_had_active_focus")
+        && yes("normal_typed_as_expected_before_fix") && yes("normal_matches_expected")
+        && yes("secret_had_active_focus") && yes("secret_hints_sensitive")
+        && yes("secret_field_unchanged");
+    if (g_scenario == "selection-race") passed = passed && yes("selection_preserved");
+    else passed = passed && yes("normal_no_selection");
+    if (g_scenario == "focus-race") passed = passed && yes("marker_unchanged");
+    if (g_scenario == "post-send-race")
+        passed = passed && yes("post_send_prepared") && yes("post_send_mutated");
+    g_out.insert(QStringLiteral("field_assertions_passed"), passed);
+    const QByteArray line = QJsonDocument(g_out).toJson(QJsonDocument::Compact);
+    std::fwrite(line.constData(), 1, size_t(line.size()), stdout);
+    std::fputc('\n', stdout);
+    std::fflush(stdout);
+    if (code == 0)
+        QCoreApplication::exit(passed ? 0 : 1);
+}
+
+static bool parseScenario(int argc, char **argv)
+{
+    const char *label = "baseline";
+    if (argc == 3 && std::strcmp(argv[1], "--scenario") == 0)
+        label = argv[2];
+    else if (argc != 1)
+        return false;
+    for (const char *k : kScenarios) {
+        if (std::strcmp(label, k) == 0) {
+            g_scenario = QString::fromLatin1(k);
+            return true;
+        }
+    }
+    return false;
+}
+
+int main(int argc, char **argv)
+{
+    // Validate before any QGuiApplication / window / socket connection.
+    if (!parseScenario(argc, argv)) {
+        std::fputs("{\"completed\":false,\"scenario_valid\":false}\n", stdout);
+        std::fflush(stdout);
+        return 2;
+    }
+    if (g_scenario == "prefix") {
+        g_typed = QStringLiteral("hello ghbdtn ");
+        g_expected = QString::fromUtf8("hello привет ");
+    } else if (g_scenario == "reverse") {
+        g_typed = QString::fromUtf8("привет ");
+        g_expected = QStringLiteral("ghbdtn ");
+    } else if (g_scenario == "typing-race" || g_scenario == "post-send-race") {
+        g_typed = QStringLiteral("ghbdtn ");
+        g_expected = QStringLiteral("ghbdtn x");
+    } else if (g_scenario == "baseline") {
+        g_typed = QStringLiteral("ghbdtn ");
+        g_expected = QString::fromUtf8("привет ");
+    } else { // focus-race, selection-race: original must stay unchanged
+        g_typed = QStringLiteral("ghbdtn ");
+        g_expected = QStringLiteral("ghbdtn ");
+    }
+
+    if (qgetenv("RASKLAD_NATIVE_FIELD_FIXTURE") != "1"
+        || qgetenv("XDG_RUNTIME_DIR") != "/run/lab"
+        || qgetenv("WAYLAND_DISPLAY") != "rasklad-native-test"
+        || qgetenv("QT_QPA_PLATFORM") != "wayland"
+        || !qgetenv("WAYLAND_SOCKET").isEmpty()
+        || !qgetenv("WAYLAND_DEBUG").isEmpty()
+        || !qgetenv("DISPLAY").isEmpty()) {
+        std::fputs("{\"fixture_environment_valid\":false,\"completed\":false}\n", stdout);
+        return 2;
+    }
+    if (g_scenario == "post-send-race") {
+        struct stat input{};
+        if (::fstat(STDIN_FILENO, &input) != 0 || !S_ISFIFO(input.st_mode)) {
+            std::fputs("{\"fixture_pipe_valid\":false,\"completed\":false}\n", stdout);
+            return 2;
+        }
+    }
+    QGuiApplication app(argc, argv);
+    g_out = {{"completed", false},
+             {"scenario", g_scenario},
+             {"scenario_valid", true},
+             {"window_ready", false},
+             {"normal_had_active_focus", false},
+             {"normal_typed_as_expected_before_fix", false},
+             {"normal_matches_expected", false},
+             {"normal_field_is_cyrillic", false},
+             {"normal_field_changed", false},
+             {"normal_no_selection", false},
+             {"selection_preserved", false},
+             {"marker_unchanged", false},
+             {"secret_had_active_focus", false},
+             {"secret_hints_sensitive", false},
+             {"secret_field_unchanged", false},
+             {"post_send_prepared", false},
+             {"post_send_mutated", false}};
+    if (g_scenario == "post-send-race") {
+        g_stdinNotifier = new QSocketNotifier(STDIN_FILENO, QSocketNotifier::Read, &app);
+        QObject::connect(g_stdinNotifier, &QSocketNotifier::activated, [] { onStdinCommand(); });
+    }
+
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    if (engine.rootObjects().isEmpty()) {
+        finish(1);
+        return 1;
+    }
+    g_win = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+    if (!g_win) {
+        finish(1);
+        return 1;
+    }
+    if (g_scenario == "focus-race")
+        if (QQuickItem *s = field("secretField"))
+            s->setProperty("text", kMarker);
+
+    // Stage 1 (1.2 s): wait for configure/keyboard enter, focus normal field.
+    QTimer::singleShot(1200, [] {
+        QQuickItem *n = field("normalField");
+        g_out.insert(QStringLiteral("window_ready"), n != nullptr && g_win->isExposed());
+        focusField(n);
+    });
+    // Stage 2 (1.7 s): type into the focused normal field.
+    QTimer::singleShot(1700, [] {
+        QQuickItem *n = field("normalField");
+        g_out.insert(QStringLiteral("normal_had_active_focus"), n && n->hasActiveFocus());
+        g_out.insert(QStringLiteral("window_active"), g_win->isActive());
+        g_out.insert(QStringLiteral("focus_is_normal"), QGuiApplication::focusObject() == n);
+        g_out.insert(QStringLiteral("input_context_visible"), QGuiApplication::inputMethod()->isVisible());
+        typeText(g_typed);
+        // Checked synchronously: compositor round-trip cannot have happened yet.
+        g_out.insert(QStringLiteral("normal_typed_as_expected_before_fix"),
+                     n && n->property("text").toString() == g_typed);
+    });
+    // Stage 2b (1.8 s): race actions inside the parent's 300 ms plan window.
+    QTimer::singleShot(1800, [] {
+        QQuickItem *n = field("normalField");
+        if (g_scenario == "typing-race") {
+            typeText(QStringLiteral("x"));
+        } else if (g_scenario == "focus-race") {
+            focusField(field("secretField"));
+        } else if (g_scenario == "selection-race" && n) {
+            QMetaObject::invokeMethod(n, "select", Q_ARG(int, 0), Q_ARG(int, 2));
+            QGuiApplication::inputMethod()->update(Qt::ImQueryAll);
+        }
+    });
+    // Stage 3 (3.4 s): verify actual field content, then switch to password field.
+    QTimer::singleShot(3400, [] {
+        QQuickItem *n = field("normalField");
+        QQuickItem *s = field("secretField");
+        const QString t = n ? n->property("text").toString() : QString();
+        const QString sel = n ? n->property("selectedText").toString() : QString();
+        g_out.insert(QStringLiteral("normal_matches_expected"), n && t == g_expected);
+        g_out.insert(QStringLiteral("stale_edit_corrupted_new_text"), t == QString::fromUtf8("gпривет "));
+        g_out.insert(QStringLiteral("correction_arrived_before_local_mutation"), t == QString::fromUtf8("привет x"));
+        g_out.insert(QStringLiteral("normal_field_is_cyrillic"), t == QString::fromUtf8("привет "));
+        g_out.insert(QStringLiteral("normal_field_changed"), !t.isEmpty() && t != g_typed);
+        g_out.insert(QStringLiteral("normal_no_selection"), n && sel.isEmpty());
+        g_out.insert(QStringLiteral("selection_preserved"),
+                     n && sel == QStringLiteral("gh"));
+        if (g_scenario == "focus-race") {
+            g_out.insert(QStringLiteral("marker_unchanged"),
+                         s && s->property("text").toString() == kMarker);
+            if (s)
+                s->setProperty("text", QString()); // reset for the standard password stage
+        }
+        focusField(s);
+    });
+    // Stage 4 (3.9 s): type same fictional word into the protected field.
+    QTimer::singleShot(3900, [] {
+        QQuickItem *s = field("secretField");
+        g_out.insert(QStringLiteral("secret_had_active_focus"), s && s->hasActiveFocus());
+        const int hints = s ? s->property("inputMethodHints").toInt() : 0;
+        g_out.insert(QStringLiteral("secret_hints_sensitive"),
+                     (hints & Qt::ImhSensitiveData) && (hints & Qt::ImhNoPredictiveText));
+        typeText(kSecretTyped);
+    });
+    // Stage 5 (5.6 s): verify protected field untouched, report, quit.
+    QTimer::singleShot(5600, [] {
+        QQuickItem *s = field("secretField");
+        g_out.insert(QStringLiteral("secret_field_unchanged"),
+                     s && s->property("text").toString() == kSecretTyped);
+        finish();
+    });
+
+    return app.exec();
+}

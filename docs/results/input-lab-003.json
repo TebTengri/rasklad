@@ -1,0 +1,174 @@
+{
+  "experiment": "INPUT-LAB-003",
+  "date": "2026-11-12",
+  "issue": "SYS-223",
+  "base_commit": "849267cf502f0112df3f6ff2d56a3071aab3a8ce",
+  "scope": "real QtQuick field; six mechanical passes, one post-send safety failure, one authorized real-profile baseline pass",
+  "scenarios": [
+    {
+      "scenario": "baseline",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 1,
+      "delete_before_bytes": 7,
+      "delete_after_bytes": 0,
+      "stale_plans_refused": 0,
+      "protected_plans_refused": 0,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6388
+    },
+    {
+      "scenario": "prefix",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 1,
+      "delete_before_bytes": 7,
+      "delete_after_bytes": 0,
+      "stale_plans_refused": 0,
+      "protected_plans_refused": 0,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6897
+    },
+    {
+      "scenario": "reverse",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 1,
+      "delete_before_bytes": 13,
+      "delete_after_bytes": 0,
+      "stale_plans_refused": 0,
+      "protected_plans_refused": 0,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6746
+    },
+    {
+      "scenario": "typing-race",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 0,
+      "delete_before_bytes": -1,
+      "delete_after_bytes": -1,
+      "stale_plans_refused": 1,
+      "protected_plans_refused": 0,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6745
+    },
+    {
+      "scenario": "focus-race",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 0,
+      "delete_before_bytes": -1,
+      "delete_after_bytes": -1,
+      "stale_plans_refused": 0,
+      "protected_plans_refused": 1,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6695
+    },
+    {
+      "scenario": "selection-race",
+      "passed": true,
+      "client_field_matches_expected": true,
+      "client_exited_normally": true,
+      "replacements_sent": 0,
+      "delete_before_bytes": -1,
+      "delete_after_bytes": -1,
+      "stale_plans_refused": 1,
+      "protected_plans_refused": 0,
+      "protected_text_queries": 0,
+      "password_unchanged": true,
+      "wall_ms": 6543
+    },
+    {
+      "scenario": "post-send-race",
+      "passed": false,
+      "safety_blocker": true,
+      "client_exit_code": 1,
+      "client_process_normal_exit": true,
+      "handshake_success": true,
+      "local_before_dispatch_matches": true,
+      "stale_edit_corrupted_new_text": true,
+      "password_unchanged": true,
+      "protected_text_queries": 0,
+      "wall_ms": 6630
+    }
+  ],
+  "extra_environment_guards_checked": 5,
+  "final_guard_baseline_passed": true,
+  "matrix_scope_note": "Six-case matrix plus separately executed post-send safety failure and one authorized real-profile baseline. The wrapper returns 1 for failed overall assertions; compositor exitCode alone is not a safety verdict.",
+  "public_client_sources": [
+    {
+      "path": "tests/native_field_client/main.cpp",
+      "sha256": "aaad44b173d47b58a1fad2174b61544179f7fee114d00e0487d74e4440a8fbea"
+    },
+    {
+      "path": "tests/native_field_client/main.qml",
+      "sha256": "b4e4c67d44f6fd6709d44d6f57cba5af8b5eb49ddbbdf37ee8b928896f2f7590"
+    },
+    {
+      "path": "tests/native_field_client/client.qrc",
+      "sha256": "ca296f14fe9df3c2ca9aad90e46279464f49e54d8d8accaaf90c522c2692ee0d"
+    },
+    {
+      "path": "tests/native_field_client/native_field_client.pro",
+      "sha256": "7ec1ce8589afe5ae00a116d7e7018ddb25a42a5792eac19e3adaeaef701f35fb"
+    }
+  ],
+  "private_fixture_source_fingerprints": [
+    {
+      "file": "main.cpp",
+      "sha256": "53a914275cda69e09680383069866ea26ee6653777407ea146e72ae19addc3c1"
+    },
+    {
+      "file": "compositor.pro",
+      "sha256": "2573ab5ba9a918ca659992354c83f348c52a1ed32a2711bfb5519cc0a684f53f"
+    },
+    {
+      "file": "profile.pro",
+      "sha256": "4115780d98936e611c14b2e642893d484e2a6991042f62cd4e3b00457d7844b7"
+    },
+    {
+      "file": "run_probe.py",
+      "sha256": "d50cfcea88dd7cae3ebce14ab39772199fdca750245656daf1a6e23a3701e232"
+    },
+    {
+      "file": "run_matrix.py",
+      "sha256": "a5326d525b92e8266b6ab622046a0e0e2f3f320d3c10dbf1661f1303f3f6af66"
+    }
+  ],
+  "profile_test": {
+    "executed": true,
+    "explicit_owner_approval": true,
+    "runs_authorized": 1,
+    "scenario": "baseline",
+    "overall_passed": true,
+    "profile_loaded": true,
+    "router_called": true,
+    "router_correct": true,
+    "pins_verified_by_loader": true,
+    "data_published": false,
+    "wall_ms": 7029
+  },
+  "full_clean_clone_reproduction": false,
+  "qt_compositor_dependency": "GPL-3.0-only, local private test use; server source/binary not distributed",
+  "production_app_changed": false,
+  "working_session_input_enabled": false,
+  "hyprland_compatibility_proven": false,
+  "post_send_race_closed": false,
+  "private_source_snapshot": {
+    "path": "build/native-field-probe/local-source-snapshot-1794503585853385828.tar",
+    "sha256": "85822ffb5c7b987f723aa20203cddaa26e13e7be91a5c1e73948e541cd28c2fb",
+    "contains_model_or_dictionary": false
+  },
+  "safety_verdict": "retroactive delete/commit not admitted to working session"
+}
