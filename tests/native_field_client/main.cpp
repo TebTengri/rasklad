@@ -27,8 +27,11 @@ static const char *const kScenarios[] = {"baseline", "prefix", "reverse",
                                          "typing-race", "focus-race", "selection-race",
                                          "post-send-race", "keyboard-before-edit",
                                          "keyboard-after-edit", "keyboard-acked-edit",
-                                         "keyboard-applied-before-edit", "keyboard-guarded-after-key"};
+                                         "keyboard-applied-before-edit", "keyboard-guarded-after-key", "compose-baseline", "compose-fast-tail", "compose-known", "compose-backspace", "compose-overflow", "compose-focus", "fcitx-baseline", "fcitx-fast-tail", "fcitx-known", "fcitx-backspace", "fcitx-overflow", "fcitx-focus"};
 static QString g_scenario;
+static bool frameworkScenario() { return g_scenario.startsWith(QLatin1String("fcitx-")); }
+static QString compositionKind() { return frameworkScenario() ? QStringLiteral("compose-") + g_scenario.mid(6) : g_scenario; }
+static bool compositionScenario() { return g_scenario.startsWith(QLatin1String("compose-")) || frameworkScenario(); }
 static QSocketNotifier *g_stdinNotifier = nullptr;
 static bool g_handshakeDone = false;
 
@@ -200,7 +203,9 @@ static void finish(int code = 0)
         && yes("secret_field_unchanged");
     if (g_scenario == "selection-race") passed = passed && yes("selection_preserved");
     else passed = passed && yes("normal_no_selection");
-    if (g_scenario == "focus-race") passed = passed && yes("marker_unchanged");
+    if (g_scenario == "focus-race" || compositionKind() == "compose-focus") passed = passed && yes("marker_unchanged");
+    if (compositionScenario()) passed = passed && yes("composition_intermediate_verified") && yes("composition_final_preedit_empty");
+    if (compositionKind() == "compose-fast-tail") passed = passed && yes("composition_tail_verified");
     if (g_scenario == "post-send-race")
         passed = passed && yes("post_send_prepared") && yes("post_send_mutated");
     if (keyboardScenario())
@@ -240,7 +245,15 @@ int main(int argc, char **argv)
         std::fflush(stdout);
         return 2;
     }
-    if (g_scenario == "prefix") {
+    if (compositionScenario()) {
+        g_typed = compositionKind() == "compose-known" ? QStringLiteral("hello")
+            : compositionKind() == "compose-overflow" ? QString(33, QLatin1Char('z')) : QStringLiteral("ghbdtn");
+        g_expected = compositionKind() == "compose-known" ? QStringLiteral("hello ")
+            : compositionKind() == "compose-overflow" ? g_typed + QLatin1Char(' ')
+            : compositionKind() == "compose-focus" ? g_typed
+            : compositionKind() == "compose-fast-tail" ? QString::fromUtf8("привет x ")
+            : QString::fromUtf8("привет ");
+    } else if (g_scenario == "prefix") {
         g_typed = QStringLiteral("hello ghbdtn ");
         g_expected = QString::fromUtf8("hello привет ");
     } else if (g_scenario == "reverse") {
@@ -333,7 +346,17 @@ int main(int argc, char **argv)
         g_out.insert(QStringLiteral("window_active"), g_win->isActive());
         g_out.insert(QStringLiteral("focus_is_normal"), QGuiApplication::focusObject() == n);
         g_out.insert(QStringLiteral("input_context_visible"), QGuiApplication::inputMethod()->isVisible());
-        if (keyboardScenario()) {
+        if (frameworkScenario()) {
+            // The ordinary Fcitx Qt plugin handles source keys, not this client.
+        } else if (compositionScenario()) {
+            const QString preedit = n ? n->property("preeditText").toString() : QString();
+            const QString committed = n ? n->property("text").toString() : QString();
+            const bool matches = compositionKind() == "compose-overflow"
+                ? committed == g_typed && preedit.isEmpty()
+                : committed.isEmpty() && preedit == g_typed;
+            g_out.insert("normal_typed_as_expected_before_fix", matches);
+            g_out.insert("composition_intermediate_verified", matches);
+        } else if (keyboardScenario()) {
             // Ask the private server for a fixed synthetic word through wl_keyboard.
             writeAck("{\"phase\":\"word_ready\"}\n");
             QTimer::singleShot(150, [] {
@@ -346,6 +369,46 @@ int main(int argc, char **argv)
             // Synchronous local-event control from LAB-003.
             g_out.insert(QStringLiteral("normal_typed_as_expected_before_fix"),
                          n && n->property("text").toString() == g_typed);
+        }
+    });
+    QTimer::singleShot(1750, [] {
+        if (compositionKind() == "compose-focus" && !frameworkScenario()) {
+            auto *secret = field("secretField");
+            if (secret) secret->setProperty("text", kMarker);
+            focusField(secret);
+        }
+    });
+    QTimer::singleShot(2300, [] {
+        if (compositionKind() == "compose-fast-tail" && !frameworkScenario()) {
+            auto *normal = field("normalField");
+            g_out.insert("composition_tail_verified", normal
+                && normal->property("text").toString() == QString::fromUtf8("привет ")
+                && normal->property("preeditText").toString() == QStringLiteral("x"));
+        }
+    });
+    QTimer::singleShot(2100, [] {
+        if (!frameworkScenario()) return;
+        auto *normal = field("normalField");
+        const QString preedit = normal ? normal->property("preeditText").toString() : QString();
+        const QString committed = normal ? normal->property("text").toString() : QString();
+        const bool matches = compositionKind() == "compose-overflow"
+            ? committed == g_typed && preedit.isEmpty() : committed.isEmpty() && preedit == g_typed;
+        g_out.insert("normal_typed_as_expected_before_fix", matches);
+        g_out.insert("composition_intermediate_verified", matches);
+    });
+    QTimer::singleShot(2200, [] {
+        if (frameworkScenario() && compositionKind() == "compose-focus") {
+            auto *secret = field("secretField");
+            if (secret) secret->setProperty("text", kMarker);
+            focusField(secret);
+        }
+    });
+    QTimer::singleShot(2900, [] {
+        if (frameworkScenario() && compositionKind() == "compose-fast-tail") {
+            auto *normal = field("normalField");
+            g_out.insert("composition_tail_verified", normal
+                && normal->property("text").toString() == QString::fromUtf8("привет ")
+                && normal->property("preeditText").toString() == QStringLiteral("x"));
         }
     });
     // Stage 2b (1.8 s): race actions inside the parent's 300 ms plan window.
@@ -367,6 +430,8 @@ int main(int argc, char **argv)
         const QString t = n ? n->property("text").toString() : QString();
         const QString sel = n ? n->property("selectedText").toString() : QString();
         g_out.insert(QStringLiteral("normal_matches_expected"), n && t == g_expected);
+        g_out.insert("composition_final_preedit_empty", n && n->property("preeditText").toString().isEmpty());
+        g_out.insert("composition_original_pending_only", n && t.isEmpty() && n->property("preeditText").toString() == g_typed);
         g_out.insert(QStringLiteral("stale_edit_corrupted_new_text"), t == QString::fromUtf8("gпривет "));
         g_out.insert(QStringLiteral("correction_arrived_before_local_mutation"), t == QString::fromUtf8("привет x"));
         g_out.insert(QStringLiteral("normal_field_is_cyrillic"), t == QString::fromUtf8("привет "));
@@ -374,7 +439,7 @@ int main(int argc, char **argv)
         g_out.insert(QStringLiteral("normal_no_selection"), n && sel.isEmpty());
         g_out.insert(QStringLiteral("selection_preserved"),
                      n && sel == QStringLiteral("gh"));
-        if (g_scenario == "focus-race") {
+        if (g_scenario == "focus-race" || compositionKind() == "compose-focus") {
             g_out.insert(QStringLiteral("marker_unchanged"),
                          s && s->property("text").toString() == kMarker);
             if (s)
@@ -389,7 +454,7 @@ int main(int argc, char **argv)
         const int hints = s ? s->property("inputMethodHints").toInt() : 0;
         g_out.insert(QStringLiteral("secret_hints_sensitive"),
                      (hints & Qt::ImhSensitiveData) && (hints & Qt::ImhNoPredictiveText));
-        typeText(kSecretTyped);
+        if (!frameworkScenario()) typeText(kSecretTyped); // framework cases receive real wl_keyboard keys
     });
     // Stage 5 (5.6 s): verify protected field untouched, report, quit.
     QTimer::singleShot(5600, [] {
