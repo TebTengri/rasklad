@@ -48,17 +48,17 @@
     "optimization": "-O2, no LTO",
     "cases": {
       "32_utf16": {
-        "baseline_ns": 1674.64433,
-        "candidate_ns": 292.04256,
+        "baseline_ns": 1654.02241,
+        "candidate_ns": 241.11083,
         "samples": 5,
-        "speedup": 5.7342475357016465,
+        "speedup": 6.860008776876593,
         "utf16": 32
       },
       "65536_utf16": {
-        "baseline_ns": 3360147.06,
-        "candidate_ns": 559183.33,
+        "baseline_ns": 3351033.93,
+        "candidate_ns": 451883.29,
         "samples": 5,
-        "speedup": 6.009025805543954,
+        "speedup": 7.415706675057624,
         "utf16": 65536
       }
     },
@@ -67,17 +67,19 @@
     "end_to_end_speedup_claim": false,
     "index_bytes": 570,
     "rodata_increase_bytes": 194,
-    "object_section_total_increase_bytes": 195,
-    "production_behavior_changed": false
+    "object_section_total_increase_bytes": 192,
+    "production_behavior_changed": false,
+    "text_increase_bytes": 6,
+    "eh_frame_change_bytes": -8
   },
   "candidate_sources": [
     {
       "path": "src/layoutconverter.cpp",
-      "sha256": "5b9c9e2fa8bb25eacc236b319909a1ae729e7008561880f86ad9c8a2660dea71"
+      "sha256": "3e13b7be42c1cdd675d0ad4d8c13b9b833f146765d333e295dd4befd002d990d"
     },
     {
       "path": "tests/rasklad_tests.cpp",
-      "sha256": "eddd48fdb619b9bce412412f113c2071014178cd53cc9fff63e3d41980168d40"
+      "sha256": "3d6372e40e553ee8ef8ba9132c0da3a7227aeb387f1e19d02a6e86fa1be1786f"
     }
   ],
   "developer_probe_sources": [
@@ -87,12 +89,35 @@
     },
     {
       "path": "build/optimization-review/fast.cpp",
-      "sha256": "72c8e939a276103cfc7dee36c3137912153a9c8ebefe951d8f13c7a3d8853f5c"
+      "sha256": "c92b4538b96342fa73496fbd4c45edca6b10189f331c86e48c56f88e2f21cba1"
     }
   ],
   "root_working_branch_changed": false,
   "system_config_changed": false,
   "third_party_code_copied": false,
   "release_license_selected": false,
-  "independently_approved": false
+  "final_followup_tests": {
+    "qt_passed": 603,
+    "failed": 0,
+    "skipped": 1,
+    "sanitizer_cases_passed": 14,
+    "developer_equivalence_comparisons": 393216,
+    "unicode_literals_escaped_without_value_change": 23
+  },
+  "independent_review": {
+    "reviewer": "Claude",
+    "scope": [
+      "src/layoutconverter.h",
+      "src/layoutconverter.cpp",
+      "tests/rasklad_tests.cpp"
+    ],
+    "final_static_review_completed": true,
+    "blocking_findings": 0,
+    "reviewer_executed_tests": false,
+    "tools_enabled": false,
+    "session_persisted": false,
+    "project_memory_written": false,
+    "result_sha256": "9dded999ac3a15eae84a042c6500b3ec4e4ed810ba8bb7960adde7bc88d213e9",
+    "github_approval_submitted": false
+  }
 }
