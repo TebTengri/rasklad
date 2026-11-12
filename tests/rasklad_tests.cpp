@@ -63,6 +63,7 @@ class LayoutConverterTest : public QObject
 private Q_SLOTS:
     void oracleCoversAllPrintableAscii();
     void oracleRuSideIsUnique();
+    void allUtf16CodeUnitsFollowIndependentOracle();
 
     void exampleWord();
 
@@ -101,6 +102,32 @@ private Q_SLOTS:
     void roundTrip();
     void unknownDirectionUnchanged();
 };
+
+// The independent keyboard rows define mapped characters. Exhaustively check
+// every other UTF-16 unit too: compact lookup must preserve unknown values,
+// controls and lone surrogates rather than accidentally indexing a gap.
+void LayoutConverterTest::allUtf16CodeUnitsFollowIndependentOracle()
+{
+    const auto rows = expectedRows();
+    for (const auto direction : {LayoutDirection::UsToRu, LayoutDirection::RuToUs}) {
+        for (uint value = 0; value <= 0xffff; ++value) {
+            const QChar input{ushort(value)};
+            QChar expected = input;
+            for (const KeyRow &row : rows) {
+                const QString &from = direction == LayoutDirection::UsToRu ? row.us : row.ru;
+                const QString &to = direction == LayoutDirection::UsToRu ? row.ru : row.us;
+                const qsizetype index = from.indexOf(input);
+                if (index >= 0) {
+                    expected = to.at(index);
+                    break;
+                }
+            }
+            QCOMPARE(convertLayout(QString(1, input), direction), QString(1, expected));
+            const QString marked = QString(1, input) + QChar(0x0301);
+            QCOMPARE(convertLayout(marked, direction), marked);
+        }
+    }
+}
 
 void LayoutConverterTest::oracleCoversAllPrintableAscii()
 {
