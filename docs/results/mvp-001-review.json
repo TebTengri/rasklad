@@ -1,0 +1,47 @@
+{
+  "task": "SYS-239",
+  "implementation": "manual-preview MVP",
+  "reviewDate": "2026-11-12",
+  "qtVersion": "6.12.0",
+  "hunspellVersion": "1.7.5",
+  "tests": {
+    "qtPassed": 602,
+    "defaultOptionalRealProfileSkipped": 1,
+    "explicitRealProfilePassed": 3,
+    "noHunspellAppTestsPassed": 46,
+    "addressUndefinedLeakSanitizerAppTestsPassed": 46
+  },
+  "routerParity": {
+    "rows": 221090,
+    "profileComparisons": 442180,
+    "mismatches": 0
+  },
+  "providerParity": {
+    "eligibleRows": 140259,
+    "uniqueLayoutTokens": 14189,
+    "featureMismatches": 0
+  },
+  "nativeWaylandSelfCheck": {
+    "platform": "wayland",
+    "primarySelectionSupported": false,
+    "profileLoaded": false,
+    "windowCreated": false
+  },
+  "binaryHardening": {
+    "pie": true,
+    "nonExecutableStack": true,
+    "fullRelroBindNow": true,
+    "stackProtectorStrong": true,
+    "releaseFortifySource": 3
+  },
+  "releaseDataApproved": false,
+  "globalInputEnabled": false,
+  "installed": false,
+  "autostartEnabled": false,
+  "finalClaudeReview": {
+    "highFindingsReported": 0,
+    "mediumFindings": 1,
+    "lowFindings": 3,
+    "disposition": "All addressed: bounded bulk-edit undo, fail-closed editor guard, short-viewport scrolling, guarded worker cleanup; Codex fixed QML sizing cycle and reran tests."
+  }
+}

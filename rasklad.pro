@@ -39,6 +39,21 @@ router_decisions.file = tools/router_decisions.pro
 router_decisions.makefile = Makefile.router_decisions
 router_decisions.depends = core
 
+# SYS-239: manual-preview приложение Qt Quick и его тесты. Приложение
+# собирается в build/src рядом с ядром (отдельные Makefile и каталог
+# объектов), не устанавливается; запуск — bin/run. Hunspell для приложения
+# необязательна: без неё оно собирается только с ручным преобразованием.
+SUBDIRS += app decision_tests app_tests ui_tests
+app.file = src/rasklad_app.pro
+app.makefile = Makefile.rasklad_app
+app.depends = core
+decision_tests.file = tests/decision/decision_tests.pro
+decision_tests.depends = core
+app_tests.file = tests/app/app_tests.pro
+app_tests.depends = core
+ui_tests.file = tests/ui/ui_tests.pro
+ui_tests.depends = core
+
 # Эксперимент 003 (SYS-235): только если уже установлена Hunspell с
 # pkg-config. Ничего не скачивается и не устанавливается; без неё цели
 # пропускаются, а bin/test сообщает, что зависимость недоступна.
@@ -56,6 +71,11 @@ packagesExist(hunspell) {
     domain_decisions.file = tools/domain_decisions.pro
     domain_decisions.makefile = Makefile.domain_decisions
     domain_decisions.depends = core
+    # SYS-239: production profile code против research helper'ов и провайдер
+    # на синтетических .aff/.dic (без сгенерированных данных).
+    SUBDIRS += profile_tests
+    profile_tests.file = tests/profile/profile_tests.pro
+    profile_tests.depends = core
 } else {
     message("rasklad: pkg-config hunspell not found; SYS-235/236 morphology and domain targets are skipped")
 }

@@ -4,8 +4,11 @@
 # (экспериментальный детектор SYS-232), затем benchmark_tests (helper'ы
 # независимой оценки SYS-233), затем context_tests (политики контекста
 # SYS-237, без Hunspell), router_tests (router-политики SYS-238, без
-# Hunspell) и, если доступна Hunspell, domain_tests и
-# morphology_tests. Аргументы передаются всем бинарникам
+# Hunspell), затем тесты manual-preview SYS-239: decision_tests (production
+# router и паритет с исследованием), app_tests (контроллер, worker, проверка
+# профиля, тема, переводы) и ui_tests (offscreen QtQuick, скриншоты в
+# build/tests/ui/screenshots). Если доступна Hunspell — profile_tests,
+# domain_tests и morphology_tests. Аргументы передаются всем бинарникам
 # (например, -v2); имя тестовой функции подходит только одному.
 set -euo pipefail
 
@@ -27,20 +30,32 @@ context_bin="${context_dir}/context_tests"
 # SYS-238: router-политики опыта 006; без Hunspell, собираются всегда.
 router_dir="${build_dir}/tests/router"
 router_bin="${router_dir}/router_tests"
+# SYS-239: manual-preview; собираются всегда.
+decision_dir="${build_dir}/tests/decision"
+decision_bin="${decision_dir}/decision_tests"
+app_dir="${build_dir}/tests/app"
+app_bin="${app_dir}/app_tests"
+ui_dir="${build_dir}/tests/ui"
+ui_bin="${ui_dir}/ui_tests"
 
-for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}" "${router_bin}"; do
+for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}" "${router_bin}" \
+    "${decision_bin}" "${app_bin}" "${ui_bin}"; do
     if [[ ! -x "${bin}" ]]; then
         echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
         exit 1
     fi
 done
 
-# Тесты не требуют GUI, внешних словарей и корпуса; запускаются из каталога сборки.
+# Тесты не требуют внешних словарей и корпуса; запускаются из каталога сборки.
 (cd -- "${test_dir}" && "${test_bin}" "$@")
 (cd -- "${detector_dir}" && "${detector_bin}" "$@")
 (cd -- "${benchmark_dir}" && "${benchmark_bin}" "$@")
 (cd -- "${context_dir}" && "${context_bin}" "$@")
 (cd -- "${router_dir}" && "${router_bin}" "$@")
+(cd -- "${decision_dir}" && "${decision_bin}" "$@")
+(cd -- "${app_dir}" && "${app_bin}" "$@")
+# GUI-тест только offscreen и с программной отрисовкой: реальный рабочий стол не используется.
+(cd -- "${ui_dir}" && QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=generic QT_QUICK_BACKEND=software "${ui_bin}" "$@")
 
 if pkg-config --exists hunspell; then
     morphology_dir="${build_dir}/tests/morphology"
@@ -56,9 +71,17 @@ if pkg-config --exists hunspell; then
         echo "bin/test: domain_tests не собран при доступной Hunspell" >&2
         exit 1
     fi
+    # SYS-239: паритет production profile и провайдер на синтетических словарях.
+    profile_dir="${build_dir}/tests/profile"
+    profile_bin="${profile_dir}/profile_tests"
+    if [[ ! -x "${profile_bin}" ]]; then
+        echo "bin/test: profile_tests не собран при доступной Hunspell" >&2
+        exit 1
+    fi
     (cd -- "${domain_dir}" && "${domain_bin}" "$@")
+    (cd -- "${profile_dir}" && "${profile_bin}" "$@")
     cd -- "${morphology_dir}"
     exec "${morphology_bin}" "$@"
 else
-    echo "bin/test: morphology_tests и domain_tests пропущены — pkg-config hunspell недоступен" >&2
+    echo "bin/test: morphology_tests, domain_tests и profile_tests пропущены — pkg-config hunspell недоступен" >&2
 fi

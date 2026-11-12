@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Запускает собранное окно rasklad из build/src без установки. Ничего не
+# собирает и не устанавливает: сначала выполните bin/build. Аргументы
+# передаются приложению (--help, --version, --language en|ru,
+# --local-profile <корень проекта>). Пользовательский текст аргументами не
+# передаётся — его вводят в окне.
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+root_dir="$(cd -P -- "${script_dir}/.." && pwd -P)"
+app_bin="${root_dir}/build/src/rasklad"
+
+if [[ -L "${root_dir}/build" ]]; then
+    echo "bin/run: ${root_dir}/build является символической ссылкой; отказ" >&2
+    exit 1
+fi
+if [[ ! -x "${app_bin}" ]]; then
+    echo "bin/run: приложение не собрано; выполните bin/build" >&2
+    exit 1
+fi
+
+exec "${app_bin}" "$@"

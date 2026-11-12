@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>Main.qml</file>
+        <file>i18n/ru.json</file>
+    </qresource>
+</RCC>
