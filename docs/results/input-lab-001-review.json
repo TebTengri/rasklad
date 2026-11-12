@@ -1,0 +1,77 @@
+{
+  "experiment": "INPUT-LAB-001",
+  "issue": "SYS-223",
+  "date": "2026-11-12",
+  "implementation": "Claude Opus",
+  "independent_review": "Codex",
+  "lab_tests": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "asan_ubsan_lsan": {
+    "passed": 30,
+    "failed": 0,
+    "diagnostics": 0
+  },
+  "existing_app_regression": {
+    "passed": 602,
+    "failed": 0,
+    "skipped": 1
+  },
+  "protocol_license": "MIT (Expat), complete notices checked against XML",
+  "scope": "in-process libwayland socketpair; fake text field; no production input backend",
+  "real_hyprland_runtime_tested": false,
+  "automatic_correction_enabled": false,
+  "sources": [
+    {
+      "file": "InputMethodV2.cpp",
+      "url": "https://raw.githubusercontent.com/hyprwm/Hyprland/v0.56.2/src/protocols/InputMethodV2.cpp",
+      "bytes": 11961,
+      "sha256": "a1f5f7827fa44cffac0352bdb2e5bacb01b83f6f2f984fc69b73ade12e89677f"
+    },
+    {
+      "file": "TextInputV3.cpp",
+      "url": "https://raw.githubusercontent.com/hyprwm/Hyprland/v0.56.2/src/protocols/TextInputV3.cpp",
+      "bytes": 5246,
+      "sha256": "1ba5ab9b986d94b8cd442277ae9fbc6c3959ca1bbc9c8a5429d8bc3c3723d5bf"
+    },
+    {
+      "file": "InputMethodRelay.cpp",
+      "url": "https://raw.githubusercontent.com/hyprwm/Hyprland/v0.56.2/src/managers/input/InputMethodRelay.cpp",
+      "bytes": 5068,
+      "sha256": "f3abdcb490650be96b90f6f23e5f0cae6d62ab967ae39be8e99611b8c9ff570b"
+    },
+    {
+      "file": "input-method-unstable-v2.xml",
+      "url": "https://raw.githubusercontent.com/swaywm/wlroots/0855cdacb2eeeff35849e2e9c4db0aa996d78d10/protocol/input-method-unstable-v2.xml",
+      "commit": "0855cdacb2eeeff35849e2e9c4db0aa996d78d10",
+      "bytes": 21354,
+      "sha256": "99414dbad9458e71aa1fa01bc45f94ca6685787bfcb4d98948f72c1b45b60703"
+    },
+    {
+      "file": "InputMethodRelay.hpp",
+      "url": "https://raw.githubusercontent.com/hyprwm/Hyprland/efb50993780079460b0cbed1363e2166a2de1d9f/src/managers/input/InputMethodRelay.hpp",
+      "bytes": 1811,
+      "sha256": "c50677357e45684f374facddb26c0b8ff634d371d7677ad482fa2ad8340f24ac"
+    },
+    {
+      "file": "TextInput.cpp",
+      "url": "https://raw.githubusercontent.com/hyprwm/Hyprland/efb50993780079460b0cbed1363e2166a2de1d9f/src/managers/input/TextInput.cpp",
+      "bytes": 10369,
+      "sha256": "bd732ac710c3bddc8307c04891fad7c78365fc1c0f18c3bba7d5410513cdb869"
+    },
+    {
+      "file": "wayland-server.c",
+      "url": "https://gitlab.freedesktop.org/wayland/wayland/-/raw/1.26.0/src/wayland-server.c",
+      "bytes": 81339,
+      "sha256": "77bfc0fdf911cf8288430b40227f22c4e37dcd4abaa4cc1f367d597e75abf893"
+    },
+    {
+      "file": "connection.c",
+      "url": "https://gitlab.freedesktop.org/wayland/wayland/-/raw/1.26.0/src/connection.c",
+      "bytes": 38906,
+      "sha256": "2db8435dfd051ee3f8b7fae5c37eb35d22c21cc158fc21f77bcf3d4b920a4f1f"
+    }
+  ]
+}
