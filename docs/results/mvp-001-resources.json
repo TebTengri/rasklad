@@ -1,0 +1,28 @@
+{
+  "observations": [
+    {
+      "mode": "manual",
+      "aliveAt5s": true,
+      "peakRssKiB": 69768,
+      "lastRssKiB": 69768,
+      "idleLast2sCpuSeconds": 0.01,
+      "stderrBytes": 0,
+      "stdoutBytes": 0,
+      "exitCodeAfterTermination": -15
+    },
+    {
+      "mode": "local-profile",
+      "aliveAt5s": true,
+      "peakRssKiB": 102532,
+      "lastRssKiB": 97156,
+      "idleLast2sCpuSeconds": 0.01,
+      "stderrBytes": 0,
+      "stdoutBytes": 0,
+      "exitCodeAfterTermination": -15
+    }
+  ],
+  "scope": "actual rasklad child, offscreen software renderer, empty owned document, RU UI, 5 seconds; fresh process, OS page cache not flushed; terminated by reviewer after idle sample; no native desktop capture or usertext",
+  "measuredDate": "2026-11-12",
+  "renderer": "Qt Quick software, offscreen, generic platform theme",
+  "sampling": "20 ms /proc actual app PID; VmHWM includes shared pages; CPU delta over final 2 s with kernel tick granularity"
+}
