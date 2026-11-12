@@ -107,17 +107,71 @@ static_assert(hasUniqueSide(true), "duplicate symbol on the us side");
 static_assert(hasUniqueSide(false), "duplicate symbol on the ru side");
 static_assert(hasOnlyPlainBmpSymbols(), "table must contain only printable BMP symbols");
 
-bool lookup(char16_t source, LayoutDirection direction, char16_t &target)
+constexpr char16_t kAsciiFirst = 0x21;
+constexpr char16_t kAsciiLast = 0x7e;
+constexpr char16_t kCyrillicFirst = 0x400;
+constexpr char16_t kCyrillicLast = 0x45f;
+constexpr char16_t kNumero = 0x2116;
+
+struct DirectIndex {
+    std::array<char16_t, kAsciiLast - kAsciiFirst + 1> us{};
+    std::array<char16_t, kAsciiLast - kAsciiFirst + 1> ruAscii{};
+    std::array<char16_t, kCyrillicLast - kCyrillicFirst + 1> ruCyrillic{};
+    char16_t numero = 0;
+};
+
+constexpr DirectIndex makeIndex()
+{
+    DirectIndex out;
+    for (const KeySymbol &key : kKeySymbols) {
+        if (key.us >= kAsciiFirst && key.us <= kAsciiLast)
+            out.us[key.us - kAsciiFirst] = key.ru;
+        if (key.ru >= kAsciiFirst && key.ru <= kAsciiLast)
+            out.ruAscii[key.ru - kAsciiFirst] = key.us;
+        else if (key.ru >= kCyrillicFirst && key.ru <= kCyrillicLast)
+            out.ruCyrillic[key.ru - kCyrillicFirst] = key.us;
+        else if (key.ru == kNumero)
+            out.numero = key.us;
+    }
+    return out;
+}
+
+// Индекс выводится из единственной таблицы. Сам поиск память не выделяет.
+// Ноль обозначает отсутствие отображения: все символы таблицы печатные.
+constexpr auto kIndex = makeIndex();
+
+constexpr bool lookup(char16_t source, LayoutDirection direction, char16_t &target)
+{
+    char16_t mapped = 0;
+    if (direction == LayoutDirection::UsToRu) {
+        if (source >= kAsciiFirst && source <= kAsciiLast)
+            mapped = kIndex.us[source - kAsciiFirst];
+    } else if (direction == LayoutDirection::RuToUs) {
+        if (source >= kAsciiFirst && source <= kAsciiLast)
+            mapped = kIndex.ruAscii[source - kAsciiFirst];
+        else if (source >= kCyrillicFirst && source <= kCyrillicLast)
+            mapped = kIndex.ruCyrillic[source - kCyrillicFirst];
+        else if (source == kNumero)
+            mapped = kIndex.numero;
+    }
+    if (mapped == 0)
+        return false;
+    target = mapped;
+    return true;
+}
+
+constexpr bool indexCoversTable()
 {
     for (const KeySymbol &key : kKeySymbols) {
-        const char16_t from = direction == LayoutDirection::UsToRu ? key.us : key.ru;
-        if (from == source) {
-            target = direction == LayoutDirection::UsToRu ? key.ru : key.us;
-            return true;
-        }
+        char16_t forward = 0;
+        char16_t reverse = 0;
+        if (!lookup(key.us, LayoutDirection::UsToRu, forward) || forward != key.ru
+            || !lookup(key.ru, LayoutDirection::RuToUs, reverse) || reverse != key.us)
+            return false;
     }
-    return false;
+    return true;
 }
+static_assert(indexCoversTable(), "lookup must cover every key pair in both directions");
 
 // Начинается ли с позиции pos combining mark, включая марки вне BMP.
 bool markStartsAt(const QString &text, qsizetype pos)
