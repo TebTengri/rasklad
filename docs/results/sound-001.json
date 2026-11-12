@@ -1,0 +1,46 @@
+{
+  "feature": "SOUND-001",
+  "date": "2026-11-12",
+  "issue": "SYS-223",
+  "sample": {
+    "file": "src/sounds/layout-switch.wav",
+    "sha256": "a27b8379d6758c52aa4725d3e5025071c2585d49688ffb963d1f3348a9f27d05",
+    "bytes": 6764,
+    "format": "PCM signed 16-bit little-endian, mono",
+    "sample_rate": 48000,
+    "frames": 3360,
+    "duration_ms": 70.0,
+    "peak_pcm": 5918,
+    "first_and_last_samples_zero": true,
+    "third_party_samples_used": false
+  },
+  "playback": {
+    "module": "Qt Multimedia 6.12.0",
+    "volume_linear": 0.45,
+    "loops": 1,
+    "minimum_interval_ms": 180,
+    "loading_request_expiry_ms": 300,
+    "lazy_audio_output": true,
+    "microphone_capture": false,
+    "system_volume_changed": false,
+    "sound_preference_persisted": false,
+    "system_layout_backend_connected": false
+  },
+  "tests": {
+    "passed": 606,
+    "failed": 0,
+    "skipped": 1,
+    "audio_player_attached_in_unit_or_ui_tests": false,
+    "no_device_probe": {
+      "exit_code": 0,
+      "stdout": "{\"no_output_refused\":true}",
+      "stderr_bytes": 0
+    },
+    "visual_review": [
+      "en-sound.png",
+      "ru-sound.png",
+      "ru-narrow.png"
+    ],
+    "hardware_audio_audition_performed": false
+  }
+}

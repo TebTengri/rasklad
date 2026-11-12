@@ -29,7 +29,7 @@ bin/test    # сборка и запуск Qt Test; аргументы пере�
 
 Параллельная сборка по умолчанию ограничена двумя заданиями. Для явного выбора: `RASKLAD_BUILD_JOBS=1 bin/build` (допустимо 1–64). Отдельные Wayland-стенды описаны в [INPUT-LAB-001](docs/INPUT-LAB-001.md), [INPUT-LAB-002](docs/INPUT-LAB-002.md) и [INPUT-LAB-003 — настоящие Qt-поля](docs/INPUT-LAB-003.md); они не входят в runtime приложения. [Ревизия безопасности и ресурсов](docs/PROJECT-AUDIT-001.md) · [Сторонние лицензии и ограничения выпуска](THIRD_PARTY.md).
 
-Для окна дополнительно нужны Qt 6 Gui, Qml, Quick и QuickControls2 (рассчитано на уже установленную Qt 6.12; ничего не скачивается). GUI-тест `ui_tests` запускается только offscreen (`QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`, `bin/test` задаёт их сам) и сохраняет скриншоты в `build/tests/ui/screenshots/`.
+Для окна дополнительно нужны Qt 6 Gui, Qml, Quick, QuickControls2 и Multimedia (рассчитано на уже установленную Qt 6.12; ничего не скачивается). GUI-тест `ui_tests` запускается только offscreen (`QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software`, `bin/test` задаёт их сам) и сохраняет скриншоты в `build/tests/ui/screenshots/`.
 
 ## Окно ручного предпросмотра (SYS-239)
 
@@ -114,3 +114,5 @@ rasklad::convertLayout(QStringLiteral("привет"), LayoutDirection::RuToUs);
 Лицензия будет выбрана перед публичным распространением.
 
 Исследование автоматического ввода: [INPUT-LAB-004](docs/INPUT-LAB-004.md) — реальная доставка слова/Space через private keyboard, подтверждение исправления и отмена устаревшего плана. Это developer fixture; рабочий backend пока выключен.
+
+Звук: в окне «Звук → Прослушать» доступен собственный короткий ретро-сигнал (70 мс). Выключатель действует до закрытия программы. Автоматический вызов предусмотрен только для подтверждённой смены раскладки; системный backend пока не подключён. Выбор направления ручного предпросмотра не воспроизводит звук. [Происхождение и проверки](docs/SOUND-001.md).

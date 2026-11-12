@@ -41,3 +41,6 @@ SOURCES += \
     HEADERS += $$PWD/spellengine.h
     SOURCES += $$PWD/spellengine.cpp
 }
+
+HEADERS += $$PWD/soundfeedback.h
+SOURCES += $$PWD/soundfeedback.cpp
