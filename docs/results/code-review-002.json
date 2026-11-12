@@ -1,0 +1,98 @@
+{
+  "review": "CODE-REVIEW-002",
+  "date": "2026-11-12",
+  "issue": "SYS-223",
+  "base_commit": "222c6d7a0e288d5dcdc5810682ce8f1f6e899972",
+  "context7": {
+    "used": true,
+    "library_id": "/websites/doc_qt_io_qt-6",
+    "query_docs_calls": 3,
+    "exact_6_12_index_provided": false,
+    "project_code_sent": false,
+    "topics": [
+      "QThread QObject worker lifecycle",
+      "QFileSystemWatcher atomic replacement",
+      "QProcess blocking wait and GUI event loop"
+    ]
+  },
+  "tests": {
+    "baseline": {
+      "passed": 602,
+      "failed": 0,
+      "skipped": 1,
+      "suites": 11
+    },
+    "candidate": {
+      "passed": 603,
+      "failed": 0,
+      "skipped": 1,
+      "suites": 11
+    },
+    "sanitizers": {
+      "cases_passed": 14,
+      "asan": true,
+      "ubsan": true,
+      "lsan": true,
+      "diagnostics": 0,
+      "initial_sandbox_lsan_ptrace_failure": true,
+      "repeat_completed_with_lsan_enabled": true
+    },
+    "mocked_runner_passed": 22,
+    "developer_equivalence_comparisons": 393216,
+    "permanent_oracle_comparisons": 262144,
+    "real_profile_tested": false
+  },
+  "benchmark": {
+    "compiler": "GCC 16.2.1",
+    "qt": "6.12.0",
+    "optimization": "-O2, no LTO",
+    "cases": {
+      "32_utf16": {
+        "baseline_ns": 1674.64433,
+        "candidate_ns": 292.04256,
+        "samples": 5,
+        "speedup": 5.7342475357016465,
+        "utf16": 32
+      },
+      "65536_utf16": {
+        "baseline_ns": 3360147.06,
+        "candidate_ns": 559183.33,
+        "samples": 5,
+        "speedup": 6.009025805543954,
+        "utf16": 65536
+      }
+    },
+    "cpu_pinned": false,
+    "synthetic_templates_only": true,
+    "end_to_end_speedup_claim": false,
+    "index_bytes": 570,
+    "rodata_increase_bytes": 194,
+    "object_section_total_increase_bytes": 195,
+    "production_behavior_changed": false
+  },
+  "candidate_sources": [
+    {
+      "path": "src/layoutconverter.cpp",
+      "sha256": "5b9c9e2fa8bb25eacc236b319909a1ae729e7008561880f86ad9c8a2660dea71"
+    },
+    {
+      "path": "tests/rasklad_tests.cpp",
+      "sha256": "eddd48fdb619b9bce412412f113c2071014178cd53cc9fff63e3d41980168d40"
+    }
+  ],
+  "developer_probe_sources": [
+    {
+      "path": "build/optimization-review/bench.cpp",
+      "sha256": "332268f7b1ef989588ebcedbaa9d982792d15496b442a9473fafa7dc398ea786"
+    },
+    {
+      "path": "build/optimization-review/fast.cpp",
+      "sha256": "72c8e939a276103cfc7dee36c3137912153a9c8ebefe951d8f13c7a3d8853f5c"
+    }
+  ],
+  "root_working_branch_changed": false,
+  "system_config_changed": false,
+  "third_party_code_copied": false,
+  "release_license_selected": false,
+  "independently_approved": false
+}

@@ -107,16 +107,67 @@ static_assert(hasUniqueSide(true), "duplicate symbol on the us side");
 static_assert(hasUniqueSide(false), "duplicate symbol on the ru side");
 static_assert(hasOnlyPlainBmpSymbols(), "table must contain only printable BMP symbols");
 
-bool lookup(char16_t source, LayoutDirection direction, char16_t &target)
+struct DirectIndex {
+    std::array<char16_t, 94> us{};
+    std::array<char16_t, 94> ruAscii{};
+    std::array<char16_t, 96> ruCyrillic{};
+    char16_t numero = 0;
+};
+constexpr DirectIndex makeIndex()
+{
+    DirectIndex out;
+    for (const KeySymbol &key : kKeySymbols) {
+        if (key.us >= 0x21 && key.us <= 0x7e)
+            out.us[key.us - 0x21] = key.ru;
+        if (key.ru >= 0x21 && key.ru <= 0x7e)
+            out.ruAscii[key.ru - 0x21] = key.us;
+        else if (key.ru >= 0x400 && key.ru <= 0x45f)
+            out.ruCyrillic[key.ru - 0x400] = key.us;
+        else if (key.ru == 0x2116)
+            out.numero = key.us;
+    }
+    return out;
+}
+// Derived from the single authoritative table; lookup allocates no memory.
+// A zero entry means unmapped: every mapped symbol is printable and nonzero.
+constexpr auto kIndex = makeIndex();
+constexpr bool indexCoversTable()
 {
     for (const KeySymbol &key : kKeySymbols) {
-        const char16_t from = direction == LayoutDirection::UsToRu ? key.us : key.ru;
-        if (from == source) {
-            target = direction == LayoutDirection::UsToRu ? key.ru : key.us;
-            return true;
-        }
+        if (key.us < 0x21 || key.us > 0x7e || kIndex.us[key.us - 0x21] != key.ru)
+            return false;
+        char16_t reverse = 0;
+        if (key.ru >= 0x21 && key.ru <= 0x7e)
+            reverse = kIndex.ruAscii[key.ru - 0x21];
+        else if (key.ru >= 0x400 && key.ru <= 0x45f)
+            reverse = kIndex.ruCyrillic[key.ru - 0x400];
+        else if (key.ru == 0x2116)
+            reverse = kIndex.numero;
+        if (reverse != key.us)
+            return false;
     }
-    return false;
+    return true;
+}
+static_assert(indexCoversTable(), "direct index must cover every key pair in both directions");
+
+bool lookup(char16_t source, LayoutDirection direction, char16_t &target)
+{
+    char16_t mapped = 0;
+    if (direction == LayoutDirection::UsToRu) {
+        if (source >= 0x21 && source <= 0x7e)
+            mapped = kIndex.us[source - 0x21];
+    } else {
+        if (source >= 0x21 && source <= 0x7e)
+            mapped = kIndex.ruAscii[source - 0x21];
+        else if (source >= 0x400 && source <= 0x45f)
+            mapped = kIndex.ruCyrillic[source - 0x400];
+        else if (source == 0x2116)
+            mapped = kIndex.numero;
+    }
+    if (mapped == 0)
+        return false;
+    target = mapped;
+    return true;
 }
 
 // Начинается ли с позиции pos combining mark, включая марки вне BMP.
