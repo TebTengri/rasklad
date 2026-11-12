@@ -17,6 +17,7 @@ ApplicationWindow {
     required property QtObject theme
     required property QtObject editorGuard
     required property QtObject clipboard
+    property QtObject soundFeedback: null
     required property bool profileRequested
 
     width: 1040
@@ -72,6 +73,52 @@ ApplicationWindow {
         sequence: "F1"
         context: Qt.ApplicationShortcut
         onActivated: helpDialog.open()
+    }
+
+    Dialog {
+        id: soundDialog
+        objectName: "soundDialog"
+        parent: Overlay.overlay
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        width: Math.min(360, window.width - 32)
+        modal: true
+        enter: Transition {}
+        exit: Transition {}
+        title: qsTr("Sound")
+        standardButtons: Dialog.Close
+        Material.theme: window.theme.dark ? Material.Dark : Material.Light
+        Material.accent: window.theme.accent
+        Material.foreground: window.theme.foreground
+        Material.background: window.theme.surface
+        Material.roundedScale: window.theme.radius
+        background: Rectangle {
+            color: window.theme.surface
+            radius: window.theme.radius
+            border.width: 1
+            border.color: window.theme.muted
+        }
+        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.55) }
+        contentItem: ColumnLayout {
+            CheckBox {
+                objectName: "soundEnabled"
+                text: qsTr("Enable sound")
+                checked: window.soundFeedback ? window.soundFeedback.enabled : false
+                onToggled: if (window.soundFeedback) window.soundFeedback.enabled = checked
+            }
+            ActionButton {
+                objectName: "previewSoundButton"
+                text: qsTr("Preview sound")
+                enabled: window.soundFeedback ? window.soundFeedback.enabled : false
+                onClicked: window.soundFeedback.preview()
+            }
+            PlainLabel {
+                Layout.fillWidth: true
+                text: qsTr("Sound unavailable")
+                color: window.theme.error
+                visible: window.soundFeedback ? window.soundFeedback.unavailable : false
+            }
+        }
     }
 
     Dialog {
@@ -460,6 +507,12 @@ ApplicationWindow {
                     }
                 }
 
+                ToolButton {
+                    objectName: "soundButton"
+                    text: qsTr("Sound")
+                    visible: window.soundFeedback !== null
+                    onClicked: soundDialog.open()
+                }
                 ToolButton {
                     text: qsTr("Keys")
                     onClicked: helpDialog.open()

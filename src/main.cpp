@@ -6,6 +6,8 @@
 // process, application IPC endpoint, settings, history or logging of user text.
 
 #include "analysisservice.h"
+#include "soundfeedback.h"
+#include "retrosoundplayer.h"
 #include "appoptions.h"
 #include "clipboardwriter.h"
 #include "documentcontroller.h"
@@ -108,11 +110,14 @@ int main(int argc, char *argv[])
     DocumentController controller(&analysis);
     ThemeWatcher theme(defaultThemeSources(), options.language, true);
     ClipboardWriter clipboard;
+    SoundFeedback soundFeedback;
+    RetroSoundPlayer soundPlayer(&soundFeedback);
 
     QQmlApplicationEngine engine;
     LanguageSwitcher languages(&engine, &theme);
-    engine.setInitialProperties(
-        mainWindowProperties(&controller, &theme, &clipboard, !options.localProfileRoot.isEmpty()));
+    auto properties = mainWindowProperties(&controller, &theme, &clipboard, !options.localProfileRoot.isEmpty());
+    properties.insert(QStringLiteral("soundFeedback"), QVariant::fromValue(&soundFeedback));
+    engine.setInitialProperties(properties);
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, []() { QCoreApplication::exit(kExitUi); },
         Qt::QueuedConnection);

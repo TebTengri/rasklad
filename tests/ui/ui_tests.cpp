@@ -4,6 +4,7 @@
 // build directory. The clipboard is never read.
 
 #include "analysisservice.h"
+#include "soundfeedback.h"
 #include "clipboardwriter.h"
 #include "documentcontroller.h"
 #include "themewatcher.h"
@@ -21,6 +22,7 @@
 #include <QTextDocument>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QSignalSpy>
 #include <QUrl>
 
 #include <memory>
@@ -78,6 +80,7 @@ struct Ui {
     std::unique_ptr<DocumentController> controller;
     std::unique_ptr<ThemeWatcher> theme;
     ClipboardWriter clipboard;
+    SoundFeedback soundFeedback; // No audio player attached in tests.
     std::unique_ptr<QQmlApplicationEngine> engine;
     std::unique_ptr<LanguageSwitcher> languages;
     QQuickWindow *window = nullptr;
@@ -103,6 +106,7 @@ struct Ui {
         engine = std::make_unique<QQmlApplicationEngine>();
         languages = std::make_unique<LanguageSwitcher>(engine.get(), theme.get());
         QVariantMap properties = mainWindowProperties(controller.get(), theme.get(), &clipboard, withProvider);
+        properties.insert(QStringLiteral("soundFeedback"), QVariant::fromValue(&soundFeedback));
         if (guardOverride)
             properties.insert(QStringLiteral("editorGuard"), QVariant::fromValue(guardOverride));
         engine->setInitialProperties(properties);
@@ -172,6 +176,25 @@ class UiTests : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void soundDialogUsesFakeOutputOnly()
+    {
+        Ui ui;
+        QVERIFY(ui.load("en", false));
+        QSignalSpy requests(&ui.soundFeedback, &SoundFeedback::requested);
+        click(ui.window, ui.find<QQuickItem>("soundButton"));
+        QTRY_VERIFY(ui.find("soundDialog")->property("visible").toBool());
+        click(ui.window, ui.find<QQuickItem>("previewSoundButton"));
+        QCOMPARE(requests.count(), 1);
+        click(ui.window, ui.find<QQuickItem>("soundEnabled"));
+        QVERIFY(!ui.soundFeedback.enabled());
+        QVERIFY(!ui.find("previewSoundButton")->property("enabled").toBool());
+        screenshot(ui.window, "en-sound.png");
+        ui.setLanguage("ru");
+        ui.theme->reload();
+        QTRY_COMPARE(ui.find("soundDialog")->property("title").toString(), QString::fromUtf8("Звук"));
+        screenshot(ui.window, "ru-sound.png");
+    }
+
     void initTestCase()
     {
         const auto blocked = clipboardInterfaceBlacklist(QByteArray("custom_protocol"));

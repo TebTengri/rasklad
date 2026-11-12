@@ -2,6 +2,7 @@
 // synthetic profile fixtures only.
 
 #include "analysisservice.h"
+#include "soundfeedback.h"
 #include "appoptions.h"
 #include "documentcontroller.h"
 #include "jsontranslator.h"
@@ -129,6 +130,55 @@ class AppTests : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void soundRequiresConfirmedChange()
+    {
+        SoundFeedback sound;
+        QSignalSpy requests(&sound, &SoundFeedback::requested);
+        using L = SoundFeedback::Layout;
+        QVERIFY(!sound.notifyLayoutConfirmed(0, L::Us, L::Ru));
+        QVERIFY(!sound.notifyLayoutConfirmed(1, L::Unknown, L::Ru));
+        QVERIFY(!sound.notifyLayoutConfirmed(2, L::Us, L::Us));
+        QVERIFY(!sound.notifyLayoutConfirmed(3, static_cast<L>(99), L::Ru));
+        QCOMPARE(requests.count(), 0);
+        QVERIFY(sound.notifyLayoutConfirmed(4, L::Us, L::Ru));
+        QCOMPARE(requests.count(), 1);
+        QVERIFY(!sound.notifyLayoutConfirmed(4, L::Us, L::Ru));
+        QVERIFY(!sound.notifyLayoutConfirmed(3, L::Ru, L::Us));
+        QCOMPARE(requests.count(), 1);
+    }
+
+    void soundMuteNeverReplaysHistory()
+    {
+        SoundFeedback sound;
+        QSignalSpy requests(&sound, &SoundFeedback::requested);
+        using L = SoundFeedback::Layout;
+        sound.setEnabled(false);
+        QVERIFY(!sound.preview());
+        QVERIFY(!sound.notifyLayoutConfirmed(8, L::Us, L::Ru));
+        sound.setEnabled(true);
+        QVERIFY(!sound.notifyLayoutConfirmed(8, L::Us, L::Ru));
+        QCOMPARE(requests.count(), 0);
+        QVERIFY(sound.notifyLayoutConfirmed(9, L::Ru, L::Us));
+        QCOMPARE(requests.count(), 1);
+    }
+
+    void soundCoalescesRapidEvents()
+    {
+        SoundFeedback sound;
+        QSignalSpy requests(&sound, &SoundFeedback::requested);
+        using L = SoundFeedback::Layout;
+        QVERIFY(sound.preview());
+        QVERIFY(!sound.preview());
+        QVERIFY(!sound.notifyLayoutConfirmed(1, L::Us, L::Ru));
+        QCOMPARE(requests.count(), 1);
+        QTest::qWait(200);
+        QVERIFY(!sound.notifyLayoutConfirmed(1, L::Us, L::Ru));
+        QVERIFY(sound.notifyLayoutConfirmed(2, L::Ru, L::Us));
+        QCOMPARE(requests.count(), 2);
+        sound.noteUnavailable(true);
+        QVERIFY(sound.unavailable());
+    }
+
     // ---- Document controller ----
 
     void manualPreviewApplyUndo()

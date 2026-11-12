@@ -87,6 +87,10 @@
     "Your text": "Ваш текст",
     "Your text copied to the clipboard.": "Ваш текст скопирован в буфер обмена.",
     "rasklad — layout preview": "rasklad — просмотр раскладки",
-    "Text stays local and is not saved. Clipboard copy, cut and paste require your explicit action.": "Текст остаётся локальным и не сохраняется. Копирование, вырезание и вставка — по вашей команде."
+    "Text stays local and is not saved. Clipboard copy, cut and paste require your explicit action.": "Текст остаётся локальным и не сохраняется. Копирование, вырезание и вставка — по вашей команде.",
+    "Sound": "Звук",
+    "Enable sound": "Включить звук",
+    "Preview sound": "Прослушать",
+    "Sound unavailable": "Звук недоступен"
   }
 }

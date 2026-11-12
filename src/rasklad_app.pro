@@ -26,3 +26,8 @@ PRE_TARGETDEPS += $$OUT_PWD/librasklad_core.a
 SOURCES += main.cpp
 
 # No install target: the binary stays in the build directory.
+
+# Audio output only; the player is initialized on explicit demand.
+QT += multimedia
+HEADERS += retrosoundplayer.h
+SOURCES += retrosoundplayer.cpp
