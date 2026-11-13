@@ -1,5 +1,7 @@
 # Architecture decision 002: Fcitx first, with committed native letters
 
+**Product roadmap update:** [Direction 003](PRODUCT-DIRECTION-003.md) supersedes Fcitx as the sole primary path after explicit terminal/message requirements. SYS-241 is deferred; its evidence is retained.
+
 2026-11-13. Direction selected; no runtime admission or installation.
 
 ## Independent proposals and choice

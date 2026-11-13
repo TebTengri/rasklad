@@ -40,3 +40,7 @@ Read INPUT-LAB-006.md before continuation: external composition fails Close and 
 ## Joint decision and exact next task
 
 Read ARCHITECTURE-DECISION-002.md. Claude Opus 5.5 and Codex proposals compared: primary direction is commit-first Fcitx, not editor-by-editor plugins. The minimal candidate preserves native typing/Save/Close but refuses correction because Qt/Fcitx drops SurroundingText capability after valid queries. No delete/commit order proven. Next SYS-241: one minimal regression/candidate fix for context-update semantics in workspace only, preserving focus/password invalidation; Claude prepares, Codex reviews. Do not expand matrices, force refresh or install in the live session.
+
+## Latest product clarification
+
+Read PRODUCT-DIRECTION-003.md first. Priorities: email, messengers, editors and terminals; AI chat is not the only/primary reason. Terminal support required. Shared local core + trusted field adapters proposed as primary; device grab/setgid/password heuristics rejected; SYS-241 deferred. No live installs/permissions or new model reads. Next: reviewable message-field integration and a genuine terminal buffer contract, no standalone composer substituted for native TUI.
