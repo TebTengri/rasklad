@@ -38,13 +38,13 @@ This means that path is unavailable in the observed launch, not that Slack can
 never support it. Focused editable interface presence would still NOT authorize
 correction: code/link/mention/secret roles, native Undo, transaction freshness and
 exact limited replace must be established first. safeAutoCorrection stays false.
-Aggregate: data/slack-native-001-result.json. Seven probe/launch-plan guard tests
-ensure text/write methods are rejected and a running Slack is never terminated.
+Aggregate: data/slack-native-001-result.json. Eleven probe/launch/quit guard tests
+ensure text/write methods are rejected and only the separate, explicitly approved quit helper can terminate Slack.
 
 Primary interface reference:
 https://raw.githubusercontent.com/GNOME/at-spi2-core/main/xml/Accessible.xml
 
-## Concrete next trial — not executed
+## Reviewed temporary trial
 
 `python3 bin/slack-accessibility-trial` prints this fixed plan:
 
@@ -71,16 +71,22 @@ four metadata methods and will not correct/send/type anything. This change of a
 working application's visibility and the need to quit it require owner approval.
 The flag is not written to configuration; to end the trial, quit Slack and launch
 normally without it. No guarantee of undo/format support or actual correction is
-implied merely by accessibility becoming available. No flag launch has occurred.
+implied merely by accessibility becoming available. The approved flag launch occurred on 2026-11-14; results follow.
 
 ### Trial status — local date 2026-11-14
 
-The owner approved the temporary launch. Two invocations stopped before spawn
-because matching same-user Slack processes still existed. No process was killed
-or restarted and no UI/profile content was read. Target-machine/instance
-confirmation is pending; approval remains valid for the reviewed launch after
-that is resolved. The launcher intentionally does not turn a closed-window
-confirmation into permission to terminate a running app.
+After two guarded refusals, the owner confirmed the same Linux/Omarchy machine
+and explicitly approved SIGTERM. The identity-checked pidfd helper sent one
+SIGTERM and verified complete exit. The temporary launch then succeeded; process
+metadata confirmed the force flag present and disable flag absent. No SIGKILL.
+
+The post-launch probe still found zero matching Slack accessibility connections
+and queried zero UI nodes. All eight bus-peer PID lookups succeeded; comparing
+peer executables also found no Slack peer. A read-only X11 root AT_SPI_BUS query
+succeeded but found no alternative accessibility bus property. This trial does
+not establish a usable native Slack adapter. No correction or message operation
+was attempted. The trial Slack remains running; normal quit and ordinary launch
+are still required to end its temporary accessibility flag.
 
 ### Separately approved termination request if normal quit leaves background Slack
 
@@ -93,5 +99,5 @@ profile read or automatic restart. If identity is stale, root selection ambiguou
 or the app does not exit within ten seconds, it stops; the launch helper still
 refuses remaining processes. Four fake-kernel tests cover root selection, pidfd
 identity races, exact signal/cleanup and missing targets; no signal was sent by tests.
-The owner confirmed this is the same Linux/Omarchy machine; SIGTERM has not yet
-been authorized or executed. All original text/write restrictions remain.
+The owner confirmed this is the same Linux/Omarchy machine; SIGTERM was explicitly authorized and executed once, followed by the approved
+temporary launch. All original text/write restrictions remain.

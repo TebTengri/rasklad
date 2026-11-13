@@ -11,8 +11,21 @@
     "writes": false,
     "safeAutoCorrection": false
   },
-  "scope": "Package/launcher/process flags and bounded accessibility metadata only; no private content, app profile/config or environment inspected.",
-  "trial": "Owner approved temporary launch and confirmed same Linux/Omarchy machine; existing-process guard prevented both attempts. Separate pidfd/SIGTERM plan prepared, not authorized or executed. No app launch/termination/config change.",
+  "scope": "Bounded accessibility/process metadata and whitelisted launcher-environment presence checks only. No message/draft text or profile contents read. Explicitly approved SIGTERM and temporary ordinary-profile launch.",
+  "trial": {
+    "ownerApprovedTermination": true,
+    "signal": "SIGTERM",
+    "fullyExited": true,
+    "sigkillUsed": false,
+    "launchRequested": true,
+    "forceAccessibilityFlagConfirmed": true,
+    "postLaunchSlackA11yConnections": 0,
+    "postLaunchUiNodesQueried": 0,
+    "x11A11yBusPropertyPresent": false,
+    "correctorStarted": false,
+    "configurationEdited": false,
+    "rollback": "Pending normal quit and ordinary launch; trial Slack is still running."
+  },
   "source_sha256": {
     "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
     "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0",
