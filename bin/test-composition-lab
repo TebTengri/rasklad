@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Pure synthetic composer unit tests; never loads the Fcitx plugin.
+set -euo pipefail
+root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cd -- "$root_dir"
+for dir in build build/src build/composition-tests; do
+    [[ ! -L "$dir" ]] || { echo "Refusing symlink build directory: $dir" >&2; exit 1; }
+done
+mkdir -p build/src build/composition-tests
+qmake6 -o build/src/Makefile src/rasklad_core.pro
+make -C build/src -j2
+qmake6 -o build/composition-tests/Makefile tests/composition_lab/composition_tests.pro
+make -C build/composition-tests -j2
+exec build/composition-tests/composition_tests "$@"

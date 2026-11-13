@@ -24,3 +24,7 @@ Developer-only composition experiment; no production input backend enabled.
 Working branch: SYS-223/composition-prototype, worktree /tmp/rasklad-compose-20261112, based on 222c6d7 (PR #13). Private GPL-dependent compositor and aggregate attempts remain local in ignored build/; they are not distributed. A local checkpoint archive preserves these fixture files for continuation. No host input, clipboard, GPU, network, home-directory access or desktop configuration changes were enabled. No autostart, installation or service added. This work is not merged or released.
 
 Other pending work: PR #13 input lab, PR #14 lookup optimization, PR #15 retro sound. Do not mark them merged or hardware-validated without checking their current state.
+
+## Resumed: integration result
+
+Superseded by INPUT-LAB-005.md and INPUT-LAB-005-results.json: private Fcitx integration now ran, all six cases passed, and direct focus negative control still failed as expected. Unit tests remain 10/10. Next: lifecycle/navigation/shortcuts and a second ordinary field, then independent review; production input remains disabled.
