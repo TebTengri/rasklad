@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 // Entirely fabricated numeric weights and key sequences; no natural corpus.
 #include "synthetic.h"
 #include "decisionrouter.h"

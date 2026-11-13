@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 // Evaluate every finite evidence-policy state using the production C++ router.
 // No profiles, models, dictionaries, user input, files or network are opened.
 #include "decisionrouter.h"

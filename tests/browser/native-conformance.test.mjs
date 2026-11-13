@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 // Independently generated native gold; no real model, dictionary or user input.
 import test from 'node:test';
 import assert from 'node:assert/strict';

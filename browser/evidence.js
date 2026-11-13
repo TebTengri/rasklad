@@ -1,4 +1,4 @@
-/* Project license pending; see README.md
+/* SPDX-License-Identifier: MIT
  * Synchronous local evidence binding. Dictionary functions are trusted exact
  * full/control/stem engines, not a replacement implementation of Hunspell.
  */

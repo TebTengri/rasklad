@@ -1,4 +1,4 @@
-/* Project license pending; see README.md */
+/* SPDX-License-Identifier: MIT */
 'use strict';
 // Entirely synthetic dictionary membership + numeric weights, not language accuracy.
 // These tiny sets are NOT full/control Hunspell implementations.

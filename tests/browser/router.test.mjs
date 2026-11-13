@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 // Router binding tests. Synthetic evidence and fictional tokens only; no corpus accuracy claims.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

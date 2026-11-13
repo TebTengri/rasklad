@@ -1,4 +1,4 @@
-/* Project license pending; see README.md
+/* SPDX-License-Identifier: MIT
  * rasklad browser router binding. Bounded glue between the page adapter, the
  * generated policy table and a caller-supplied synchronous evidence provider.
  * It contains no linguistic rules: every evidence outcome is looked up in the

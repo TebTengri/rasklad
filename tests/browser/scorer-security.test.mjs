@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';

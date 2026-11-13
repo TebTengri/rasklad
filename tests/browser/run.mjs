@@ -1,4 +1,4 @@
-// Project license pending; see README.md
+// SPDX-License-Identifier: MIT
 // Closed synthetic browser integration. No host profile, bus, input or network.
 import {spawn, execFileSync} from 'node:child_process';
 import {writeFileSync,readFileSync} from 'node:fs';

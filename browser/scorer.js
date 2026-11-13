@@ -1,4 +1,4 @@
-/* Project license pending; see README.md
+/* SPDX-License-Identifier: MIT
  * Browser arithmetic port of the native RSKN scorer, checked by native gold.
  * Format validation does not authenticate model provenance or release rights.
  */

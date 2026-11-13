@@ -91,7 +91,6 @@ canonicalizeToken. Browser router валидирует metadata и выбира�
 Документация API: [Chrome scripting/activeTab](https://developer.chrome.com/docs/extensions/reference/api/scripting),
 [MDN execCommand и история отмены](https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand),
 [CDP Input](https://chromedevtools.github.io/devtools-protocol/tot/Input/).
-Сторонний product-код или словарные данные не копировались. Лицензия собственного
-кода ещё не выбрана: см. README.md и THIRD_PARTY.md. Выбор лицензии и условия
-выпуска согласуются отдельно. Ранее добавленные Codex MIT-метки были ошибочными;
-их исправление не является решением о лицензировании истории репозитория.
+Сторонний product-код или словарные данные не копировались. Собственные модули
+лицензированы по [MIT](../LICENSE) по выбору владельца от 2026-11-13. Сторонние
+компоненты/данные сохраняют свои уведомления и отдельный release-допуск.
