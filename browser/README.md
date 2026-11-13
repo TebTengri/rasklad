@@ -196,3 +196,62 @@ are not physical keystroke latency. No model/editor/user text was loaded.
 Packages and data stay ignored/local, distribution false. This proves the tested
 dictionary-engine handoff, not real language accuracy or installable mail support.
 Reproduction, precise scope and aggregate: [language packages](../data/LANGUAGE_PACKS.md).
+
+## Verified local session and editor integration
+
+`browser/session.js` now joins verified raw language packages, the unchanged RSKN
+model, RSKP stem pair and source-built Hunspell to the existing router/textarea
+adapter. The manifest is supplied by a trusted owner/catalog; a downloaded pack
+cannot approve itself. Both purpose flags are exact booleans and independent.
+
+Before the first async wait, the session snapshots policy/manifest, captures module
+factories and owns bounded non-shared/non-detached byte copies of every listed asset.
+SHA-256 must match for every asset, including complete notices, before any factory
+runs. Model and RSKP/RSKF formats are validated before the engine loader executes.
+There is no weaker profile, auto-fetch, code discovery or threshold change.
+RSKP extraction is exact-length/version/language-count checked. An invalid input
+rejects the entire session with a generic error and reverse cleanup of resources.
+The caller's input buffers remain unchanged; temporary owned copies are wiped
+best effort. This is not guaranteed erasure from JS strings, internal engine memory
+or swap, and not a sandbox against hostile code in the same realm.
+
+Only a ready session can register a field explicitly as owner-authorized prose.
+The query path stays synchronous. Spell failure, missing handles or heap outside
+the 128 MiB limit disables the whole session and removes its input hooks. Dispose
+is idempotent and clears resource references. `decideUs` follows the router contract
+(candidate string or null), never an async result. Ordinary editing survives a
+failed load, failed engine or disposed session. Unknown/external fields are not
+scanned or automatically authorized.
+
+Reproduction (default is fully fictional):
+
+```sh
+node tests/browser/session.test.mjs
+python3 bin/test-reviewed-dictionaries --editor
+# Explicit scoped real integration only, not run by normal build/test:
+python3 bin/test-reviewed-dictionaries --real --editor --input-root /home/mvn/Work/rasklad
+```
+
+The separate [profile review](../data/notices/BROWSER-PROFILE-REVIEW.md) and
+[passport](../data/browser-profile.json) retain exact source metadata, MODIFICATIONS
+and the two notice copies beside the existing derived artifacts. Four raw inputs,
+one 88,290 B model and one 1,200,379 B stem pair are the only linguistic artifacts.
+No reference-model.bin, corpus, features, labels, training or private text is read.
+Outer bwrap mounts only those fixed files and code/notices; nested Chromium sees
+only the generated minimal editor HTML. Third-party code is instantiated from
+verified bytes with fetch/XHR disabled; control stays in child CDP pipes.
+
+Completed real run: all 12 fixed functional cases plus Undo/dispose/integrity/network
+checks passed (16 checks). `ghbdtn x → привет x`, title/upper case, known English,
+URL/path/mixed/short gates and unregistered/code/credential-form fields behaved as
+specified before execution. Native Undo returned `ghbdtn`; disposed sessions left
+`ghbdtn ` untouched. Corrupted model bytes were refused before WASM instantiation.
+
+Full hash+init: 421.4 ms in the final run; WASM heap 19.25 MiB, model file 88,290 B,
+stem pair 1,200,379 B. These exclude JS/browser total RSS and are not per-key latency.
+The local profile's 5,860,597 input bytes include engine/data/notices, not a finished
+release package. Aggregate/source fingerprints: [result](../data/browser-editor-001-result.json).
+11 session Node tests, 18 package/oracle Python tests and the previous 32 browser
+regressions pass. Fixed examples do not establish linguistic accuracy or support
+for Gmail/Telegram/other editors. No extension/install/global gesture is included;
+double Super remains the planned manual operation. Distribution remains false.

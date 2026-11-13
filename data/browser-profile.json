@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "purpose": "local-editor-integration-only",
+  "local_test": true,
+  "distribution": false,
+  "files": {
+    "metadata": {
+      "path": "build/experiment-002-artifacts/artifact-metadata.json",
+      "bytes": 1827,
+      "sha256": "9a55205497c9cea58a157b83a3eeca3d66be899679265888443d1f18fee79612"
+    },
+    "modifications": {
+      "path": "build/experiment-002-artifacts/MODIFICATIONS.txt",
+      "bytes": 182,
+      "sha256": "e2a4d9b6956c3210d0f60cf65432c7f8bfe3b891852f39832e46e4e6b3408af5"
+    },
+    "model": {
+      "path": "build/experiment-002-artifacts/detector-model.rskn",
+      "bytes": 88290,
+      "sha256": "e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8"
+    },
+    "stem": {
+      "path": "build/experiment-002-artifacts/exact-full-lexicons.rskp",
+      "bytes": 1200379,
+      "sha256": "3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871"
+    },
+    "en-notice": {
+      "path": "data/notices/en_US.README.txt",
+      "bytes": 15732,
+      "sha256": "168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371"
+    },
+    "ru-notice": {
+      "path": "data/notices/ru_RU.README.txt",
+      "bytes": 1886,
+      "sha256": "262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52"
+    },
+    "review": {
+      "path": "data/notices/BROWSER-PROFILE-REVIEW.md",
+      "bytes": 2394,
+      "sha256": "c1b7a4687fd09bf5bef4258c1033cfad72e6f055d3644070821db58d3502cb89"
+    }
+  }
+}

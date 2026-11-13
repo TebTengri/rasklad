@@ -2,12 +2,12 @@
 // Shared closed Chromium/CDP fixture. Never uses the host browser profile.
 import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
-export function startIsolatedChromium(root,timeoutMs=45000){
+export function startIsolatedChromium(root,timeoutMs=45000,fixtureDirectory=resolve(root,'build/browser-fixture')){
 const args = ['--unshare-all','--die-with-parent','--new-session',
   '--ro-bind','/usr','/usr','--symlink','usr/lib','/lib','--symlink','usr/lib','/lib64',
   '--proc','/proc','--dev','/dev','--tmpfs','/tmp','--dir','/home','--dir','/home/test',
   '--dir','/etc','--ro-bind','/etc/fonts','/etc/fonts','--dir','/lab','--dir','/lab/build',
-  '--ro-bind',resolve(root,'build/browser-fixture'),'/lab/build/browser-fixture',
+  '--ro-bind',fixtureDirectory,'/lab/build/browser-fixture',
   '--setenv','HOME','/home/test','--setenv','XDG_RUNTIME_DIR','/tmp',
   '--unsetenv','DBUS_SESSION_BUS_ADDRESS','--','/usr/lib/chromium/chromium',
   '--headless','--disable-gpu','--disable-background-networking','--disable-component-update',

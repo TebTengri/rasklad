@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "scope": "fixed project-authored functional examples, not language accuracy",
+  "cases": [
+    {"id":"lowercase","field":"prose","input":"ghbdtn x","expected":"привет x"},
+    {"id":"titlecase","field":"prose","input":"Ghbdtn ","expected":"Привет "},
+    {"id":"uppercase","field":"prose","input":"GHBDTN ","expected":"ПРИВЕТ "},
+    {"id":"known-en","field":"prose","input":"hello ","expected":"hello "},
+    {"id":"known-inflection","field":"prose","input":"books ","expected":"books "},
+    {"id":"url","field":"prose","input":"https://example.invalid ","expected":"https://example.invalid "},
+    {"id":"path","field":"prose","input":"/tmp/demo ","expected":"/tmp/demo "},
+    {"id":"mixed","field":"prose","input":"abc123 ","expected":"abc123 "},
+    {"id":"short","field":"prose","input":"ghb ","expected":"ghb "},
+    {"id":"unknown-owner","field":"unknown","input":"ghbdtn ","expected":"ghbdtn "},
+    {"id":"code-owner","field":"code","input":"ghbdtn ","expected":"ghbdtn "},
+    {"id":"credential-form","field":"protected","input":"ghbdtn ","expected":"ghbdtn "}
+  ],
+  "undo": {"input":"ghbdtn ","expected":"ghbdtn"},
+  "disposed": {"input":"ghbdtn ","expected":"ghbdtn "},
+  "rules": "No case selection, model change or threshold tuning based on this run. Failed correction is reported as failed mechanism example, not silently reclassified as a pass. Ctrl+Z tests native Undo only; double Super remains the planned manual gesture."
+}

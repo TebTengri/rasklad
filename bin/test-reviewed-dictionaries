@@ -34,6 +34,7 @@ class Parser(argparse.ArgumentParser):
 def main():
     parser=Parser(description=__doc__)
     parser.add_argument('--real',action='store_true')
+    parser.add_argument('--editor',action='store_true',help='Connect pinned model/stems and exercise the owner-side textarea')
     parser.add_argument('--input-root',type=Path,help='Explicit rasklad checkout holding the four pinned files; required with --real')
     args=parser.parse_args()
     if args.real != (args.input_root is not None):raise pack.PackError('usage')
@@ -46,6 +47,12 @@ def main():
            'build/hunspell-source-build/out/hunspell.js','build/hunspell-source-build/out/hunspell.wasm',
            'build/browser-spell-native/native_spell_fixture']
     if not args.real:files.append('build/browser-spell-native/native.json')
+    if args.editor:
+        files+=['browser/session.js','browser/router.js','browser/scorer.js','browser/lexicon.js','browser/evidence.js','browser/adapter.js',
+                'tools/editor_profile.py','tests/browser/editor-run.mjs','build/browser-fixture/converter.js','build/browser-fixture/policy.js',
+                'data/browser-profile.json','data/notices/BROWSER-PROFILE-REVIEW.md','data/browser-editor-001-protocol.json',
+                'data/sources.json','data/experiment-002-protocol.json']
+        if not args.real:files.append('build/browser-fixture/synthetic-conformance.json')
     for f in files:regular(ROOT/f)
     mounts=[]
     if args.real:
@@ -61,6 +68,16 @@ def main():
                     pack._check_path(rel)
                     source=args.input_root/rel;regular(source)
                     mounts+=['--ro-bind',str(source),'/inputs/'+lang+'.'+item['role']]
+    if args.real and args.editor:
+        profile=json.loads((ROOT/'data/browser-profile.json').read_text())
+        if profile['local_test'] is not True or profile['distribution'] is not False:raise pack.PackError('profile-admission')
+        for name in ['model','stem','metadata','modifications','en-notice','ru-notice']:
+            rel=profile['files'][name]['path']
+            if name.endswith('-notice'):
+                rel='build/experiment-002-artifacts/'+{'en-notice':'en_US.NOTICE.txt','ru-notice':'ru_RU.NOTICE.txt'}[name]
+            pack._check_path(rel)
+            source=args.input_root/rel;regular(source)
+            mounts+=['--ro-bind',str(source),'/inputs/'+name]
     build=ROOT/'build'
     fd=pack._open_abs(pack._abs_parts(build));os.close(fd)
     # Never reuse an existing output or delete another run's package.
@@ -73,7 +90,7 @@ def main():
     for f in files:command+=['--ro-bind',str(ROOT/f),'/lab/'+f]
     command+=mounts+['--chdir','/lab','--clearenv','--setenv','PATH','/usr/bin','--setenv','HOME','/tmp',
                      '--setenv','PYTHONDONTWRITEBYTECODE','1','--','/usr/bin/python3','/lab/tools/dictionary_smoke.py',
-                     '--real' if args.real else '--synthetic']
+                     '--real' if args.real else '--synthetic']+(['--editor'] if args.editor else [])
     result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=110)
     if result.returncode or len(result.stdout)>16384:
         try:phase=json.loads(result.stderr[:4096]).get('phase')

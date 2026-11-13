@@ -158,3 +158,28 @@ pipe read contains the entire input. Error reports expose only enumerated stage
 codes (pins/package/native/browser), never dictionary words, stderr or paths.
 A large fictional-input regression covers the multi-chunk case. The completed
 real run kept the same four read-only inputs and no model/seat/network access.
+
+## Verified session / scoped local editor integration
+
+The separately confirmed editor step reads only the four catalog-pinned raw files,
+existing pinned RSKN model/RSKP pair and their metadata/notices in isolated bwrap.
+It does not reuse the earlier raw-smoke authorization, train, access corpora/user
+text or install anything. The review and consumed operation/result are recorded
+in data/browser-profile.json and data/browser-editor-001-result.json.
+
+Session inputs are bounded owned snapshots before async hashing. Every listed file,
+including notices, must match the trusted manifest before any component initializes.
+Model/stem formats must pass before verified third-party engine code executes.
+Dependency callbacks and the manifest/digest implementation are trusted; a malicious
+same-realm script or attacker-owned catalog is outside this boundary. No downloaded
+manifest self-approval or implicit distribution permission. The page owner remains
+responsible for the registered prose field and protected spans.
+
+Atomic lifecycle cleanup removes adapter hooks and disposes engines/model/stems on
+initialization failure or runtime engine failure; there is no fallback evidence.
+Exactly four handles and valid heap capacity <=128 MiB are required. Temporary byte
+copies are wiped best effort, without claims about allocator copies or swap.
+Registration occurs only after ready; queries remain synchronous and unlogged.
+The owner-side test uses fixed fictional text, no messaging account or host profile.
+The browser receives only minimal editor HTML plus explicitly verified in-memory
+assets; outer mounts do not expose model/seat/home directories as a tree.
