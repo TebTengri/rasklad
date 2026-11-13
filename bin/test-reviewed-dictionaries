@@ -74,8 +74,13 @@ def main():
     command+=mounts+['--chdir','/lab','--clearenv','--setenv','PATH','/usr/bin','--setenv','HOME','/tmp',
                      '--setenv','PYTHONDONTWRITEBYTECODE','1','--','/usr/bin/python3','/lab/tools/dictionary_smoke.py',
                      '--real' if args.real else '--synthetic']
-    result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=110)
-    if result.returncode or len(result.stdout)>16384:raise pack.PackError('isolated-test-failed')
+    result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=110)
+    if result.returncode or len(result.stdout)>16384:
+        try:phase=json.loads(result.stderr[:4096]).get('phase')
+        except (ValueError,UnicodeDecodeError):phase=None
+        if phase in {'reference-library','read-pins','package-build','native-comparison','browser-comparison'}:
+            raise pack.PackError('failed-'+phase)
+        raise pack.PackError('isolated-test-failed')
     report=json.loads(result.stdout)
     if report.get('passed') is not True:raise pack.PackError('isolated-test-failed')
     print(json.dumps(report,sort_keys=True))
@@ -83,6 +88,9 @@ def main():
 
 if __name__=='__main__':
     try:main()
+    except pack.PackError as error:
+        print(json.dumps({'passed':False,'error':error.code}),file=sys.stderr)
+        sys.exit(1)
     except Exception:
         print(json.dumps({'passed':False,'error':'isolated-dictionary-test-failed'}),file=sys.stderr)
         sys.exit(1)

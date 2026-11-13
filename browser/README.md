@@ -184,3 +184,15 @@ Hunspell/MySpell/Emscripten и runtime, а также отдельный доп�
 Сторонний product-код или словарные данные не копировались. Собственные модули
 лицензированы по [MIT](../LICENSE) по выбору владельца от 2026-11-13. Сторонние
 компоненты/данные сохраняют свои уведомления и отдельный release-допуск.
+
+## Real raw-dictionary compatibility result
+
+The separately authorized 2026-11-13 test loaded the pinned RU/EN raw dictionary
+packages with full notices into the source-built engine, outside the default page.
+All 83 native/WASM cases and both control byte arrays matched; 2,000 additional
+lookups completed. Four handles used 19.25 MiB WASM heap; dictionary init ~295 ms
+in one run. This excludes browser/native RSS and JS input copies; lookup batches
+are not physical keystroke latency. No model/editor/user text was loaded.
+Packages and data stay ignored/local, distribution false. This proves the tested
+dictionary-engine handoff, not real language accuracy or installable mail support.
+Reproduction, precise scope and aggregate: [language packages](../data/LANGUAGE_PACKS.md).

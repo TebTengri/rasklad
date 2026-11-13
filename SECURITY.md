@@ -149,5 +149,12 @@ bytes and fixed smoke cases, never user input. Network and host session access
 remain absent. Only aggregate results are printed. Unique ignored output directories
 hold raw local packages and their notices, never overwrite old runs, and are not
 release-approved. The resource report measures WASM heap capacity, not process RSS;
-batch lookup means are not physical keystroke latency. Current recorded smoke inputs
-are fictional; actual real-data execution requires its own recorded result.
+batch lookup means are not physical keystroke latency. A separately authorized real-data run completed on 2026-11-13; aggregate results
+and consumed one-shot scope are recorded in data/language-pack-smoke-001.json.
+Default remains fictional and further raw-input runs are not automatically authorized.
+
+The native stdin oracle now reads bounded chunks to EOF instead of assuming one
+pipe read contains the entire input. Error reports expose only enumerated stage
+codes (pins/package/native/browser), never dictionary words, stderr or paths.
+A large fictional-input regression covers the multi-chunk case. The completed
+real run kept the same four read-only inputs and no model/seat/network access.

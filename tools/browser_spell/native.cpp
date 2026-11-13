@@ -39,9 +39,14 @@ QJsonObject profile(const QByteArray &aff,const QByteArray &dic,const QStringLis
 int main(int argc, char **argv){
     if(std::strcmp(Hunspell_get_library_version(),"1.7.5")!=0)return 1;
     if(argc==2 && std::strcmp(argv[1],"--stdin-profiles")==0){
-        QFile input;if(!input.open(stdin,QIODevice::ReadOnly))return 1;
-        const auto bytes=input.read(16*1024*1024+1);
-        if(bytes.size()>16*1024*1024)return 1;
+        // A pipe may return a short read before EOF. Small fictional profiles
+        // hid this; collect bounded chunks until EOF for real dictionary inputs.
+        QByteArray bytes;char chunk[65536];std::size_t count;
+        while((count=std::fread(chunk,1,sizeof(chunk),stdin))>0){
+            if(bytes.size()+qint64(count)>16*1024*1024)return 1;
+            bytes.append(chunk,qsizetype(count));
+        }
+        if(std::ferror(stdin))return 1;
         QJsonParseError error;const auto document=QJsonDocument::fromJson(bytes,&error);
         if(error.error!=QJsonParseError::NoError || !document.isObject())return 1;
         const auto object=document.object();

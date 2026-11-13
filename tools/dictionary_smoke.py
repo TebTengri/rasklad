@@ -13,6 +13,7 @@ import language_pack as pack
 
 ROOT = Path('/lab')
 OUT = Path('/out')
+PHASE = 'reference-library'
 WORDS = {
     'en': ['hello','world','book','books','computer','dictionary','layout','language',
            'iPhone','iphone','John','john','qzxv','ghbdtn','https','CMake'],
@@ -72,11 +73,14 @@ def records_and_payloads(synthetic):
 
 
 def run(synthetic):
+    global PHASE
     # Read-only /usr is trusted host tooling; this check pins the reference library.
     pin=json.loads((ROOT/'data/morphology-003-sources.json').read_text())['hunspell']
     lib=Path(pin['library_path'])
     read_pin(lib.parent,lib.name,pin['library_bytes'],pin['library_sha256'])
+    PHASE='read-pins'
     bundles=records_and_payloads(synthetic)
+    PHASE='package-build'
     request={'schema':1,'profiles':{}}
     packages=[]
     for lang,record,payload in bundles:
@@ -97,9 +101,11 @@ def run(synthetic):
         packages.append({'locale':record['locale'],'files':len(record['files']),
                          'bytes':sum(f['bytes'] for f in record['files']),
                          'distribution':record['admission']['distribution']})
+    PHASE='native-comparison'
     native=subprocess.run([str(ROOT/'build/browser-spell-native/native_spell_fixture'),'--stdin-profiles'],
                           input=json.dumps(request).encode(),stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=30,check=True)
     if len(native.stdout)>16*1024*1024:raise pack.PackError('native-output-size')
+    PHASE='browser-comparison'
     node=subprocess.run(['/usr/bin/node',str(ROOT/'tests/browser/dictionary-smoke.mjs')],input=native.stdout,
                         stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=65,check=True)
     if len(node.stdout)>16384:raise pack.PackError('browser-output-size')
@@ -117,5 +123,5 @@ if __name__=='__main__':
         if sys.argv[1:] not in (['--synthetic'],['--real']):raise pack.PackError('usage')
         run(sys.argv[1]=='--synthetic')
     except Exception:
-        print(json.dumps({'passed':False,'error':'dictionary-smoke-failed'}),file=sys.stderr)
+        print(json.dumps({'passed':False,'error':'dictionary-smoke-failed','phase':PHASE}),file=sys.stderr)
         sys.exit(1)

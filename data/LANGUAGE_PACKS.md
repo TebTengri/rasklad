@@ -113,5 +113,28 @@ The script must fail if load/call/cleanup or any comparison fails; it does not
 silently fall back to another engine or disable checks to fit the memory budget.
 
 The real command is prepared for review, not automatically executed by build/test.
-The previous one-shot data-test permission is not reused. All recorded results
-for this new command currently use fictional inputs only.
+The previous one-shot data-test permission is not reused. The default command remains fictional. See the separately authorized real-data result below.
+
+### Authorized real-data result — 2026-11-13
+
+The owner authorized the specific one-shot command after the explicit question.
+Two initial attempts failed at native stdin framing: the Qt single read could end
+before EOF for a multi-megabyte pipe. The native oracle now reads bounded chunks
+until EOF; a 5,000-entry fictional dictionary regression covers this failure.
+No integrity check, access scope or resource limit was weakened to pass the run.
+
+The completed real run passed all 83 case variants with zero native/WASM mismatch,
+including 60 positive full-spell answers and 9 full-positive/control-negative
+variants. Both native/browser control byte arrays matched. Four handles shared
+20,185,088 B (19.25 MiB) WASM heap capacity. Dictionary init was 295 ms, module init
+81.3 ms. For 2,000 lookups, the p50/p95 of 50-call batch means were 0.020/0.042 ms.
+Network attempts: 0; no model loaded. These are one-run resource/smoke measurements,
+not accuracy, per-key delay, browser RSS or a peak total-memory benchmark.
+
+The EN/RU local packages contained 575,517 / 3,551,131 bytes respectively including
+notices and modification records (excluding the manifest itself). Raw dictionary
+hashes stayed unchanged. No words/data/model are committed; the aggregate report
+is [language-pack-smoke-001.json](language-pack-smoke-001.json).
+Distribution remains false for both packages; this local test does not approve
+shipping them or make new languages/real editors supported. The one-shot data
+operation is complete; further real-input experiments require their own scope.
