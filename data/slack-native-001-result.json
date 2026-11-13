@@ -12,10 +12,11 @@
     "safeAutoCorrection": false
   },
   "scope": "Package/launcher/process flags and bounded accessibility metadata only; no private content, app profile/config or environment inspected.",
-  "trial": "Owner approved temporary launch; two attempts refused before spawn because matching Slack processes remained. No launch/kill/config change. Awaiting confirmation of the target machine/instance.",
+  "trial": "Owner approved temporary launch and confirmed same Linux/Omarchy machine; existing-process guard prevented both attempts. Separate pidfd/SIGTERM plan prepared, not authorized or executed. No app launch/termination/config change.",
   "source_sha256": {
     "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
-    "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0"
+    "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0",
+    "bin/slack-request-quit": "10f9d292760d3f024cb215cbbf92e021dfa550756d865818d3dfab6ee6c9af87"
   },
   "updated_local_date": "2026-11-14"
 }

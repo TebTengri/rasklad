@@ -81,3 +81,17 @@ or restarted and no UI/profile content was read. Target-machine/instance
 confirmation is pending; approval remains valid for the reviewed launch after
 that is resolved. The launcher intentionally does not turn a closed-window
 confirmation into permission to terminate a running app.
+
+### Separately approved termination request if normal quit leaves background Slack
+
+`python3 bin/slack-request-quit` defaults to a plan. A separate explicit --run
+requires approval beyond the launch approval: it can lose unsaved application state.
+It identifies exactly one current-user installed-Slack process-tree root, pins it
+with a Linux pidfd and rechecks executable/UID/parent/birth-time identity before
+sending one SIGTERM. No global signal, killall, SIGKILL, child sweep, forced retry,
+profile read or automatic restart. If identity is stale, root selection ambiguous
+or the app does not exit within ten seconds, it stops; the launch helper still
+refuses remaining processes. Four fake-kernel tests cover root selection, pidfd
+identity races, exact signal/cleanup and missing targets; no signal was sent by tests.
+The owner confirmed this is the same Linux/Omarchy machine; SIGTERM has not yet
+been authorized or executed. All original text/write restrictions remain.
