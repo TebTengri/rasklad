@@ -1,34 +1,35 @@
-/* SPDX-License-Identifier: MIT
+/* Project license pending; see README.md
  * Synchronous local evidence binding. Dictionary functions are trusted exact
  * full/control/stem engines, not a replacement implementation of Hunspell.
  */
 (function(root) {
   'use strict';
   function createEvidenceProvider({model,policy,convert,lookup}={}) {
-    if (!model || typeof model.score!=='function' || typeof model.decide!=='function' ||
-        typeof convert!=='function' || !lookup || !policy || policy.schema!==1 ||
-        !Number.isInteger(policy.minKeys) || !Number.isInteger(policy.maxKeys) ||
-        policy.minKeys<4 || policy.maxKeys>32 || policy.minKeys>policy.maxKeys)
-      throw new TypeError('Invalid evidence provider');
-    const min=policy.minKeys,max=policy.maxKeys,minRaw=policy.modelSpec?.minStepRaw;
+    const score=model?.score,decide=model?.decide;
+    const schema=policy?.schema,min=policy?.minKeys,max=policy?.maxKeys;
+    const canonical=policy?.canonical,minRaw=policy?.modelSpec?.minStepRaw;
+    if (typeof score!=='function' || typeof decide!=='function' || typeof convert!=='function' ||
+        !lookup || schema!==1 || !Number.isInteger(min) || !Number.isInteger(max) ||
+        min<4 || max>32 || min>max)throw new TypeError('Invalid evidence provider');
     if(!Number.isInteger(minRaw) || minRaw>=0 || minRaw < -1000000)throw new TypeError('Invalid score bounds');
-    const score=model.score,decide=model.decide;
     const functions={};
     for(const name of ['full','control','stem']) {
-      if(typeof lookup[name]!=='function')throw new TypeError('Missing exact dictionary engine');
-      functions[name]=lookup[name];
+      const fn=lookup[name];
+      if(typeof fn!=='function')throw new TypeError('Missing exact dictionary engine');
+      functions[name]=fn;
     }
     const maps={};
     for(const layout of ['us','ru']) {
-      const raw=policy.canonical?.[layout];
+      const raw=canonical?.[layout];
       if(!raw || typeof raw!=='object' || Array.isArray(raw))throw new TypeError('Invalid canonical map');
       const chars=Object.keys(raw);
       if(chars.length===0 || chars.length>256)throw new TypeError('Invalid canonical map');
       maps[layout]=new Map();
       for(const ch of chars) {
-        if(ch.length!==1 || !Number.isInteger(raw[ch]) || raw[ch]<0 || raw[ch]>32)
+        const key=raw[ch];
+        if(ch.length!==1 || !Number.isInteger(key) || key<0 || key>32)
           throw new TypeError('Invalid canonical map');
-        maps[layout].set(ch,raw[ch]);
+        maps[layout].set(ch,key);
       }
     }
     function member(name,language,value) {

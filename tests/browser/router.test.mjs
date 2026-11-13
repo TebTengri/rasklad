@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// Project license pending; see README.md
 // Router binding tests. Synthetic evidence and fictional tokens only; no corpus accuracy claims.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -221,7 +221,7 @@ test('malicious converter fails closed', () => {
   const p = forced('correct', 'dictionaryOnly');
   const ev = () => synthetic(0, 'keep');
   const bads = [() => 'x', () => US + 'y', () => ({ toString: () => 'abcd', length: 4 }), () => new String('abcd'),
-    () => null, () => 1234, () => { throw new Error('boom'); }];
+    () => 'абвг', () => 'xxxx', () => null, () => 1234, () => { throw new Error('boom'); }];
   for (const impl of bads) {
     const router = createRouter({ policy: p, convert: impl, evidence: ev });
     assert.deepEqual(router.route(prose(US)), abst('invalidEvidence', true));
@@ -230,4 +230,17 @@ test('malicious converter fails closed', () => {
   const c = spy(convert);
   createRouter({ policy: p, convert: c, evidence: ev }).route(prose(RU, { layout: 'ru' }));
   assert.deepEqual(c.calls, [[RU, 'ru-us']]);
+});
+
+test('semantic anchors are independent of generated table indexing',()=>{
+  assert.equal(policy.outcomes.length,9);
+  const action=(e,profile='safeConfirmed')=>createRouter({policy,convert,evidence:()=>e})
+    .route(prose(US,{profile})).action;
+  assert.equal(action(synthetic(1,'correct')),'keep');
+  assert.equal(action(synthetic(2,'correct')),'correct');
+  assert.equal(action(synthetic(2,'abstain')),'abstain');
+  assert.equal(action(synthetic(2,'abstain'),'requestedHybrid'),'suggest');
+  assert.equal(action(synthetic(12,'correct')),'abstain');
+  assert.equal(action(synthetic(48,'correct')),'abstain');
+  assert.equal(action(synthetic(1,'invalid')),'abstain');
 });

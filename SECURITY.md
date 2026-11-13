@@ -85,3 +85,10 @@ JS scorer проверен по native gold, ключи не кэшируютс�
 только сгенерированные числовые веса и искусственные Set, не замена Hunspell.
 Реальные артефакты не открывались/не допущены к browser distribution, сети/IPC/
 истории/host config нет. См. [Browser evidence 003](docs/BROWSER-EVIDENCE-003.md).
+
+ECC review 004: browser loader теперь допускает только frozen профиль порогов,
+router повторно проверяет canonical соответствие кандидата, evidence снимает
+конфигурацию одним чтением. Независимый native oracle передаёт явные evidence
+поля, а не ожидаемый индекс browser table. Контракт owner-registration не
+заменяется поиском password по всей странице. Статическое ECC-review и отдельно
+исполненные Codex тесты разделены: [ECC review 004](docs/ECC-REVIEW-004.md).

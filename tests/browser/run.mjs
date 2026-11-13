@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// Project license pending; see README.md
 // Closed synthetic browser integration. No host profile, bus, input or network.
 import {spawn, execFileSync} from 'node:child_process';
 import {writeFileSync,readFileSync} from 'node:fs';
@@ -142,9 +142,21 @@ try {
       }
       model.dispose();
     }
-    return {scores,decisions};
+    let routerStates=0,conversions=0;
+    for(const row of gold.routerCases){
+      const router=RaskladRouter.createRouter({policy:RaskladPolicyData,convert:RaskladConverter.convert,evidence:()=>row.evidence});
+      const actual=router.route({field:'prose',layout:'us',token:row.token,profile:row.profile});
+      for(const key of ['action','reason','evidenceQueried','candidate'])if(actual[key]!==row.expected[key])throw Error('native router mismatch');
+      routerStates++;
+    }
+    for(const row of gold.converterCases){
+      const actual=RaskladConverter.convert(String.fromCharCode(...row.source),row.direction);
+      if(actual.length!==row.expected.length || row.expected.some((unit,i)=>actual.charCodeAt(i)!==unit))throw Error('native converter mismatch');
+      conversions++;
+    }
+    return {scores,decisions,routerStates,conversions};
   }.toString()+')('+JSON.stringify(nativeGold)+')');
-  assert.deepEqual(browserConformance,{scores:1176,decisions:2464});passed++;
+  assert.deepEqual(browserConformance,{scores:1176,decisions:2464,routerStates:512,conversions:27});passed++;
   console.log(JSON.stringify({passed,browser:version.product,browserConformance,timing,jsHeapUsedBytesBeforeConformance:heap.usedSize,scope:'synthetic owned textarea, numeric model and dictionary fixtures; no real data or host session'}));
 } catch(error){console.error(JSON.stringify({passed,error:error.message}));process.exitCode=1;}
 finally {

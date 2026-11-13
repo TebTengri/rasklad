@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// Project license pending; see README.md
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -78,6 +78,12 @@ test('disabled or invalid thresholds never correct',()=>{
     assert.equal(m.decide(m.score([0,1,2,3]),'us'),'abstain');
   }
 });
+test('finite lenient thresholds are rejected like the admitted native profile',()=>{
+  for(const patch of [{minAlternative:-1e9},{maxObserved:0},{gap:0},{gap:2.49},{enabled:1}]){
+    const altered=copySpec();Object.assign(altered.twoScore,patch);
+    assert.throws(()=>loadModel(weights(),altered),TypeError);
+  }
+});
 test('exact full/control/stem membership, case and layout reach local callbacks',()=>{
   const seen=[];
   const make=name=>(language,value)=>{seen.push([name,language,value]);return language==='ru';};
@@ -111,4 +117,13 @@ test('bad converter, model response and mutable source keys fail closed',()=>{
   const q=query();
   const e=provider({lookup:{full:()=>{q.keys.fill(32);return false;},control:empty,stem:empty}});
   assert.equal(e(q).model,'correct'); // Provider owns a frozen key snapshot before callbacks.
+});
+
+test('provider snapshots configuration getter values exactly once',()=>{
+  let reads=0;const c=JSON.parse(JSON.stringify(policy));
+  const value=c.canonical.us.Q;
+  Object.defineProperty(c.canonical.us,'Q',{enumerable:true,get(){reads++;return reads===1?value:999;}});
+  const m=loadModel(weights(),spec);
+  const e=provider({policy:c,model:m});assert.equal(reads,1);
+  assert.equal(e(query()).model,'correct');assert.equal(reads,1);
 });

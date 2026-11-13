@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* Project license pending; see README.md
  * rasklad browser router binding. Bounded glue between the page adapter, the
  * generated policy table and a caller-supplied synchronous evidence provider.
  * It contains no linguistic rules: every evidence outcome is looked up in the
@@ -172,6 +172,10 @@
         return abstain('invalidEvidence', true);
       }
       if (typeof candidate !== 'string' || candidate.length !== token.length) return abstain('invalidEvidence', true);
+      const opposite = policy.maps[layout === 'us' ? 'ru' : 'us'];
+      for (let i = 0; i < candidate.length; i++) {
+        if (opposite.get(candidate[i]) !== keys[i]) return abstain('invalidEvidence', true);
+      }
       return result(outcome.action, outcome.reason, true, candidate);
     }
 

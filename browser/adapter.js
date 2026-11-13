@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* Project license pending; see README.md
  * Owner-integrated plain-text adapter. No detector or global input backend.
  */
 (function (root) {

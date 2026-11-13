@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// Project license pending; see README.md
 // Entirely fabricated numeric weights and key sequences; no natural corpus.
 #include "synthetic.h"
 #include "decisionrouter.h"
@@ -43,6 +43,60 @@ QJsonObject scoreCase(const NgramModel &model, const KeySequence &keys) {
             {QStringLiteral("ru"),action(s,SourceLayout::Ru)}};
 }
 }
+
+namespace {
+QJsonArray units(const QString &text) {
+    QJsonArray out;for(QChar ch:text)out.append(int(ch.unicode()));return out;
+}
+QJsonObject pairJson(const routing::PairHit &p) {
+    return {{QStringLiteral("observed"),p.observed},{QStringLiteral("alternative"),p.alternative}};
+}
+class OracleSource final:public routing::EvidenceSource {
+public:
+    routing::TokenEvidence value;
+    std::optional<routing::TokenEvidence> evidence(const routing::EvidenceQuery &)const override{return value;}
+};
+QJsonArray routerOracle() {
+    using namespace routing;
+    QJsonArray out;
+    const QString token=QStringLiteral("Ghbdtn");
+    for(auto profile:{RouteProfile::SafeConfirmed,RouteProfile::RequestedHybrid})
+    for(auto model:{DecisionAction::Keep,DecisionAction::Correct,DecisionAction::Abstain,static_cast<DecisionAction>(99)})
+    for(bool fo:{false,true})for(bool fa:{false,true})
+    for(bool co:{false,true})for(bool ca:{false,true})
+    for(bool so:{false,true})for(bool sa:{false,true}) {
+        OracleSource source;source.value={{fo,fa},{co,ca},{so,sa},model};
+        const auto d=route({FieldContext::Prose,InputLayout::KnownUs,QStringView(token)},profile,&source);
+        const auto modelName=model==DecisionAction::Keep?QStringLiteral("keep"):model==DecisionAction::Correct?
+            QStringLiteral("correct"):model==DecisionAction::Abstain?QStringLiteral("abstain"):QStringLiteral("invalid");
+        out.append(QJsonObject{
+            {QStringLiteral("profile"),profile==RouteProfile::SafeConfirmed?QStringLiteral("safeConfirmed"):QStringLiteral("requestedHybrid")},
+            {QStringLiteral("token"),token},
+            {QStringLiteral("evidence"),QJsonObject{{QStringLiteral("full"),pairJson(source.value.full)},
+                {QStringLiteral("control"),pairJson(source.value.control)},{QStringLiteral("stem"),pairJson(source.value.stem)},
+                {QStringLiteral("model"),modelName}}},
+            {QStringLiteral("expected"),QJsonObject{{QStringLiteral("action"),QString::fromLatin1(routeActionName(d.action))},
+                {QStringLiteral("reason"),QString::fromLatin1(routeReasonName(d.reason))},
+                {QStringLiteral("evidenceQueried"),d.evidenceQueried},{QStringLiteral("candidate"),d.candidate}}}});
+    }
+    return out;
+}
+QJsonArray converterOracle() {
+    QJsonArray out;
+    QString ascii;for(int i=33;i<=126;++i)ascii.append(QChar(i));
+    QString surrogate;for(char16_t ch:{u'a',char16_t(0xd800),u'b',char16_t(0xdc00)})surrogate.append(QChar(ch));
+    const QStringList texts{QString(),ascii,QStringLiteral("Ghbdtn, Vbh!"),QStringLiteral("Привет, Мир!"),
+        QString::fromUtf16(u"a\u0301a\U0001D165"),QString::fromUtf16(u"#\ufe0f\u20e3"),
+        QString::fromUtf16(u"a\U0001f600b"),surrogate,QStringLiteral(" \n\t ")};
+    for(const auto &text:texts)for(auto direction:{LayoutDirection::UsToRu,LayoutDirection::RuToUs,static_cast<LayoutDirection>(99)})
+        out.append(QJsonObject{{QStringLiteral("source"),units(text)},
+            {QStringLiteral("direction"),direction==LayoutDirection::UsToRu?QStringLiteral("us-ru"):
+                direction==LayoutDirection::RuToUs?QStringLiteral("ru-us"):QStringLiteral("invalid")},
+            {QStringLiteral("expected"),units(convertLayout(text,direction))}});
+    return out;
+}
+}
+
 QJsonObject syntheticConformance() {
     QJsonArray models;
     const int constants[7][2]={{-50,-50},{-32,-16},{-16,-32},{-24,-24},{0,0},{-127,-127},{-32,-16}};
@@ -92,5 +146,6 @@ QJsonObject syntheticConformance() {
             {QStringLiteral("us"),action(s,SourceLayout::Us)},{QStringLiteral("ru"),action(s,SourceLayout::Ru)}});
     }
     return {{QStringLiteral("schema"),1},{QStringLiteral("models"),models},
-            {QStringLiteral("boundaries"),boundaries},{QStringLiteral("fixtureModelIndex"),6}};
+            {QStringLiteral("boundaries"),boundaries},{QStringLiteral("fixtureModelIndex"),6},
+            {QStringLiteral("routerCases"),routerOracle()},{QStringLiteral("converterCases"),converterOracle()}};
 }

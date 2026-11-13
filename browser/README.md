@@ -34,7 +34,11 @@ node tests/browser/run.mjs
 поля не регистрируются. Парольные формы, hints credentials, отключённые/readonly,
 code/spellcheck=false, composition и чужой фокус отсекаются до чтения value.
 Отсутствие password input в форме само по себе не доказывает безопасность:
-именно владелец интеграции обязан разрешить обычное поле. DOM-атрибут не является
+именно владелец интеграции обязан разрешить обычное поле. Поиск credentials
+ограничен associated form, это дополнительный guard, а не классификатор всей
+страницы. Поле вне form не становится защищённым от наличия чужого password
+в другой части страницы. Владелец не должен регистрировать секретный/неизвестный
+textarea, в том числе при «показать пароль» без autocomplete. DOM-атрибут не является
 авторизацией. Страница и её скрипты остаются владельцами документа; это не защита
 от вредоносного сайта или процесса того же пользователя.
 
@@ -87,4 +91,7 @@ canonicalizeToken. Browser router валидирует metadata и выбира�
 Документация API: [Chrome scripting/activeTab](https://developer.chrome.com/docs/extensions/reference/api/scripting),
 [MDN execCommand и история отмены](https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand),
 [CDP Input](https://chromedevtools.github.io/devtools-protocol/tot/Input/).
-Никакой upstream код или словарные данные не копировались. Новый код MIT, как проект.
+Сторонний product-код или словарные данные не копировались. Лицензия собственного
+кода ещё не выбрана: см. README.md и THIRD_PARTY.md. Выбор лицензии и условия
+выпуска согласуются отдельно. Ранее добавленные Codex MIT-метки были ошибочными;
+их исправление не является решением о лицензировании истории репозитория.

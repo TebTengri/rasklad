@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: MIT
+/* Project license pending; see README.md
  * Browser arithmetic port of the native RSKN scorer, checked by native gold.
  * Format validation does not authenticate model provenance or release rights.
  */
@@ -33,8 +33,10 @@
     var ts = spec.twoScore;
     if (!isObj(ts)) fail();
     var enabled = ts.enabled, minAlt = ts.minAlternative, maxObs = ts.maxObserved, gap = ts.gap;
+    // Match the admitted native LocalEvidenceProvider profile, not arbitrary tuning.
+    if (enabled !== true || minAlt !== -13 || maxObs !== -9 || gap !== 2.5) fail();
     return Object.freeze({
-      enabled: enabled === true,
+      enabled: true,
       minAlternative: typeof minAlt === 'number' ? minAlt : NaN,
       maxObserved: typeof maxObs === 'number' ? maxObs : NaN,
       gap: typeof gap === 'number' ? gap : NaN
