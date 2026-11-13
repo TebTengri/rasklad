@@ -28,3 +28,7 @@ Other pending work: PR #13 input lab, PR #14 lookup optimization, PR #15 retro s
 ## Resumed: integration result
 
 Superseded by INPUT-LAB-005.md and INPUT-LAB-005-results.json: private Fcitx integration now ran, all six cases passed, and direct focus negative control still failed as expected. Unit tests remain 10/10. Next: lifecycle/navigation/shortcuts and a second ordinary field, then independent review; production input remains disabled.
+
+## Navigation and performance follow-up
+
+Commits after 5af653c include 9/9 navigation integration cases and 11 composer units, then five alternating performance pairs plus four private daemon stop/kill continuation/focus cases. See INPUT-LAB-005-performance.md for limits: synthetic evidence, editor-state timing only, daemon-only RSS/CPU, pending preedit persists until subsequent action. Next: real detector measurement requires separate data authorization; independent review and remaining lifecycle/shortcut/client gates. Global input remains disabled.

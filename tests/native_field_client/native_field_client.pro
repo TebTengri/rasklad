@@ -7,3 +7,5 @@ CONFIG -= app_bundle
 include(../../src/rasklad_hardening.pri)
 SOURCES += main.cpp
 RESOURCES += client.qrc
+
+HEADERS += timingobserver.h

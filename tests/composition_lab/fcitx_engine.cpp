@@ -20,6 +20,7 @@ namespace {
 struct Counters {
     int handled = 0, corrections = 0, commits = 0, resets = 0, protectedRefusals = 0, missingCapability = 0;
     void report() const {
+        if (std::getenv("RASKLAD_FIXTURE_QUIET")) return;
         // Bounded metadata only, captured by the closed fixture launcher.
         std::printf("RASKLAD_COUNTERS {\"handled\":%d,\"corrections\":%d,\"commits\":%d,\"resets\":%d,\"protected_refusals\":%d,\"missing_capability\":%d}\n",
             handled, corrections, commits, resets, protectedRefusals, missingCapability);

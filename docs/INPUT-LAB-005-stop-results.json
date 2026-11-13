@@ -1,0 +1,59 @@
+{
+  "scope": "private daemon only; no unconditional pending-preedit persistence claim",
+  "cases": [
+    {
+      "scenario": "fcitx-stop",
+      "passed": true,
+      "daemon_exited": true,
+      "assertions": {
+        "stop_original_pending": true,
+        "stop_original_committed": false,
+        "stop_original_absent": false,
+        "stop_new_typing_survived": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true
+      }
+    },
+    {
+      "scenario": "fcitx-kill",
+      "passed": true,
+      "daemon_exited": true,
+      "assertions": {
+        "stop_original_pending": true,
+        "stop_original_committed": false,
+        "stop_original_absent": false,
+        "stop_new_typing_survived": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true
+      }
+    },
+    {
+      "scenario": "fcitx-stop-focus",
+      "passed": true,
+      "daemon_exited": true,
+      "assertions": {
+        "stop_original_pending": true,
+        "stop_original_committed": false,
+        "stop_original_absent": false,
+        "stop_new_typing_survived": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "second_field_verified": true
+      }
+    },
+    {
+      "scenario": "fcitx-kill-focus",
+      "passed": true,
+      "daemon_exited": true,
+      "assertions": {
+        "stop_original_pending": true,
+        "stop_original_committed": false,
+        "stop_original_absent": false,
+        "stop_new_typing_survived": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "second_field_verified": true
+      }
+    }
+  ]
+}

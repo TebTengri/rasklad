@@ -38,3 +38,7 @@ limits and a closed bwrap environment are essential to the observations.
 Unfinished: arbitrary layouts, cursor/selection changes, shortcuts with pending
 preedit, shutdown/crash/lock, application compatibility and real detector
 integration. A passing fixed-field experiment does not admit global input.
+
+Synthetic latency and daemon failure results: `docs/INPUT-LAB-005-performance.md`.
+Counter logging can be suppressed by the private launcher during performance runs;
+this flag does not enable or change the application input backend.

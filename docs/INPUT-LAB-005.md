@@ -133,3 +133,5 @@ still uses synthetic evidence and a fixed US layout; it is not enabled globally.
 Final follow-up matrix: **9/9 passed**, with the corrected final generator and
 adapter. [Aggregate assertions](INPUT-LAB-005-navigation-results.json). This is
 not a latency benchmark or independent review.
+
+Latency/resource and private daemon disconnection follow-up: [performance report](INPUT-LAB-005-performance.md). These measurements still use synthetic evidence; they do not establish real detector cost.
