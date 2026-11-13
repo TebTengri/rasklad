@@ -42,3 +42,12 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 ## Естественные префиксы 006
 
 [Паспорт](evaluation-006-sources.json) и [review](notices/NATURAL-CONTEXT-006-REVIEW.md): новые ranks20..39 того же pinned Rust Book pool, disjoint документы развития/контроля и исключение старых20. Истинный предыдущий текст сохранён, ответы не выводятся из context vote. Single/burst/unknown — явно искусственные сценарии. Features и labels разделены по shards и остаются в build/. Обновления источников/обучение/выпуск не разрешены этим local-only допуском. [Методика](../docs/EXPERIMENT-006-METHOD.md), [принятый ADR](../docs/ADR-001-DETECTOR-ROUTING.md).
+
+## Языковые пакеты
+
+Общий offline-формат и процедура добавления языков: [LANGUAGE_PACKS](LANGUAGE_PACKS.md).
+Паспорта RU/EN находятся в `language-packs.json`; каждый пакет содержит собственные
+полные notices и MODIFICATIONS. Разрешения локальной подготовки и распространения
+разделены. Выпуск обоих пакетов остаётся запрещён; права на модель/engine отдельно.
+Текущая реализация упаковки протестирована на собственных искусственных данных.
+Она не расширяет EN/RU classifier на новые языки автоматически.

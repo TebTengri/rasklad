@@ -118,3 +118,18 @@ WASM heap ещё не допущены к выпуску. Candidate lock release
 проект/build; никаких auth/cache/реальных артефактов ему не открывается. Общее
 CDP управление выделено в isolated-chromium.mjs и ожидает loadEventFired до
 использования документа. Подробнее: browser/README.md (opt-in full/control).
+
+## Language package preparation
+
+`tools/language_pack.py` is an explicit offline developer CLI. Its reviewer-owned
+catalog is the trust anchor; a downloaded package cannot approve itself. Validation
+checks exact bytes/hash, full notice files and a mandatory modification record.
+Distribution and local-test grants are independent and distribution remains denied
+for the current RU/EN records. There are no executable hooks, downloads or automatic
+language activation. File access uses bounded regular-file reads and descriptor-based
+no-follow traversal. Linux publication uses renameat2 NOREPLACE; fallback uses exclusive
+output mkdir. Failed preparation rolls back only entries it created, not arbitrary
+recursive directories. This is not a sandbox against hostile code with the same UID.
+Standalone verification is a snapshot check, not a lock against later modification:
+a future runtime consumer must use the verified bytes, not reopen mutable paths.
+No real dictionaries/model/user text were read by the package tests.

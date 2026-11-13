@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "inputs": {
+    "libreoffice-en-us-c0865a85": {
+      "dictionary.aff": "build/experiment-003-data/en.aff",
+      "dictionary.dic": "build/experiment-data/en.dic",
+      "notices/UPSTREAM.txt": "data/notices/en_US.README.txt",
+      "notices/REVIEW.md": "data/notices/LANGUAGE-PACKS-REVIEW.md",
+      "notices/MODIFICATIONS.txt": "data/notices/LANGUAGE-PACK-MODIFICATIONS.txt"
+    },
+    "libreoffice-ru-ru-c0865a85": {
+      "dictionary.aff": "build/experiment-003-data/ru.aff",
+      "dictionary.dic": "build/experiment-data/ru.dic",
+      "notices/UPSTREAM.txt": "data/notices/ru_RU.README.txt",
+      "notices/REVIEW.md": "data/notices/LANGUAGE-PACKS-REVIEW.md",
+      "notices/MODIFICATIONS.txt": "data/notices/LANGUAGE-PACK-MODIFICATIONS.txt"
+    }
+  }
+}
