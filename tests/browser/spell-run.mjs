@@ -7,9 +7,17 @@ import {dirname,resolve} from 'node:path';
 import assert from 'node:assert/strict';
 import {startIsolatedChromium} from './isolated-chromium.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
-const lock=JSON.parse(readFileSync(resolve(root,'tools/browser_spell/candidate.json'),'utf8'));
+const lock=JSON.parse(readFileSync(resolve(root,'tools/browser_spell/source-lock.json'),'utf8'));
 function pinned(path,sha){const bytes=readFileSync(resolve(root,path));assert.equal(createHash('sha256').update(bytes).digest('hex'),sha,'candidate hash mismatch');return bytes;}
 const loader=pinned(lock.loader_path,lock.loader_sha256),wasm=pinned(lock.wasm_path,lock.wasm_sha256);
+// Inspect the actual WASM memory section, not just compiler flags.
+let offset=8;const leb=()=>{let n=0,shift=0,b;do{assert.ok(offset<wasm.length&&shift<35);b=wasm[offset++];n+=(b&127)*2**shift;shift+=7;}while(b&128);return n;};
+let memorySeen=false;
+while(offset<wasm.length){const id=wasm[offset++],size=leb(),end=offset+size;assert.ok(end<=wasm.length);
+ if(id===5){assert.equal(leb(),1);const flags=leb();assert.equal(flags,1);assert.equal(leb()*65536,16777216);assert.equal(leb()*65536,lock.maximum_memory_bytes);memorySeen=true;}
+ offset=end;
+}
+assert.ok(memorySeen);
 assert.equal(lock.release_approved,false); // Deliberately not a release profile.
 const native=JSON.parse(readFileSync(resolve(root,'build/browser-spell-native/native.json'),'utf8'));
 assert.equal(native.nativeVersion,lock.native_reference_version);
@@ -35,7 +43,9 @@ try{
     globalThis.XMLHttpRequest=function(){networkAttempts++;throw Error('network disabled');};
     const start=performance.now();
     const {default:factory}=await import(config.loaderUrl);
-    const m=await factory({wasmBinary:from64(config.wasm),locateFile:()=> 'disabled.wasm',print:()=>{},printErr:()=>{}});
+    const m=await factory({instantiateWasm:(imports,receive)=>{const instance=new WebAssembly.Instance(new WebAssembly.Module(from64(config.wasm)),imports);receive(instance);return instance.exports;},locateFile:()=> 'disabled.wasm',print:()=>{},printErr:()=>{}});
+    const ptr=m._Hunspell_get_library_version();
+    if(!Number.isInteger(ptr)||ptr<=0||ptr+6>m.HEAPU8.length||Array.from(m.HEAPU8.slice(ptr,ptr+6)).join(',')!=='49,46,55,46,53,0')throw Error('engine version mismatch');
     const profile=Object.fromEntries(Object.entries(config.native.profiles).map(([lang,p])=>[lang,{aff:from64(p.affBase64),dic:from64(p.dicBase64)}]));
     const engines=RaskladSpell.createEngines(m,profile);
     let spellCases=0,controls=0;
@@ -70,6 +80,6 @@ try{
   assert.equal(await evaluate('field.value'),'ghbdtn');passed++;
   await evaluate('spellFixtureEngines.dispose();');
   await evaluate(`field.value='';field.focus();`);await type('ghbdtn ');assert.equal(await evaluate('field.value'),'ghbdtn ');passed++;
-  console.log(JSON.stringify({passed,browser:version.product,init,candidate:lock.name+'@'+lock.version,releaseApproved:false,scope:'synthetic aff/dic/model only; core binary version not attested'}));
+  console.log(JSON.stringify({passed,browser:version.product,init,candidate:'Hunspell@'+lock.version,releaseApproved:false,scope:'synthetic aff/dic/model only; source-built Hunspell 1.7.5; matching repeated builds'}));
 }catch(error){console.error(JSON.stringify({passed,error:error.message}));process.exitCode=1;}
 finally{try{await browser.close();}catch(error){console.error(JSON.stringify({error:error.message}));process.exitCode=1;}}

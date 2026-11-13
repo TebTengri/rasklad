@@ -6,7 +6,7 @@
 // Scope and status notes:
 //  - This is an original adapter. It does not reimplement Hunspell. It does not load,
 //    fetch, or initialize code. The caller supplies an already-awaited module instance.
-//  - The provenance and version of the external engine are NOT fully admitted. Nothing
+//  - Core version 1.7.5 is required; integrity is checked by the caller. Nothing
 //    here implies the module is release-ready or replaces the project's data-admission
 //    process for engines or dictionaries.
 //  - The module boundary is trusted. This code is not a security boundary against
@@ -217,14 +217,19 @@
         create: mod._Hunspell_create,
         destroy: mod._Hunspell_destroy,
         spell: mod._Hunspell_spell,
-        encoding: mod._Hunspell_get_dic_encoding
+        encoding: mod._Hunspell_get_dic_encoding,
+        version: mod._Hunspell_get_library_version
       };
       var names = ['mkdir', 'writeFile', 'unlink', 'rmdir', 'malloc', 'free',
-        'create', 'destroy', 'spell', 'encoding'];
+        'create', 'destroy', 'spell', 'encoding', 'version'];
       for (var i = 0; i < names.length; i++) {
         if (typeof b[names[i]] !== 'function') return null;
       }
       if (!isU8(mod.HEAPU8)) return null;
+      var vp = apply(b.version, mod, []);
+      var expected = [49, 46, 55, 46, 53, 0];
+      if (!Number.isInteger(vp) || vp <= 0 || vp + expected.length > mod.HEAPU8.length) return null;
+      for (var vi = 0; vi < expected.length; vi++) if (mod.HEAPU8[vp + vi] !== expected[vi]) return null;
       return b;
     } catch (e) {
       return null;

@@ -33,3 +33,11 @@ WASM и полный комплект Hunspell/MySpell/Emscripten notices тре
 Код/бинарник находятся только в ignored build/ для закрытого synthetic-теста,
 не vendored и не включены в default build/runtime. Собственная C API обвязка MIT;
 это не перелицензирует сторонний engine.
+
+Текущий закрытый browser-тест заменил этот бинарный кандидат source-сборкой
+Hunspell 1.7.5 (upstream commit и SHA-256 архивов в
+`tools/browser_spell/source-lock.json`), Emscripten 7.0.0. Исходники upstream
+не изменены; генерируются version/visibility headers. Две сборки совпали.
+Hunspell/MySpell сохраняют собственные лицензии и notices; Emscripten/toolchain
+и runtime требуют полного списка attribution перед распространением бинарника.
+Рецепт и обвязка проекта MIT, бинарный release ещё не разрешён.

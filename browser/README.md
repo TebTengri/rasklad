@@ -123,12 +123,38 @@ network namespace включены. Loader получает bytes напряму
 Четыре engine использовали 18 284 544 B WASM heap; setup+проверки заняли ~84 ms
 в одном прогоне. Это не RSS, не real-dictionary latency и не скорость нажатия.
 
-**До выпуска:** версия Hunspell внутри чужого WASM и связь с конкретным source
-build не аттестованы. Loader допускает рост heap вплоть до 2 GiB; текущий тест
-этого не достигает. Совпадение 93 случаев не доказывает полную эквивалентность
-1.7.5. Следующий шаг — воспроизводимая сборка выбранного upstream source с
-проверяемой версией, ограниченным heap и полными notices. Затем отдельный
-release-допуск реальных данных. MIT проекта не заменяет лицензии кандидата.
+### Source build вместо непрозрачного кандидата
+
+Текущий `spell-run.mjs` использует собственную сборку upstream Hunspell 1.7.5,
+commit `e8342700b4dde06130cdbba75f7e6500ffa58864`, Emscripten 7.0.0.
+Lock: `tools/browser_spell/source-lock.json`; рецепт: `bin/build-browser-hunspell`.
+Две отдельные sandbox-сборки на этой машине дали одинаковые SHA-256.
+WASM 379 238 B, JS 58 920 B. Проверяется версия C API до создания handles,
+SHA-256 обоих файлов и фактическая memory section: initial 16 MiB, maximum 128 MiB.
+Повторный закрытый прогон: 93 native cases, 7 control cases, 12 browser assertions;
+4 handles используют один heap 16 MiB; setup+все проверки ~51 ms, network attempts 0.
+Это искусственные данные, не оценка памяти настоящих словарей или языковой точности.
+
+Рецепт работает без скачивания: положите архивы из lock в
+`build/hunspell-source-build/{hunspell.tar.gz,sdk.tar.xz}` и распакуйте Python
+`tarfile.extractall(filter="data")` в `hunspell/` и `sdk/` соответственно.
+Архивы должны пройти SHA-256 из lock **до распаковки**. SDK остаётся локальным
+инструментом сборки, не устанавливается в ОС. Затем:
+
+```sh
+python3 bin/build-browser-hunspell out
+python3 bin/build-browser-hunspell repeat
+python3 bin/prepare-browser-spell
+node --test tests/browser/spell.test.mjs
+node tests/browser/spell-run.mjs
+```
+
+Compiler запускается в bwrap без сети/домашнего каталога с двумя workers;
+source и SDK read-only. Ожидаемые output hashes проверяются после линковки.
+Проверка архивов и output не защищает от злонамеренной подмены извлечённого SDK
+владельцем машины. Для выпуска остаются полный комплект notices/source offer
+Hunspell/MySpell/Emscripten и runtime, а также отдельный допуск реальных данных.
+`release_approved=false`; MIT не перелицензирует сторонние компоненты.
 
 ## Ограничения и следующий проход
 
