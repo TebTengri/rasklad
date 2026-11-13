@@ -100,3 +100,7 @@ unverified. A synchronous event in this fixture is not a general atomic-edit
 protocol for unrelated applications. No additional data/model reads are authorized
 by this experiment. All foreign libraries are already installed; no foreign code
 or data was copied into the repository.
+
+## Subsequent joint decision
+
+After independent Codex and Claude Opus proposals, [Architecture decision 002](ARCHITECTURE-DECISION-002.md) selects a commit-first Fcitx candidate for product coverage. The in-process demo is a fallback, not the main system-utility plan. This changes direction, not the recorded Save/Close failures. The new external candidate currently refuses missing context and has not demonstrated correction.

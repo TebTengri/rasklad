@@ -31,17 +31,18 @@ static const char *const kScenarios[] = {"baseline", "prefix", "reverse",
                                          "typing-race", "focus-race", "selection-race",
                                          "post-send-race", "keyboard-before-edit",
                                          "keyboard-after-edit", "keyboard-acked-edit",
-                                         "keyboard-applied-before-edit", "keyboard-guarded-after-key", "compose-baseline", "compose-fast-tail", "compose-known", "compose-backspace", "compose-overflow", "compose-focus", "fcitx-baseline", "fcitx-fast-tail", "fcitx-known", "fcitx-backspace", "fcitx-overflow", "fcitx-focus", "fcitx-cursor", "fcitx-selection", "fcitx-fields", "fcitx-perf", "fcitx-perf-native", "fcitx-stop", "fcitx-kill", "fcitx-stop-focus", "fcitx-kill-focus", "fcitx-save", "fcitx-save-native", "fcitx-kill-save", "fcitx-close", "fcitx-close-native", "fcitx-kill-close", "fcitx-stop-race-before", "fcitx-stop-race-after", "fcitx-kill-race-before", "fcitx-kill-race-after", "fcitx-client-baseline", "fcitx-client-fast-tail", "fcitx-client-save", "fcitx-client-close", "fcitx-client-kill-save", "fcitx-client-kill-close"};
+                                         "keyboard-applied-before-edit", "keyboard-guarded-after-key", "compose-baseline", "compose-fast-tail", "compose-known", "compose-backspace", "compose-overflow", "compose-focus", "fcitx-baseline", "fcitx-fast-tail", "fcitx-known", "fcitx-backspace", "fcitx-overflow", "fcitx-focus", "fcitx-cursor", "fcitx-selection", "fcitx-fields", "fcitx-perf", "fcitx-perf-native", "fcitx-stop", "fcitx-kill", "fcitx-stop-focus", "fcitx-kill-focus", "fcitx-save", "fcitx-save-native", "fcitx-kill-save", "fcitx-close", "fcitx-close-native", "fcitx-kill-close", "fcitx-stop-race-before", "fcitx-stop-race-after", "fcitx-kill-race-before", "fcitx-kill-race-after", "fcitx-client-baseline", "fcitx-client-fast-tail", "fcitx-client-save", "fcitx-client-close", "fcitx-client-kill-save", "fcitx-client-kill-close", "fcitx-commit-baseline", "fcitx-commit-fast-tail", "fcitx-commit-burst", "fcitx-commit-save", "fcitx-commit-close", "fcitx-commit-kill-save", "fcitx-commit-kill-close"};
 static QString g_scenario;
 static bool frameworkScenario() { return g_scenario.startsWith(QLatin1String("fcitx-")); }
 static bool clientAdapterScenario() { return g_scenario.startsWith(QLatin1String("fcitx-client-")); }
-static QString compositionKind() { if (clientAdapterScenario()) return QStringLiteral("compose-") + g_scenario.mid(13); return frameworkScenario() ? QStringLiteral("compose-") + g_scenario.mid(6) : g_scenario; }
+static bool commitFirstScenario() { return g_scenario.startsWith(QLatin1String("fcitx-commit-")); }
+static QString compositionKind() { if (clientAdapterScenario() || commitFirstScenario()) return QStringLiteral("compose-") + g_scenario.mid(13); return frameworkScenario() ? QStringLiteral("compose-") + g_scenario.mid(6) : g_scenario; }
 static bool compositionScenario() { return g_scenario.startsWith(QLatin1String("compose-")) || frameworkScenario(); }
 static bool lifecycleScenario() { return g_scenario.contains(QLatin1String("-save")) || g_scenario.contains(QLatin1String("-close")); }
 static bool closeScenario() { return lifecycleScenario() && g_scenario.contains(QLatin1String("-close")); }
-static bool nativeLifecycle() { return clientAdapterScenario() || (lifecycleScenario() && g_scenario.endsWith(QLatin1String("-native"))); }
+static bool nativeLifecycle() { return clientAdapterScenario() || commitFirstScenario() || (lifecycleScenario() && g_scenario.endsWith(QLatin1String("-native"))); }
 static bool timingScenario() { return g_scenario.startsWith(QLatin1String("fcitx-perf")); }
-static bool stopScenario() { return g_scenario.contains(QLatin1String("client-kill-")) || g_scenario.startsWith(QLatin1String("fcitx-stop")) || g_scenario.startsWith(QLatin1String("fcitx-kill")); }
+static bool stopScenario() { return g_scenario.contains(QLatin1String("commit-kill-")) || g_scenario.contains(QLatin1String("client-kill-")) || g_scenario.startsWith(QLatin1String("fcitx-stop")) || g_scenario.startsWith(QLatin1String("fcitx-kill")); }
 static bool stopFocusScenario() { return stopScenario() && g_scenario.endsWith(QLatin1String("-focus")); }
 static TimingObserver *g_timingObserver = nullptr;
 class SyntheticClientEvidence final : public rasklad::routing::EvidenceSource {
@@ -62,13 +63,31 @@ static const QString kMarker = QStringLiteral("zqxmarker");          // invented
 static QString g_typed;     // what stage 2 types into the normal field
 static QString g_expected;  // hardcoded expected final normal-field text
 
-static QQuickWindow *g_win = nullptr;
+static QPointer<QQuickWindow> g_win;
 static QJsonObject g_out;
+static QJsonArray g_queryObservations;
 
 static QQuickItem *field(const char *name)
 {
     return g_win ? g_win->findChild<QQuickItem *>(QLatin1String(name)) : nullptr;
 }
+
+// Read-only diagnostic: observe completed queries of the approved fixture field.
+// Store validity/masks only, never the returned surrounding string.
+class ProbeApplication final : public QGuiApplication {
+public:
+    using QGuiApplication::QGuiApplication;
+    bool notify(QObject *receiver, QEvent *event) override {
+        const bool result = QGuiApplication::notify(receiver, event);
+        if (commitFirstScenario() && event->type() == QEvent::InputMethodQuery && receiver == field("normalField") && g_queryObservations.size() < 32) {
+            auto *query = static_cast<QInputMethodQueryEvent *>(event);
+            g_queryObservations.append(QJsonObject{{"mask", int(query->queries())},
+                {"text_valid", query->value(Qt::ImSurroundingText).isValid()},
+                {"cursor_valid", query->value(Qt::ImCursorPosition).isValid()}});
+        }
+        return result;
+    }
+};
 
 static void focusField(QQuickItem *item)
 {
@@ -248,6 +267,7 @@ static void finish(int code = 0)
         g_out.insert("client_adapter_corrections", g_clientAdapter->corrections);
         g_out.insert("client_adapter_refusals", g_clientAdapter->refusals);
     }
+    if (commitFirstScenario()) g_out.insert("surrounding_query_observations", g_queryObservations);
     const QByteArray line = QJsonDocument(g_out).toJson(QJsonDocument::Compact);
     std::fwrite(line.constData(), 1, size_t(line.size()), stdout);
     std::fputc('\n', stdout);
@@ -289,11 +309,11 @@ int main(int argc, char **argv)
             : compositionKind() == "compose-overflow" ? g_typed + QLatin1Char(' ')
             : compositionKind() == "compose-cursor" ? QStringLiteral("ghbdt n")
             : compositionKind() == "compose-selection" ? QStringLiteral("ghbdtx ")
-            : (clientAdapterScenario() && lifecycleScenario()) ? g_typed
+            : ((clientAdapterScenario() || commitFirstScenario()) && lifecycleScenario()) ? g_typed
             : stopFocusScenario() ? g_typed
             : stopScenario() ? g_typed + QStringLiteral("x ")
             : (compositionKind() == "compose-focus" || compositionKind() == "compose-fields") ? g_typed
-            : compositionKind() == "compose-fast-tail" ? QString::fromUtf8("привет x ")
+            : (compositionKind() == "compose-fast-tail" || compositionKind() == "compose-burst") ? QString::fromUtf8("привет x ")
             : QString::fromUtf8("привет ");
     } else if (g_scenario == "prefix") {
         g_typed = QStringLiteral("hello ghbdtn ");
@@ -335,7 +355,7 @@ int main(int argc, char **argv)
             return 2;
         }
     }
-    QGuiApplication app(argc, argv);
+    ProbeApplication app(argc, argv);
     DeliveryObserver observer;
     app.installEventFilter(&observer);
     g_out = {{"completed", false},
@@ -455,7 +475,7 @@ int main(int argc, char **argv)
         if (compositionKind() == "compose-fast-tail" && !frameworkScenario()) {
             auto *normal = field("normalField");
             g_out.insert("composition_tail_verified", normal
-                && (clientAdapterScenario()
+                && ((clientAdapterScenario() || commitFirstScenario())
                     ? normal->property("text").toString() == QString::fromUtf8("привет x") && normal->property("preeditText").toString().isEmpty()
                     : normal->property("text").toString() == QString::fromUtf8("привет ") && normal->property("preeditText").toString() == QStringLiteral("x")));
         }
@@ -465,7 +485,7 @@ int main(int argc, char **argv)
         auto *normal = field("normalField");
         const QString preedit = normal ? normal->property("preeditText").toString() : QString();
         const QString committed = normal ? normal->property("text").toString() : QString();
-        const bool matches = (compositionKind() == "compose-overflow" || nativeLifecycle())
+        const bool matches = compositionKind() == "compose-burst" ? committed == g_expected && preedit.isEmpty() : (compositionKind() == "compose-overflow" || nativeLifecycle())
             ? committed == g_typed && preedit.isEmpty() : committed.isEmpty() && preedit == g_typed;
         g_out.insert("normal_typed_as_expected_before_fix", matches);
         g_out.insert("composition_intermediate_verified", matches);
@@ -500,7 +520,7 @@ int main(int argc, char **argv)
         if (frameworkScenario() && compositionKind() == "compose-fast-tail") {
             auto *normal = field("normalField");
             g_out.insert("composition_tail_verified", normal
-                && (clientAdapterScenario()
+                && ((clientAdapterScenario() || commitFirstScenario())
                     ? normal->property("text").toString() == QString::fromUtf8("привет x") && normal->property("preeditText").toString().isEmpty()
                     : normal->property("text").toString() == QString::fromUtf8("привет ") && normal->property("preeditText").toString() == QStringLiteral("x")));
         }
@@ -523,6 +543,11 @@ int main(int argc, char **argv)
         QQuickItem *s = field("secretField");
         const QString t = n ? n->property("text").toString() : QString();
         const QString sel = n ? n->property("selectedText").toString() : QString();
+        if (commitFirstScenario()) {
+            const QString original = (compositionKind() == "compose-fast-tail" || compositionKind() == "compose-burst")
+                ? g_typed + QStringLiteral(" x ") : g_typed + QLatin1Char(' ');
+            g_out.insert("committed_original_preserved", n && t == original && n->property("preeditText").toString().isEmpty());
+        }
         g_out.insert(QStringLiteral("normal_matches_expected"), n && t == g_expected);
         if (stopScenario()) {
             auto *target = stopFocusScenario() ? field("secondField") : n;

@@ -75,3 +75,12 @@ other processes or linked into the manual application. Synthetic Save/Close
 observers read document state but do not flush preedit or write files. Tests and
 limits (including large-snapshot allocation and unverified reentrant handlers)
 are in docs/INPUT-LAB-006.md and tests/client_adapter_lab/README.md.
+
+ARCHITECTURE-DECISION-002 adds a separate developer-only commit-first Fcitx
+candidate, narrowed to the private fixture program/frontend. Native letters are
+not buffered in preedit; at Space it requires context capability and matching
+cached state before considering external deletion. Current client lacks that
+capability at the gate, so no cache query or correction is admitted. A bounded
+observer records query masks/validity and capability booleans, never strings.
+Actual external edit ordering and real-client safety remain unproven. No new
+runtime installation or broadening of input permissions is authorized.

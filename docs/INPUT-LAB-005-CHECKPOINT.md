@@ -36,3 +36,7 @@ Commits after 5af653c include 9/9 navigation integration cases and 11 composer u
 ## Save/Close finding and candidate
 
 Read INPUT-LAB-006.md before continuation: external composition fails Close and Save after kill despite prior typing/focus passes. New own in-process component passes six fixed-field integration cases and ten reported offscreen unit passes; it requires supported-client integration and is not universal. No production input enabled.
+
+## Joint decision and exact next task
+
+Read ARCHITECTURE-DECISION-002.md. Claude Opus 5.5 and Codex proposals compared: primary direction is commit-first Fcitx, not editor-by-editor plugins. The minimal candidate preserves native typing/Save/Close but refuses correction because Qt/Fcitx drops SurroundingText capability after valid queries. No delete/commit order proven. Next SYS-241: one minimal regression/candidate fix for context-update semantics in workspace only, preserving focus/password invalidation; Claude prepares, Codex reviews. Do not expand matrices, force refresh or install in the live session.
