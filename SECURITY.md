@@ -61,3 +61,14 @@ IPC и не логируется. Реальные profile/model/dictionary фа
 Тест Chromium — closed bwrap с временным HOME/profile, network namespace, без
 host bus/input/GPU; Chromium sandbox включён, CDP только дочерние pipes. См.
 [Browser adapter](docs/BROWSER-ADAPTER-001.md) и [границы](browser/README.md).
+
+Browser core 002 добавляет build-time exporter: он исполняет существующий native
+DecisionRouter на всех 512 состояниях синтетических признаков и canonicalizeToken
+на BMP, не загружая словари/модель. В браузере применяется его конечная таблица,
+а не IPC к desktop-процессу. Runtime binding проверяет gates до evidence, строгие
+boolean/model поля, синхронность результата и bounds; Suggest не auto-edit.
+Таблица и карты копируются в приватный snapshot factory. Это не изоляция от
+скриптов того же JS realm и не проверка реальной языковой точности. Provenance
+фиксирует хеши исходников developer build, но не заменяет подпись дистрибутива.
+Exporter требует только уже установленный Qt/qmake/C++ toolchain и не устанавливает
+пакеты. Детали: [Browser core 002](docs/BROWSER-CORE-002.md).

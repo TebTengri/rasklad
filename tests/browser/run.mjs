@@ -53,7 +53,7 @@ try {
   await evaluate(`new Promise((resolve,reject)=>{const end=Date.now()+5000;function ready(){if(globalThis.fixtureAdapter)return resolve(true);if(Date.now()>end)return reject(Error('fixture timeout'));setTimeout(ready,20);}ready();})`);
   async function reset(id='prose',setup=''){
     await evaluate(`fixtureAdapter.dispose();document.body.querySelectorAll('textarea').forEach(x=>{x.value='';x.readOnly=false;});
-      globalThis.calls=0;globalThis.localDecision=t=>{calls++;return t==='ghbdtn'?'привет':null;};
+      globalThis.calls=0;globalThis.localDecision=t=>{calls++;return fixtureRouter.decideUs(t);};
       globalThis.fixtureAdapter=RaskladBrowser.createAdapter({document,decide:t=>localDecision(t)});
       for(const id of ['prose','code','protected'])fixtureAdapter.register(document.getElementById(id),{role:'prose',layout:'us'});
       globalThis.field=document.getElementById(${JSON.stringify(id)});field.focus();${setup}`);
@@ -75,6 +75,8 @@ try {
   await reset();await type('https://ghbdtn ');await check('URL unchanged',`field.value==='https://ghbdtn ' && calls===0`);
   await reset();await type('/ghbdtn ');await check('path unchanged',`field.value==='/ghbdtn ' && calls===0`);
   await reset();await type('hello ');await check('abstention preserves text',`field.value==='hello '`);
+  await reset();await type('test abcd ');await check('shared ambiguity and dictionary-only never auto-correct',`field.value==='test abcd '`);
+  await check('Suggest is explicit only',`fixtureRouter.route({field:'prose',layout:'us',token:'abcd',profile:'requestedHybrid'}).action==='suggest' && fixtureRouter.decideUs('abcd')===null`);
   await reset('prose',`localDecision=t=>{calls++;field.readOnly=true;return 'привет';};`);
   await type('ghbdtn ');await check('context changed during evidence',`field.value==='ghbdtn' && calls===1`);
   await reset('prose',`localDecision=t=>{calls++;field.value='newer';field.setSelectionRange(5,5);return 'привет';};`);
