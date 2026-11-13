@@ -1,6 +1,6 @@
 import QtQuick
 
-// Fixed trusted resource. Two real fields; no user QML is ever loaded.
+// Fixed trusted resource. Ordinary fields; no user QML is ever loaded.
 Window {
     width: 400
     height: 200
@@ -18,6 +18,13 @@ Window {
             height: 60
             textFormat: TextEdit.PlainText
             // Ordinary field: not sensitive, predictive allowed.
+        }
+
+        TextEdit {
+            objectName: "secondField"
+            width: parent.width
+            height: 40
+            textFormat: TextEdit.PlainText
         }
 
         TextInput {

@@ -45,6 +45,13 @@ Update Composer::backspace()
     out.preedit = m_word;
     return out;
 }
+Update Composer::finishLiteral()
+{
+    Update out;
+    out.commit = m_word;
+    reset();
+    return out;
+}
 void Composer::reset()
 {
     m_word.clear();

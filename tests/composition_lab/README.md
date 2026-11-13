@@ -7,7 +7,8 @@ input connection or load dictionaries/models.
 
 The composer owns an unfinished word (at most 32 letters), emits preedit, and
 runs the existing SafeConfirmed router at Space. Unsupported characters and
-oversized words are committed literally. Backspace edits only owned preedit.
+oversized words are committed literally. Backspace edits only owned preedit. Navigation/modified keys first finalize
+owned preedit literally, then pass through without being filtered.
 The adapter must pass through unhandled keys and manage focus/lifecycle safely.
 
 `fcitx_engine.cpp` is an experimental adapter to the **already installed**

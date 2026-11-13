@@ -98,6 +98,21 @@ private Q_SLOTS:
         QCOMPARE(c.buffered(), 1);
         QCOMPARE(c.text(U' ').commit, QStringLiteral("a "));
     }
+    void interruptedWordIsFinalizedLiterallyWithoutEvidence() {
+        Evidence evidence;
+        composition::Composer c(routing::InputLayout::KnownUs, &evidence);
+        for (char32_t key : QStringLiteral("ghbdtn").toUcs4()) (void)c.text(key);
+        const auto out = c.finishLiteral();
+        QCOMPARE(out.commit, QStringLiteral("ghbdtn"));
+        QVERIFY(out.preedit.isEmpty() && !out.corrected);
+        QCOMPARE(c.buffered(), 0);
+        QVERIFY(c.finishLiteral().commit.isEmpty());
+        QCOMPARE(evidence.calls, 0);
+        QCOMPARE(c.text(U' ').commit, QStringLiteral(" "));
+        for (int i = 0; i < 33; ++i) (void)c.text(U'z');
+        QVERIFY(c.finishLiteral().commit.isEmpty()); // already committed, never duplicate
+        QCOMPARE(c.text(U'a').preedit, QStringLiteral("a"));
+    }
     void unknownLayoutNotHandled() {
         composition::Composer c(routing::InputLayout::Unknown, nullptr);
         QVERIFY(!c.text(U'a').handled);

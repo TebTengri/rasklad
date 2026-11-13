@@ -53,21 +53,22 @@ public:
         if (!flags.test(fcitx::CapabilityFlag::Preedit) || !flags.test(fcitx::CapabilityFlag::ClientUnfocusCommit)) {
             ++counters.missingCapability; counters.report(); return;
         }
-        // Never consume shortcuts; this fixture tests plain keys only.
-        if (event.key().states().testAny(fcitx::KeyStates(fcitx::KeyState::Ctrl) | fcitx::KeyState::Alt | fcitx::KeyState::Super | fcitx::KeyState::Meta)) return;
         auto *state = ic->propertyFor(&states_);
+        // Preserve original preedit before a shortcut or navigation key. The
+        // original event remains unfiltered so the editor performs its action.
+        if (event.key().states().testAny(fcitx::KeyStates(fcitx::KeyState::Ctrl) | fcitx::KeyState::Alt | fcitx::KeyState::Super | fcitx::KeyState::Meta)) {
+            publish(ic, state->composer.finishLiteral());
+            return;
+        }
         const auto update = event.key().sym() == FcitxKey_BackSpace ? state->composer.backspace()
             : state->composer.text(fcitx::Key::keySymToUnicode(event.key().sym()));
-        if (!update.handled) return;
+        if (!update.handled) {
+            publish(ic, state->composer.finishLiteral());
+            return;
+        }
         event.filterAndAccept();
         ++counters.handled;
-        if (!update.commit.isEmpty()) { ic->commitString(update.commit.toStdString()); ++counters.commits; }
-        if (update.corrected) ++counters.corrections;
-        fcitx::Text preedit(update.preedit.toStdString());
-        preedit.setCursor(update.preedit.toUtf8().size());
-        ic->inputPanel().setClientPreedit(preedit);
-        ic->updatePreedit();
-        counters.report();
+        publish(ic, update);
     }
     void reset(const fcitx::InputMethodEntry &, fcitx::InputContextEvent &event) override {
         auto *ic = event.inputContext();
@@ -77,6 +78,15 @@ public:
         ++counters.resets; counters.report();
     }
 private:
+    static void publish(fcitx::InputContext *ic, const rasklad::composition::Update &update) {
+        if (!update.commit.isEmpty()) { ic->commitString(update.commit.toStdString()); ++counters.commits; }
+        if (update.corrected) ++counters.corrections;
+        fcitx::Text preedit(update.preedit.toStdString());
+        preedit.setCursor(update.preedit.toUtf8().size());
+        ic->inputPanel().setClientPreedit(preedit);
+        ic->updatePreedit();
+        counters.report();
+    }
     fcitx::SimpleInputContextPropertyFactory<State> states_;
 };
 class Factory final : public fcitx::AddonFactory {

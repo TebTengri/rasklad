@@ -1,0 +1,98 @@
+{
+  "scope": "closed synthetic fixture, precise timers and full key events",
+  "unit_tests_passed": 11,
+  "cases": [
+    {
+      "scenario": "fcitx-cursor",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-selection",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "selection_verified": true
+      }
+    },
+    {
+      "scenario": "fcitx-fields",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "second_field_verified": true
+      }
+    },
+    {
+      "scenario": "fcitx-baseline",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-fast-tail",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-known",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-backspace",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-overflow",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    },
+    {
+      "scenario": "fcitx-focus",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true
+      }
+    }
+  ]
+}

@@ -94,3 +94,42 @@ failure must be tested. Then verify compatibility in isolated real browser,
 terminal and editor clients before considering a separately authorized desktop
 trial. Independent code review is still pending. No installation, autostart,
 service or production hook has been enabled.
+
+## Navigation follow-up
+
+The owner explicitly requires correction to help rather than obstruct typing or
+OS operation. See [non-interference acceptance](INPUT-NONINTERFERENCE.md).
+
+Added ordinary second-field, Left-arrow and Shift+Left-selection cases. The
+adapter now finalizes owned preedit **literally** before returning an unhandled
+navigation or modified key to the editor. `Composer::finishLiteral()` does not
+consult evidence, duplicate already committed overflow or mark text corrected.
+The original event is not filtered; no artificial delay or replay is added.
+The unit suite now has 11 passing cases, including interrupted-word preservation.
+
+Initial follow-up attempts failed and remain in local build reports. Besides the
+adapter's missing literal-finalization path, the fixture required fixes: coarse
+single-shot timers were inappropriate for nearby synthetic key deadlines, and
+modifier combinations needed complete key events. PreciseTimer is now used for
+framework script deadlines and client assertions. All synthetic framework keys
+use sendFullKeyEvent with fixed native codes and explicit modifier state; the
+selection script includes Shift press/release. This follows the public
+[Qt seat API](https://doc.qt.io/qt-6/qwaylandseat.html#sendFullKeyEvent).
+Fixture fixes are not evidence that real desktop scheduling is safe, and early
+failed attempts must not be presented as isolated proof of an adapter-only bug.
+
+Additional assertions: Left then Space preserves original spelling and inserts
+Space at the new cursor; Shift+Left actually selects the last letter, then input
+replaces that selection; switching to the second normal field preserves the
+first word and commits a distinct known word in the second. Every scenario also
+checks unchanged fictional password input. Neither editor has custom IME logic.
+
+These checks do not yet cover Ctrl/Super/Alt shortcuts, mouse selection, cursor
+movement into an existing word, capability loss or process failure. In particular,
+fragment detection after arbitrary navigation is not admitted. Pending input at
+crash/disconnect and real input latency remain release blockers. The adapter
+still uses synthetic evidence and a fixed US layout; it is not enabled globally.
+
+Final follow-up matrix: **9/9 passed**, with the corrected final generator and
+adapter. [Aggregate assertions](INPUT-LAB-005-navigation-results.json). This is
+not a latency benchmark or independent review.

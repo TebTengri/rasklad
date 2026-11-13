@@ -19,6 +19,8 @@ public:
         : m_layout(layout), m_source(source) {}
     [[nodiscard]] Update text(char32_t character);
     [[nodiscard]] Update backspace();
+    // Finalize owned preedit literally before passing navigation/shortcuts through.
+    [[nodiscard]] Update finishLiteral();
     void reset();
     [[nodiscard]] qsizetype buffered() const { return m_word.size(); }
 private:
