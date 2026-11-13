@@ -14,6 +14,7 @@ node tests/browser/adapter.test.mjs
 node tests/browser/router.test.mjs
 node tests/browser/scorer-security.test.mjs
 node tests/browser/native-conformance.test.mjs
+node tests/browser/lexicon.test.mjs
 node tests/browser/run.mjs
 ```
 
@@ -65,6 +66,23 @@ canonicalizeToken. Browser router валидирует metadata и выбира�
 источников, известный ввод, неоднозначность и dictionary-only. Это не качество
 распознавания и не словарь продукта.
 Реальные локальные артефакты не открывались. JS не заменяет основной C++/Qt стек.
+
+## Компактный stem-индекс
+
+`lexicon.js` читает существующий RSKF v1: точное членство canonical keys, блоки
+по 16 записей, front-coding, бинарный поиск по первым ключам. Данные копируются
+в собственную ограниченную память; глобальный JS Set/массив всех слов не нужен.
+Header/offsets/prefixes/sorting/trailing bytes проверяются, query не сохраняется.
+`stats()` возвращает только keyCount/blockCount/payloadBytes/indexBytes; indexBytes
+не включает payload. Максимум формата: 1 048 576 ключей, файл 64 MiB; при загрузке
+есть временные копии, это не жёсткая гарантия пика RSS.
+
+В fixture stem уже вызывается через этот reader и проверяет shared ambiguity.
+Native writer/parser дал 8 исходных случаев, 469 мутаций файла и 12 356 membership
+ответов; совпадение подтверждено в Node и закрытом Chromium. Все данные искусственные.
+RSKF **не заменяет full/control Hunspell**: canonical keys не сохраняют регистр,
+морфологию и словарные flags. RSKP pair parser пока не перенесён; EN/RU загружаются
+отдельными RSKF. Реальные .aff/.dic/артефакты не читались и не выпускались.
 
 ## Ограничения и следующий проход
 

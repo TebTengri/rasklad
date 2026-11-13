@@ -5,6 +5,10 @@
 const fixtureModel = RaskladScorer.loadModel(RaskladSyntheticModelBytes, RaskladPolicyData.modelSpec);
 RaskladSyntheticModelBytes.fill(0);
 delete globalThis.RaskladSyntheticModelBytes;
+const stemEn = RaskladLexicon.loadLexicon(RaskladSyntheticStemBytes);
+const stemRu = RaskladLexicon.loadLexicon(RaskladSyntheticStemBytes);
+RaskladSyntheticStemBytes.fill(0);
+delete globalThis.RaskladSyntheticStemBytes;
 const full = { en: new Set(['hello']), ru: new Set(['привет', 'фисв', 'еуые']) };
 const control = { en: new Set(['test']), ru: new Set(['привет', 'еуые']) };
 const fixtureEvidence = RaskladEvidence.createEvidenceProvider({
@@ -12,7 +16,7 @@ const fixtureEvidence = RaskladEvidence.createEvidenceProvider({
   lookup: {
     full: (language, token) => full[language].has(token),
     control: (language, token) => control[language].has(token),
-    stem: () => false
+    stem: (language, keys) => (language === 'en' ? stemEn : stemRu).contains(keys)
   }
 });
 globalThis.fixtureRouter = RaskladRouter.createRouter({

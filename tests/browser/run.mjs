@@ -76,6 +76,7 @@ try {
   await reset();await type('/ghbdtn ');await check('path unchanged',`field.value==='/ghbdtn ' && calls===0`);
   await reset();await type('hello ');await check('abstention preserves text',`field.value==='hello '`);
   await reset();await type('test abcd ');await check('shared ambiguity and dictionary-only never auto-correct',`field.value==='test abcd '`);
+  await check('real compact stem reader blocks shared ambiguity',`fixtureRouter.route({field:'prose',layout:'us',token:'qzxv',profile:'safeConfirmed'}).reason==='sharedAmbiguity'`);
   await check('Suggest is explicit only',`fixtureRouter.route({field:'prose',layout:'us',token:'abcd',profile:'requestedHybrid'}).action==='suggest' && fixtureRouter.decideUs('abcd')===null`);
   await reset('prose',`localDecision=t=>{calls++;field.readOnly=true;return 'привет';};`);
   await type('ghbdtn ');await check('context changed during evidence',`field.value==='ghbdtn' && calls===1`);
@@ -154,9 +155,16 @@ try {
       if(actual.length!==row.expected.length || row.expected.some((unit,i)=>actual.charCodeAt(i)!==unit))throw Error('native converter mismatch');
       conversions++;
     }
-    return {scores,decisions,routerStates,conversions};
+    let lexiconQueries=0,lexiconMutations=0;
+    for(const row of [...gold.lexicons.cases,...gold.lexicons.mutations]){
+      let lex;try{lex=RaskladLexicon.loadLexicon(Uint8Array.from(atob(row.bytesBase64),c=>c.charCodeAt(0)));}catch{}
+      if(Boolean(lex)!==row.accepted)throw Error('native lexicon acceptance mismatch');
+      if(lex){for(const check of row.checks){if(lex.contains(check.keys)!==check.expected)throw Error('native lexicon membership mismatch');lexiconQueries++;}lex.dispose();}
+      lexiconMutations++;
+    }
+    return {scores,decisions,routerStates,conversions,lexiconQueries,lexiconMutations};
   }.toString()+')('+JSON.stringify(nativeGold)+')');
-  assert.deepEqual(browserConformance,{scores:1176,decisions:2464,routerStates:512,conversions:27});passed++;
+  assert.deepEqual(browserConformance,{scores:1176,decisions:2464,routerStates:512,conversions:27,lexiconQueries:[...nativeGold.lexicons.cases,...nativeGold.lexicons.mutations].reduce((n,row)=>n+row.checks.length,0),lexiconMutations:477});passed++;
   console.log(JSON.stringify({passed,browser:version.product,browserConformance,timing,jsHeapUsedBytesBeforeConformance:heap.usedSize,scope:'synthetic owned textarea, numeric model and dictionary fixtures; no real data or host session'}));
 } catch(error){console.error(JSON.stringify({passed,error:error.message}));process.exitCode=1;}
 finally {

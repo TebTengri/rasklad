@@ -2,6 +2,7 @@
 // Entirely fabricated numeric weights and key sequences; no natural corpus.
 #include "synthetic.h"
 #include "decisionrouter.h"
+#include "../frontcodedlexicon.h"
 #include <QByteArray>
 #include <QJsonArray>
 #include <QString>
@@ -97,6 +98,50 @@ QJsonArray converterOracle() {
 }
 }
 
+
+namespace {
+QJsonArray keyArray(const KeySequence &key) {
+    QJsonArray out;for(char k:key)out.append(int(static_cast<unsigned char>(k)));return out;
+}
+QJsonObject lexiconCase(const QByteArray &bytes,const std::vector<KeySequence> &queries) {
+    const auto loaded=benchmark::FrontCodedLexicon::deserialize(bytes);QJsonArray checks;
+    if(loaded)for(const auto &key:queries)checks.append(QJsonObject{{QStringLiteral("keys"),keyArray(key)},
+        {QStringLiteral("expected"),loaded->contains(key)}});
+    return {{QStringLiteral("bytesBase64"),QString::fromLatin1(bytes.toBase64())},
+        {QStringLiteral("accepted"),bool(loaded)},{QStringLiteral("checks"),checks}};
+}
+QJsonObject lexiconOracle() {
+    QJsonArray cases,mutations;int fixtureIndex=0;
+    std::vector<KeySequence> queries{{},KeySequence(33,char(0)),KeySequence(4,char(33)),KeySequence(4,char(255))};
+    for(int i=0;i<120;++i){KeySequence key;for(int j=0;j<1+i%32;++j)key.append(char((i*7+j*3)%33));queries.push_back(key);}
+    QByteArray mutationBase;
+    for(int count:{0,1,16,17,33,257}){
+        std::vector<KeySequence> keys;
+        for(int i=0;i<count;++i){KeySequence key;key.append(char(i/33));key.append(char(i%33));
+            for(int j=0;j<i%5;++j){key.append(char(j));}
+            keys.push_back(key);}
+        const auto built=benchmark::FrontCodedLexicon::build(keys);
+        if(!built)return {};
+        auto checks=queries;checks.insert(checks.end(),keys.begin(),keys.end());
+        const auto raw=built->serialize();cases.append(lexiconCase(raw,checks));
+        if(count==17)mutationBase=raw;
+    }
+    std::vector<KeySequence> longest{KeySequence(1,char(0)),KeySequence(32,char(0)),KeySequence(32,char(32))};
+    const auto longBuilt=benchmark::FrontCodedLexicon::build(longest);if(!longBuilt)return {};
+    cases.append(lexiconCase(longBuilt->serialize(),longest));
+    // Actual fixture pair tests stem ambiguity on fictional physical keys only.
+    std::vector<KeySequence> stems{canonicalizeToken(QStringView(u"qzxv"),SourceLayout::Us).keys};
+    const auto fixture=benchmark::FrontCodedLexicon::build(stems);if(!fixture)return {};
+    fixtureIndex=cases.size();cases.append(lexiconCase(fixture->serialize(),stems));
+    for(qsizetype offset=0;offset<mutationBase.size();++offset)for(unsigned int value:{0U,32U,33U,255U}){
+        auto raw=mutationBase;raw[offset]=char(value);mutations.append(lexiconCase(raw,queries));
+    }
+    for(qsizetype size:{qsizetype(0),qsizetype(1),qsizetype(23),mutationBase.size()-1})mutations.append(lexiconCase(mutationBase.left(size),queries));
+    auto extra=mutationBase;extra.append(char(0));mutations.append(lexiconCase(extra,queries));
+    return {{QStringLiteral("cases"),cases},{QStringLiteral("mutations"),mutations},{QStringLiteral("fixtureIndex"),fixtureIndex}};
+}
+}
+
 QJsonObject syntheticConformance() {
     QJsonArray models;
     const int constants[7][2]={{-50,-50},{-32,-16},{-16,-32},{-24,-24},{0,0},{-127,-127},{-32,-16}};
@@ -147,5 +192,6 @@ QJsonObject syntheticConformance() {
     }
     return {{QStringLiteral("schema"),1},{QStringLiteral("models"),models},
             {QStringLiteral("boundaries"),boundaries},{QStringLiteral("fixtureModelIndex"),6},
+            {QStringLiteral("lexicons"),lexiconOracle()},
             {QStringLiteral("routerCases"),routerOracle()},{QStringLiteral("converterCases"),converterOracle()}};
 }
