@@ -53,3 +53,34 @@ INPUT-LAB-003 добавляет standalone synthetic Qt Quick assertion client 
 INPUT-LAB-003 воспроизвёл потерю нового ввода при доставке устаревшего text-input-v3 delete/commit. Проверка контекста до отправки и serial не обеспечивают атомарность на стороне редактора. Этот путь автоматического исправления не допускается в рабочий сеанс; ручной runtime не изменён. Подробности: [INPUT-LAB-003](docs/INPUT-LAB-003.md).
 
 INPUT-LAB-004 расширяет только developer fixture: исходное слово/Space и следующий фиксированный символ доставляются private wl_keyboard без реальных устройств. Есть metadata-only ACK после проверки настоящего поля, ограниченный одним ожидающим символом и дедлайном; это test-only механизм, не production IPC. Отдельные сценарии сохраняют провал критерия при принудительном применении устаревшей правки. Обычное приложение, его разрешения и runtime не меняются. См. docs/INPUT-LAB-004.md.
+
+INPUT-LAB-005 дополнен developer-only наблюдателем задержки: только вымышленные
+клавиши в закрытом compositor/Fcitx/DBus fixture, массивы из 60 monotonic timestamps
+и проверки фиксированного результата. Наблюдатель не изменяет редактор и не
+подтверждает клавиши producer-у. В Git публикуются агрегаты, не значения текста
+или последовательности пользовательского ввода. Отдельный launcher измеряет
+только собственный приватный daemon через /proc и может завершить только его PID
+в namespace для проверки отключения. Это не монитор рабочего сеанса, не
+авторизация на настоящее чтение ввода и не замер ресурсов всего приложения.
+Performance-режим отключает developer counter logging; timing observer не
+подключён к runtime приложению. См. docs/INPUT-LAB-005-performance.md.
+
+INPUT-LAB-006: external whole-word composition failed Save/Close document-snapshot
+checks and is not admitted as a universal input backend. A separate developer-only
+client adapter operates synchronously inside its own fixture on two explicitly
+approved Qt Quick object pointers; ordinary letters are committed native input.
+Protected/unapproved fields are refused before text/evidence queries, including
+a second hints/focus check after evidence. This component is not installed into
+other processes or linked into the manual application. Synthetic Save/Close
+observers read document state but do not flush preedit or write files. Tests and
+limits (including large-snapshot allocation and unverified reentrant handlers)
+are in docs/INPUT-LAB-006.md and tests/client_adapter_lab/README.md.
+
+ARCHITECTURE-DECISION-002 adds a separate developer-only commit-first Fcitx
+candidate, narrowed to the private fixture program/frontend. Native letters are
+not buffered in preedit; at Space it requires context capability and matching
+cached state before considering external deletion. Current client lacks that
+capability at the gate, so no cache query or correction is admitted. A bounded
+observer records query masks/validity and capability booleans, never strings.
+Actual external edit ordering and real-client safety remain unproven. No new
+runtime installation or broadening of input permissions is authorized.

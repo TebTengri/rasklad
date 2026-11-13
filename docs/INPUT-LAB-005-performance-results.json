@@ -1,0 +1,206 @@
+{
+  "scope": "synthetic editor state, not display presentation or real detector",
+  "quantile": "nearest rank per run; p99 at n=60 equals maximum",
+  "runs": [
+    {
+      "scenario": "fcitx-perf-native",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.6957,
+        "p95": 2.0246,
+        "p99": 2.1782,
+        "max": 2.1782
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 997.791,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1157.288,
+        "final_rss_kib": 16012,
+        "peak_rss_kib": 18080
+      }
+    },
+    {
+      "scenario": "fcitx-perf",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.5011,
+        "p95": 1.8474,
+        "p99": 4.4925,
+        "max": 4.4925
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 10.0,
+        "idle_wall_ms": 998.028,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1137.712,
+        "final_rss_kib": 22256,
+        "peak_rss_kib": 22256
+      }
+    },
+    {
+      "scenario": "fcitx-perf-native",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.7469,
+        "p95": 2.0526,
+        "p99": 2.2443,
+        "max": 2.2443
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 997.954,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1157.932,
+        "final_rss_kib": 16064,
+        "peak_rss_kib": 18232
+      }
+    },
+    {
+      "scenario": "fcitx-perf",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.4707,
+        "p95": 1.9375,
+        "p99": 4.9667,
+        "max": 4.9667
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 996.87,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1137.544,
+        "final_rss_kib": 22104,
+        "peak_rss_kib": 22104
+      }
+    },
+    {
+      "scenario": "fcitx-perf-native",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.7592,
+        "p95": 2.1335,
+        "p99": 2.251,
+        "max": 2.251
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 1000.58,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1157.468,
+        "final_rss_kib": 16036,
+        "peak_rss_kib": 17984
+      }
+    },
+    {
+      "scenario": "fcitx-perf",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.4656,
+        "p95": 1.894,
+        "p99": 4.8773,
+        "max": 4.8773
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 996.965,
+        "typing_cpu_ms": 30.0,
+        "typing_wall_ms": 1137.831,
+        "final_rss_kib": 22216,
+        "peak_rss_kib": 22216
+      }
+    },
+    {
+      "scenario": "fcitx-perf-native",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.7479,
+        "p95": 1.9566,
+        "p99": 2.6104,
+        "max": 2.6104
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 998.833,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1139.826,
+        "final_rss_kib": 16064,
+        "peak_rss_kib": 18184
+      }
+    },
+    {
+      "scenario": "fcitx-perf",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.4405,
+        "p95": 1.8941,
+        "p99": 4.5929,
+        "max": 4.5929
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 997.773,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1157.78,
+        "final_rss_kib": 22284,
+        "peak_rss_kib": 22284
+      }
+    },
+    {
+      "scenario": "fcitx-perf-native",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.7356,
+        "p95": 2.1364,
+        "p99": 2.1891,
+        "max": 2.1891
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 1001.369,
+        "typing_cpu_ms": 20.0,
+        "typing_wall_ms": 1138.049,
+        "final_rss_kib": 16088,
+        "peak_rss_kib": 18360
+      }
+    },
+    {
+      "scenario": "fcitx-perf",
+      "observations": 60,
+      "editor_state_latency_ms": {
+        "p50": 1.4585,
+        "p95": 1.7589,
+        "p99": 5.1148,
+        "max": 5.1148
+      },
+      "daemon_resources": {
+        "scope": "private Fcitx daemon, not whole app",
+        "cpu_resolution_ms": 10.0,
+        "idle_cpu_ms": 0.0,
+        "idle_wall_ms": 998.327,
+        "typing_cpu_ms": 10.0,
+        "typing_wall_ms": 1139.385,
+        "final_rss_kib": 22244,
+        "peak_rss_kib": 22244
+      }
+    }
+  ]
+}

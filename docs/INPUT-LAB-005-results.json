@@ -1,0 +1,138 @@
+{
+  "fixture": "private Qt compositor + private DBus + installed Fcitx5 5.1.23",
+  "evidence": "deterministic synthetic, not dictionaries/models",
+  "cases": [
+    {
+      "scenario": "fcitx-baseline",
+      "passed": true,
+      "wall_ms": 6776,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": false
+      },
+      "addon_counters": {
+        "handled": 7,
+        "corrections": 1,
+        "commits": 1,
+        "resets": 3,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    },
+    {
+      "scenario": "fcitx-focus",
+      "passed": true,
+      "wall_ms": 6778,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": true
+      },
+      "addon_counters": {
+        "handled": 6,
+        "corrections": 0,
+        "commits": 0,
+        "resets": 4,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    },
+    {
+      "scenario": "fcitx-fast-tail",
+      "passed": true,
+      "wall_ms": 6826,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": false
+      },
+      "addon_counters": {
+        "handled": 9,
+        "corrections": 1,
+        "commits": 2,
+        "resets": 3,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    },
+    {
+      "scenario": "fcitx-known",
+      "passed": true,
+      "wall_ms": 6928,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": false
+      },
+      "addon_counters": {
+        "handled": 6,
+        "corrections": 0,
+        "commits": 1,
+        "resets": 3,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    },
+    {
+      "scenario": "fcitx-backspace",
+      "passed": true,
+      "wall_ms": 6926,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": false
+      },
+      "addon_counters": {
+        "handled": 9,
+        "corrections": 1,
+        "commits": 1,
+        "resets": 3,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    },
+    {
+      "scenario": "fcitx-overflow",
+      "passed": true,
+      "wall_ms": 6929,
+      "fields": {
+        "composition_intermediate_verified": true,
+        "composition_final_preedit_empty": true,
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "marker_unchanged": false
+      },
+      "addon_counters": {
+        "handled": 34,
+        "corrections": 0,
+        "commits": 2,
+        "resets": 3,
+        "protected_refusals": 7,
+        "missing_capability": 0
+      },
+      "nonzero_wayland_deletes": 0,
+      "editor_ack_attempted": false
+    }
+  ]
+}

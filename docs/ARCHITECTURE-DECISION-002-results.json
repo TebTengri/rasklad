@@ -1,0 +1,379 @@
+{
+  "scope": "synthetic private Fcitx; no actual correction admitted",
+  "cases": [
+    {
+      "scenario": "fcitx-commit-save",
+      "save_close_passed": true,
+      "snapshot_complete": true
+    },
+    {
+      "scenario": "fcitx-commit-close",
+      "save_close_passed": true,
+      "snapshot_complete": true
+    },
+    {
+      "scenario": "fcitx-commit-kill-save",
+      "save_close_passed": true,
+      "snapshot_complete": true
+    },
+    {
+      "scenario": "fcitx-commit-kill-close",
+      "save_close_passed": true,
+      "snapshot_complete": true
+    },
+    {
+      "scenario": "fcitx-commit-baseline",
+      "automatic_correction_passed": false,
+      "original_preserved": true,
+      "observed_gates": [
+        {
+          "tail_length": 6,
+          "surrounding_cap": 0
+        }
+      ],
+      "capability_true_observed": true,
+      "capability_true_to_false_observed": true,
+      "normal_field_query_validity": [
+        {
+          "cursor_valid": false,
+          "mask": 0,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 1,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 1,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 411,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 154,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 154,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 154,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 154,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        }
+      ]
+    },
+    {
+      "scenario": "fcitx-commit-burst",
+      "automatic_correction_passed": false,
+      "original_preserved": true,
+      "observed_gates": [
+        {
+          "tail_length": 6,
+          "surrounding_cap": 0
+        },
+        {
+          "tail_length": 1,
+          "surrounding_cap": 0
+        }
+      ],
+      "capability_true_observed": true,
+      "capability_true_to_false_observed": true,
+      "normal_field_query_validity": [
+        {
+          "cursor_valid": false,
+          "mask": 0,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 1,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 1,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": true,
+          "mask": 411,
+          "text_valid": true
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 257,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        },
+        {
+          "cursor_valid": false,
+          "mask": 2,
+          "text_valid": false
+        }
+      ]
+    }
+  ]
+}

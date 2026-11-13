@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Own trusted client fields only, offscreen. Never loads the Fcitx addon.
+set -euo pipefail
+root_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cd -- "$root_dir"
+for dir in build build/src build/client-adapter-tests; do
+    [[ ! -L "$dir" ]] || { echo "Refusing symlink build directory: $dir" >&2; exit 1; }
+done
+mkdir -p build/src build/client-adapter-tests
+qmake6 -o build/src/Makefile src/rasklad_core.pro
+make -C build/src -j2
+qmake6 -o build/client-adapter-tests/Makefile tests/client_adapter_lab/client_adapter_tests.pro
+make -C build/client-adapter-tests -j2
+exec env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET -u DISPLAY -u DBUS_SESSION_BUS_ADDRESS \
+    QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=generic QT_QUICK_BACKEND=software QT_IM_MODULE=compose QML_DISABLE_DISK_CACHE=1 \
+    build/client-adapter-tests/client_adapter_tests "$@"

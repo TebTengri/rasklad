@@ -1,11 +1,17 @@
 import QtQuick
 
-// Fixed trusted resource. Two real fields; no user QML is ever loaded.
+// Fixed trusted resource. Ordinary fields; no user QML is ever loaded.
 Window {
     width: 400
     height: 200
     visible: true
     title: "native-field-probe"
+
+    Shortcut {
+        sequence: StandardKey.Save
+        context: Qt.WindowShortcut
+        onActivated: fixtureActions.save()
+    }
 
     Column {
         anchors.fill: parent
@@ -18,6 +24,13 @@ Window {
             height: 60
             textFormat: TextEdit.PlainText
             // Ordinary field: not sensitive, predictive allowed.
+        }
+
+        TextEdit {
+            objectName: "secondField"
+            width: parent.width
+            height: 40
+            textFormat: TextEdit.PlainText
         }
 
         TextInput {
