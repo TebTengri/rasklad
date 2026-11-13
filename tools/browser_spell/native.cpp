@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Only original tiny fabricated .aff/.dic are written/read; no real data.
+// Default mode uses original fictional data. --stdin-profiles is an explicit
+// smoke-test mode for bytes already verified by the isolated parent.
 #include "profileverify.h"
 #include <hunspell/hunspell.h>
 #include <hunspell/hunversion.h>
@@ -10,6 +11,7 @@
 #include <QFile>
 #include <QSet>
 #include <cstdio>
+#include <cstring>
 
 namespace {
 bool write(const QString &name,const QByteArray &data){QFile f(name);return f.open(QIODevice::WriteOnly)&&f.write(data)==data.size();}
@@ -34,7 +36,47 @@ QJsonObject profile(const QByteArray &aff,const QByteArray &dic,const QStringLis
         {QStringLiteral("controlBase64"),QString::fromLatin1(control.toBase64())},{QStringLiteral("cases"),cases}};
 }
 }
-int main(){
+int main(int argc, char **argv){
+    if(std::strcmp(Hunspell_get_library_version(),"1.7.5")!=0)return 1;
+    if(argc==2 && std::strcmp(argv[1],"--stdin-profiles")==0){
+        QFile input;if(!input.open(stdin,QIODevice::ReadOnly))return 1;
+        const auto bytes=input.read(16*1024*1024+1);
+        if(bytes.size()>16*1024*1024)return 1;
+        QJsonParseError error;const auto document=QJsonDocument::fromJson(bytes,&error);
+        if(error.error!=QJsonParseError::NoError || !document.isObject())return 1;
+        const auto object=document.object();
+        if(object.keys()!=QStringList{QStringLiteral("profiles"),QStringLiteral("schema")} || object.value(QStringLiteral("schema")).toDouble()!=1)return 1;
+        const auto profiles=object.value(QStringLiteral("profiles")).toObject();
+        if(profiles.keys()!=QStringList{QStringLiteral("en"),QStringLiteral("ru")})return 1;
+        QJsonObject outputProfiles;
+        for(const auto &lang:profiles.keys()){
+            const auto entry=profiles.value(lang).toObject();
+            if(entry.keys()!=QStringList{QStringLiteral("affBase64"),QStringLiteral("dicBase64"),QStringLiteral("words")})return 1;
+            const auto decode=[&](const char *name)->QByteArray{
+                const auto value=entry.value(QString::fromLatin1(name));
+                if(!value.isString())return {};
+                const auto raw=value.toString().toLatin1();
+                const auto decoded=QByteArray::fromBase64Encoding(raw,QByteArray::AbortOnBase64DecodingErrors);
+                return decoded ? decoded.decoded : QByteArray{};
+            };
+            const auto aff=decode("affBase64"),dic=decode("dicBase64");
+            if(aff.isEmpty() || aff.size()>1024*1024 || dic.isEmpty() || dic.size()>16*1024*1024)return 1;
+            const auto array=entry.value(QStringLiteral("words")).toArray();
+            if(array.isEmpty() || array.size()>64)return 1;
+            QStringList words;
+            for(const auto &value:array){
+                const auto word=value.toString();
+                if(!value.isString() || word.isEmpty() || word.size()>32 || word.contains(QChar::Null))return 1;
+                words.append(word);
+            }
+            const auto result=profile(aff,dic,words);if(result.isEmpty())return 1;
+            outputProfiles.insert(lang,result);
+        }
+        const QJsonObject result{{QStringLiteral("schema"),1},{QStringLiteral("nativeVersion"),QStringLiteral("1.7.5")},{QStringLiteral("profiles"),outputProfiles}};
+        const auto bytesOut=QJsonDocument(result).toJson(QJsonDocument::Compact);
+        return std::fwrite(bytesOut.constData(),1,std::size_t(bytesOut.size()),stdout)==std::size_t(bytesOut.size())?0:1;
+    }
+    if(argc!=1)return 1;
     const QByteArray common("SET UTF-8\nKEEPCASE K\nNEEDAFFIX N\nFORBIDDENWORD F\nONLYINCOMPOUND O\nCOMPOUNDFLAG C\nCOMPOUNDMIN 3\n");
     const auto en=profile(common+QByteArray("PFX R Y 1\nPFX R 0 re .\nSFX S Y 1\nSFX S 0 s .\n"),
         QByteArray("9\nbook/RS\niPhone/K\nstem/NS\nbanned/F\nrain/C\nbow/C\nonly/OC\nhello\nworld\n"),

@@ -133,3 +133,21 @@ recursive directories. This is not a sandbox against hostile code with the same 
 Standalone verification is a snapshot check, not a lock against later modification:
 a future runtime consumer must use the verified bytes, not reopen mutable paths.
 No real dictionaries/model/user text were read by the package tests.
+
+## Prepared dictionary compatibility smoke
+
+`bin/test-reviewed-dictionaries` defaults to project-authored fictional data.
+Its explicit `--real --input-root` mode is prepared for a separately authorized
+one-shot read of the four catalog-pinned .aff/.dic files, not an implicit reuse of
+an old test permission. The launcher mounts exactly those files read-only and
+selected code/notices into an outer networkless bwrap; no project tree/HOME/model
+is mounted. Raw source bytes are hash/size checked before package assembly.
+The native oracle receives pinned immutable snapshots via stdin in its explicit
+`--stdin-profiles` mode; default mode remains synthetic. The browser has a nested
+sandbox and only an empty fixture directory. Developer CDP carries public dictionary
+bytes and fixed smoke cases, never user input. Network and host session access
+remain absent. Only aggregate results are printed. Unique ignored output directories
+hold raw local packages and their notices, never overwrite old runs, and are not
+release-approved. The resource report measures WASM heap capacity, not process RSS;
+batch lookup means are not physical keystroke latency. Current recorded smoke inputs
+are fictional; actual real-data execution requires its own recorded result.

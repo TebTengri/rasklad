@@ -79,3 +79,39 @@ python3 -m unittest discover -s tests/language_pack -v
 These tests check provenance enforcement, byte-exact notices, independent locales,
 resource limits, hostile paths/symlinks, tampering, extra content and no-overwrite
 behavior, without opening actual dictionaries or user text.
+
+## Prepared native/browser smoke test
+
+`python3 bin/test-reviewed-dictionaries` uses **only fictional dictionaries**.
+It exercises the same package builder and native/browser handoff planned for the
+real run. The controller mounts only fixed own code/notices and engine files.
+An outer networkless bwrap hides HOME, session bus, input devices and GPU; a nested
+closed Chromium has only an empty fixture directory and temporary profile.
+No model, stem lexicon, corpus, real user text or actual editor is loaded.
+
+The separately authorized real command is:
+
+```sh
+python3 bin/test-reviewed-dictionaries --real --input-root /home/mvn/Work/rasklad
+```
+
+It mounts read-only exactly the four project files described in
+`language-pack-inputs.json` (two .aff and two .dic), validates their admitted
+hashes/sizes before use, builds new raw packages with exact notices under a unique
+ignored `build/dictionary-smoke-*` directory, and compares full/control against
+native Hunspell 1.7.5. The reference library is also pinned. Verified immutable
+byte snapshots are passed to the native oracle and browser, not mutable paths.
+Native control bytes and spell results must match. Only aggregate JSON is printed;
+no words, source dictionaries or weights are published. No network/downloads or
+installation, and no replacement of any previous run or original files.
+
+Metrics cover module init, dictionary init, final WASM heap capacity and percentiles
+of **50-call batch means** for 2,000 lookups. They do not establish per-keystroke
+latency, peak process RSS, linguistic accuracy or correctness in a real editor.
+Four engine handles share the source-built WASM module with a 128 MiB maximum.
+The script must fail if load/call/cleanup or any comparison fails; it does not
+silently fall back to another engine or disable checks to fit the memory budget.
+
+The real command is prepared for review, not automatically executed by build/test.
+The previous one-shot data-test permission is not reused. All recorded results
+for this new command currently use fictional inputs only.
