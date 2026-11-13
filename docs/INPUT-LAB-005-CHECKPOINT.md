@@ -32,3 +32,7 @@ Superseded by INPUT-LAB-005.md and INPUT-LAB-005-results.json: private Fcitx int
 ## Navigation and performance follow-up
 
 Commits after 5af653c include 9/9 navigation integration cases and 11 composer units, then five alternating performance pairs plus four private daemon stop/kill continuation/focus cases. See INPUT-LAB-005-performance.md for limits: synthetic evidence, editor-state timing only, daemon-only RSS/CPU, pending preedit persists until subsequent action. Next: real detector measurement requires separate data authorization; independent review and remaining lifecycle/shortcut/client gates. Global input remains disabled.
+
+## Save/Close finding and candidate
+
+Read INPUT-LAB-006.md before continuation: external composition fails Close and Save after kill despite prior typing/focus passes. New own in-process component passes six fixed-field integration cases and ten reported offscreen unit passes; it requires supported-client integration and is not universal. No production input enabled.

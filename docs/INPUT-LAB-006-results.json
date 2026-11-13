@@ -1,0 +1,281 @@
+{
+  "scope": "synthetic, negative Save/Close controls retained; no disk text writes",
+  "cases": [
+    {
+      "scenario": "fcitx-close-native",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": false,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": true,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-close",
+      "passed": false,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": false,
+        "save_action_invoked": false,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": true,
+        "lifecycle_document_matches": false,
+        "lifecycle_document_empty": true,
+        "lifecycle_preedit_empty": false,
+        "lifecycle_original_pending": true,
+        "lifecycle_window_closed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-kill-close",
+      "passed": false,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": false,
+        "save_action_invoked": false,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": true,
+        "lifecycle_document_matches": false,
+        "lifecycle_document_empty": true,
+        "lifecycle_preedit_empty": false,
+        "lifecycle_original_pending": true,
+        "lifecycle_window_closed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-kill-race-after",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-kill-race-before",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-kill-save",
+      "passed": false,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": false,
+        "save_action_invoked": true,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": true,
+        "save_snapshot_pending": true,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": false,
+        "lifecycle_document_empty": true,
+        "lifecycle_preedit_empty": false,
+        "lifecycle_original_pending": true,
+        "lifecycle_window_closed": false
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-save-native",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": true,
+        "save_snapshot_matches": true,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": false
+      },
+      "adapter_corrections": null,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-save",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": true,
+        "save_snapshot_matches": true,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": false
+      },
+      "adapter_corrections": null,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-stop-race-after",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-stop-race-before",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": null,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-client-baseline",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": 1,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-client-close",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": false,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": true,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": true
+      },
+      "adapter_corrections": 0,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-client-fast-tail",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": true,
+        "secret_field_unchanged": true,
+        "field_assertions_passed": true
+      },
+      "adapter_corrections": 1,
+      "daemon_exited": null
+    },
+    {
+      "scenario": "fcitx-client-kill-close",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": false,
+        "save_snapshot_matches": false,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": true,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": true
+      },
+      "adapter_corrections": 0,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-client-kill-save",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": true,
+        "save_snapshot_matches": true,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": false
+      },
+      "adapter_corrections": 0,
+      "daemon_exited": true
+    },
+    {
+      "scenario": "fcitx-client-save",
+      "passed": true,
+      "assertions": {
+        "normal_matches_expected": false,
+        "field_assertions_passed": true,
+        "save_action_invoked": true,
+        "save_snapshot_matches": true,
+        "save_snapshot_empty": false,
+        "save_snapshot_pending": false,
+        "closing_snapshot_matches": false,
+        "closing_snapshot_pending": false,
+        "lifecycle_document_matches": true,
+        "lifecycle_document_empty": false,
+        "lifecycle_preedit_empty": true,
+        "lifecycle_original_pending": false,
+        "lifecycle_window_closed": false
+      },
+      "adapter_corrections": 0,
+      "daemon_exited": null
+    }
+  ]
+}

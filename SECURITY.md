@@ -64,3 +64,14 @@ INPUT-LAB-005 дополнен developer-only наблюдателем заде�
 авторизация на настоящее чтение ввода и не замер ресурсов всего приложения.
 Performance-режим отключает developer counter logging; timing observer не
 подключён к runtime приложению. См. docs/INPUT-LAB-005-performance.md.
+
+INPUT-LAB-006: external whole-word composition failed Save/Close document-snapshot
+checks and is not admitted as a universal input backend. A separate developer-only
+client adapter operates synchronously inside its own fixture on two explicitly
+approved Qt Quick object pointers; ordinary letters are committed native input.
+Protected/unapproved fields are refused before text/evidence queries, including
+a second hints/focus check after evidence. This component is not installed into
+other processes or linked into the manual application. Synthetic Save/Close
+observers read document state but do not flush preedit or write files. Tests and
+limits (including large-snapshot allocation and unverified reentrant handlers)
+are in docs/INPUT-LAB-006.md and tests/client_adapter_lab/README.md.

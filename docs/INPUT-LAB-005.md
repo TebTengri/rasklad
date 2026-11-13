@@ -1,5 +1,7 @@
 # INPUT-LAB-005: composition through an existing input framework
 
+**Later finding:** [INPUT-LAB-006](INPUT-LAB-006.md) shows Save/Close failures for this composition path. Earlier passes and performance numbers do not admit it as a universal backend. The new in-process candidate is a separate, unmeasured path.
+
 ## Result
 
 Six closed synthetic integration cases passed with the installed Fcitx5 5.1.23

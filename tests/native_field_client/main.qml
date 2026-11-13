@@ -7,6 +7,12 @@ Window {
     visible: true
     title: "native-field-probe"
 
+    Shortcut {
+        sequence: StandardKey.Save
+        context: Qt.WindowShortcut
+        onActivated: fixtureActions.save()
+    }
+
     Column {
         anchors.fill: parent
         anchors.margins: 8

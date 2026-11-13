@@ -1,5 +1,7 @@
 # INPUT-LAB-005: latency, daemon resources and disconnection
 
+**Later finding:** [INPUT-LAB-006](INPUT-LAB-006.md) shows Save/Close failures for this composition path. Earlier passes and performance numbers do not admit it as a universal backend. The new in-process candidate is a separate, unmeasured path.
+
 ## Scope and method
 
 Closed synthetic fixture, installed Qt 6.12 and Fcitx5 5.1.23; no desktop input,
