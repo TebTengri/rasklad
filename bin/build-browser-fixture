@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Build an owned-field fixture, generating the US/RU map from the C++ source.
+No dependencies, models, network, installation or browser profile access.
+"""
+from pathlib import Path
+import ast
+import json
+import re
+import shutil
+
+root = Path(__file__).resolve().parent.parent
+source = (root / 'src/layoutconverter.cpp').read_text()
+pairs = [(ast.literal_eval(a), ast.literal_eval(b)) for a, b in
+         re.findall(r"\{u('(?:\\.|[^'\\])*'), u('(?:\\.|[^'\\])*')\}", source)]
+if len(pairs) != 94 or any(len(a) != 1 or len(b) != 1 for a, b in pairs):
+    raise SystemExit('Unexpected converter table; review generator before rebuilding')
+if len({a for a, _ in pairs}) != 94 or len({b for _, b in pairs}) != 94:
+    raise SystemExit('Ambiguous converter table')
+out = root / 'build/browser-fixture'
+out.mkdir(parents=True, exist_ok=True)
+for name in ['adapter.js', 'fixture.html', 'fixture.js']:
+    shutil.copyfile(root / 'browser' / name, out / name)
+script = '''// Generated from the project-owned C++ key map. MIT. Do not edit.
+(function(root) {
+'use strict';
+const pairs = PAIRS;
+const us = new Map(pairs), ru = new Map(pairs.map(([a,b])=>[b,a]));
+function convert(text, direction) {
+  const map = direction === 'us-ru' ? us : direction === 'ru-us' ? ru : null;
+  if (!map) return text;
+  let result = '';
+  for (let i=0; i<text.length; i++) {
+    const next = i+1<text.length ? String.fromCodePoint(text.codePointAt(i+1)) : '';
+    result += /\\p{M}/u.test(next) ? text[i] : (map.get(text[i]) ?? text[i]);
+  }
+  return result;
+}
+root.RaskladConverter = Object.freeze({convert});
+if(typeof module !== 'undefined') module.exports = root.RaskladConverter;
+})(globalThis);
+'''.replace('PAIRS', json.dumps(pairs, ensure_ascii=False))
+(out / 'converter.js').write_text(script)
+print(json.dumps({'fixture': 'build/browser-fixture/fixture.html', 'keyPairs': len(pairs),
+                  'modelIncluded': False}))
