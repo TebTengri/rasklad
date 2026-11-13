@@ -72,3 +72,16 @@ boolean/model поля, синхронность результата и bounds;
 фиксирует хеши исходников developer build, но не заменяет подпись дистрибутива.
 Exporter требует только уже установленный Qt/qmake/C++ toolchain и не устанавливает
 пакеты. Детали: [Browser core 002](docs/BROWSER-CORE-002.md).
+
+Browser evidence 003: RSKN loader принимает только фиксированный v1 Uint8Array
+с собственным ограниченным снимком, отвергает shared/detached buffers, неверный
+header/размер/веса. Исключения нормализуются без входных данных. Арифметический
+JS scorer проверен по native gold, ключи не кэшируются; dispose зануляет только
+собственную копию best effort, не гарантируя стирание swap/исходного буфера.
+Проверка формата не доказывает provenance/SHA-256/лицензию. Runtime evidence binding
+проверяет token/layout/canonical keys до локальных lookup и использует только
+строгие bool ответы точных full/control/stem интерфейсов; неизвестный/ошибочный/
+асинхронный lookup даёт отсутствие evidence, а не false membership. В fixture
+только сгенерированные числовые веса и искусственные Set, не замена Hunspell.
+Реальные артефакты не открывались/не допущены к browser distribution, сети/IPC/
+истории/host config нет. См. [Browser evidence 003](docs/BROWSER-EVIDENCE-003.md).

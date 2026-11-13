@@ -2,6 +2,7 @@
 // Evaluate every finite evidence-policy state using the production C++ router.
 // No profiles, models, dictionaries, user input, files or network are opened.
 #include "decisionrouter.h"
+#include "synthetic.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -30,8 +31,16 @@ QJsonObject canonicalMap(SourceLayout layout)
     return out;
 }
 }
-int main()
+int main(int argc, char **argv)
 {
+    if (argc == 2 && QByteArray(argv[1]) == QByteArray("--synthetic")) {
+        const auto data = syntheticConformance();
+        if (data.isEmpty()) return 1;
+        const auto json = QJsonDocument(data).toJson(QJsonDocument::Compact);
+        return std::fwrite(json.constData(), 1, std::size_t(json.size()), stdout) == std::size_t(json.size()) ? 0 : 1;
+    }
+    if (argc != 1) return 2;
+    const auto thresholds = frozenTwoScore();
     const QString token = QStringLiteral("ghbdtn");
     QJsonArray outcomes, table;
     QVector<QPair<QString, QString>> unique;
@@ -60,6 +69,22 @@ int main()
     }
     const QJsonObject data{
         {QStringLiteral("schema"), 1},
+        {QStringLiteral("modelSpec"),QJsonObject{
+            {QStringLiteral("magic"),QStringLiteral("RSKN")},
+            {QStringLiteral("version"),int(NgramModel::kFormatVersion)},
+            {QStringLiteral("scale"),NgramModel::kScale},{QStringLiteral("alphabet"),NgramModel::kAlphabet},
+            {QStringLiteral("letterKeys"),NgramModel::kLetterKeys},{QStringLiteral("bos"),NgramModel::kBos},
+            {QStringLiteral("eos"),NgramModel::kEos},{QStringLiteral("tableSize"),NgramModel::kTableSize},
+            {QStringLiteral("headerBytes"),NgramModel::kHeaderBytes},
+            {QStringLiteral("serializedBytes"),NgramModel::kSerializedBytes},
+            {QStringLiteral("minQuantized"),NgramModel::kMinQuantized},
+            {QStringLiteral("minStepRaw"),NgramModel::kMinStepRaw},
+            {QStringLiteral("orderWeights"),QJsonArray{NgramModel::kOrderWeights[0],NgramModel::kOrderWeights[1],NgramModel::kOrderWeights[2]}},
+            {QStringLiteral("minTokenKeys"),kMinTokenKeys},{QStringLiteral("maxTokenKeys"),kMaxTokenKeys},
+            {QStringLiteral("minDecisionKeys"),kMinDecisionKeys},
+            {QStringLiteral("twoScore"),QJsonObject{{QStringLiteral("enabled"),thresholds.enabled},
+                {QStringLiteral("minAlternative"),thresholds.minAlternative},
+                {QStringLiteral("maxObserved"),thresholds.maxObserved},{QStringLiteral("gap"),thresholds.gap}}}}},
         {QStringLiteral("minKeys"), kMinRouteKeys}, {QStringLiteral("maxKeys"), kMaxRouteKeys},
         {QStringLiteral("canonical"), QJsonObject{
             {QStringLiteral("us"), canonicalMap(SourceLayout::Us)},

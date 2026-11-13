@@ -12,6 +12,8 @@
 bin/build-browser-fixture
 node tests/browser/adapter.test.mjs
 node tests/browser/router.test.mjs
+node tests/browser/scorer-security.test.mjs
+node tests/browser/native-conformance.test.mjs
 node tests/browser/run.mjs
 ```
 
@@ -20,6 +22,9 @@ node tests/browser/run.mjs
 остаётся включённым. CDP идёт по дочерним pipes, порт не открывается. В среде,
 запрещающей создание namespace, тест завершится ошибкой; запускать обычный браузер
 или выключать sandbox вместо него нельзя. Дедлайн 45 секунд, bwrap die-with-parent.
+Сборка создаёт synthetic-conformance.json (семь искусственных наборов весов и
+числовой нативный эталон) и synthetic-model.js для fixture. Реальные источники
+данных не открываются. Эти файлы не являются release package.
 Снимок собственного поля: `build/browser-fixture/preview.png`.
 
 ## Что реально подключено
@@ -48,9 +53,11 @@ combining marks. Это **общий источник преобразовани
 путём выполнения настоящего C++ DecisionRouter для всех 512 состояний evidence
 и двух профилей; 66 допустимых символов на раскладку экспортирует native
 canonicalizeToken. Browser router валидирует metadata и выбирает результат
-из общей таблицы, не переписывая evidence policy вручную. Нет browser build
-самого C++ scorer, модели или словарей. Fixture-only evidence содержит несколько
-явно синтетических примеров: согласие
+из общей таблицы, не переписывая evidence policy вручную. Browser `scorer.js`
+реализует арифметику формата RSKN и проверен по C++ эталону. Это JS port,
+не запуск C++ бинарника. `evidence.js` связывает scorer с явными full/control/stem
+интерфейсами. Настоящий Hunspell и реальные веса ещё не подключены. Fixture-only evidence содержит несколько
+явно синтетических словарных примеров и искусственную числовую модель: согласие
 источников, известный ввод, неоднозначность и dictionary-only. Это не качество
 распознавания и не словарь продукта.
 Реальные локальные артефакты не открывались. JS не заменяет основной C++/Qt стек.
@@ -71,8 +78,8 @@ canonicalizeToken. Browser router валидирует metadata и выбира�
   из textarea. Пунктуационные URL/пути отсеиваются, но общей защиты inline-кода
   нет. Нужна интеграция реального владельца редактора с ролями/диапазонами.
 - Нет расширения, host permissions, native messaging, установщика и ежедневного
-  режима. Общая policy уже подключена; следующий шаг: локальный browser evidence provider
-  с проверенным scorer и разрешёнными данными,
+  режима. Policy, арифметический scorer и evidence binding уже подключены; следующий
+  шаг: точная словарная реализация, разрешённые данные и проверка integrity,
   затем адаптер конкретного редактора и проверяемый пакет с минимальными правами.
   Не выдавать эту fixture за совместимость со всеми приложениями.
 - Shell/TUI остаются отдельным milestone, браузерная проверка их не заменяет.

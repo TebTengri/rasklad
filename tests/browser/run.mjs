@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Closed synthetic browser integration. No host profile, bus, input or network.
 import {spawn, execFileSync} from 'node:child_process';
-import {writeFileSync} from 'node:fs';
+import {writeFileSync,readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve, dirname} from 'node:path';
 import assert from 'node:assert/strict';
@@ -124,7 +124,28 @@ try {
     await check(mode+' timing text integrity',mode==='adapter'?`field.value==='привет '.repeat(50)`:`field.value==='ghbdtn '.repeat(50)`);
   }
   const heap=await c('Runtime.getHeapUsage');
-  console.log(JSON.stringify({passed,browser:version.product,timing,jsHeapUsedBytes:heap.usedSize,scope:'synthetic owned textarea; no model or host session'}));
+  const nativeGold=JSON.parse(readFileSync(resolve(root,'build/browser-fixture/synthetic-conformance.json'),'utf8'));
+  const browserConformance=await evaluate('('+function(gold){
+    let scores=0,decisions=0;
+    for(const entry of gold.models){
+      const bytes=Uint8Array.from(atob(entry.bytesBase64),c=>c.charCodeAt(0));
+      const model=RaskladScorer.loadModel(bytes,RaskladPolicyData.modelSpec);
+      for(const item of entry.cases){
+        const score=model.score(item.keys),wanted=item.score;
+        if(score.ok!==wanted.ok || score.keyCount!==wanted.keyCount || score.steps!==wanted.steps ||
+          score.raw[0]!==wanted.raw[0] || score.raw[1]!==wanted.raw[1])throw Error('native score mismatch');
+        scores++;
+        for(const layout of ['us','ru']){if(model.decide(score,layout)!==item[layout])throw Error('native decision mismatch');decisions++;}
+      }
+      for(const item of gold.boundaries)for(const layout of ['us','ru']){
+        if(model.decide(item.score,layout)!==item[layout])throw Error('native boundary mismatch');decisions++;
+      }
+      model.dispose();
+    }
+    return {scores,decisions};
+  }.toString()+')('+JSON.stringify(nativeGold)+')');
+  assert.deepEqual(browserConformance,{scores:1176,decisions:2464});passed++;
+  console.log(JSON.stringify({passed,browser:version.product,browserConformance,timing,jsHeapUsedBytesBeforeConformance:heap.usedSize,scope:'synthetic owned textarea, numeric model and dictionary fixtures; no real data or host session'}));
 } catch(error){console.error(JSON.stringify({passed,error:error.message}));process.exitCode=1;}
 finally {
   try{await call('Browser.close');}catch{}
