@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "result": {
+    "passed": true,
+    "browser": "Chrome/155.0.8059.84",
+    "editor": "ProseMirror",
+    "cases": 12,
+    "advancedChecks": 25,
+    "hashAndInitMs": 192.4,
+    "heapBytes": 20185088,
+    "modelBytes": 88290,
+    "stemBytes": 1200379,
+    "engineCount": 4,
+    "networkAttempts": 0,
+    "execCommandCalls": 0,
+    "nativeHistoryPassed": true,
+    "externalApplicationSupport": false,
+    "packages": [
+      {
+        "locale": "en-US",
+        "files": 5,
+        "bytes": 575517,
+        "distribution": false
+      },
+      {
+        "locale": "ru-RU",
+        "files": 5,
+        "bytes": 3551131,
+        "distribution": false
+      }
+    ],
+    "inputMode": "reviewed-local-profile",
+    "modelLoaded": true,
+    "profileBytes": 5860597,
+    "scope": "fixed editor functional cases; not a language accuracy benchmark",
+    "releaseApproved": false
+  },
+  "test_source_sha256": {
+    "browser/prosemirror.js": "77625a7ed486321e66b878ab3153c34a59ae0504f56fabc433339c26d07ff51f",
+    "browser/session.js": "9323ae81de1d7f0be587253375d5c881ce725a46bf94f1f44b3a1219317d7a30",
+    "tests/browser/prosemirror-run.mjs": "02f34fd773047b8ae488c59e3d002e325d8d4c2255b4c9ef43416194305895c1",
+    "tools/prosemirror/lock.json": "9b3fff04992f5ebf0e95bab1dc0956f2fca107a4da4d9f94ec7c0fd370f38ec8",
+    "bin/prepare-prosemirror": "d125e2610abddcb6981c83a7a2c1ffc7785943b1cb7d8f2fb194ce8fc508d139",
+    "tools/editor_profile.py": "d9804bab6aabbef86634b3b1c9fac3f36fa44b61b0f9a6d6620b491ef67a1625",
+    "data/prosemirror-editor-001-protocol.json": "7783ad5307c4e33d14d22f166a98720df798a782dfebba2e9933097d0b7b8c83",
+    "data/browser-profile.json": "399641403c22af49c95f91de76ac1bf3c9a5fb4ac25a008778a2e1ba3f66a8e4"
+  },
+  "checks": {
+    "adapter_guard_node_tests": 10,
+    "session_node_tests": 11,
+    "package_oracle_python_tests": 18
+  },
+  "review": "Codex authored adapter after the overlong implementation request was stopped; Claude Opus 5.5 completed independent source review. Stored/mixed/noninclusive marks and reconfigure findings fixed and tested. Review was static; Codex ran tests.",
+  "limits": [
+    "Pinned upstream editor, not an actual Slack workspace/client test.",
+    "Core hash/init timing excludes editor imports, CDP transport and whole application startup.",
+    "WASM heap excludes JS/ProseMirror/browser memory; no total RSS claim.",
+    "No host profile/config, global input, real user text, network, installation or distribution approval."
+  ]
+}

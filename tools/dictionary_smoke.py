@@ -72,7 +72,7 @@ def records_and_payloads(synthetic):
     return result
 
 
-def run(synthetic,editor=False):
+def run(synthetic,editor=False,prosemirror=False):
     global PHASE
     # Read-only /usr is trusted host tooling; this check pins the reference library.
     pin=json.loads((ROOT/'data/morphology-003-sources.json').read_text())['hunspell']
@@ -104,7 +104,7 @@ def run(synthetic,editor=False):
     if editor:
         PHASE='browser-comparison'
         from editor_profile import run_editor
-        report=run_editor(bundles,synthetic)
+        report=run_editor(bundles,synthetic,prosemirror)
         report['packages']=packages
         (OUT/'report.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps(report))
@@ -128,8 +128,8 @@ def run(synthetic,editor=False):
 
 if __name__=='__main__':
     try:
-        if sys.argv[1:] not in (['--synthetic'],['--real'],['--synthetic','--editor'],['--real','--editor']):raise pack.PackError('usage')
-        run(sys.argv[1]=='--synthetic','--editor' in sys.argv[2:])
+        if sys.argv[1:] not in (['--synthetic'],['--real'],['--synthetic','--editor'],['--real','--editor'],['--synthetic','--prosemirror'],['--real','--prosemirror']):raise pack.PackError('usage')
+        run(sys.argv[1]=='--synthetic',bool(sys.argv[2:]),'--prosemirror' in sys.argv[2:])
     except Exception:
         print(json.dumps({'passed':False,'error':'dictionary-smoke-failed','phase':PHASE}),file=sys.stderr)
         sys.exit(1)

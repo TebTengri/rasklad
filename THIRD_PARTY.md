@@ -41,3 +41,13 @@ Hunspell 1.7.5 (upstream commit и SHA-256 архивов в
 Hunspell/MySpell сохраняют собственные лицензии и notices; Emscripten/toolchain
 и runtime требуют полного списка attribution перед распространением бинарника.
 Рецепт и обвязка проекта MIT, бинарный release ещё не разрешён.
+
+The optional ProseMirror editor fixture uses the eight pinned packages in
+`tools/prosemirror/lock.json`. Each actual archive LICENSE was read and hashed;
+all are MIT. Complete byte-distinct notices: `data/notices/ProseMirror-MIT.txt`,
+`OrderedMap-MIT.txt`, `RopeSequence-MIT.txt`; per-package notices accompany ignored
+cached/derived code. ESM specifier/source-map rewriting is marked in the fixture's
+MODIFICATIONS. No npm install/scripts or third-party code vendoring. Registry
+reported gitHead is provenance metadata; archive/code pins are the tested identity.
+These permissions do not relicense model/dictionary/Hunspell components or approve
+real artifact distribution. See docs/PROSEMIRROR-ADAPTER-005.md.

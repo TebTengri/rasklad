@@ -21,7 +21,7 @@ def _read_pin(directory,rel,pin):
         os.close(fd)
 
 
-def run_editor(bundles,synthetic):
+def run_editor(bundles,synthetic,prosemirror=False):
     assets={}
     for lang,record,payload in bundles:
         for name,b in payload.items():assets['packs/'+lang+'/'+name]=b
@@ -81,9 +81,14 @@ def run_editor(bundles,synthetic):
 <label>Unregistered<textarea id="unknown"></textarea></label>
 <label>Code<textarea id="code" spellcheck="false"></textarea></label>
 <form><input type="password"><textarea id="protected"></textarea></form>''')
+    if prosemirror:
+        (fixture/'editor.html').write_text('''<!doctype html><meta charset="utf-8"><title>Rasklad ProseMirror test</title>
+<style>.ProseMirror{white-space:pre-wrap;border:1px solid #888;min-height:2em;padding:8px;margin:8px}body{font:18px monospace}</style>
+<h1>ProseMirror local owner integration</h1><div id="prose"></div><div id="unknown"></div><div id="code"></div>
+<form><input type="password"><div id="protected"></div></form>''')
     config={'manifest':manifest,'assets':{name:base64.b64encode(b).decode('ascii') for name,b in assets.items()},
-            'protocol':json.loads((ROOT/'data/browser-editor-001-protocol.json').read_text())}
-    result=subprocess.run(['/usr/bin/node',str(ROOT/'tests/browser/editor-run.mjs')],
+            'protocol':json.loads((ROOT/('data/prosemirror-editor-001-protocol.json' if prosemirror else 'data/browser-editor-001-protocol.json')).read_text())}
+    result=subprocess.run(['/usr/bin/node',str(ROOT/('tests/browser/prosemirror-run.mjs' if prosemirror else 'tests/browser/editor-run.mjs'))],
                           input=json.dumps(config).encode(),stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,check=False,timeout=70)
     if len(result.stdout)>16384:raise pack.PackError('editor-output')
     report=json.loads(result.stdout)

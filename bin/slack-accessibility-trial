@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Prepare one explicit Slack launch with a temporary accessibility flag.
+No file edits, signal/quit, profile extraction, debugging port or message action.
+Default is a plan. --run requires owner approval and Slack already closed by owner.
+"""
+from pathlib import Path
+import argparse,json,subprocess,sys
+ROOT=Path(__file__).resolve().parent.parent
+sys.path.insert(0,str(ROOT/'tools'))
+from slack_accessibility_probe import slack_pids
+COMMAND=('/usr/lib/slack/slack','--force-renderer-accessibility')
+
+
+def plan():return{'mode':'plan','command':list(COMMAND),'requiresSlackClosed':True,
+    'projectFileEdits':False,'usesNormalSlackProfile':True,'temporaryFlag':True,
+    'effect':'Expose Slack accessibility UI to local assistive clients until Slack exits',
+    'rollback':'Close Slack and launch normally without this flag',
+    'messagesSentByTool':False,'correctorStarted':False}
+
+
+def launch(running,spawn):
+    if running():return{'started':False,'reason':'close-slack-first'}
+    if not Path(COMMAND[0]).is_file():return{'started':False,'reason':'slack-not-installed'}
+    spawn(list(COMMAND),stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
+    return{'launchRequested':True,'temporaryAccessibilityFlag':True,'projectFileEdits':False,'correctorStarted':False}
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run',action='store_true');args=p.parse_args()
+    result=launch(slack_pids,subprocess.Popen) if args.run else plan()
+    print(json.dumps(result));return 1 if result.get('started') is False else 0
+if __name__=='__main__':
+    try:sys.exit(main())
+    except Exception:print(json.dumps({'error':'slack-trial-unavailable'}),file=sys.stderr);sys.exit(1)

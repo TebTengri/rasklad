@@ -255,3 +255,17 @@ release package. Aggregate/source fingerprints: [result](../data/browser-editor-
 regressions pass. Fixed examples do not establish linguistic accuracy or support
 for Gmail/Telegram/other editors. No extension/install/global gesture is included;
 double Super remains the planned manual operation. Distribution remains false.
+
+## Actual transactional editor
+
+`browser/prosemirror.js` now adapts the same verified session to a real upstream
+ProseMirror editor through public buffer/history APIs. It preserves mixed marks,
+annotations and native Undo/Redo without DOM insertion or execCommand. Owner
+classification and registration precede bounded prefix access; revocation/stale
+state and failed application dispatches disable safely. The host provides its
+existing editor/history instances; there is no global app discovery or injection.
+
+Real-profile tests passed 12 base cases +25 rich-editor/adversarial checks, plus
+10 new Node privacy/lifecycle tests. This is not Slack compatibility yet. Sources,
+full MIT notice handling, reproduction, exact result and exceptional Space behavior:
+[ProseMirror adapter](../docs/PROSEMIRROR-ADAPTER-005.md).

@@ -35,8 +35,12 @@ def main():
     parser=Parser(description=__doc__)
     parser.add_argument('--real',action='store_true')
     parser.add_argument('--editor',action='store_true',help='Connect pinned model/stems and exercise the owner-side textarea')
+    parser.add_argument('--prosemirror',action='store_true',help='Exercise the actual pinned transactional rich editor')
     parser.add_argument('--input-root',type=Path,help='Explicit rasklad checkout holding the four pinned files; required with --real')
     args=parser.parse_args()
+    if args.prosemirror:
+        args.editor=True
+        subprocess.run([sys.executable,str(ROOT/'bin/prepare-prosemirror')],check=True,stdout=subprocess.DEVNULL,timeout=30)
     if args.real != (args.input_root is not None):raise pack.PackError('usage')
     files=['tools/language_pack.py','tools/dictionary_smoke.py','browser/spell.js',
            'tests/browser/dictionary-smoke.mjs','tests/browser/isolated-chromium.mjs',
@@ -53,6 +57,9 @@ def main():
                 'data/browser-profile.json','data/notices/BROWSER-PROFILE-REVIEW.md','data/browser-editor-001-protocol.json',
                 'data/sources.json','data/experiment-002-protocol.json']
         if not args.real:files.append('build/browser-fixture/synthetic-conformance.json')
+    if args.prosemirror:
+        files+=['browser/prosemirror.js','tests/browser/prosemirror-run.mjs','data/prosemirror-editor-001-protocol.json',
+                'build/prosemirror-fixture/modules.json','build/prosemirror-fixture/sources.json','tools/prosemirror/lock.json']
     for f in files:regular(ROOT/f)
     mounts=[]
     if args.real:
@@ -90,7 +97,7 @@ def main():
     for f in files:command+=['--ro-bind',str(ROOT/f),'/lab/'+f]
     command+=mounts+['--chdir','/lab','--clearenv','--setenv','PATH','/usr/bin','--setenv','HOME','/tmp',
                      '--setenv','PYTHONDONTWRITEBYTECODE','1','--','/usr/bin/python3','/lab/tools/dictionary_smoke.py',
-                     '--real' if args.real else '--synthetic']+(['--editor'] if args.editor else [])
+                     '--real' if args.real else '--synthetic']+(['--prosemirror'] if args.prosemirror else ['--editor'] if args.editor else [])
     result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=110)
     if result.returncode or len(result.stdout)>16384:
         try:phase=json.loads(result.stderr[:4096]).get('phase')

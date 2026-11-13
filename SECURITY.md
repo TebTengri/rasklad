@@ -183,3 +183,33 @@ Registration occurs only after ready; queries remain synchronous and unlogged.
 The owner-side test uses fixed fictional text, no messaging account or host profile.
 The browser receives only minimal editor HTML plus explicitly verified in-memory
 assets; outer mounts do not expose model/seat/home directories as a tree.
+
+## ProseMirror owner adapter
+
+The owner passes public editor/history APIs and an explicit range classifier.
+No registered context is inferred from a window title or DOM appearance. Metadata
+(code/link/current stored marks, role, credential form, focus, composition) gates
+all bounded prefix extraction. Exact EditorState identity and registration are
+rechecked after synchronous evidence, including revocation/reconfigure. Per-run
+marks are retained and native Space marks applied separately. Native history
+boundaries provide Undo/Redo without execCommand/replay. WeakMap records contain
+only busy/disabled flags, no queries/documents. Stale/unexpected owner changes are
+not rolled back; an exceptional Space may be consumed rather than misapplied.
+The verified third-party editor is executed only in the closed fixture; it is not
+installed into Slack. Details: docs/PROSEMIRROR-ADAPTER-005.md.
+
+## Native Slack target
+
+The owner chose native desktop Slack. The metadata-only developer probe scopes
+accessibility peers to that executable and whitelists four non-text methods. It
+cannot request text/names/attributes/values, edit/focus/actions or register event
+listeners through its guarded reader. Only counts/enums/booleans leave the probe;
+peer IDs and object paths do not. The current snapshot had no matching Slack a11y
+connection and queried zero UI nodes. Native correction is NOT enabled.
+
+A separately reviewable launch helper defaults to a plan and never kills a running
+Slack. Its optional explicit run requests only force-renderer-accessibility, no
+config/app patch or debugging port, and starts no corrector. This exposes UI to
+local assistive clients and uses Slack's normal app profile; it requires owner
+approval before launch. The probe still reads metadata only. Trial/rollback and
+unresolved buffer/Undo/code-role gates: docs/SLACK-DESKTOP-001.md.
