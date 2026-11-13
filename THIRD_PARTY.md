@@ -24,3 +24,12 @@
 5. Для каждого словаря/weights провести отдельный release review, сохранить происхождение, полные notices и пометки преобразований. Сжатие и обучение не отменяют условий источника.
 
 Первичные источники: [Qt licensing](https://doc.qt.io/qt-6/licensing.html), [Qt LGPL obligations](https://www.qt.io/development/open-source-lgpl-obligations), [Qt Quick Controls license/attributions](https://doc.qt.io/qt-6/qtquickcontrols-index.html#license-and-attributions), [Hunspell 1.7.5](https://github.com/hunspell/hunspell/tree/v1.7.5), [паспорта и первичные словарные notices](data/README.md). Это техническая проверка известных источников и границ использования; спорные права на будущие артефакты не считаются разрешёнными автоматически.
+
+Опциональный developer-кандидат `hunspell-wasm@0.3.0` (rotemdan): registry metadata
+декларирует `(LGPL-2.0 OR GPL-2.0 OR MPL-1.1)`, архив содержит COPYING/COPYING.LESSER/
+COPYING.MPL. Это не выбранная лицензия бинарного релиза: точный source build/version
+WASM и полный комплект Hunspell/MySpell/Emscripten notices требуют отдельной
+проверки. Lock: tools/browser_spell/candidate.json, release_approved=false.
+Код/бинарник находятся только в ignored build/ для закрытого synthetic-теста,
+не vendored и не включены в default build/runtime. Собственная C API обвязка MIT;
+это не перелицензирует сторонний engine.

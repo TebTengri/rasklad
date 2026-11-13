@@ -1,50 +1,23 @@
 // SPDX-License-Identifier: MIT
 // Closed synthetic browser integration. No host profile, bus, input or network.
-import {spawn, execFileSync} from 'node:child_process';
+import {execFileSync} from 'node:child_process';
 import {writeFileSync,readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {resolve, dirname} from 'node:path';
 import assert from 'node:assert/strict';
+import {startIsolatedChromium} from './isolated-chromium.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 execFileSync(resolve(root, 'bin/build-browser-fixture'), {stdio:'ignore'});
-const args = ['--unshare-all','--die-with-parent','--new-session',
-  '--ro-bind','/usr','/usr','--symlink','usr/lib','/lib','--symlink','usr/lib','/lib64',
-  '--proc','/proc','--dev','/dev','--tmpfs','/tmp','--dir','/home','--dir','/home/test',
-  '--dir','/etc','--ro-bind','/etc/fonts','/etc/fonts','--ro-bind',root,'/lab',
-  '--setenv','HOME','/home/test','--setenv','XDG_RUNTIME_DIR','/tmp',
-  '--unsetenv','DBUS_SESSION_BUS_ADDRESS','--','/usr/lib/chromium/chromium',
-  '--headless','--disable-gpu','--disable-background-networking','--disable-component-update',
-  '--no-first-run','--no-default-browser-check','--user-data-dir=/tmp/profile',
-  '--remote-debugging-pipe','about:blank'];
-const child = spawn('/usr/bin/bwrap',args,{stdio:['ignore','ignore','pipe','pipe','pipe'],env:{PATH:'/usr/bin'}});
-let sequence=0, buffer='', stderr='', alive=true; const pending=new Map();
-child.stderr.on('data',d=>{stderr=(stderr+d).slice(-4000);});
-const exited = new Promise(resolve=>child.once('exit',(code,signal)=>{
-  alive=false;
-  for(const {reject} of pending.values()) reject(new Error('isolated browser exited'));
-  pending.clear(); resolve({code,signal});
-}));
-for(const pipe of [child.stdio[3],child.stdio[4]]) pipe.on('error',()=>{});
-child.stdio[4].on('data',data=>{
-  buffer+=data; let at;
-  while((at=buffer.indexOf('\0'))>=0){
-    const message=JSON.parse(buffer.slice(0,at)); buffer=buffer.slice(at+1);
-    if(message.id){const entry=pending.get(message.id);pending.delete(message.id);
-      if(message.error) entry?.reject(new Error('CDP '+message.error.message));else entry?.resolve(message.result);}
-  }
-});
-function call(method,params={},sessionId){return new Promise((resolve,reject)=>{
-  if(!alive){reject(new Error('isolated browser already closed'));return;}
-  const id=++sequence;pending.set(id,{resolve,reject});
-  child.stdio[3].write(JSON.stringify({id,method,params,...(sessionId?{sessionId}:{})})+'\0');
-});}
-const deadline=setTimeout(()=>child.kill('SIGKILL'),45000);
+const browser=startIsolatedChromium(root);
+const {call}=browser;
 let passed=0;
 try {
   const version=await call('Browser.getVersion');
-  const {targetId}=await call('Target.createTarget',{url:'file:///lab/build/browser-fixture/fixture.html'});
+  const {targetId}=await call('Target.createTarget',{url:'about:blank'});
   const {sessionId}=await call('Target.attachToTarget',{targetId,flatten:true});
   const c=(method,params)=>call(method,params,sessionId);
+  await c('Page.enable');
+  await Promise.all([browser.waitForEvent('Page.loadEventFired',sessionId),c('Page.navigate',{url:'file:///lab/build/browser-fixture/fixture.html'})]);
   async function evaluate(expression){const x=await c('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
     if(x.exceptionDetails)throw new Error('fixture evaluation failed');return x.result.value;}
   await c('Emulation.setDeviceMetricsOverride',{width:1000,height:1050,deviceScaleFactor:1,mobile:false});
@@ -167,8 +140,4 @@ try {
   assert.deepEqual(browserConformance,{scores:1176,decisions:2464,routerStates:512,conversions:27,lexiconQueries:[...nativeGold.lexicons.cases,...nativeGold.lexicons.mutations].reduce((n,row)=>n+row.checks.length,0),lexiconMutations:477});passed++;
   console.log(JSON.stringify({passed,browser:version.product,browserConformance,timing,jsHeapUsedBytesBeforeConformance:heap.usedSize,scope:'synthetic owned textarea, numeric model and dictionary fixtures; no real data or host session'}));
 } catch(error){console.error(JSON.stringify({passed,error:error.message}));process.exitCode=1;}
-finally {
-  try{await call('Browser.close');}catch{}
-  const result=await exited;clearTimeout(deadline);
-  if(result.code!==0){console.error(JSON.stringify({browserExit:result,diagnostic:stderr}));process.exitCode=1;}
-}
+finally {try{await browser.close();}catch(error){console.error(JSON.stringify({error:error.message}));process.exitCode=1;}}

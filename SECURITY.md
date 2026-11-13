@@ -103,3 +103,18 @@ best-effort зануляет только собственную память. �
 2026-11-13 владелец явно выбрал MIT для собственного кода/документации, добавлен
 LICENSE. Предыдущий pending-статус в исторических отчётах не является текущим;
 правила допуска/лицензии сторонних файлов и данных остаются отдельными.
+
+Опциональная browser full/control-обвязка получает уже созданный trusted module,
+не выполняет fetch/код-загрузку. Проверяет UTF8/NUL/size до создания четырёх
+handles в одном heap, удаляет временные metadata-only MEMFS файлы, не сохраняет
+запросы. Query UTF16 1..32, without Cc/unpaired surrogates; временные UTF8/Cstring
+копии зануляются перед free best effort, не внутренние allocator buffers engine.
+Trap отключает профиль; dispose/ошибки constructor чистят зарегистрированные
+handles. Provenance/version, source offer/notices и ограничение максимального
+WASM heap ещё не допущены к выпуску. Candidate lock release_approved=false;
+никаких бинарников/чужого кода в Git или default runtime.
+
+Закрытый browser fixture теперь монтирует только build/browser-fixture, не весь
+проект/build; никаких auth/cache/реальных артефактов ему не открывается. Общее
+CDP управление выделено в isolated-chromium.mjs и ожидает loadEventFired до
+использования документа. Подробнее: browser/README.md (opt-in full/control).

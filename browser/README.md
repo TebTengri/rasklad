@@ -61,7 +61,8 @@ canonicalizeToken. Browser router валидирует metadata и выбира�
 из общей таблицы, не переписывая evidence policy вручную. Browser `scorer.js`
 реализует арифметику формата RSKN и проверен по C++ эталону. Это JS port,
 не запуск C++ бинарника. `evidence.js` связывает scorer с явными full/control/stem
-интерфейсами. Настоящий Hunspell и реальные веса ещё не подключены. Fixture-only evidence содержит несколько
+интерфейсами. Основной fixture пока не использует настоящие словари/веса; отдельный Hunspell
+кандидат проверяется opt-in тестом ниже. Fixture-only evidence содержит несколько
 явно синтетических словарных примеров и искусственную числовую модель: согласие
 источников, известный ввод, неоднозначность и dictionary-only. Это не качество
 распознавания и не словарь продукта.
@@ -84,6 +85,51 @@ RSKF **не заменяет full/control Hunspell**: canonical keys не сох
 морфологию и словарные flags. RSKP pair parser пока не перенесён; EN/RU загружаются
 отдельными RSKF. Реальные .aff/.dic/артефакты не читались и не выпускались.
 
+## Опциональная full/control Hunspell-обвязка
+
+`spell.js` создаёт четыре handles (EN/RU × full/control) в одном заранее
+инициализированном Emscripten module. Control получается тем же удалением
+PFX/SFX-строк, что native; остальные flags/case/compound правила остаются
+у Hunspell. Typed query не пишется в MEMFS: только временный UTF8 malloc-буфер,
+который адаптер зануляет перед free. Это best effort, не гарантия стирания
+внутренних копий Hunspell/JS. Ошибка native query выключает profile; отсутствие
+engine не превращается в false membership. На входе caps: aff 1 MiB, dic 16 MiB.
+Модуль не загружает код/данные и не осуществляет сеть самостоятельно.
+
+Отдельный developer test работает только с artificial .aff/.dic/model:
+
+```sh
+# Обычный prepare сети не использует; кандидат должен быть заранее проверен.
+bin/prepare-browser-spell
+# Только явный флаг разрешает скачать закреплённый архив КОДА в ignored build/:
+# bin/prepare-browser-spell --fetch-candidate
+node tests/browser/spell.test.mjs
+node tests/browser/spell-run.mjs
+```
+
+`tools/browser_spell/candidate.json` закрепляет hunspell-wasm@0.3.0, SHA-256
+архива/loader/WASM и `release_approved=false`. Нет npm install, lifecycle scripts,
+реальных словарей или нового обязательного runtime dependency. Код/бинарник
+кандидата не вложены в Git и не подключены к default fixture. Браузеру видна
+только generated fixture directory, а не весь проект/build/home; sandbox и
+network namespace включены. Loader получает bytes напрямую, попыток fetch/XHR
+в сквозном прогоне — 0.
+
+Результат: 93 native full/control cases и 7 byte-exact control cases совпали с
+установленным Hunspell 1.7.5. Дополнительно прошли 12 browser assertions (case,
+сгенерированная словоформа, следующая буква, native Undo, dispose/fail-open обычного
+ввода), 5 Node cleanup/guard tests и прежние 32 browser assertions. Пример:
+`Ghbdtn → Привет`, `rjns → коты` через реальные affix rules искусственного словаря.
+Четыре engine использовали 18 284 544 B WASM heap; setup+проверки заняли ~84 ms
+в одном прогоне. Это не RSS, не real-dictionary latency и не скорость нажатия.
+
+**До выпуска:** версия Hunspell внутри чужого WASM и связь с конкретным source
+build не аттестованы. Loader допускает рост heap вплоть до 2 GiB; текущий тест
+этого не достигает. Совпадение 93 случаев не доказывает полную эквивалентность
+1.7.5. Следующий шаг — воспроизводимая сборка выбранного upstream source с
+проверяемой версией, ограниченным heap и полными notices. Затем отдельный
+release-допуск реальных данных. MIT проекта не заменяет лицензии кандидата.
+
 ## Ограничения и следующий проход
 
 - Только собственный plain textarea, US→RU. Gmail/Telegram, contenteditable,
@@ -101,7 +147,7 @@ RSKF **не заменяет full/control Hunspell**: canonical keys не сох
   нет. Нужна интеграция реального владельца редактора с ролями/диапазонами.
 - Нет расширения, host permissions, native messaging, установщика и ежедневного
   режима. Policy, арифметический scorer и evidence binding уже подключены; следующий
-  шаг: точная словарная реализация, разрешённые данные и проверка integrity,
+  шаг: воспроизводимая сборка/допуск полного словарного engine, разрешённые данные и проверка integrity,
   затем адаптер конкретного редактора и проверяемый пакет с минимальными правами.
   Не выдавать эту fixture за совместимость со всеми приложениями.
 - Shell/TUI остаются отдельным milestone, браузерная проверка их не заменяет.

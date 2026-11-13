@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Prepare optional synthetic spell tests. Only --fetch-candidate downloads code.
+Never runs npm/install scripts, opens real dictionaries or installs anything.
+"""
+from pathlib import Path
+import argparse,hashlib,json,subprocess,tarfile,io,urllib.request
+root=Path(__file__).resolve().parent.parent
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--fetch-candidate',action='store_true',help='Explicitly download the pinned developer code archive, not approved for release')
+args=parser.parse_args()
+lock=json.loads((root/'tools/browser_spell/candidate.json').read_text())
+if lock['release_approved'] is not False:raise SystemExit('This tool accepts a developer candidate only')
+for name in ['build','build/wasm-source-audit','build/browser-spell-native']:
+ p=root/name
+ if p.is_symlink():raise SystemExit('Refusing symlink directory')
+ p.mkdir(parents=True,exist_ok=True)
+build=root/'build/browser-spell-native'
+cache=root/'build/wasm-source-audit'
+if args.fetch_candidate:
+ with urllib.request.urlopen(lock['tarball_url'],timeout=30) as response:data=response.read(16_000_001)
+ if len(data)>16_000_000 or hashlib.sha256(data).hexdigest()!=lock['tarball_sha256']:raise SystemExit('Candidate archive hash/size mismatch')
+ target=cache/'hunspell-wasm-0.3.0'
+ if target.is_symlink():raise SystemExit('Refusing symlink extraction directory')
+ target.mkdir(exist_ok=True)
+ with tarfile.open(fileobj=io.BytesIO(data),mode='r:gz') as archive:
+  members=archive.getmembers()
+  if len(members)>1000 or sum(x.size for x in members)>32_000_000:raise SystemExit('Candidate unpack bounds exceeded')
+  if any(x.issym() or x.islnk() for x in members):raise SystemExit('Links forbidden in candidate archive')
+  archive.extractall(target,filter='data')
+for field in ['loader','wasm']:
+ path=root/lock[field+'_path']
+ if path.is_symlink() or not path.resolve().is_relative_to(cache.resolve()):raise SystemExit('Unsafe candidate path')
+ if not path.is_file():raise SystemExit('Candidate absent; review lock then explicitly use --fetch-candidate (no automatic download)')
+ if hashlib.sha256(path.read_bytes()).hexdigest()!=lock[field+'_sha256']:raise SystemExit('Candidate file hash mismatch')
+for name in ['Makefile','native_spell_fixture','native.json','build.txt']:
+ if (build/name).is_symlink():raise SystemExit('Refusing symlink output')
+subprocess.run([str(root/'bin/build-browser-fixture')],check=True,stdout=subprocess.DEVNULL,timeout=180)
+with (build/'build.txt').open('w') as log:
+ subprocess.run(['qmake6','-o','Makefile',str(root/'tools/browser_spell/native.pro')],cwd=build,check=True,stdout=log,timeout=30)
+ subprocess.run(['make','-j2'],cwd=build,check=True,stdout=log,timeout=120)
+raw=subprocess.check_output([str(build/'native_spell_fixture')],timeout=30)
+gold=json.loads(raw)
+if gold.get('schema')!=1 or gold.get('nativeVersion')!=lock['native_reference_version']:raise SystemExit('Native reference version/schema mismatch')
+(build/'native.json').write_bytes(raw)
+print(json.dumps({'candidate':lock['name']+'@'+lock['version'],'releaseApproved':False,'nativeVersion':gold['nativeVersion'],'syntheticSpellCases':sum(len(p['cases']) for p in gold['profiles'].values()),'realDataOpened':False}))
