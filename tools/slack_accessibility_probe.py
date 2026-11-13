@@ -5,7 +5,7 @@ No Text/Value/Name/Description/Attributes getters, writes, signals, input or set
 """
 from collections import deque
 from pathlib import Path
-import argparse,json,re,subprocess,sys,time,threading
+import argparse,json,re,subprocess,sys,time,threading,os
 
 ACCESSIBLE='org.a11y.atspi.Accessible'
 ROOT_PATH='/org/a11y/atspi/accessible/root'
@@ -32,7 +32,8 @@ def slack_pids():
     for row in result.stdout.splitlines():
         if not row.isdecimal():continue
         try:
-            if (Path('/proc')/row/'exe').resolve()==Path('/usr/lib/slack/slack'):found.add(int(row))
+            process=Path('/proc')/row
+            if process.stat().st_uid==os.getuid() and (process/'exe').resolve()==Path('/usr/lib/slack/slack'):found.add(int(row))
         except OSError:pass
     return found
 

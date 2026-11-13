@@ -12,9 +12,10 @@
     "safeAutoCorrection": false
   },
   "scope": "Package/launcher/process flags and bounded accessibility metadata only; no private content, app profile/config or environment inspected.",
-  "trial": "Prepared only. Accessibility flag launch/restart requires separate approval; not executed.",
+  "trial": "Owner approved temporary launch; two attempts refused before spawn because matching Slack processes remained. No launch/kill/config change. Awaiting confirmation of the target machine/instance.",
   "source_sha256": {
-    "tools/slack_accessibility_probe.py": "92645c2e70bc65c5c97ef079c0b065c97c0410ff1d9809686b5bb5c8e26586f2",
+    "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
     "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0"
-  }
+  },
+  "updated_local_date": "2026-11-14"
 }

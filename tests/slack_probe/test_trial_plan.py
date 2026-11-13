@@ -11,3 +11,13 @@ class TrialPlanTests(unittest.TestCase):
  def test_running_slack_is_never_killed_or_relaunched(self):
   calls=[];r=trial.launch(lambda:{123},lambda *a,**k:calls.append(a));self.assertFalse(r['started']);self.assertEqual(calls,[])
 if __name__=='__main__':unittest.main()
+
+class FixedLaunchTests(unittest.TestCase):
+ def test_approved_launch_uses_only_the_reviewed_flag_and_no_shell(self):
+  from unittest.mock import patch
+  calls=[]
+  with patch.object(trial.Path,'is_file',return_value=True):
+   result=trial.launch(lambda:set(),lambda *args,**kwargs:calls.append((args,kwargs)))
+  self.assertTrue(result['launchRequested']);self.assertFalse(result['correctorStarted'])
+  self.assertEqual(calls[0][0][0],['/usr/lib/slack/slack','--force-renderer-accessibility'])
+  self.assertTrue(calls[0][1]['start_new_session']);self.assertNotIn('shell',calls[0][1])

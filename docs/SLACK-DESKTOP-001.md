@@ -38,7 +38,7 @@ This means that path is unavailable in the observed launch, not that Slack can
 never support it. Focused editable interface presence would still NOT authorize
 correction: code/link/mention/secret roles, native Undo, transaction freshness and
 exact limited replace must be established first. safeAutoCorrection stays false.
-Aggregate: data/slack-native-001-result.json. Six probe/launch-plan guard tests
+Aggregate: data/slack-native-001-result.json. Seven probe/launch-plan guard tests
 ensure text/write methods are rejected and a running Slack is never terminated.
 
 Primary interface reference:
@@ -72,3 +72,12 @@ working application's visibility and the need to quit it require owner approval.
 The flag is not written to configuration; to end the trial, quit Slack and launch
 normally without it. No guarantee of undo/format support or actual correction is
 implied merely by accessibility becoming available. No flag launch has occurred.
+
+### Trial status — local date 2026-11-14
+
+The owner approved the temporary launch. Two invocations stopped before spawn
+because matching same-user Slack processes still existed. No process was killed
+or restarted and no UI/profile content was read. Target-machine/instance
+confirmation is pending; approval remains valid for the reviewed launch after
+that is resolved. The launcher intentionally does not turn a closed-window
+confirmation into permission to terminate a running app.
