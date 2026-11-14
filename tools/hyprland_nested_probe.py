@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 INSIDE = Path(__file__) == Path('/lab/probe.py')
 CONFIG = '''monitor = , 1000x800@30, auto, 1
 debug {
+ disable_logs = false
  enable_stdout_logs = true
 }
 xwayland {
@@ -58,7 +59,7 @@ def endpoint(env):
     return runtime / name
 
 
-def sandbox_args(directory, parent_fd):
+def sandbox_args(directory, parent_fd, metadata_plan=None):
     a = ['/usr/bin/bwrap', '--unshare-all', '--die-with-parent', '--new-session',
          '--cap-drop', 'ALL', '--clearenv', '--ro-bind', '/usr', '/usr',
          '--symlink', 'usr/bin', '/bin', '--symlink', 'usr/lib', '/lib',
@@ -69,6 +70,16 @@ def sandbox_args(directory, parent_fd):
          '--ro-bind', str(ROOT / 'tools/hyprland_nested_probe.py'), '/lab/probe.py',
          '--ro-bind', str(directory / 'hypr.conf'), '/lab/hypr.conf',
          '--chdir', '/home/lab']
+    if metadata_plan is not None:
+        primary = metadata_plan['statOnlyPrimary']
+        snapshot = Path(metadata_plan['sysfs'])
+        if (not re.fullmatch(r'/dev/dri/card[0-9]+', primary)
+                or snapshot != directory / 'gpu-metadata/sys'
+                or metadata_plan.get('hostSysfsBind') is not False
+                or metadata_plan.get('primaryBindMustBeNodevReadOnly') is not True):
+            raise ValueError('metadata_mount_plan')
+        a += ['--ro-bind', str(snapshot), '/sys', '--ro-bind', primary, primary,
+              '--setenv', 'RASKLAD_STAT_ONLY_PRIMARY', primary]
     for name in ('passwd', 'group', 'machine-id'):
         a += ['--ro-bind', str(directory / name), '/etc/' + name]
     env = {'PATH': '/usr/bin', 'HOME': '/home/lab', 'LANG': 'C.UTF-8',
@@ -107,6 +118,17 @@ def classify_startup(payload):
     return 'unclassified_startup_failure'
 
 
+def require_stat_only_mounts(mountinfo, nodes):
+    """A metadata-only card must be a distinct RO+NODEV mount, never a device grant."""
+    rows = [line.split() for line in mountinfo.splitlines()]
+    for node in nodes:
+        if not re.fullmatch(r'/dev/dri/card[0-9]+', node):
+            raise ValueError('metadata_node_shape')
+        entries = [row for row in rows if len(row) > 6 and row[4] == node]
+        if len(entries) != 1 or not {'ro', 'nodev'}.issubset(entries[0][5].split(',')):
+            raise ValueError('metadata_node_not_stat_only')
+
+
 def startup_reason():
     # Only this namespace's bounded logs; return enums, never raw display/input data.
     payload = b''
@@ -128,6 +150,13 @@ def inside():
         raise ValueError('parent_fd_shape')
     # The parent display is never mounted. Only this compositor gets its FD.
     env = dict(os.environ, WAYLAND_SOCKET=str(fd))
+    primary = env.pop('RASKLAD_STAT_ONLY_PRIMARY', None)
+    if primary:
+        try:
+            require_stat_only_mounts(Path('/proc/self/mountinfo').read_text(), [primary])
+        except BaseException:
+            os.close(fd)
+            raise
     os.chmod('/run/lab', 0o700)
     child = None
     try:
@@ -158,7 +187,7 @@ def inside():
                 child.wait(timeout=1)
 
 
-def run():
+def run(with_metadata=False):
     if os.geteuid() == 0:
         raise ValueError('root_not_admitted')
     spec = importlib.util.spec_from_file_location('lab_base', ROOT / 'tools/fcitx_lab_runner.py')
@@ -176,6 +205,17 @@ def run():
     directory = Path(tempfile.mkdtemp(prefix='hypr-probe-', dir=base.ensure_private_base(ROOT)))
     child = None
     try:
+        metadata_plan = None
+        gpu_metadata = None
+        collector = None
+        if with_metadata:
+            module_path = ROOT / 'tools/drm_metadata_snapshot.py'
+            base.regular_file(module_path)
+            spec = importlib.util.spec_from_file_location('drm_metadata', module_path)
+            collector = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(collector)
+            gpu_metadata = collector.collect_metadata()
+            metadata_plan = collector.write_snapshot(gpu_metadata, directory / 'gpu-metadata')
         (directory / 'hypr.conf').write_text(CONFIG)
         (directory / 'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
         (directory / 'group').write_text(f'lab:x:{os.getgid()}:\n')
@@ -188,7 +228,13 @@ def run():
                 raise ValueError('parent_peer_owner')
             parent.settimeout(None)
             with (directory / 'result').open('w+b') as output:
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno()), pass_fds=(parent.fileno(),),
+                if gpu_metadata is not None:
+                    for node in gpu_metadata['nodes']:
+                        path = Path('/dev/dri') / node['name']
+                        current = path.stat()
+                        if path.is_symlink() or not stat.S_ISCHR(current.st_mode) or current.st_rdev != os.makedev(node['major'], node['minor']):
+                            raise ValueError('changed_gpu_identity')
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), metadata_plan), pass_fds=(parent.fileno(),),
                                          env={'PATH': '/usr/bin'}, stdin=subprocess.DEVNULL,
                                          stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=limits)
@@ -202,6 +248,8 @@ def run():
                 result.update(schema=1, parentDisplayConnection=True, renderNodeGranted=True,
                               hostConfigurationWritten=False, slackConnected=False,
                               typingTested=False, maxProbeSeconds=16)
+                result.update(gpuMetadataSnapshotUsed=with_metadata, hostSysfsBound=False,
+                              primaryStatOnly=with_metadata)
                 result['passed'] = child.returncode == 0 and result.get('passed') is True
                 return result
     finally:
@@ -220,12 +268,16 @@ def main():
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--run-approved', action='store_true')
     modes.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--gpu-metadata', action='store_true', help='use bounded reconstructed PCI metadata; no host /sys mount')
     args = parser.parse_args()
     try:
-        result = inside() if args.inside else run() if args.run_approved else {
+        if args.inside and args.gpu_metadata:
+            raise ValueError('outer_metadata_option_only')
+        result = inside() if args.inside else run(args.gpu_metadata) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostConnectionOpened': False,
             'scope': 'one nested Hyprland window; one render node; no Slack/IME/input tests',
-            'requiresOwnerApproval': True, 'maxProbeSeconds': 16}
+            'requiresOwnerApproval': True, 'gpuMetadataSnapshotPlanned': args.gpu_metadata,
+            'hostSysfsBound': False, 'maxProbeSeconds': 16}
         print(json.dumps(result, sort_keys=True))
         return 0 if result.get('passed', True) else 1
     except (OSError, ValueError, KeyError, subprocess.SubprocessError):

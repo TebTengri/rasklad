@@ -2,6 +2,14 @@
 
 ## Актуальная контрольная точка
 
+Подготовлено минимальное исправление discovery: tools/drm_metadata_snapshot.py
+и --gpu-metadata в nested probe. Доказательства HYPRLAND-BACKEND-DIAGNOSIS.md:
+FD consumed actualHypr; исправлен disable_logs; synthetic controls -22/0/-19;
+реальные metadata snapshot + оба nodes RO/NODEV дают libdrm0/0 без GPU open/display.
+31 guards pass. Два reviewer-агента участвовали, затем достигли usage limit;
+Claude review timeout не засчитан. Следующий конкретный шаг — согласованный
+одиночный --run-approved --gpu-metadata (~16s), не broad sysfs/devices fallback.
+
 Вторая отдельно разрешённая проба подтвердила backend_creation_failed;
 data/hyprland-nested-002-result.json. Source review указывает на DRM discovery /
 allocator dependency, но точный отказ не установлен. Следующий шаг — подробный

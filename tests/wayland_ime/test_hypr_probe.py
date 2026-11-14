@@ -12,6 +12,20 @@ spec.loader.exec_module(probe)
 
 
 class ProbeBoundaries(unittest.TestCase):
+    def test_stat_only_card_requires_readonly_and_nodev(self):
+        row = '31 20 0:5 /null /dev/dri/card0 ro,nosuid,nodev - devtmpfs udev rw'
+        probe.require_stat_only_mounts(row, ['/dev/dri/card0'])
+        for bad in (row.replace(',nodev', ''), row.replace('ro,nosuid', 'rw,nosuid'), ''):
+            with self.assertRaisesRegex(ValueError, 'metadata_node_not_stat_only'):
+                probe.require_stat_only_mounts(bad, ['/dev/dri/card0'])
+
+    def test_stat_only_guard_rejects_unexpected_or_shadowed_node(self):
+        with self.assertRaises(ValueError):
+            probe.require_stat_only_mounts('', ['/dev/dri/renderD128'])
+        row = '31 20 0:5 /null /dev/dri/card0 ro,nodev - devtmpfs udev rw'
+        with self.assertRaises(ValueError):
+            probe.require_stat_only_mounts(row+'\n'+row, ['/dev/dri/card0'])
+
     def test_specific_error_takes_priority_over_generic_abort(self):
         self.assertEqual(probe.classify_startup(b'drmGetDeviceFromDevId failed\nCBackend::create() failed'),
                          'drm_device_discovery_failed')
@@ -41,6 +55,21 @@ class ProbeBoundaries(unittest.TestCase):
             self.assertNotIn(forbidden, args)
         self.assertNotIn('fcitx5', args)
         self.assertNotIn('slack', args)
+
+    def test_metadata_mounts_are_reconstructed_and_primary_is_nodev(self):
+        directory = Path('/fixture')
+        plan = {'sysfs': '/fixture/gpu-metadata/sys', 'statOnlyPrimary': '/dev/dri/card1',
+                'primaryBindMustBeNodevReadOnly': True, 'hostSysfsBind': False}
+        args = probe.sandbox_args(directory, 9, plan)
+        binds = [args[i+1:i+3] for i, value in enumerate(args) if value == '--ro-bind']
+        self.assertIn(['/fixture/gpu-metadata/sys', '/sys'], binds)
+        self.assertIn(['/dev/dri/card1', '/dev/dri/card1'], binds)
+        self.assertFalse(any(source == '/sys' or source.startswith('/sys/') for source, _ in binds))
+        self.assertEqual(args.count('--dev-bind'), 1)
+        for bad in ({**plan, 'sysfs': '/sys'}, {**plan, 'statOnlyPrimary': '/dev/dri/renderD128'},
+                    {**plan, 'hostSysfsBind': True}):
+            with self.assertRaises(ValueError):
+                probe.sandbox_args(directory, 9, bad)
 
     def test_host_cannot_call_inner(self):
         with patch.object(probe, 'INSIDE', False), patch.object(probe.subprocess, 'Popen') as popen:

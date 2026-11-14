@@ -55,3 +55,10 @@ namespace без sysfs И device nodes. Сравнение меняет два �
 точным ошибкам upstream, проверить необходимые metadata paths libdrm, затем
 провести ревью минимального mount plan. Без повторного blind запуска и без
 автоматического предоставления /sys, /dev/dri целиком или KMS/input устройств.
+
+Последующий разбор и подготовка исправления: HYPRLAND-BACKEND-DIAGNOSIS.md.
+Дополнительная опция --gpu-metadata строит собственный минимальный sysfs
+snapshot; primary card только NODEV/RO identity, renderD128 остаётся единственным
+открываемым устройством. Runtime guard проверяет primary mount flags до запуска.
+RO discovery с настоящими metadata и двумя stat-only nodes прошёл без GPU/display.
+Применение этого исправления в live nested Hyprland ещё не выполнялось.
