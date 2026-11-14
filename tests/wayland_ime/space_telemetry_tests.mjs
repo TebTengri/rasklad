@@ -45,9 +45,9 @@ test('unknown targets/types become enums and forbidden key/data/id getters are n
   f.emitUnknown('keydown',{code:'Space',keyCode:229});
   f.emitUnknown('input',{inputType:'PRIVATE_TYPE_SENTINEL'});
   const snap=await probe.snapshot();
-  assert.equal(snap.valid,true);assert.equal(snap.records.length,2);
-  assert.equal(snap.records[0].targetIndex,-1);assert.equal(snap.records[0].keyCodeIs229,true);
-  assert.equal(snap.records[1].inputTypeIndex,-1);
+  assert.equal(snap.valid,true);assert.equal(snap.records.length,3);
+  assert.equal(snap.records[1].targetIndex,-1);assert.equal(snap.records[1].keyCodeIs229,true);
+  assert.equal(snap.records[2].inputTypeIndex,-1);
   assert.equal(JSON.stringify(snap).includes('PRIVATE'),false);
   await probe.stop();assert.equal(countListeners(f),0);
 });
@@ -100,3 +100,76 @@ for(const method of ['begin','arm','snapshot','stop']) {
     assert.equal(countListeners(f),0);
   });
 }
+
+// The mock emits controlled events for fault tests only; live fixtures never do.
+test('keyboard code classes retain no raw code and do not read key/data',async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  for(const code of ['Space','Unidentified','','PRIVATE_CODE'])f.emit('keydown',{code,keyCode:229});
+  const s=await p.snapshot();assert.deepEqual(s.records.map(r=>r.codeClassIndex),[0,1,2,3]);
+  assert.ok(s.records.every(r=>r.keyCodeIs229));assert.equal(JSON.stringify(s).includes('PRIVATE'),false);
+  await p.stop();
+});
+test('input seen before await survives registration gap and wait is one shot',async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  f.emit('input',{inputType:'insertText'});
+  const r=await p.awaitInputAfterFailure();assert.equal(r.valid,true);assert.equal(r.observedBeforeWait,true);
+  assert.equal((await p.awaitInputAfterFailure()).valid,false);assert.equal(f.timers.size,0);await p.stop();
+});
+test('only actual input wakes wait, including unknown target',async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  const pending=p.awaitInputAfterFailure();assert.equal(f.timers.size,1);
+  f.emit('beforeinput',{inputType:'insertText',defaultPrevented:true});assert.equal(f.timers.size,1);
+  f.emitUnknown('input',{inputType:'insertText'});
+  const r=await pending;assert.equal(r.observedDuringWait,true);assert.equal(f.timers.size,0);
+  const s=await p.snapshot();assert.equal(s.records[1].targetIndex,-1);await p.stop();
+});
+test('beforeinput alone reaches bounded deadline, never signals successful delivery',async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  f.emit('beforeinput',{inputType:'insertText',defaultPrevented:true});
+  const r=await p.awaitInputAfterFailure();assert.equal(r.valid,true);assert.equal(r.timedOut,true);
+  assert.equal(r.observedDuringWait,false);assert.equal(f.timers.size,0);await p.stop();
+});
+for(const cut of ['snapshot','stop'])test(`${cut} cancels pending waiter and timer`,async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  const pending=p.awaitInputAfterFailure();assert.equal(f.timers.size,1);
+  await p[cut]();const r=await pending;assert.equal(r.cancelled,true);assert.equal(f.timers.size,0);
+  if(cut==='snapshot')await p.stop();assert.equal(countListeners(f),0);
+});
+test('overflow still signals input while complete remains false',async()=>{
+  const f=fixture(),p=createSpaceTelemetry(f);await p.begin(ID);await p.arm();
+  for(let i=0;i<32;i++)f.emit('keydown',{code:'Space',keyCode:32});
+  const pending=p.awaitInputAfterFailure();f.emit('input',{inputType:'insertText'});
+  const r=await pending;assert.equal(r.observedDuringWait,true);assert.equal(r.complete,false);
+  const s=await p.snapshot();assert.equal(s.dropped,1);assert.equal(s.complete,false);await p.stop();
+});
+async function failedSpaceFixture(waitFault=false){
+  const f=fixture(),p=createSpaceTelemetry(f);let suppressed=false;
+  const type=async name=>{
+    if(name==='space'&&!suppressed&&await f.ev(`window.__raskladFocus?.token===${JSON.stringify(ID)}`)){
+      suppressed=true;return;
+    }
+    return f.type(name);
+  };
+  const telemetry={...p,awaitInputAfterFailure:async()=>{
+    if(waitFault)throw Error('PRIVATE_WAIT_SENTINEL');
+    const pending=p.awaitInputAfterFailure();
+    await f.ev(`document.getElementById('prose').value='ghbdtn '`);
+    f.emit('input',{inputType:'insertText'});return pending;
+  }};
+  const r=await runFocusScenarios({...f,type,spaceTelemetry:telemetry});
+  assert.equal(f.timers.size,0);assert.equal(countListeners(f),0);return r;
+}
+test('late exact match never rescues original FAIL and cleanup input is excluded',async()=>{
+  const r=await failedSpaceFixture(),c=r.cases[1];assert.equal(r.passed,false);assert.equal(c.passed,false);
+  assert.equal(c.errorCode,'ASSERTION_FAILED');assert.equal(c.lateDelivery.primarySnapshotCode,0);
+  assert.equal(c.lateDelivery.waitStatus,'input_during_wait');assert.equal(c.lateDelivery.lateSnapshotCode,100);
+  assert.equal(c.lateDelivery.lateMatchesOriginalOracle,true);assert.equal(c.cleanupPassed,true);
+  assert.deepEqual(c.spaceTelemetry.records.map(x=>x.typeIndex),[3]);
+  assert.ok(r.cases.filter((_,i)=>i!==1).every(x=>x.passed));
+});
+test('wait errors export no exception text and block dependent cases',async()=>{
+  const r=await failedSpaceFixture(true),c=r.cases[1];assert.equal(c.passed,false);
+  assert.equal(c.lateDelivery.waitStatus,'error');assert.equal(c.cleanupPassed,false);
+  assert.equal(JSON.stringify(r).includes('PRIVATE_WAIT_SENTINEL'),false);
+  assert.ok(r.cases.slice(2).every(x=>x.errorCode==='DEPENDENT_NOT_RUN'));
+});

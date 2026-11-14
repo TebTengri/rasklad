@@ -2,6 +2,20 @@
 
 ## Актуальная контрольная точка
 
+Новая отдельно разрешённая проба bed8364 выполнена: exact Hyprland baseline17
+pass, focus3/4, case2 снова original без Space. Trace valid/armed/complete,
+dropped0, records[]: до cut нет Space-coded keydown/up или beforeinput/input.
+Это не исключает non-Space-code keyboard event или late delivery. Допуск
+использован, новых host окон не открывать. data/hyprland-space-telemetry-002-result.json.
+
+Diagnosticv2 Claude реализована, Codex интегрировал, independent critic проверил:
+all-key fixed codeclass enums + failed-only input event wait500ms с отдельным
+late snapshot и неизменным первоначальным FAIL. 45 Python +19 oracle +19telemetry
+tests pass; private headless Sway baseline17/focus4/4 pass. Native late-wait
+не exercised (case2 проходит на Sway); он проверен unit faults.
+data/space-telemetry-v2-preflight-003.json. Следующий шаг — одна отдельно
+согласованная exact Hyprland проба v2 до75s с тем же ограниченным scope.
+
 Коллективное ревью следующего этапа: docs/SPACE-DELIVERY-REVIEW-002.md.
 Три независимых reviewer + фактический Claude Opus5.5 разобрали пути Space;
 vkReady-гипотеза понижена из-за keymap/key FIFO, новые core/config fixes

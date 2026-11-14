@@ -56,5 +56,49 @@ beforeinput(insertText) → input(insertText) → keyup на prose; value-class 
 не доказывает исправление. Исходный строгий сценарий сохраняется.
 
 Подготовлена команда test-hyprland-ime --run-approved --focus-stress
---space-telemetry --input-root /home/mvn/Work/rasklad. Она ещё НЕ выполнена:
-для нового bounded live trial требуется отдельное согласие владельца.
+--space-telemetry --input-root /home/mvn/Work/rasklad. На момент подготовки она не была выполнена;
+ниже записан результат отдельно разрешённой пробы002.
+
+## Exact Hyprland: диагностическая проба 002
+
+После отдельного согласия владельца выполнена ОДНА проба bed8364 с
+--focus-stress --space-telemetry. Допуск использован. Агрегат:
+data/hyprland-space-telemetry-002-result.json. Baseline17 прошли; focus3/4,
+повторный отказ case2, source original без delimiter, other/password пусты.
+Source precondition и cleanup прошли, compositor жив, wrong-field case4 pass.
+
+Trace: valid=true, armed=true, complete=true, dropped=0, records=[]. Между
+arm после refocus и atomic cut после исходного отказа не наблюдались
+Space-coded keydown/up и никакие beforeinput/input на fixture document.
+Это НЕ доказательство отсутствия всех keyboard events: non-Space code
+фильтруется. Нет также наблюдения после cut; late delivery не исключена.
+Сама instrumentation не замаскировала отказ в этой единственной пробе.
+Серия1+1 показывает два наблюдения отказа, но не надёжную частоту.
+
+Дальнейшая подготовка без новых host окон: классифицировать все keyboard
+events только armed фазы фиксированными enum (Space/Unidentified/empty/other)
+и keyCode229 bool; Process обычно относится к key, читать его не нужно.
+В failed-only диагностике можно дождаться уже зарегистрированного input
+с deadline<=500ms до cleanup, затем снять отдельный late snapshot.
+Первоначальный FAIL сохраняется даже при позднем совпадении. Никаких
+повторов Space, дополнительных core/config changes или полного debug log.
+
+## Подготовка diagnosticv2
+
+2026-11-15. Claude реализовал модуль, Codex интегрировал failed-only ожидание
+и тесты. 45 Python guards, 19 oracle и19 telemetry tests проходят; private
+headless Sway baseline17/focus4/4 pass, codeClass trace соответствует Space.
+Нативный late-wait не выполнялся: Sway case2 проходит. Unit faults проверяют
+input до/во время ожидания, beforeinput-only timeout, отмену snapshot/stop,
+overflow, отсутствие key/data/id чтения и позднее совпадение без PASS.
+Агрегат data/space-telemetry-v2-preflight-003.json. Независимый static review
+блокеров не нашёл; reviewer тесты не запускал.
+
+500ms — браузерный deadline, не гарантированный wall-time предел; внешние
+driver/run deadlines сохранены. observedBeforeWait не различает input до
+primary snapshot и сразу после него. Любой input завершает ожидание;
+принадлежность и значения проверяются отдельным строгим late oracle.
+Трасса отсекается до cleanup. Новый live допуск ещё требуется; не запускать
+повторно по уже использованному разрешению002. Команда прежняя:
+test-hyprland-ime --run-approved --focus-stress --space-telemetry
+--input-root /home/mvn/Work/rasklad. Core, Slack и host настройки не менялись.

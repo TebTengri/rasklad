@@ -156,14 +156,38 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
       r.precondition = await is(sourceActive(K));
       if (!r.precondition) { r.errorCode = 'PRECONDITION_FAILED'; return r; }
       const expect = await body(K, telArm);
+      let primaryCode = -1;
       if (expect) {
         const code = await ev(snapshot(K, expect));
         if (Number.isInteger(code) && code >= 0) {
+          primaryCode = code <= 101 ? code : -1;
           r.hookHits = code % 100;
           r.passed = code === 100 + (hook ? 1 : 0);
         }
       }
-      if (!r.passed) r.errorCode = 'ASSERTION_FAILED';
+      if (!r.passed) {
+        r.errorCode = 'ASSERTION_FAILED';
+        // Diagnostic only: preserve the original FAIL and snapshot code. The
+        // collector was installed before Space, avoiding a registration gap.
+        if (tel !== null && telOk && expect) {
+          let wait = null;
+          try { wait = await tel.awaitInputAfterFailure(); }
+          catch { telOk = false; }
+          const flags = ['observedBeforeWait','observedDuringWait','timedOut','cancelled'];
+          const valid = wait && wait.valid === true && typeof wait.complete === 'boolean' &&
+            flags.every(k => typeof wait[k] === 'boolean') && flags.filter(k => wait[k]).length === 1;
+          if (!valid || wait.cancelled) telOk = false;
+          const late = await ev(snapshot(K, expect));
+          r.lateDelivery = {
+            primarySnapshotCode: primaryCode,
+            waitStatus: !valid ? 'error' : wait.cancelled ? 'cancelled' : wait.timedOut ? 'deadline' :
+              wait.observedBeforeWait ? 'input_before_wait' : 'input_during_wait',
+            traceCompleteAtWait: valid && wait.complete === true,
+            lateSnapshotCode: Number.isInteger(late) && late >= 0 && late <= 101 ? late : -1,
+            lateMatchesOriginalOracle: late === 100 + (hook ? 1 : 0),
+          };
+        }
+      }
     } catch {
       r.passed = false;
       r.errorCode = 'CASE_ERROR';
