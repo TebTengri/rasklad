@@ -2,6 +2,13 @@
 
 ## Актуальная контрольная точка
 
+Коллективное ревью следующего этапа: docs/SPACE-DELIVERY-REVIEW-002.md.
+Три независимых reviewer + фактический Claude Opus5.5 разобрали пути Space;
+vkReady-гипотеза понижена из-за keymap/key FIFO, новые core/config fixes
+не обоснованы. Дополнительный rAF/sleep не end-to-end barrier. Следующим
+остаётся уже подготовленный single Space DOM trace на exact Hyprland;
+для live окна по-прежнему требуется ответ на предложенный разовый допуск.
+
 Exact Hyprland focus trial8008ad7: baseline17 прошли, focus3/4. Исправление
 wrong-field подтверждено case4; case2 rapid blur/refocus теряет Space. Причина
 не установлена, addon нельзя исключить по финальному значению. Предыдущий
