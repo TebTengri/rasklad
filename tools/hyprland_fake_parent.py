@@ -18,10 +18,11 @@ probe = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(probe)
 
 
-def run(logs_enabled, debug_startup=False):
+def run(logs_enabled, debug_startup=False, ime_target=False):
     server, client = socket.socketpair()
     counts = {'getRegistry': 0, 'sync': 0, 'other': 0}
     errors = []
+    snapshots = {}
 
     def fake_parent():
         server.settimeout(8)
@@ -79,14 +80,29 @@ animations {
                 'machine-id': '00000000000000000000000000000006\n'
             }.items():
                 (directory/key).write_text(value)
-            args = probe.sandbox_args(directory, client.fileno(), debug_startup=debug_startup)
+            if ime_target:
+                spec = importlib.util.spec_from_file_location('ime_lab', ROOT/'tools/hyprland_ime_lab.py')
+                ime = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(ime)
+                (directory/'gpu-metadata/sys').mkdir(parents=True)
+                plan = {'sysfs': str(directory/'gpu-metadata/sys'), 'statOnlyPrimary': '/dev/dri/card0',
+                        'primaryBindMustBeNodevReadOnly': True, 'hostSysfsBind': False}
+                snapshots['/lab/rasklad-wayland-keys'] = ime.base.sealed_snapshot(ROOT/'build/wayland-ime/keys/rasklad-wayland-keys')
+                paths = {'runner': ROOT/'tools/hyprland_ime_lab.py', 'base': ROOT/'tools/fcitx_lab_runner.py',
+                         'bus_conf': ROOT/'tests/fcitx_transport/session-bus.conf'}
+                args = ime.sandbox_args(directory, client.fileno(), plan, paths, {}, snapshots)
+                for at, item in enumerate(args):
+                    if item == '--ro-bind' and args[at+1:at+3] == ['/dev/dri/card0']*2:
+                        args[at+1] = '/dev/null'  # Harmless NODEV identity, never a host GPU.
+            else:
+                args = probe.sandbox_args(directory, client.fileno(), debug_startup=debug_startup)
             if args.count('--dev-bind') != 1:
                 raise ValueError('unexpected_device_plan')
             at = args.index('--dev-bind')
             if args[at+1:at+3] != ['/dev/dri/renderD128'] * 2:
                 raise ValueError('unexpected_device_plan')
             del args[at:at+3]
-            result = subprocess.run(args, pass_fds=(client.fileno(),), capture_output=True,
+            result = subprocess.run(args, pass_fds=(client.fileno(), *snapshots.values()), capture_output=True,
                                     timeout=12, env={'PATH': '/usr/bin'}, preexec_fn=probe.limits)
             client.close()
             thread.join(2)
@@ -95,6 +111,8 @@ animations {
                     'runnerResult': json.loads(result.stdout)}
     finally:
         client.close()
+        for fd in snapshots.values():
+            os.close(fd)
         thread.join(2)
 
 
@@ -102,17 +120,23 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--debug-startup', action='store_true')
+    parser.add_argument('--ime-plan', action='store_true', help='test the full IME runner startup with no GPU/display')
     args = parser.parse_args()
     if not args.run:
         print(json.dumps({'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False, 'gpuExposed': False}))
         raise SystemExit(0)
     if os.geteuid() == 0:
         raise SystemExit('root not admitted')
+    if args.ime_plan and args.debug_startup:
+        raise SystemExit('IME plan uses no debugger')
     output = {'schema': 1, 'hostDisplayConnected': False, 'gpuExposed': False,
               'privateSyntheticParent': True, 'globalsAdvertised': 0,
               'debuggerTest': args.debug_startup,
-              'variants': [run(False, args.debug_startup), run(True, args.debug_startup)]}
+              'imeTarget': args.ime_plan,
+              'variants': [run(False, args.debug_startup, args.ime_plan), run(True, args.debug_startup, args.ime_plan)]}
     variants = output['variants']
-    output['passed'] = all(v['wireRequests']['getRegistry'] == 1 and v['wireRequests']['sync'] == 1 and v['wireRequests']['other'] == 0 and not v['serverErrors'] and v['runnerExitCode'] == 1 and v['runnerResult'].get('passed') is False and v['runnerResult'].get('phase') == 'compositor_start' and (v['runnerResult'].get('debuggerSignal') == 'SIGABRT' if args.debug_startup else v['runnerResult'].get('exitCode') == -6) for v in variants) and [v['runnerResult'].get('startupReason') for v in variants] == ['backend_creation_failed', 'parent_protocols_missing']
+    phase = 'hyprland_start' if args.ime_plan else 'compositor_start'
+    exit_key = 'compositorExitCode' if args.ime_plan else 'exitCode'
+    output['passed'] = all(v['wireRequests']['getRegistry'] == 1 and v['wireRequests']['sync'] == 1 and v['wireRequests']['other'] == 0 and not v['serverErrors'] and v['runnerExitCode'] == 1 and v['runnerResult'].get('passed') is False and v['runnerResult'].get('phase') == phase and (v['runnerResult'].get('debuggerSignal') == 'SIGABRT' if args.debug_startup else v['runnerResult'].get(exit_key) == -6) for v in variants) and [v['runnerResult'].get('startupReason') for v in variants] == ['backend_creation_failed', 'parent_protocols_missing']
     print(json.dumps(output, sort_keys=True))
     raise SystemExit(0 if output['passed'] else 1)

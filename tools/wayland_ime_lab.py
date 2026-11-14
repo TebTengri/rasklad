@@ -26,7 +26,7 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
   if a[i]=='--setenv' and a[i+1] in ['DISPLAY','GDK_BACKEND','GTK_IM_MODULE']:i+=3;continue
   clean.append(a[i]);i+=1
  at=clean.index('--')
- extra=['--dir','/lab/wayland-runtime','--ro-bind',str(config),'/lab/sway.conf',
+ extra=['--ro-bind',str(ROOT/'tools/native_ime_clients.py'),'/lab/native_ime_clients.py','--dir','/lab/wayland-runtime','--ro-bind',str(config),'/lab/sway.conf',
  '--ro-bind',str(ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'),'/lab/rasklad-wayland-keys']
  for name in sorted(RUNTIME):extra+=['--ro-bind',str(runtime/name),'/lab/wayland-runtime/'+name]
  for k,v in {'LD_LIBRARY_PATH':'/lab/wayland-runtime','RASKLAD_NATIVE_WAYLAND_LAB':'1',
@@ -113,22 +113,9 @@ def inside():
     alive=nested.poll() is None;ready=any(p.is_socket() for p in runtime.glob('wayland-*'))
     log.seek(0,2);size=log.tell();log.seek(max(0,size-1600));tail=log.read(1600).decode('utf8','replace')
     return {'schema':1,'passed':ready,'mode':'nested_hyprland_smoke','aliveAfter2Seconds':alive,'nestedWaylandSocket':ready,'nestedExitCode':nested.poll(),'diagnostic':tail}
-  phase='wayland_fcitx'
-  fcitx=subprocess.Popen(['/usr/bin/fcitx5','-D','-k','--disable','all','--enable','keyboard,dbus,wayland,waylandim,raskladlab','--verbose','*=0'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);children.append(fcitx)
-  end=time.monotonic()+4
-  while time.monotonic()<end:
-   if fcitx.poll() is not None:raise base.Refused('fcitx_exited')
-   p=subprocess.run(['/usr/bin/gdbus','call','--session','--dest','org.freedesktop.DBus','--object-path','/org/freedesktop/DBus','--method','org.freedesktop.DBus.NameHasOwner','org.fcitx.Fcitx5'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=.3)
-   if p.stdout==b'(true,)\n':break
-   time.sleep(.03)
-  else:raise base.Refused('fcitx_timeout')
-  factory=subprocess.run(['/usr/bin/gdbus','call','--session','--dest','org.fcitx.Fcitx5','--object-path','/inputmethod','--method','org.freedesktop.DBus.Introspectable.Introspect'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=.5)
-  dbus_input_absent=factory.returncode!=0 or b'org.fcitx.Fcitx.InputMethod1' not in factory.stdout
-  if not dbus_input_absent:raise base.Refused('unexpected_dbus_input_frontend')
   phase='native_browser_driver'
-  p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK'))))
-  if len(p.stdout)>32768:raise base.Refused('driver_output_bound')
-  r=json.loads(p.stdout);r['driverExitCode']=p.returncode;r['dbusInputFrontendAbsent']=dbus_input_absent;r['passed']=p.returncode==0 and r.get('passed') is True and dbus_input_absent;return r
+  clients=load('native_clients',Path('/lab/native_ime_clients.py'))
+  return clients.run(base,children)
  except (base.Refused,ValueError,subprocess.SubprocessError) as e:return {'schema':1,'passed':False,'phase':phase,'reason':str(e) if isinstance(e,base.Refused) else type(e).__name__}
  finally:
   for child in reversed(children):

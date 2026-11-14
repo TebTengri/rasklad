@@ -2,6 +2,13 @@
 
 ## Актуальная контрольная точка
 
+Подготовлен bin/test-hyprland-ime: existing16case native Chromium/Fcitx fixture
+на exact installed nestedHyprland. Общая native_ime_clients.py с reference,
+Swayregression16pass; fakeparent fullrunner negativecontrol pass; privatebus
+positive smoke pass без GPU/display.41Waylandguards. Live target ещё не выполнен,
+нужен отдельный допуск (предыдущая startupсерия3/3 исчерпана). Подробнее
+docs/HYPRLAND-IME-001.md. Не трогать Slack/hostIME и не менятьprogramgates заранее.
+
 SUCCESS startup smoke: серияGDB3/3 использована; third probe со generated
 node-level DEVNAME прошёл private_socket_ready +1s liveness, exit0. Причина
 SIGSEGV локализована CGBMAllocator constructor; наш snapshot давал
