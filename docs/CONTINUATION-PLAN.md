@@ -2,6 +2,16 @@
 
 ## Актуальная контрольная точка
 
+SUCCESS exact Hyprland INPUT: отдельно согласованный dbd221b runner прошёл
+16/16cases с existing fullcore в Chromium155/nativeWayland/Fcitx. Composition,
+две коррекции/EnglishKeep,Undo,password,blur,mixed/long,Backspace/Escape,
+postIMEdeath input и сохранениеpendingword подтверждены для этойfixture.
+Compositor stayedalive; ownIME stayedstopped; DBusinputfrontend absent; noCDPtyping.
+data/hyprland-ime-001-result.json + docs/HYPRLAND-IME-001.md. readyForLiveUse=false,
+Slackunconnected. Следующий шаг adversarial focus/serial suite на samefixture,
+не detector research и не немедленное подключение Slack. Единственная разрешённая
+live input проба использована; новых окон без нового согласованного scope нет.
+
 Подготовлен bin/test-hyprland-ime: existing16case native Chromium/Fcitx fixture
 на exact installed nestedHyprland. Общая native_ime_clients.py с reference,
 Swayregression16pass; fakeparent fullrunner negativecontrol pass; privatebus

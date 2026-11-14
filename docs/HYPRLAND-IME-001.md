@@ -1,5 +1,25 @@
 # Подготовка exact Hyprland native IME trial
 
+## Результат согласованной пробы
+
+2026-11-14: один отдельно разрешённый запуск dbd221b прошёл все16checks
+на установленном nested Hyprland, Chromium155 и Fcitx с существующим полным
+evidence core. data/hyprland-ime-001-result.json содержит агрегаты/source hashes.
+Приватный compositor оставался жив. Проверены composition до пробела, два
+разных исправления, English Keep, next word, native Undo, Backspace/Escape,
+mixed/long token, password passthrough и смена поля без утечки. После SIGKILL
+только своего IME дальнейший ввод работал, исходное незавершённое слово
+сохранилось, daemon не перезапустился. CDP не печатал, D-Bus input frontend
+отсутствовал. Это фиксированные сценарии, не гарантия для всех фокусов/приложений.
+
+Fcitx с ядром: RSS/high-water57728KiB, CPU0.18s за тест со стартом/profile/queries.
+Не измерены physical latency, idle CPU или суммарная память browser/compositor.
+Slack не подключён, readyForLiveUse=false. Следующий этап — adversarial
+focus/serial suite, затем конкретный Slack trial. Согласованная одиночная
+live-проба использована; дополнительных окон в этой контрольной точке нет.
+
+Ниже сохранён план подготовки до выполнения.
+
 2026-11-14. После успешного nested startup smoke следующий тест переносит
 существующую Chromium/Fcitx native fixture в установленный Hyprland. Это
 developer lab, не подключение к обычному Slack/IME и не готовый app adapter.
