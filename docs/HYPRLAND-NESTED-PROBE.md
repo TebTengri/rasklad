@@ -33,3 +33,25 @@ private display, ввод не тестировался. Результат data
 и возвращает диагностический enum; после завершения logs исчезают. Повтор пока
 не разрешён. При успехе следующий этап — закрытый тест ввода
 в этом compositor, затем adversarial focus/serial тесты и exact Slack.
+
+Вторая отдельно разрешённая проба выполнена (e530367): тот же SIGABRT,
+диагностика подтвердила `backend_creation_failed`. Точная причина всё ещё
+не установлена. Обычный host compositor не перезапускался.
+
+Source review установленного Hyprland commit efb50993780079460b0cbed1363e2166a2de1d9f
+показывает, что одинаковый throwError применяется к create и start отказам:
+https://github.com/hyprwm/Hyprland/blob/efb50993780079460b0cbed1363e2166a2de1d9f/src/Compositor.cpp
+Поэтому общий enum не различает точку отказа.
+Aquamarine v0.15.1 Wayland backend использует wl_display_connect(nullptr),
+dmabuf feedback и drmGetDeviceFromDevId; затем требуется DRM/GBM allocator:
+https://github.com/hyprwm/aquamarine/blob/v0.15.1/src/backend/Wayland.cpp
+https://github.com/hyprwm/aquamarine/blob/v0.15.1/src/backend/Backend.cpp
+Вероятная проблема — обнаружение GPU в урезанной среде, но это гипотеза.
+Отдельный read-only libdrm discovery успешен на host и возвращает -22 в
+namespace без sysfs И device nodes. Сравнение меняет два условия и не доказывает
+исключительную вину sysfs; host GPU не открывался этой проверкой.
+
+Следующий подготовительный шаг: детализировать private log classifier по
+точным ошибкам upstream, проверить необходимые metadata paths libdrm, затем
+провести ревью минимального mount plan. Без повторного blind запуска и без
+автоматического предоставления /sys, /dev/dri целиком или KMS/input устройств.

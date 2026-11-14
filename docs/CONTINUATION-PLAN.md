@@ -2,6 +2,12 @@
 
 ## Актуальная контрольная точка
 
+Вторая отдельно разрешённая проба подтвердила backend_creation_failed;
+data/hyprland-nested-002-result.json. Source review указывает на DRM discovery /
+allocator dependency, но точный отказ не установлен. Следующий шаг — подробный
+private classifier и минимальные metadata requirements libdrm, не третий blind
+host запуск. Не включать рабочий IME и не расширять devices по умолчанию.
+
 Первая согласованная live nested Hyprland проба завершилась SIGABRT до создания
 private display (data/hyprland-nested-001-result.json). Причина неизвестна: logs
 первого runner отбрасывались, core отключён. Добавлен bounded private startup
