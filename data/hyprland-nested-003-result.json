@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "runnerCommit": "b366b5a",
+  "passed": false,
+  "phase": "compositor_start",
+  "exitCode": -11,
+  "signal": "SIGSEGV",
+  "startupReason": "unclassified_startup_failure",
+  "gpuMetadataSnapshotUsed": true,
+  "parentDisplayConnection": true,
+  "renderNodeGranted": true,
+  "primaryStatOnly": true,
+  "hostSysfsBound": false,
+  "hostConfigurationWritten": false,
+  "slackConnected": false,
+  "typingTested": false,
+  "systemdRecord": {
+    "ownLabCommandMatched": true,
+    "command": "/usr/bin/Hyprland --config /lab/hypr.conf",
+    "signal": 11,
+    "storage": "none"
+  },
+  "exactCauseConfirmed": false,
+  "limitation": "core intentionally disabled; enum-only report cannot locate segfault; change of signal does not prove a startup phase"
+}

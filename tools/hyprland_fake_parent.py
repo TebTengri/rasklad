@@ -18,7 +18,7 @@ probe = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(probe)
 
 
-def run(logs_enabled):
+def run(logs_enabled, debug_startup=False):
     server, client = socket.socketpair()
     counts = {'getRegistry': 0, 'sync': 0, 'other': 0}
     errors = []
@@ -79,7 +79,7 @@ animations {
                 'machine-id': '00000000000000000000000000000006\n'
             }.items():
                 (directory/key).write_text(value)
-            args = probe.sandbox_args(directory, client.fileno())
+            args = probe.sandbox_args(directory, client.fileno(), debug_startup=debug_startup)
             if args.count('--dev-bind') != 1:
                 raise ValueError('unexpected_device_plan')
             at = args.index('--dev-bind')
@@ -101,6 +101,7 @@ animations {
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', action='store_true')
+    parser.add_argument('--debug-startup', action='store_true')
     args = parser.parse_args()
     if not args.run:
         print(json.dumps({'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False, 'gpuExposed': False}))
@@ -109,8 +110,9 @@ if __name__ == '__main__':
         raise SystemExit('root not admitted')
     output = {'schema': 1, 'hostDisplayConnected': False, 'gpuExposed': False,
               'privateSyntheticParent': True, 'globalsAdvertised': 0,
-              'variants': [run(False), run(True)]}
+              'debuggerTest': args.debug_startup,
+              'variants': [run(False, args.debug_startup), run(True, args.debug_startup)]}
     variants = output['variants']
-    output['passed'] = all(v['wireRequests']['getRegistry'] == 1 and v['wireRequests']['sync'] == 1 and v['wireRequests']['other'] == 0 and not v['serverErrors'] and v['runnerExitCode'] == 1 and v['runnerResult'].get('passed') is False and v['runnerResult'].get('phase') == 'compositor_start' and v['runnerResult'].get('exitCode') == -6 for v in variants) and [v['runnerResult'].get('startupReason') for v in variants] == ['backend_creation_failed', 'parent_protocols_missing']
+    output['passed'] = all(v['wireRequests']['getRegistry'] == 1 and v['wireRequests']['sync'] == 1 and v['wireRequests']['other'] == 0 and not v['serverErrors'] and v['runnerExitCode'] == 1 and v['runnerResult'].get('passed') is False and v['runnerResult'].get('phase') == 'compositor_start' and (v['runnerResult'].get('debuggerSignal') == 'SIGABRT' if args.debug_startup else v['runnerResult'].get('exitCode') == -6) for v in variants) and [v['runnerResult'].get('startupReason') for v in variants] == ['backend_creation_failed', 'parent_protocols_missing']
     print(json.dumps(output, sort_keys=True))
     raise SystemExit(0 if output['passed'] else 1)

@@ -59,7 +59,7 @@ def endpoint(env):
     return runtime / name
 
 
-def sandbox_args(directory, parent_fd, metadata_plan=None):
+def sandbox_args(directory, parent_fd, metadata_plan=None, debug_startup=False):
     a = ['/usr/bin/bwrap', '--unshare-all', '--die-with-parent', '--new-session',
          '--cap-drop', 'ALL', '--clearenv', '--ro-bind', '/usr', '/usr',
          '--symlink', 'usr/bin', '/bin', '--symlink', 'usr/lib', '/lib',
@@ -80,6 +80,8 @@ def sandbox_args(directory, parent_fd, metadata_plan=None):
             raise ValueError('metadata_mount_plan')
         a += ['--ro-bind', str(snapshot), '/sys', '--ro-bind', primary, primary,
               '--setenv', 'RASKLAD_STAT_ONLY_PRIMARY', primary]
+    if debug_startup:
+        a += ['--setenv', 'RASKLAD_DEBUG_STARTUP', '1']
     for name in ('passwd', 'group', 'machine-id'):
         a += ['--ro-bind', str(directory / name), '/etc/' + name]
     env = {'PATH': '/usr/bin', 'HOME': '/home/lab', 'LANG': 'C.UTF-8',
@@ -142,6 +144,43 @@ def startup_reason():
     return classify_startup(payload)
 
 
+def debugger_command():
+    return ['/usr/bin/gdb', '-nx', '-nh', '--batch',
+            '-iex', 'set auto-load off', '-iex', 'set debuginfod enabled off',
+            '-ex', 'set pagination off', '-ex', 'set confirm off',
+            '-ex', 'set startup-with-shell off', '-ex', 'set disable-randomization off',
+            '-ex', 'set print frame-arguments none', '-ex', 'set print address off',
+            '-ex', 'run', '-ex', 'backtrace 12', '-ex', 'thread apply all backtrace 6', '-ex', 'kill',
+            '--args', '/usr/bin/Hyprland', '--config', '/lab/hypr.conf']
+
+
+def parse_debugger_summary(text):
+    caught = re.search(r'received signal (SIG[A-Z0-9]+)', text)
+    frames = []
+    for line in text.splitlines():
+        if not re.match(r'^#[0-9]+\s', line):
+            continue
+        # Keep only the symbol expression before arguments; never arbitrary frame text.
+        symbol = re.sub(r'^#[0-9]+\s+(?:0x[0-9a-f]+\s+in\s+)?', '', line).split(' (', 1)[0].strip()
+        if re.fullmatch(r'[A-Za-z0-9_?$:@<>~.,+*/&\[\] -]{1,240}', symbol):
+            module = re.search(r' from (/usr/lib/[A-Za-z0-9_./+-]+)', line)
+            frames.append({'symbol': symbol, 'library': Path(module.group(1)).name if module else None})
+        if len(frames) >= 24:
+            break
+    return {'debuggerSignal': caught.group(1) if caught else None,
+            'debuggerFrames': frames, 'debuggerFrameArguments': False,
+            'debuggerNetwork': False}
+
+
+def debugger_summary():
+    # No locals, args, source lines or complete logs leave the namespace.
+    path = Path('/tmp/probe-startup.log')
+    with path.open('rb') as source:
+        source.seek(max(0, path.stat().st_size - 65536))
+        text = source.read(65536).decode('utf8', 'replace')
+    return parse_debugger_summary(text)
+
+
 def inside():
     if not INSIDE or os.environ.get('RASKLAD_NESTED_PROBE') != '1' or os.environ.get('HOME') != '/home/lab':
         raise ValueError('private_probe_required')
@@ -150,6 +189,7 @@ def inside():
         raise ValueError('parent_fd_shape')
     # The parent display is never mounted. Only this compositor gets its FD.
     env = dict(os.environ, WAYLAND_SOCKET=str(fd))
+    debugging = env.pop('RASKLAD_DEBUG_STARTUP', None) == '1'
     primary = env.pop('RASKLAD_STAT_ONLY_PRIMARY', None)
     if primary:
         try:
@@ -161,7 +201,8 @@ def inside():
     child = None
     try:
         with open('/tmp/probe-startup.log', 'wb') as log:
-            child = subprocess.Popen(['/usr/bin/Hyprland', '--config', '/lab/hypr.conf'],
+            command = debugger_command() if debugging else ['/usr/bin/Hyprland', '--config', '/lab/hypr.conf']
+            child = subprocess.Popen(command,
                                      env=env, pass_fds=(fd,), stdin=subprocess.DEVNULL,
                                      stdout=log, stderr=subprocess.STDOUT)
     finally:
@@ -170,8 +211,11 @@ def inside():
         deadline = time.monotonic() + 7
         while time.monotonic() < deadline:
             if child.poll() is not None:
-                return {'passed': False, 'phase': 'compositor_start', 'exitCode': child.returncode,
-                        'startupReason': startup_reason()}
+                report = {'passed': False, 'phase': 'compositor_start', 'exitCode': child.returncode,
+                          'startupReason': startup_reason()}
+                if debugging:
+                    report.update(debugger_summary())
+                return report
             if any(p.is_socket() for p in Path('/run/lab').glob('wayland-*')):
                 time.sleep(.25)
                 return {'passed': child.poll() is None, 'phase': 'private_socket_ready'}
@@ -187,7 +231,7 @@ def inside():
                 child.wait(timeout=1)
 
 
-def run(with_metadata=False):
+def run(with_metadata=False, debug_startup=False):
     if os.geteuid() == 0:
         raise ValueError('root_not_admitted')
     spec = importlib.util.spec_from_file_location('lab_base', ROOT / 'tools/fcitx_lab_runner.py')
@@ -195,6 +239,8 @@ def run(with_metadata=False):
     spec.loader.exec_module(base)
     base.regular_file(Path('/usr/bin/bwrap'), True)
     base.regular_file(Path('/usr/bin/Hyprland'), True)
+    if debug_startup:
+        base.regular_file(Path('/usr/bin/gdb'), True)
     metadata = Path('/usr/bin/bwrap').stat()
     if metadata.st_uid != 0 or metadata.st_mode & 0o6022:
         raise ValueError('unsafe_bwrap')
@@ -234,7 +280,7 @@ def run(with_metadata=False):
                         current = path.stat()
                         if path.is_symlink() or not stat.S_ISCHR(current.st_mode) or current.st_rdev != os.makedev(node['major'], node['minor']):
                             raise ValueError('changed_gpu_identity')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), metadata_plan), pass_fds=(parent.fileno(),),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), metadata_plan, debug_startup), pass_fds=(parent.fileno(),),
                                          env={'PATH': '/usr/bin'}, stdin=subprocess.DEVNULL,
                                          stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=limits)
@@ -269,14 +315,16 @@ def main():
     modes.add_argument('--run-approved', action='store_true')
     modes.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--gpu-metadata', action='store_true', help='use bounded reconstructed PCI metadata; no host /sys mount')
+    parser.add_argument('--debug-startup', action='store_true', help='catch startup failure in own private debugger, no network/locals')
     args = parser.parse_args()
     try:
-        if args.inside and args.gpu_metadata:
+        if args.inside and (args.gpu_metadata or args.debug_startup):
             raise ValueError('outer_metadata_option_only')
-        result = inside() if args.inside else run(args.gpu_metadata) if args.run_approved else {
+        result = inside() if args.inside else run(args.gpu_metadata, args.debug_startup) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostConnectionOpened': False,
             'scope': 'one nested Hyprland window; one render node; no Slack/IME/input tests',
             'requiresOwnerApproval': True, 'gpuMetadataSnapshotPlanned': args.gpu_metadata,
+            'privateDebuggerPlanned': args.debug_startup,
             'hostSysfsBound': False, 'maxProbeSeconds': 16}
         print(json.dumps(result, sort_keys=True))
         return 0 if result.get('passed', True) else 1

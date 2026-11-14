@@ -2,6 +2,15 @@
 
 ## Актуальная контрольная точка
 
+Согласованная live-проба b366b5a со snapshot закончилась SIGSEGV до display,
+а не прежним SIGABRT; источник неизвестен. data/hyprland-nested-003-result.json.
+systemd metadata команды /lab/hypr.conf подтверждает test crash; core отсутствует.
+Не делать вывод о конкретной GPU/allocator стадии из смены сигнала.
+Подготовлен --debug-startup, no-host fake-parent control с GDB прошёл,33guards.
+Следующее действие: согласованная bounded --run-approved --gpu-metadata
+--debug-startup, получить стек без args/locals/network, затем разбирать факты.
+Не запускать новые live-пробы до разрешения и не добавлять sysfs/devices.
+
 Подготовлено минимальное исправление discovery: tools/drm_metadata_snapshot.py
 и --gpu-metadata в nested probe. Доказательства HYPRLAND-BACKEND-DIAGNOSIS.md:
 FD consumed actualHypr; исправлен disable_logs; synthetic controls -22/0/-19;

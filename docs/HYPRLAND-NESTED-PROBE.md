@@ -62,3 +62,17 @@ snapshot; primary card только NODEV/RO identity, renderD128 остаётс
 открываемым устройством. Runtime guard проверяет primary mount flags до запуска.
 RO discovery с настоящими metadata и двумя stat-only nodes прошёл без GPU/display.
 Применение этого исправления в live nested Hyprland ещё не выполнялось.
+
+Обновление: отдельно согласованная проба со snapshot выполнена (b366b5a).
+Процесс завершился SIGSEGV до private display; причина не классифицирована.
+systemd coredump metadata подтверждает именно команду /lab/hypr.conf, Storage:none.
+Уведомление Omarchy относится к тестовому вложенному Hyprland. По одной смене
+сигнала нельзя утверждать, какой этап пройден. Поддержка ввода не проверялась.
+
+Подготовлен --debug-startup: GDB только над своим private child, -nx/-nh,
+auto-load и debuginfod off, без shell startup и frame arguments/locals.
+Никаких core files и attach к рабочим процессам. Report содержит только сигнал
+и ограниченный список symbols + basename системных библиотек; raw log остаётся
+в namespace и уничтожается. Debugger проверен на synthetic zero-global parent
+без host GPU/display: ожидаемый SIGABRT перехвачен, FD consumed, обе log controls
+сохранили ожидаемые категории. Live debugger ещё не запускался.

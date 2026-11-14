@@ -12,6 +12,23 @@ spec.loader.exec_module(probe)
 
 
 class ProbeBoundaries(unittest.TestCase):
+    def test_debugger_disables_init_autoload_network_and_frame_arguments(self):
+        args = probe.debugger_command()
+        for required in ('-nx', '-nh', 'set auto-load off', 'set debuginfod enabled off',
+                         'set startup-with-shell off', 'set print frame-arguments none'):
+            self.assertIn(required, args)
+        self.assertLess(args.index('backtrace 12'), args.index('thread apply all backtrace 6'))
+        self.assertNotIn('full', args)
+
+    def test_debugger_report_omits_arguments_and_non_system_paths(self):
+        text = 'Program received signal SIGSEGV\n#0  vendor_call (secret="never") from /usr/lib/dri/example_dri.so\n#1  ?? () from /private/home/plugin.so\n'
+        summary = probe.parse_debugger_summary(text)
+        self.assertEqual(summary['debuggerSignal'], 'SIGSEGV')
+        self.assertEqual(summary['debuggerFrames'], [{'symbol': 'vendor_call', 'library': 'example_dri.so'},
+                                                     {'symbol': '??', 'library': None}])
+        self.assertNotIn('never', str(summary))
+        self.assertNotIn('/private', str(summary))
+
     def test_stat_only_card_requires_readonly_and_nodev(self):
         row = '31 20 0:5 /null /dev/dri/card0 ro,nosuid,nodev - devtmpfs udev rw'
         probe.require_stat_only_mounts(row, ['/dev/dri/card0'])
