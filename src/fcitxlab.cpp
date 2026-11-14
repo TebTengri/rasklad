@@ -39,8 +39,8 @@
 //    Key::hasModifier() ignores them; uppercase syms are not accepted):
 //      append if buffer < 32, update preedit, consume.
 //      If the buffer is full: flush original (see below), then pass the key.
-//  * Space (no modifiers) with non-empty buffer: clear preedit, commit
-//    corrected-or-original word plus one space as ONE commitString, consume.
+//  * Space (no modifiers) with non-empty buffer: commit corrected-or-original
+//    word plus one space as ONE commitString before notifying preedit end, consume.
 //  * BackSpace (no modifiers) with non-empty buffer: drop last letter, consume.
 //  * Escape flushes the ORIGINAL word and passes through like other app
 //    shortcuts. Clearing composition alone has toolkit-dependent semantics;
@@ -328,11 +328,28 @@ private:
     }
 
     // Single commit to the same, gated, focused context; then clear.
+    // All LabState changes are staged locally BEFORE the external commit: the
+    // buffer is cleared and, if we own the preedit, preeditShown is reset and
+    // the panel preedit is emptied locally without sending it. The commit
+    // payload therefore reaches the client while its composition is still
+    // shown; the empty-preedit wire update is sent only afterwards, and only
+    // if the context still exists. Nothing touches LabState after
+    // commitString(); a local bool carries the decision.
     static void commitAndClear(fcitx::InputContext *ic, LabState &s,
                                std::string text) {
-        clearPreedit(ic, s);
+        auto ref = ic->watch();
+        const bool hadPreedit = s.preeditShown();
         s.clearBuffer();
+        if (hadPreedit) {
+            s.setPreeditShown(false);
+            ic->inputPanel().setClientPreedit(fcitx::Text());
+        }
         ic->commitString(text);
+        if (hadPreedit) {
+            if (auto *current = ref.get(); current && current->hasFocus()) {
+                current->updatePreedit();
+            }
+        }
         wipeString(text);
     }
 
@@ -397,9 +414,9 @@ private:
 #endif
                 wipeString(w);
                 out.push_back(' ');
-                commitAndClear(ic, *s, std::move(out));
                 s->addPending(key);
                 event.filterAndAccept();
+                commitAndClear(ic, *s, std::move(out));
                 return;
             }
             if (sym == FcitxKey_BackSpace) {
@@ -417,10 +434,10 @@ private:
 
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
         // same focused context, then let the key pass unfiltered.
+        if (!boundary) s->setBypass(true);
         if (!s->empty()) {
             commitAndClear(ic, *s, s->word());
         }
-        if (!boundary) s->setBypass(true);
     }
 
     fcitx::Instance *instance_;

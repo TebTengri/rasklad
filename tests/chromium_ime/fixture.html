@@ -6,5 +6,6 @@
 <script>
 window.imeEvents=[];
 for(const type of ['compositionstart','compositionupdate','compositionend','beforeinput','input'])
- document.addEventListener(type,e=>imeEvents.push({type,inputType:e.inputType||'',length:(e.data||'').length}),true);
+ document.addEventListener(type,e=>imeEvents.push({type,inputType:e.inputType||'',length:(e.data||'').length,
+  trusted:e.isTrusted===true,targetIndex:['prose','other','secret'].indexOf(e.target?.id)}),true);
 </script>

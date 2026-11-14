@@ -59,6 +59,20 @@ class ExactHyprlandGuards(unittest.TestCase):
         self.assertIn(['/private/gpu-metadata/sys', '/sys'], binds)
         self.assertFalse(any(source == '/sys' or source == '/home' or source == str(ROOT) for source, _ in binds))
 
+    def test_focus_suite_requires_explicit_option_without_new_devices(self):
+        directory = Path('/private')
+        plan = {'sysfs': '/private/gpu-metadata/sys', 'statOnlyPrimary': '/dev/dri/card0',
+                'primaryBindMustBeNodevReadOnly': True, 'hostSysfsBind': False}
+        paths = lab.chrome.files()
+        paths.pop('keys'); paths.pop('xvfb')
+        snapshots = {'/lab/addons/raskladlab.so': 9, '/lab/rasklad-wayland-keys': 10}
+        default = lab.sandbox_args(directory, 8, plan, paths, {}, snapshots)
+        selected = lab.sandbox_args(directory, 8, plan, paths, {}, snapshots, focus_stress=True)
+        self.assertNotIn('RASKLAD_FOCUS_STRESS_LAB', default)
+        self.assertIn('RASKLAD_FOCUS_STRESS_LAB', selected)
+        self.assertIn('/lab/adversarial-focus.mjs', selected)
+        self.assertEqual(selected.count('--dev-bind'), default.count('--dev-bind'))
+
     def test_private_bus_refuses_unreleased_parent_fd(self):
         for marker in ('RASKLAD_PARENT_FD', 'WAYLAND_SOCKET'):
             with patch.dict(os.environ, {marker: '8'}, clear=True), patch.object(lab.subprocess, 'Popen') as popen:

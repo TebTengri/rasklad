@@ -270,3 +270,32 @@ Only the explicitly owned lab prose context supplies Prose; program name is not
 a semantic classifier. CPU/RSS and crash-loss limitations are recorded in
 docs/CHROMIUM-IME-PROFILE-001.md. Current composition is lost on abrupt daemon
 death; live use is not approved by passing the transport scenarios.
+
+## Native focus stress developer checks
+
+`--focus-stress` is an explicit lab option; it is never enabled by normal app
+startup. Reference Sway remains no-host-display/GPU. The separately approved
+nested Hyprland runner exposes one render node, a RO/NODEV primary identity and
+a reconstructed minimal sysfs, not host HOME/bus/input/KMS or a whole sysfs bind.
+No normal IME or Slack is connected. Reports contain fixed case IDs, booleans,
+bounded counts and fixed value-class enums; no field text or raw event data.
+
+The strict baseline now requires original-word preservation on blur. Four
+additional owned-DOM scenarios use captured-node/state identity, bounded event
+barriers, atomic final predicates and verified cleanup. Cleanup failure marks
+dependent cases not run. All runtime typing uses fixed private VK commands;
+JavaScript never fabricates composition/keyboard/input events.
+
+Chromium155's observed native compositionend has isTrusted=false. The suite
+defaults to trusted_only; its scoped-end exception requires reviewed source
+SHA pins, exact browser version and a real VK positive control. This is closed
+fixture provenance, NOT authentication of arbitrary DOM events or permission
+to weaken production input gates. Text/focus/count predicates stay strict.
+
+The suite exposed our early empty-preedit notification allowing a reentrant
+hook to move a payload into another field. Claude's fix stages local state,
+commits payload before notifying preedit end and guards the remaining call
+with tracked lifetime/focus. Sway, Qt and GTK regression pass; this is not an
+atomic multi-message transaction, stale-serial proof, or generic app guarantee.
+Exact Hyprland revalidation after this change remains pending. See
+docs/FOCUS-STRESS-PLAN.md and data/focus-stress-reference-001.json.

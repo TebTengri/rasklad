@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "reviewedNoScriptEventGeneration": true,
+  "scope": "closed owned fixture only; not authentication of native DOM events",
+  "scopedBrowserVersion": "Chrome/155.0.8059.84",
+  "sourceSha256": {
+    "driver.mjs": "ca9de3296d5c627a6c957a3fe4f2c4be3720b6415f2d9bc6b5614dda72e9f468",
+    "adversarial-focus.mjs": "efd6425b3c277ea3f7a3378991327bf5214e2d7dd04d4af587971465b1940b7b",
+    "focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
+    "fixture.html": "6e9a29febcb72c35ca8c90ea615cbbd1312457b07800b8617ce9e27ad2230539"
+  }
+}

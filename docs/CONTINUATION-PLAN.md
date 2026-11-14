@@ -2,6 +2,20 @@
 
 ## Актуальная контрольная точка
 
+Claude Opus5.5 реализовал4focus scenarios и C++ commit ordering fix; Codex
+и independentcritic нашли и исправили ложно-положительные gates/cleanupmodel.
+Sway strictsamecase BEFORE: payloadперешёлизproseвother; AFTERsameoracle4/4pass.
+Причина: наш empty-preedit update ДОcommitString. Теперь localstate staged,
+payloadfirst, cleanupnotificationafter; lifetime+hasFocus guard, nooldstatewrites
+aftercallbacks. data/focus-stress-before-fix-001.json и focus-stress-reference-001.json.
+17baseline +4focus cases Swaypass; GTK17pass; Qtpass.19Node oracle faulttests,
+43Wayland+8Chromium+10Fcitxguards. Newbaselineoriginalword preservation REQUIRED.
+Explicitend policy onlyclosedreviewedChrome155 fixture withrealVKpositivecontrol;
+не genericDOMtrust. Подробно docs/FOCUS-STRESS-PLAN.md. AGENTS.md сохраняет роли.
+Следующий шаг согласованный exactHyprland --focus-stress сновымaddon, до75s.
+Новыхhostокон вэтойработе не было; oldsinglelivegrant consumed. Потом genuine
+cross-surface stale-serial test (DOMfocus != protocolserialproof), Slackstilloff.
+
 SUCCESS exact Hyprland INPUT: отдельно согласованный dbd221b runner прошёл
 16/16cases с existing fullcore в Chromium155/nativeWayland/Fcitx. Composition,
 две коррекции/EnglishKeep,Undo,password,blur,mixed/long,Backspace/Escape,

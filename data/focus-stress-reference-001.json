@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "passed": true,
+  "implementationModel": "claude-opus-5-5",
+  "integrationAndReview": "Codex plus independent reviewer agent",
+  "referenceCompositor": "private Sway/wlroots software only",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "baselineRequiredChecks": 17,
+  "overallRequiredChecksIncludingFocusAggregate": 18,
+  "baselinePassed": true,
+  "focusStress": {
+    "passed": true,
+    "checks": 4,
+    "executedCases": 4,
+    "cases": [
+      {
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true,
+        "executed": true,
+        "cleanupPassed": true,
+        "hookHits": 0
+      },
+      {
+        "id": "word_other_back_prose_space",
+        "passed": true,
+        "precondition": true,
+        "executed": true,
+        "cleanupPassed": true,
+        "hookHits": 0
+      },
+      {
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true,
+        "executed": true,
+        "cleanupPassed": true,
+        "hookHits": 0
+      },
+      {
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true,
+        "executed": true,
+        "cleanupPassed": true,
+        "hookHits": 1
+      }
+    ],
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "scope": "DOM intra-surface only; no stale protocol serial coverage"
+  },
+  "focusEventControl": {
+    "trustedSourceStarts": 1,
+    "sourceEnds": 1,
+    "trustedSourceEnds": 0,
+    "untrustedSourceEnds": 1,
+    "totalStarts": 1,
+    "totalEnds": 1
+  },
+  "sourcesReviewed": true,
+  "oracleUnchangedAcrossCppFix": true,
+  "noHostDisplay": true,
+  "noGpu": true,
+  "dbusInputFrontendAbsent": true,
+  "cdpTyping": false,
+  "daemonRssKiB": 57624,
+  "daemonCpuSeconds": 0.17,
+  "resourceScope": "own private Fcitx including startup/profile/queries, not idle or browser/compositor/physical latency",
+  "regressionGtkX11": {
+    "passed": true,
+    "checks": 17,
+    "pendingWordSurvivedCrash": false
+  },
+  "regressionQtOffscreen": {
+    "passed": true,
+    "pendingWordSurvivedCrash": false
+  },
+  "hyprlandFocusStressTestedAfterFix": false,
+  "slackSupport": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "81aed2cc3ee2477d4a5fb04c88399e9a33729a9e3e8e0f04b29858f9b28bb871",
+    "tests/chromium_ime/adversarial-focus.mjs": "efd6425b3c277ea3f7a3378991327bf5214e2d7dd04d4af587971465b1940b7b",
+    "tests/chromium_ime/driver.mjs": "ca9de3296d5c627a6c957a3fe4f2c4be3720b6415f2d9bc6b5614dda72e9f468",
+    "tests/chromium_ime/focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
+    "tests/chromium_ime/fixture.html": "6e9a29febcb72c35ca8c90ea615cbbd1312457b07800b8617ce9e27ad2230539",
+    "data/focus-source-review-001.json": "e0e43d7cb7002d016e1f71bf012ccd975af14c10ce5f83583e74c6e2d7004f19"
+  }
+}

@@ -2,6 +2,7 @@
 // CDP only observes/configures our fixture. All typing uses private XTest.
 import {spawn,execFileSync} from 'node:child_process';
 import {readFileSync,readlinkSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 const nativeWayland=process.env.RASKLAD_NATIVE_WAYLAND_LAB==='1';
 if(process.env.RASKLAD_CHROMIUM_IME_LAB!=='1'||process.env.HOME!=='/home/lab'||
  (nativeWayland?(process.env.DISPLAY||process.env.WAYLAND_DISPLAY!=='wayland-lab'):process.env.DISPLAY!==':77'))throw Error('not private lab');
@@ -51,6 +52,11 @@ try{
  phase='space';await type('space');
  report.correctedOnce=await ev(`prose.value==='привет '`);
  report.compositionEnded=await ev(`imeEvents.some(x=>x.type==='compositionend')`);
+ if(process.env.RASKLAD_FOCUS_STRESS_LAB==='1')report.focusEventControl=await ev(`(()=>{
+  const count=(type,trust)=>imeEvents.filter(e=>e.type===type&&e.targetIndex===0&&(trust===null||e.trusted===trust)).length;
+  return {trustedSourceStarts:count('compositionstart',true),sourceEnds:count('compositionend',null),
+   trustedSourceEnds:count('compositionend',true),untrustedSourceEnds:count('compositionend',false),
+   totalStarts:imeEvents.filter(e=>e.type==='compositionstart').length,totalEnds:imeEvents.filter(e=>e.type==='compositionend').length};})()`);
  if(process.env.RASKLAD_PROFILE_REJECT_TEST==='1'){
   report.profileRejectedNoInterception=await ev(`prose.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
   report.rejectionTest=true;report.passed=report.profileRejectedNoInterception;report.checks=1;
@@ -67,8 +73,49 @@ try{
   phase='profile_known_english';await reset();await type('hello');report.knownEnglishPreserved=await ev(`prose.value==='hello '`);
   report.profileVariant=true;
  }
- const required=['preeditObserved','compositionActiveBeforeSpace','correctedOnce','compositionEnded','nextWordPreserved','nativeUndoRestoresPreviousCommit','backspaceEditsComposition','escapePreservesOriginal','mixedTokenPreserved','longTokenPreserved','passwordPassthrough','focusDoesNotLeak'];
+ const required=['preeditObserved','compositionActiveBeforeSpace','correctedOnce','compositionEnded','nextWordPreserved','nativeUndoRestoresPreviousCommit','backspaceEditsComposition','escapePreservesOriginal','mixedTokenPreserved','longTokenPreserved','passwordPassthrough','focusDoesNotLeak','focusOriginalWordPreserved'];
  if(report.profileVariant)required.push('secondWordCorrected','knownEnglishPreserved');
+ if(process.env.RASKLAD_FOCUS_STRESS_LAB==='1'){
+  if(!nativeWayland)throw Error('native focus suite required');
+  phase='focus_stress';
+  const review=JSON.parse(readFileSync('/lab/focus-source-review.json','utf8'));
+  const sourceNames=['driver.mjs','adversarial-focus.mjs','focus-policy.mjs','fixture.html'];
+  const sourcesReviewed=review.schema===1&&review.reviewedNoScriptEventGeneration===true&&sourceNames.every(name=>{
+   const bytes=readFileSync('/lab/'+name);return bytes.length<=40000&&createHash('sha256').update(bytes).digest('hex')===review.sourceSha256?.[name];
+  });
+  const {selectEndEventPolicy}=await import('file:///lab/focus-policy.mjs');
+  const endEventPolicy=selectEndEventPolicy({browserVersion:report.browserVersion,sourcesReviewed,control:report.focusEventControl,correctedOnce:report.correctedOnce});
+  if(endEventPolicy===null)throw Error('focus event provenance refused');
+  report.focusSourceReviewPassed=sourcesReviewed;
+  const {runFocusScenarios}=await import('file:///lab/adversarial-focus.mjs');
+  const diagnostics=[];
+  async function focusEv(expression){
+   const result=await ev(expression);
+   if((result===false||(Number.isInteger(result)&&result<100))&&diagnostics.length<8){
+    try{
+     const observation=await ev(`(()=>{const s=window.__raskladFocus,c=window.__raskladFocusCtl;
+      const n=x=>Number.isInteger(x)&&x>=0&&x<=1000?x:-1;
+      const ids=['prose','other','secret'];const active=ids.indexOf(document.activeElement?.id);
+      return {caseIndex:['word_focus_secret_space','word_other_back_prose_space','word_escape_other_space','word_space_compositionend_hook_other'].indexOf(s?.token),
+       statePresent:!!s,stateOwned:!!s&&typeof c?.owns==='function'&&c.owns(s)===true,activeFieldIndex:active,
+       starts:ids.map(id=>n(s?.starts?.[id])),ends:ids.map(id=>n(s?.ends?.[id])),endMark:n(s?.endMark),
+       documentCompositionStarts:Math.min(1000,imeEvents.filter(e=>e.type==='compositionstart').length),
+       documentCompositionEnds:Math.min(1000,imeEvents.filter(e=>e.type==='compositionend').length),
+       documentEndTargets:[-1,0,1,2].map(i=>Math.min(1000,imeEvents.filter(e=>e.type==='compositionend'&&e.targetIndex===i).length)),
+       documentTrustedEnds:Math.min(1000,imeEvents.filter(e=>e.type==='compositionend'&&e.trusted===true).length),
+       fieldValueClasses:ids.map(id=>['',' ','ghbdtn','ghbdtn ','привет','привет '].indexOf(document.getElementById(id).value)),
+       proseIsOriginal:document.getElementById('prose').value==='ghbdtn',hookHits:n(s?.hits)};})()`);
+     diagnostics.push({stage:Number.isInteger(result)?'final_snapshot':expression.startsWith('new Promise')?'source_end_barrier':'precondition_or_action',...observation});
+    }catch{diagnostics.push({stage:'diagnostic_unavailable'});}
+   }
+   return result;
+  }
+  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset},endEventPolicy);
+  report.focusStress.scope='DOM_intra_surface_only';
+  report.focusStress.diagnostics=diagnostics;
+  report.focusStressPassed=report.focusStress.passed===true;
+  required.push('focusStressPassed');
+ }
  phase='crash_recovery';await reset();await type('word');
  const daemonPid=Number(process.env.RASKLAD_OWN_FCITX_PID);
  if(!Number.isSafeInteger(daemonPid)||daemonPid<=1||readlinkSync(`/proc/${daemonPid}/exe`)!=='/usr/bin/fcitx5')throw Error('owned private daemon missing');

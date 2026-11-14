@@ -21,6 +21,13 @@ class WaylandIsolation(unittest.TestCase):
   with patch.object(lab.os,'geteuid',return_value=1000),patch.object(lab.subprocess,'Popen') as popen:
    with self.assertRaisesRegex(lab.base.Refused,'explicit_input_root_required'):lab.run(None)
    popen.assert_not_called()
+ def test_focus_suite_is_opt_in_in_reference(self):
+  paths=lab.chrome.files();paths.pop('xvfb');paths.pop('keys')
+  default=lab.sandbox_args(paths,{},None,Path('/runtime'),Path('/config'))
+  selected=lab.sandbox_args(paths,{},None,Path('/runtime'),Path('/config'),focus_stress=True)
+  self.assertNotIn('RASKLAD_FOCUS_STRESS_LAB',default)
+  self.assertIn('RASKLAD_FOCUS_STRESS_LAB',selected)
+  self.assertNotIn('--dev-bind',selected)
  def test_inner_refuses_host(self):
   with patch.object(lab,'INSIDE',False),patch.object(lab.subprocess,'Popen') as popen:
    with self.assertRaisesRegex(lab.base.Refused,'not_private_lab'):lab.inside()
