@@ -102,3 +102,24 @@ primary snapshot и сразу после него. Любой input завер�
 повторно по уже использованному разрешению002. Команда прежняя:
 test-hyprland-ime --run-approved --focus-stress --space-telemetry
 --input-root /home/mvn/Work/rasklad. Core, Slack и host настройки не менялись.
+
+## Exact Hyprland diagnosticv2: проба003
+
+Одна отдельно разрешённая проба6d5ae19 выполнена; допуск использован.
+data/hyprland-space-telemetry-v2-003-result.json. Baseline17 pass, focus3/4;
+case2 primarySnapshotCode0, lateSnapshotCode0, waitStatus=deadline. Полная
+armed трасса всех keyboard/beforeinput/input: records[], valid/complete, dropped0.
+За дополнительный500ms браузерный deadline input не наблюдался. Late oracle
+также не совпал; original без Space, other/password пусты. Три остальных
+focus cases и cleanup проходят, compositor жив.
+
+В этой пробе увеличение срока наблюдения и снятие Space-code фильтра не
+показали доставку. Это не локализует виновника и не доказывает вечную потерю.
+Дальше DOM trace не расширяем: следующим нужен отдельный lab-only свидетель
+ветки addon, а не core fix по гипотезе. Предпочтён read-only GetStats через
+существующий private bus: фиксированные20 saturating255 счётчиков, без
+текста/keys/timestamps, setter/reset и I/O в key callback. Before-word baseline
+и after-oracle sample, затем post-query DOM snapshot с сохранением исходного
+FAIL. Нулевой прирост значит только отсутствие наблюдения ДО getter.
+Значение255 делает соответствующую delta неизвестной, а trace неполной.
+Обычная сборка не должна содержать этот интерфейс. Новый host run не разрешён.

@@ -18,7 +18,11 @@ focus_follows_mouse no
 default_border none
 '''
 
-def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapshot_fds=None,focus_stress=False,space_telemetry=False):
+def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapshot_fds=None,focus_stress=False,space_telemetry=False,addon_witness=False):
+ if addon_witness and not (focus_stress and space_telemetry):raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+ if addon_witness:
+  paths=dict(paths);paths['addon']=ROOT/'build/chromium-ime/witness-addon/raskladlab.so';paths['addon_conf']=ROOT/'tests/fcitx_transport/raskladwitness.conf'
+  base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
  a=chrome.argv(paths,identity,profile)
  # Drop X11/GTK routing; this test must use native text-input/input-method.
  clean=[];i=0
@@ -39,6 +43,8 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
  if space_telemetry:
   if not focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
   extra+=['--setenv','RASKLAD_SPACE_TELEMETRY_LAB','1']
+ if addon_witness:
+  extra+=['--ro-bind',str(ROOT/'tests/chromium_ime/addon-witness.mjs'),'/lab/addon-witness.mjs','--setenv','RASKLAD_ADDON_WITNESS_LAB','1']
  result=clean[:at]+extra+clean[at:]
  if snapshot_fds:
   sealed=[];i=0
@@ -49,11 +55,15 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
   result=sealed
  return result
 
-def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False):
+def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,addon_witness=False):
+ if addon_witness and not (focus_stress and space_telemetry):raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
  if os.geteuid()==0:raise base.Refused('root_not_admitted')
  if input_root is None:raise base.Refused('explicit_input_root_required')
  if space_telemetry and not focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
- paths=chrome.files();paths.pop('xvfb');paths.pop('keys');paths['runner']=ROOT/'tools/wayland_ime_lab.py';paths['addon']=ROOT/'build/chromium-ime/profile-addon/raskladlab.so'
+ paths=chrome.files();paths.pop('xvfb');paths.pop('keys');paths['runner']=ROOT/'tools/wayland_ime_lab.py';paths['addon']=ROOT/('build/chromium-ime/witness-addon/raskladlab.so' if addon_witness else 'build/chromium-ime/profile-addon/raskladlab.so')
+ if addon_witness:
+  paths['addon_conf']=ROOT/'tests/fcitx_transport/raskladwitness.conf'
+  base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
  for path in paths.values():base.regular_file(path)
  if focus_stress:
   for source in ['tests/chromium_ime/adversarial-focus.mjs','tests/chromium_ime/focus-policy.mjs','tests/chromium_ime/space-telemetry.mjs','data/focus-source-review-001.json']:base.regular_file(ROOT/source)
@@ -78,7 +88,7 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False):
   identity['passwd'].write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Private lab:/home/lab:/usr/bin/nologin\n');identity['group'].write_text(f'lab:x:{os.getgid()}:\n');identity['machine-id'].write_text('00000000000000000000000000000004\n')
   config=d/'sway.conf';config.write_text(SWAY_CONFIG)
   with (d/'stdout').open('w+b') as out:
-   child=subprocess.Popen(sandbox_args(paths,identity,profile,runtime,config,nested_smoke,snapshots,focus_stress,space_telemetry),stdin=subprocess.DEVNULL,stdout=out,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin'},start_new_session=True,preexec_fn=chrome.limits,pass_fds=tuple(snapshots.values()))
+   child=subprocess.Popen(sandbox_args(paths,identity,profile,runtime,config,nested_smoke,snapshots,focus_stress,space_telemetry,addon_witness),stdin=subprocess.DEVNULL,stdout=out,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin'},start_new_session=True,preexec_fn=chrome.limits,pass_fds=tuple(snapshots.values()))
    try:rc=child.wait(timeout=65)
    except subprocess.TimeoutExpired:raise base.Refused('outer_timeout')
    out.seek(0);raw=out.read(32769)
@@ -134,11 +144,12 @@ def inside():
     except subprocess.TimeoutExpired:child.kill();child.wait(timeout=1)
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');args=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');p.add_argument('--addon-witness',action='store_true');args=p.parse_args()
  try:
+  if args.addon_witness and not (args.focus_stress and args.space_telemetry):raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
   if args.focus_stress and (args.inside or args.smoke_nested_hypr):raise base.Refused('focus_suite_outer_native_only')
   if args.space_telemetry and not args.focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
-  r=inside() if args.inside else run(args.input_root,True) if args.smoke_nested_hypr else run(args.input_root,focus_stress=args.focus_stress,space_telemetry=args.space_telemetry) if args.run else {'schema':1,'status':'plan_only','tested':False,'hostInput':False,'hyprlandSupport':False,'slackSupport':False,'focusStressPlanned':args.focus_stress,'spaceTelemetryPlanned':args.space_telemetry,'transport':'private headless Sway/pixman; virtual keyboard -> native Wayland Chromium -> real Fcitx; no host seat/GPU'}
+  r=inside() if args.inside else run(args.input_root,True) if args.smoke_nested_hypr else run(args.input_root,focus_stress=args.focus_stress,space_telemetry=args.space_telemetry,addon_witness=args.addon_witness) if args.run else {'schema':1,'status':'plan_only','tested':False,'hostInput':False,'hyprlandSupport':False,'slackSupport':False,'focusStressPlanned':args.focus_stress,'spaceTelemetryPlanned':args.space_telemetry,'addonWitnessPlanned':args.addon_witness,'transport':'private headless Sway/pixman; virtual keyboard -> native Wayland Chromium -> real Fcitx; no host seat/GPU'}
   print(json.dumps(r,sort_keys=True));return 0 if r.get('passed',True) else 1
  except (base.Refused,OSError,ValueError,KeyError,subprocess.SubprocessError) as e:
   print(json.dumps({'schema':1,'passed':False,'reason':str(e) if isinstance(e,base.Refused) else type(e).__name__}));return 2

@@ -299,3 +299,12 @@ with tracked lifetime/focus. Sway, Qt and GTK regression pass; this is not an
 atomic multi-message transaction, stale-serial proof, or generic app guarantee.
 Exact Hyprland revalidation after this change remains pending. See
 docs/FOCUS-STRESS-PLAN.md and data/focus-stress-reference-001.json.
+
+
+SYS-245 addon witness — отдельный compile-time developer вариант, не рабочая
+функция. Обычный preprocessed profile code не меняется. В закрытой fixture
+readonly GetStats на уже private bus возвращает только fixed bounded counters;
+key callback не делает I/O/логирование и не сохраняет payload. Нет setter/reset
+или input API. Тестовый вариант не устанавливается, требует явных private
+markers и отдельного бинаря. Ограничения корреляции/насыщения и позитивный
+Sway контроль: [Addon witness](docs/ADDON-WITNESS-001.md).

@@ -34,6 +34,16 @@
 //    deletes the property together with the context, and we never call into a
 //    destroying context.
 //
+// RASKLAD_WITNESS_LAB (separate developer variant only, built by
+// tools/fcitx_witness_lab.pro on top of PROFILE_LAB):
+//  * adds observation-only saturating counters and one read-only GetStats
+//    D-Bus method on the private lab bus (tools/fcitxlabwitness.h).
+//  * reads fixed environment markers once at initialization (never in the key
+//    path) and stays fully inert if any marker differs.
+//  * every witness line is under #ifdef; it never changes gates, filtering,
+//    return paths, ordering or state creation. Default builds contain none of
+//    it: no endpoint, counters, D-Bus dependency or environment reads.
+//
 // Key policy for a gated key PRESS:
 //  * a..z without modifiers (CapsLock/NumLock lock bits are tolerated because
 //    Key::hasModifier() ignores them; uppercase syms are not accepted):
@@ -78,6 +88,13 @@
 #include "fcitxlabprofile.h"
 #endif
 
+#ifdef RASKLAD_WITNESS_LAB
+#ifndef RASKLAD_PROFILE_LAB
+#error "RASKLAD_WITNESS_LAB requires RASKLAD_PROFILE_LAB (use tools/fcitx_witness_lab.pro)"
+#endif
+#include "fcitxlabwitness.h"
+#endif
+
 #include <fcitx-utils/capabilityflags.h>
 #include <fcitx-utils/handlertable.h>
 #include <fcitx-utils/key.h>
@@ -102,6 +119,10 @@
 #include <vector>
 
 namespace {
+
+#ifdef RASKLAD_WITNESS_LAB
+namespace lw = rasklad::fcitxlab::witness;
+#endif
 
 constexpr std::size_t kMaxWord = 32;
 constexpr std::size_t kMaxPendingReleases = 8;
@@ -240,6 +261,10 @@ public:
             watchers_.emplace_back(instance_->watchEvent(
                 type, fcitx::EventWatcherPhase::PreInputMethod,
                 [this](fcitx::Event &event) {
+#ifdef RASKLAD_WITNESS_LAB
+                    // Counted before the existing state lookup/discard.
+                    witnessLifecycle(event.type());
+#endif
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
                     if (auto *s = state(ic); s && s->active()) {
@@ -247,13 +272,48 @@ public:
                     }
                 }));
         }
+
+#ifdef RASKLAD_WITNESS_LAB
+        // Only after profile.ready() and successful property registration.
+        // Fails closed (no endpoint, counters disabled) outside the fixed
+        // private lab environment or without the dbus addon.
+        witness_.start(instance_);
+#endif
     }
 
     // Members are destroyed in reverse order: watchers first (no more
     // callbacks), then the factory (unregisters and deletes all properties).
+#ifdef RASKLAD_WITNESS_LAB
+    // Witness endpoint is unregistered first, while the dbus addon we depend
+    // on is still loaded; the remaining members then follow the order above.
+    ~RaskladLab() override { witness_.stop(); }
+#else
     ~RaskladLab() override = default;
+#endif
 
 private:
+#ifdef RASKLAD_WITNESS_LAB
+    static void witnessLifecycle(fcitx::EventType type) {
+        switch (type) {
+        case fcitx::EventType::InputContextFocusIn:
+            lw::inc(lw::Counter::focusIn);
+            break;
+        case fcitx::EventType::InputContextFocusOut:
+            lw::inc(lw::Counter::focusOut);
+            break;
+        case fcitx::EventType::InputContextReset:
+            lw::inc(lw::Counter::reset);
+            break;
+        case fcitx::EventType::InputContextCapabilityAboutToChange:
+        case fcitx::EventType::InputContextCapabilityChanged:
+            lw::inc(lw::Counter::capabilityChange);
+            break;
+        default:
+            break;
+        }
+    }
+#endif
+
     LabState *state(fcitx::InputContext *ic) {
         if (!registered_ || !ic) {
             return nullptr;
@@ -344,6 +404,9 @@ private:
             s.setPreeditShown(false);
             ic->inputPanel().setClientPreedit(fcitx::Text());
         }
+#ifdef RASKLAD_WITNESS_LAB
+        lw::inc(lw::Counter::commitStringCalls); // any key, immediately before
+#endif
         ic->commitString(text);
         if (hadPreedit) {
             if (auto *current = ref.get(); current && current->hasFocus()) {
@@ -354,6 +417,27 @@ private:
     }
 
     void handleKey(fcitx::KeyEvent &event) {
+#ifdef RASKLAD_WITNESS_LAB
+        // Observation only, BEFORE the filtered check and all gates: raw code
+        // 65 (evdev KEY_SPACE 57 + 8). Code and sym are compared, never stored
+        // or exported. A prior-filtered press returns below, so no further
+        // per-press counter is incremented for it.
+        const bool wSpaceCode = event.rawKey().code() == lw::kSpaceKeyCode;
+        const bool wSpacePress = wSpaceCode && !event.isRelease();
+        if (wSpaceCode) {
+            if (event.isRelease()) {
+                lw::inc(lw::Counter::spaceCodeReleaseSeen);
+            } else {
+                lw::inc(lw::Counter::spaceCodePressSeen);
+                if (event.key().sym() == FcitxKey_space) {
+                    lw::inc(lw::Counter::normalizedSpacePress);
+                }
+                if (event.filtered()) {
+                    lw::inc(lw::Counter::priorFilteredPress);
+                }
+            }
+        }
+#endif
         if (!registered_ || event.filtered()) {
             return;
         }
@@ -364,21 +448,48 @@ private:
             // Never mutates the buffer; only swallows the release of a press
             // we consumed in this same context.
             if (auto *s = state(ic); s && s->takePending(key)) {
+#ifdef RASKLAD_WITNESS_LAB
+                if (wSpaceCode) {
+                    lw::inc(lw::Counter::releaseFiltered);
+                }
+#endif
                 event.filterAndAccept();
             }
             return;
         }
 
+#ifdef RASKLAD_WITNESS_LAB
+        // Read-only focus observation; not a gate, creates no state.
+        if (wSpacePress && ic && ic->hasFocus()) {
+            lw::inc(lw::Counter::focusedPress);
+        }
+#endif
         if (!eligible(ic)) {
+#ifdef RASKLAD_WITNESS_LAB
+            if (wSpacePress) {
+                lw::inc(lw::Counter::passIneligible);
+            }
+#endif
             // Gates no longer hold: discard without commit, pass the key.
             if (auto *s = state(ic); s && s->active()) {
                 discard(ic, *s);
             }
             return;
         }
+#ifdef RASKLAD_WITNESS_LAB
+        // Existing single eligible() evaluation above; not re-evaluated.
+        if (wSpacePress) {
+            lw::inc(lw::Counter::eligiblePress);
+        }
+#endif
 
         LabState *s = state(ic);
         if (!s) {
+#ifdef RASKLAD_WITNESS_LAB
+            if (wSpacePress) {
+                lw::inc(lw::Counter::noStatePress);
+            }
+#endif
             return;
         }
         // A new press of a tracked key means its old release was lost.
@@ -391,9 +502,21 @@ private:
         // Never begin correcting a suffix of a token already passed through.
         // Mixed tokens, punctuation and overflow bypass until a safe delimiter.
         if (s->bypass()) {
+#ifdef RASKLAD_WITNESS_LAB
+            // This branch always returns unfiltered: both points coincide.
+            if (wSpacePress) {
+                lw::inc(lw::Counter::bypassPress);
+                lw::inc(lw::Counter::passBypass);
+            }
+#endif
             if (boundary) s->setBypass(false);
             return;
         }
+#ifdef RASKLAD_WITNESS_LAB
+        if (wSpacePress && !s->empty()) {
+            lw::inc(lw::Counter::bufferNonemptyPress);
+        }
+#endif
 
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
             s->push(static_cast<char>('a' + (sym - FcitxKey_a)));
@@ -405,6 +528,11 @@ private:
 
         if (plain && !s->empty()) {
             if (sym == FcitxKey_space) {
+#ifdef RASKLAD_WITNESS_LAB
+                if (wSpacePress) {
+                    lw::inc(lw::Counter::commitSpaceBranch);
+                }
+#endif
                 std::string w = s->word();
 #ifdef RASKLAD_PROFILE_LAB
                 auto corrected = profile_.correct(w);
@@ -435,6 +563,12 @@ private:
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
         // same focused context, then let the key pass unfiltered.
         if (!boundary) s->setBypass(true);
+#ifdef RASKLAD_WITNESS_LAB
+        if (wSpacePress) {
+            lw::inc(s->empty() ? lw::Counter::passEmpty
+                               : lw::Counter::flushOriginalSpaceCode);
+        }
+#endif
         if (!s->empty()) {
             commitAndClear(ic, *s, s->word());
         }
@@ -449,6 +583,9 @@ private:
     bool registered_ = false;
     std::vector<std::unique_ptr<fcitx::HandlerTableEntry<fcitx::EventHandler>>>
         watchers_;
+#ifdef RASKLAD_WITNESS_LAB
+    rasklad::fcitxlab::witness::Owner witness_;
+#endif
 };
 
 class RaskladLabFactory final : public fcitx::AddonFactory {

@@ -2,6 +2,30 @@
 
 ## Актуальная контрольная точка
 
+Проба003 с diagnosticv2 на exact Hyprland выполнена по отдельному допуску:
+baseline17/focus3/4, primary0/late0, waitdeadline, ALLkeyboard+input records[]
+(valid/armed/complete,dropped0). Допуск использован.
+data/hyprland-space-telemetry-v2-003-result.json. Причина ещё не установлена.
+
+Следующий отдельно подготовленный опыт — compile-time addon witness. Claude
+реализовал C++, Codex интегрировал readonlyJS reader, oracle и проверки;
+runneragent добавил optional flags/guards. В keypath только counters в памяти,
+GetStats readonly на existingprivatebus, без текста/кодовых payload/timestamps.
+Обычный profile preprocessed code побайтово прежний. Witness variant собран.
+52Python +19oracle +19telemetry +8witness tests pass; C++negativeenv controls
+pass. Private Sway baseline17/focus4/4 pass: Space1press/1release, passEmpty1,
+commit0, focusIn/Out2/2. Подробно docs/ADDON-WITNESS-001.md и
+data/addon-witness-preflight-001.json. Независимые C++ иJSreview блокеров не нашли;
+DBus runtime dependency в отдельном conf явно указана.
+
+Следующая команда: bin/test-hyprland-ime --run-approved --focus-stress
+--space-telemetry --addon-witness --input-root /home/mvn/Work/rasklad.
+Нужен НОВЫЙ однократный допуск до75s с теми же ресурсами. Не запускать
+по использованному003. Сохранить первоначальныйFAIL и post-query snapshot.
+Если witnesspass/missing наблюдения неоднозначны, не объявлятьfix. Slackoff.
+
+## Предыдущие контрольные точки (история)
+
 Новая отдельно разрешённая проба bed8364 выполнена: exact Hyprland baseline17
 pass, focus3/4, case2 снова original без Space. Trace valid/armed/complete,
 dropped0, records[]: до cut нет Space-coded keydown/up или beforeinput/input.

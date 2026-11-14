@@ -115,7 +115,7 @@ const snapshot = (K, x) => `(()=>{${pre(K)}if(!live)return -1;
  const h=s.hits;if(!Number.isInteger(h)||h<0||h>${HITS_CAP})return -1;
  return (ok?100:0)+h;})()`;
 
-export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
+export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null, addonWitness = null }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
   let policy = null;
   if (endEventPolicy === END_POLICY_TRUSTED_ONLY) policy = END_POLICY_TRUSTED_ONLY;
   else if (endEventPolicy === END_POLICY_SCOPED) policy = END_POLICY_SCOPED;
@@ -131,6 +131,8 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
     const r = { id, passed: false, precondition: false, hookHits: null, errorCode: null, executed: false, cleanupPassed: null };
     if (tel !== null) r.spaceTelemetry = null;
     let telOk = true, telBegun = false;
+    const witness = id === 'word_other_back_prose_space' ? addonWitness : null;
+    let witnessOk = true, witnessBegun = false;
     const telArm = tel === null ? null : async () => {
       try {
         if (!(await tel.arm())) telOk = false;
@@ -151,6 +153,11 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
         } catch {
           telOk = false;
         }
+      }
+      if (witness !== null) {
+        witnessBegun = true;
+        try { witnessOk = await witness.begin() === true; } catch { witnessOk = false; }
+        if (!witnessOk) { r.errorCode = 'WITNESS_SETUP_FAILED'; return r; }
       }
       await type('word');
       r.precondition = await is(sourceActive(K));
@@ -188,6 +195,19 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
           };
         }
       }
+      if (witness !== null && witnessBegun && expect) {
+        try {
+          const counters = await witness.sample();
+          witnessOk = counters && counters.valid === true;
+          r.addonWitness = witnessOk ? counters : {valid:false,complete:false,before:[],after:[],delta:[]};
+        } catch { witnessOk = false; r.addonWitness = {valid:false,complete:false,before:[],after:[],delta:[]}; }
+        // The getter is not atomic with DOM; record a separate post-query observation.
+        const post = await ev(snapshot(K, expect));
+        r.witnessPostQuery = {
+          snapshotCode: Number.isInteger(post) && post >= 0 && post <= 101 ? post : -1,
+          matchesOriginalOracle: post === 100 + (hook ? 1 : 0),
+        };
+      }
     } catch {
       r.passed = false;
       r.errorCode = 'CASE_ERROR';
@@ -209,6 +229,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
         r.spaceTelemetry = snap && typeof snap === 'object' ? snap : { valid: false, armed: false, records: [], dropped: 0 };
       }
       if (tel !== null && !telOk) cleanOk = false;
+      if (witness !== null && !witnessOk) cleanOk = false;
       try {
         if (!(await is(CLEAR))) cleanOk = false;
       } catch {

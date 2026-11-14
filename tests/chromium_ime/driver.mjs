@@ -80,6 +80,7 @@ try{
   phase='focus_stress';
   const review=JSON.parse(readFileSync('/lab/focus-source-review.json','utf8'));
   const sourceNames=['driver.mjs','adversarial-focus.mjs','focus-policy.mjs','space-telemetry.mjs','fixture.html'];
+  if(process.env.RASKLAD_ADDON_WITNESS_LAB==='1')sourceNames.push('addon-witness.mjs');
   const sourcesReviewed=review.schema===1&&review.reviewedNoScriptEventGeneration===true&&sourceNames.every(name=>{
    const bytes=readFileSync('/lab/'+name);return bytes.length<=40000&&createHash('sha256').update(bytes).digest('hex')===review.sourceSha256?.[name];
   });
@@ -116,7 +117,15 @@ try{
    const {createSpaceTelemetry}=await import('file:///lab/space-telemetry.mjs');
    spaceTelemetry=createSpaceTelemetry({ev});
   }
-  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry},endEventPolicy);
+  let addonWitness=null;
+  if(process.env.RASKLAD_ADDON_WITNESS_LAB==='1'){
+   const {createAddonWitness}=await import('file:///lab/addon-witness.mjs');
+   addonWitness=createAddonWitness({query:async()=>execFileSync('/usr/bin/gdbus',[
+    'call','--session','--dest','org.fcitx.Fcitx5','--object-path','/org/rasklad/LabWitness',
+    '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']})});
+  }
+  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitness},endEventPolicy);
+  report.focusStress.instrumentedAddonTrial=addonWitness!==null;
   report.focusStress.instrumentedSpaceTrial=spaceTelemetry!==null;
   report.focusStress.scope='DOM_intra_surface_only';
   report.focusStress.diagnostics=diagnostics;
