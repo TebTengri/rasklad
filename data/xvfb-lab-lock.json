@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "version": "21.1.26-1",
+  "url": "https://archive.archlinux.org/packages/x/xorg-server-xvfb/xorg-server-xvfb-21.1.26-1-x86_64.pkg.tar.zst",
+  "packageSha256": "67fb3d52b7658bf610449cb83b97a224ea683d7486b612995b4d10ec26a1a9af",
+  "packageBytes": 873799,
+  "binarySha256": "68d288d1fc8c5ad684cf6f122e4bbabf2afc8135654e70a814e37aa9ca42f333",
+  "binaryBytes": 1973888,
+  "licenseSha256": "c9f90a6669109aad6c9a7c3b46cc2c574221a73b792afa419336816b49da5c11",
+  "signatureVerified": true,
+  "signerFingerprint": "ADC8A1FCC15E01D45310419E94657AB20F2A092B",
+  "trustSource": "installed Arch Linux public package keyring; dearmored project-local for gpgv",
+  "installation": "none; exact binary extracted into ignored build for isolated test",
+  "redistributionApproved": false,
+  "packageLicenses": [
+    "MIT",
+    "GPL-2.0-only"
+  ],
+  "licenseScope": "Full package COPYING retained in ignored build; no runtime/script/source vendoring, package not redistributed"
+}

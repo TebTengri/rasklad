@@ -19,3 +19,10 @@
 Продолжение: изолированный настоящий внешний клиент Chromium/Fcitx (проверить
 официальный project-local Xvfb), затем сформировать конкретный exact Slack trial.
 Незавершённое слово при crash теряется; эта задача остаётся открытой.
+
+Следующая контрольная точка: Chromium155 + настоящий GTK/Fcitx transport прошёл
+в private signed Xvfb без CDP typing. Точный Undo, mixed/long/password и blur
+проверены. См. docs/CHROMIUM-IME-001.md. Xvfb находится только в ignored build/,
+подпись проверена; в систему ничего не установлено. Следующий незавершённый шаг:
+подключить существующее локальное evidence core вместо фиксированного правила,
+не заявляя качество по transport-тесту; затем exact Slack trial.

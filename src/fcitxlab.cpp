@@ -96,7 +96,12 @@ namespace {
 
 constexpr std::size_t kMaxWord = 32;
 constexpr std::size_t kMaxPendingReleases = 8;
+// Separate compile-time lab variant; never an environment-controlled app list.
+#ifdef RASKLAD_CHROMIUM_LAB
+constexpr const char kLabProgram[] = "chromium";
+#else
 constexpr const char kLabProgram[] = "rasklad-ime-lab";
+#endif
 constexpr const char kLabEntry[] = "keyboard-us";
 constexpr const char kPropertyName[] = "raskladlabState";
 

@@ -242,3 +242,18 @@ in the lab's private namespace; no existing Slack/Fcitx process is signalled.
 Focus/capability loss clears lab state. Crash and incomplete-preedit behavior are
 measured rather than assumed lossless. Host integration, permissions, installation
 and rollback require a later concrete review; no release approval is implied.
+
+## Real Chromium IM transport lab
+
+The optional chromium-ime lab uses an official signed/hash-pinned project-local
+Xvfb binary, private X server, private D-Bus/Fcitx and disposable Chromium profile
+in bwrap --unshare-all. No host display/profile/seat/bus/input/GPU/network. Fixed
+synthetic XTest events target only the owned, viewable private browser PID; this
+is not a permitted system replay fallback. CDP Input.* is forbidden. The browser
+keeps its sandbox; its shared-memory files need a larger128MiB file cap.
+
+The separate addon compile variant gates program=chromium, not the default Qt
+fixture. It is synthetic developer code, not a generic context classifier or a
+production app allowlist. Provisional composition text can already exist in DOM.
+No raw dictionaries/model/profile/account/message data are read by this test.
+See docs/CHROMIUM-IME-001.md and data/chromium-ime-001-result.json.

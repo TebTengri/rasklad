@@ -70,3 +70,13 @@ in data/fcitx-transport-environment.json. This local linking experiment does not
 approve redistribution of system binaries, SDKs or their bundled dependencies.
 Before packaging, audit exact component licenses, source/notice/relinking duties
 separately. Own addon code remains MIT; that does not relicense Fcitx/Qt.
+
+## Project-local Xvfb developer fixture
+
+Official Arch xorg-server-xvfb21.1.26-1 package (MIT/GPL-2.0-only package metadata)
+is downloaded only with explicit prepare --fetch, signature verified against the
+installed public Arch keyring and exact signer, with immutable SHA/size pins.
+Only Xvfb and its unmodified full COPYING are extracted into ignored build/.
+No system installation or redistribution. Scripts/package/runtime dependencies
+are not relicensed by own MIT code; shipping requires a separate component audit.
+Pins/source: data/xvfb-lab-lock.json, docs/CHROMIUM-IME-001.md.

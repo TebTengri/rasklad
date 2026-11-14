@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Verify cached signed Xvfb fixture; --fetch downloads fixed package, never installs."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+import urllib.request
+
+ROOT=Path(__file__).resolve().parent.parent
+OUT=ROOT/'build/chromium-ime'
+
+def digest(b):return hashlib.sha256(b).hexdigest()
+def main():
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--fetch',action='store_true');args=p.parse_args()
+ lock=json.loads((ROOT/'data/xvfb-lab-lock.json').read_text())
+ OUT.mkdir(parents=True,exist_ok=True)
+ if OUT.is_symlink():raise ValueError('unsafe output')
+ name=lock['url'].rsplit('/',1)[1];package=OUT/name;signature=OUT/(name+'.sig')
+ for path in [package,signature,OUT/'Xvfb',OUT/'Xvfb-COPYING.txt']:
+  if path.is_symlink():raise ValueError('unsafe output')
+ if args.fetch:
+  for path,url,maximum in [(package,lock['url'],lock['packageBytes']),(signature,lock['url']+'.sig',16384)]:
+   if path.exists():continue
+   with urllib.request.urlopen(url,timeout=20) as r:
+    if not r.geturl().startswith('https://archive.archlinux.org/'):raise ValueError('redirect refused')
+    b=r.read(maximum+1)
+   if len(b)>maximum:raise ValueError('download bound')
+   if path==package and digest(b)!=lock['packageSha256']:raise ValueError('package pin')
+   with path.open('xb') as f:f.write(b)
+ b=package.read_bytes()
+ if len(b)!=lock['packageBytes'] or digest(b)!=lock['packageSha256']:raise ValueError('package pin')
+ with tempfile.TemporaryDirectory(prefix='signature-',dir=OUT) as temp:
+  keyring=Path(temp)/'keys.gpg'
+  subprocess.run(['/usr/bin/gpg','--homedir',temp,'--batch','--dearmor','--output',str(keyring),'/usr/share/pacman/keyrings/archlinux.gpg'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=8)
+  result=subprocess.run(['/usr/bin/gpgv','--homedir',temp,'--keyring',str(keyring),'--status-fd','1',str(signature),str(package)],check=True,capture_output=True,timeout=8)
+  valid='[GNUPG:] VALIDSIG '+lock['signerFingerprint']+' '
+  if valid not in result.stdout.decode('ascii','replace'):raise ValueError('signer mismatch')
+ for member,name,sha in [('usr/bin/Xvfb','Xvfb',lock['binarySha256']),('usr/share/licenses/xorg-server-xvfb/COPYING','Xvfb-COPYING.txt',lock['licenseSha256'])]:
+  b=subprocess.run(['/usr/bin/bsdtar','-xOf',str(package),member],check=True,capture_output=True,timeout=8).stdout
+  if len(b)>5_000_000 or digest(b)!=sha:raise ValueError('member pin')
+  target=OUT/name
+  if target.exists():
+   if digest(target.read_bytes())!=sha:raise ValueError('existing output differs')
+  else:
+   with target.open('xb') as f:f.write(b)
+   if name=='Xvfb':target.chmod(0o755)
+ print(json.dumps({'schema':1,'verified':True,'signatureVerified':True,'downloadedOnlyIfExplicit':args.fetch,'systemInstallation':False,'version':lock['version']}))
+if __name__=='__main__':
+ try:main()
+ except (OSError,ValueError,KeyError,subprocess.SubprocessError):
+  print(json.dumps({'schema':1,'verified':False,'reason':'cache_signature_or_pin_failed','systemInstallation':False}));raise SystemExit(1)
