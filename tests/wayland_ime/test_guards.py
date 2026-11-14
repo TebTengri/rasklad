@@ -28,6 +28,18 @@ class WaylandIsolation(unittest.TestCase):
   self.assertNotIn('RASKLAD_FOCUS_STRESS_LAB',default)
   self.assertIn('RASKLAD_FOCUS_STRESS_LAB',selected)
   self.assertNotIn('--dev-bind',selected)
+ def test_space_telemetry_is_optional_and_requires_focus(self):
+  paths=lab.chrome.files();paths.pop('xvfb');paths.pop('keys')
+  default=lab.sandbox_args(paths,{},None,Path('/runtime'),Path('/config'),focus_stress=True)
+  selected=lab.sandbox_args(paths,{},None,Path('/runtime'),Path('/config'),focus_stress=True,space_telemetry=True)
+  self.assertNotIn('RASKLAD_SPACE_TELEMETRY_LAB',default)
+  self.assertIn('RASKLAD_SPACE_TELEMETRY_LAB',selected)
+  self.assertNotIn('--dev-bind',selected)
+  with self.assertRaisesRegex(lab.base.Refused,'space_telemetry_requires_focus_suite'):
+   lab.sandbox_args(paths,{},None,Path('/runtime'),Path('/config'),space_telemetry=True)
+  with patch.object(lab.subprocess,'Popen') as popen:
+   with self.assertRaisesRegex(lab.base.Refused,'space_telemetry_requires_focus_suite'):lab.run('/unused',space_telemetry=True)
+   popen.assert_not_called()
  def test_inner_refuses_host(self):
   with patch.object(lab,'INSIDE',False),patch.object(lab.subprocess,'Popen') as popen:
    with self.assertRaisesRegex(lab.base.Refused,'not_private_lab'):lab.inside()

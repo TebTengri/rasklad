@@ -2,6 +2,20 @@
 
 ## Актуальная контрольная точка
 
+Exact Hyprland focus trial8008ad7: baseline17 прошли, focus3/4. Исправление
+wrong-field подтверждено case4; case2 rapid blur/refocus теряет Space. Причина
+не установлена, addon нельзя исключить по финальному значению. Предыдущий
+одиночный live допуск использован; новых окон без отдельного согласия нет.
+
+Optional bounded Space telemetry Claude готова и независимо проверена.
+45 Python guards, 19 Node oracle, 10 telemetry tests проходят; instrumented
+private Sway baseline17 + focus4/4 pass, trace показывает Space input в prose.
+Агрегат data/space-telemetry-preflight-001.json; ограничения и следующая
+команда в docs/HYPRLAND-FOCUS-STRESS-001.md. Нужен один отдельно согласованный
+exact Hyprland diagnostic trial до75s. Инструментация может менять timing;
+не считать её успех исправлением. Исходный строгий тест не ослаблять,
+не добавлять sleep/retry Space. Slack и host IME не подключены.
+
 Claude Opus5.5 реализовал4focus scenarios и C++ commit ordering fix; Codex
 и independentcritic нашли и исправили ложно-положительные gates/cleanupmodel.
 Sway strictsamecase BEFORE: payloadперешёлизproseвother; AFTERsameoracle4/4pass.

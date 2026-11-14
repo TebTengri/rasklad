@@ -115,7 +115,7 @@ const snapshot = (K, x) => `(()=>{${pre(K)}if(!live)return -1;
  const h=s.hits;if(!Number.isInteger(h)||h<0||h>${HITS_CAP})return -1;
  return (ok?100:0)+h;})()`;
 
-export async function runFocusScenarios({ ev, type, reset }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
+export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
   let policy = null;
   if (endEventPolicy === END_POLICY_TRUSTED_ONLY) policy = END_POLICY_TRUSTED_ONLY;
   else if (endEventPolicy === END_POLICY_SCOPED) policy = END_POLICY_SCOPED;
@@ -127,18 +127,35 @@ export async function runFocusScenarios({ ev, type, reset }, endEventPolicy = EN
   const is = async expression => (await ev(expression)) === true;
   let setupClean = true;
 
-  async function runCase(id, hook, body) {
+  async function runCase(id, hook, body, tel = null) {
     const r = { id, passed: false, precondition: false, hookHits: null, errorCode: null, executed: false, cleanupPassed: null };
+    if (tel !== null) r.spaceTelemetry = null;
+    let telOk = true, telBegun = false;
+    const telArm = tel === null ? null : async () => {
+      try {
+        if (!(await tel.arm())) telOk = false;
+      } catch {
+        telOk = false;
+      }
+    };
     if (!setupClean) { r.errorCode = 'DEPENDENT_NOT_RUN'; return r; }
     r.executed = true;
     const K = { T: J(id), S };
     try {
       await reset();
       if (!(await is(install(K, hook)))) { r.errorCode = 'INSTALL_FAILED'; return r; }
+      if (tel !== null) {
+        telBegun = true;
+        try {
+          if (!(await tel.begin(id))) telOk = false;
+        } catch {
+          telOk = false;
+        }
+      }
       await type('word');
       r.precondition = await is(sourceActive(K));
       if (!r.precondition) { r.errorCode = 'PRECONDITION_FAILED'; return r; }
-      const expect = await body(K);
+      const expect = await body(K, telArm);
       if (expect) {
         const code = await ev(snapshot(K, expect));
         if (Number.isInteger(code) && code >= 0) {
@@ -152,6 +169,22 @@ export async function runFocusScenarios({ ev, type, reset }, endEventPolicy = EN
       r.errorCode = 'CASE_ERROR';
     } finally {
       let cleanOk = true;
+      if (tel !== null && telBegun) {
+        let snap = null;
+        try {
+          snap = await tel.snapshot();
+        } catch {
+          snap = null;
+        }
+        try {
+          if (!(await tel.stop())) cleanOk = false;
+        } catch {
+          cleanOk = false;
+        }
+        if (!snap || typeof snap !== 'object' || snap.valid !== true) cleanOk = false;
+        r.spaceTelemetry = snap && typeof snap === 'object' ? snap : { valid: false, armed: false, records: [], dropped: 0 };
+      }
+      if (tel !== null && !telOk) cleanOk = false;
       try {
         if (!(await is(CLEAR))) cleanOk = false;
       } catch {
@@ -190,7 +223,7 @@ export async function runFocusScenarios({ ev, type, reset }, endEventPolicy = EN
   }));
 
   // 2: word preedit -> other focus (source must end first) -> prose focus -> space
-  cases.push(await runCase('word_other_back_prose_space', false, async K => {
+  cases.push(await runCase('word_other_back_prose_space', false, async (K, telArm) => {
     if (!(await is(markEnd(K)))) return false;
     if (!(await is(focusTo(K, 'other')))) return false;
     if (!(await is(sourceEnded(K)))) return false;
@@ -198,9 +231,10 @@ export async function runFocusScenarios({ ev, type, reset }, endEventPolicy = EN
     if (!(await is(focusTo(K, 'prose')))) return false;
     if (!(await is(held(K, 'prose')))) return false;
     if (!(await is(markStart(K)))) return false;
+    if (telArm !== null) await telArm();
     await type('space');
     return { prose: PROSE_WORD + ' ', other: '', secret: '', active: 'prose', sinceMark: true };
-  }));
+  }, spaceTelemetry));
 
   // 3: word preedit -> escape (must end source BEFORE any blur) -> other focus -> space
   cases.push(await runCase('word_escape_other_space', false, async K => {

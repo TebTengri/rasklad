@@ -79,10 +79,11 @@ try{
   if(!nativeWayland)throw Error('native focus suite required');
   phase='focus_stress';
   const review=JSON.parse(readFileSync('/lab/focus-source-review.json','utf8'));
-  const sourceNames=['driver.mjs','adversarial-focus.mjs','focus-policy.mjs','fixture.html'];
+  const sourceNames=['driver.mjs','adversarial-focus.mjs','focus-policy.mjs','space-telemetry.mjs','fixture.html'];
   const sourcesReviewed=review.schema===1&&review.reviewedNoScriptEventGeneration===true&&sourceNames.every(name=>{
    const bytes=readFileSync('/lab/'+name);return bytes.length<=40000&&createHash('sha256').update(bytes).digest('hex')===review.sourceSha256?.[name];
   });
+  if(!sourcesReviewed)throw Error('focus source provenance refused');
   const {selectEndEventPolicy}=await import('file:///lab/focus-policy.mjs');
   const endEventPolicy=selectEndEventPolicy({browserVersion:report.browserVersion,sourcesReviewed,control:report.focusEventControl,correctedOnce:report.correctedOnce});
   if(endEventPolicy===null)throw Error('focus event provenance refused');
@@ -110,7 +111,13 @@ try{
    }
    return result;
   }
-  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset},endEventPolicy);
+  let spaceTelemetry=null;
+  if(process.env.RASKLAD_SPACE_TELEMETRY_LAB==='1'){
+   const {createSpaceTelemetry}=await import('file:///lab/space-telemetry.mjs');
+   spaceTelemetry=createSpaceTelemetry({ev});
+  }
+  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry},endEventPolicy);
+  report.focusStress.instrumentedSpaceTrial=spaceTelemetry!==null;
   report.focusStress.scope='DOM_intra_surface_only';
   report.focusStress.diagnostics=diagnostics;
   report.focusStressPassed=report.focusStress.passed===true;

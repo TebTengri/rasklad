@@ -73,6 +73,12 @@ class ExactHyprlandGuards(unittest.TestCase):
         self.assertIn('/lab/adversarial-focus.mjs', selected)
         self.assertEqual(selected.count('--dev-bind'), default.count('--dev-bind'))
 
+    def test_space_telemetry_refuses_without_focus_before_endpoint(self):
+        with patch.object(lab.probe, 'endpoint') as endpoint:
+            with self.assertRaisesRegex(lab.base.Refused, 'space_telemetry_requires_focus_suite'):
+                lab.run('/unused', space_telemetry=True)
+            endpoint.assert_not_called()
+
     def test_private_bus_refuses_unreleased_parent_fd(self):
         for marker in ('RASKLAD_PARENT_FD', 'WAYLAND_SOCKET'):
             with patch.dict(os.environ, {marker: '8'}, clear=True), patch.object(lab.subprocess, 'Popen') as popen:

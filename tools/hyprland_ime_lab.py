@@ -34,7 +34,7 @@ probe = load('hypr_probe', Path('/lab/probe.py') if INSIDE else ROOT/'tools/hypr
 chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False):
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False):
     args = probe.sandbox_args(directory, parent_fd, metadata_plan)
     at = args.index('--')
     extra = ['--ro-bind', '/etc/fonts', '/etc/fonts', '--dir', '/lab/addons']
@@ -49,9 +49,14 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
     if focus_stress:
         for source, target in [('tests/chromium_ime/adversarial-focus.mjs','adversarial-focus.mjs'),
                                ('tests/chromium_ime/focus-policy.mjs','focus-policy.mjs'),
+                               ('tests/chromium_ime/space-telemetry.mjs','space-telemetry.mjs'),
                                ('data/focus-source-review-001.json','focus-source-review.json')]:
             extra += ['--ro-bind', str(ROOT/source), '/lab/'+target]
         extra += ['--setenv', 'RASKLAD_FOCUS_STRESS_LAB', '1']
+    if space_telemetry:
+        if not focus_stress:
+            raise base.Refused('space_telemetry_requires_focus_suite')
+        extra += ['--setenv', 'RASKLAD_SPACE_TELEMETRY_LAB', '1']
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
     for relative, path in profile.items():
         extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
@@ -163,11 +168,13 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False):
+def run(input_root, focus_stress=False, space_telemetry=False):
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
     if input_root is None:
         raise base.Refused('explicit_input_root_required')
+    if space_telemetry and not focus_stress:
+        raise base.Refused('space_telemetry_requires_focus_suite')
     base.regular_file(Path('/usr/bin/bwrap'), True)
     meta = Path('/usr/bin/bwrap').stat()
     if meta.st_uid != 0 or meta.st_mode & 0o6022:
@@ -181,7 +188,7 @@ def run(input_root, focus_stress=False):
     for path in [*paths.values(), ROOT/'tools/native_ime_clients.py']:
         base.regular_file(path)
     if focus_stress:
-        for source in ['tests/chromium_ime/adversarial-focus.mjs','tests/chromium_ime/focus-policy.mjs','data/focus-source-review-001.json']:
+        for source in ['tests/chromium_ime/adversarial-focus.mjs','tests/chromium_ime/focus-policy.mjs','tests/chromium_ime/space-telemetry.mjs','data/focus-source-review-001.json']:
             base.regular_file(ROOT/source)
     keys = ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'
     base.regular_file(keys, True)
@@ -219,7 +226,7 @@ def run(input_root, focus_stress=False):
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -256,14 +263,18 @@ def main():
     modes.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--input-root')
     parser.add_argument('--focus-stress', action='store_true')
+    parser.add_argument('--space-telemetry', action='store_true')
     args = parser.parse_args()
     try:
         if args.inside and args.focus_stress:
             raise base.Refused('focus_suite_outer_native_only')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress) if args.run_approved else {
+        if args.space_telemetry and not args.focus_stress:
+            raise base.Refused('space_telemetry_requires_focus_suite')
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
             'focusStressPlanned': args.focus_stress,
+            'spaceTelemetryPlanned': args.space_telemetry,
             'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
         print(json.dumps(report, sort_keys=True))
         return 0 if report.get('passed', True) else 1
