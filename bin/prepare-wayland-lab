@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Verify official signed cached reference compositor; --fetch never installs."""
+import argparse,hashlib,json,subprocess,tempfile,urllib.request,urllib.parse
+from pathlib import Path
+ROOT=Path(__file__).resolve().parent.parent
+OUT=ROOT/'build/wayland-ime'
+def sha(b):return hashlib.sha256(b).hexdigest()
+def write_exact(path,payload):
+ if any(p.is_symlink() for p in [path,*path.parents]):raise ValueError('symlink')
+ if path.exists():
+  if path.read_bytes()!=payload:raise ValueError('existing bytes differ')
+ else:
+  path.parent.mkdir(parents=True,exist_ok=True)
+  with path.open('xb') as f:f.write(payload)
+def main():
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--fetch',action='store_true');args=p.parse_args()
+ lock=json.loads((ROOT/'data/wayland-lab-runtime-lock.json').read_text())
+ for parent in [OUT,*OUT.parents]:
+  if parent.is_symlink():raise ValueError('unsafe directory')
+ OUT.mkdir(parents=True,exist_ok=True)
+ with tempfile.TemporaryDirectory(prefix='verify-',dir=OUT) as temp:
+  ring=Path(temp)/'keys.gpg'
+  subprocess.run(['/usr/bin/gpg','--homedir',temp,'--batch','--dearmor','--output',str(ring),'/usr/share/pacman/keyrings/archlinux.gpg'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=8)
+  for pkg in lock['packages']:
+   name=urllib.parse.unquote(pkg['url'].rsplit('/',1)[1]);package=OUT/name;sig=OUT/(name+'.sig')
+   if not pkg['url'].startswith('https://archive.archlinux.org/packages/'):raise ValueError('source')
+   for path,url,limit in [(package,pkg['url'],8_000_000),(sig,pkg['url']+'.sig',16000)]:
+    if path.is_symlink():raise ValueError('symlink')
+    if not path.exists() and args.fetch:
+     with urllib.request.urlopen(url,timeout=25) as r:
+      if not r.geturl().startswith('https://archive.archlinux.org/'):raise ValueError('redirect')
+      b=r.read(limit+1)
+     if len(b)>limit:raise ValueError('download bound')
+     write_exact(path,b)
+   if package.stat().st_size>8_000_000 or sha(package.read_bytes())!=pkg['packageSha256']:raise ValueError('package pin')
+   r=subprocess.run(['/usr/bin/gpgv','--homedir',temp,'--keyring',str(ring),'--status-fd','1',str(sig),str(package)],check=True,capture_output=True,timeout=8)
+   if '[GNUPG:] VALIDSIG '+pkg['signer']+' ' not in r.stdout.decode('ascii','replace'):raise ValueError('signer')
+   for row in pkg['files']:
+    member=row['path'].split('/',1)[1]
+    if not member.startswith(('usr/bin/','usr/lib/','usr/share/licenses/')) or '..' in Path(member).parts:raise ValueError('member')
+    b=subprocess.run(['/usr/bin/bsdtar','-xOf',str(package),member],check=True,capture_output=True,timeout=8).stdout
+    if len(b)!=row['bytes'] or sha(b)!=row['sha256']:raise ValueError('member pin')
+    write_exact(OUT/row['path'],b)
+  mapping={'sway':'sway/usr/bin/sway','libwlroots-0.20.so':'wlroots0.20/usr/lib/libwlroots-0.20.so','libliftoff.so.0':'libliftoff/usr/lib/libliftoff.so.0.5.0'}
+  for name,source in mapping.items():
+   b=(OUT/source).read_bytes()
+   if sha(b)!=lock['runtimeFiles'][name]:raise ValueError('runtime pin')
+   dest=OUT/'runtime'/name;write_exact(dest,b)
+   if name=='sway':dest.chmod(0o755)
+ print(json.dumps({'schema':1,'verified':True,'signedPackages':len(lock['packages']),'systemInstallation':False,'networkUsedOnlyIfExplicit':args.fetch}))
+if __name__=='__main__':
+ try:main()
+ except (OSError,ValueError,KeyError,subprocess.SubprocessError):
+  print(json.dumps({'schema':1,'verified':False,'reason':'signature_cache_or_pin_failed','systemInstallation':False}));raise SystemExit(1)

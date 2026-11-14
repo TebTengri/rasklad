@@ -1,5 +1,17 @@
 # План продолжения: SYS-244
 
+## Актуальная контрольная точка
+
+Native Wayland reference прошёл 16 checks +8 guards с полным локальным ядром;
+см. WAYLAND-IME-001.md и MULTI-MODEL-REVIEW-002.md. Не расширять reference labs
+и не возвращаться к обучению/словарам. Подготовить bounded nested test именно
+установленного Hyprland, затем согласовать доступ к parent Wayland/GPU перед
+запуском. Рабочий Slack и host IME не трогать. После точного compositor-теста
+нужны adversarial focus/serial проверки и отдельно согласованный exact Slack.
+На ключевых развилках повторять независимую критику других моделей и проверять
+их утверждения экспериментом. Ни текущая схема, ни большинство голосов сами
+по себе не доказывают оптимальность. Ниже сохранена история контрольных точек.
+
 2026-11-14. Рабочая ветка SYS-242/message-adapter, draft PR17. Задача SYS-244 — настоящий Fcitx preedit/commit transport; SYS-243 — exact Slack, остаётся незавершённой.
 
 - [x] Claude: минимальный project-local addon, одно синтетическое правило, bounded per-context state, только явно именованный lab-клиент.

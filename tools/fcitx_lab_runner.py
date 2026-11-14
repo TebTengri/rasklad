@@ -6,6 +6,8 @@ Default is a read-only plan. --build compiles project-authored fixture and addon
 --run admits only fixed binaries and synthetic test input; no host UI connection.
 """
 import argparse
+import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -64,6 +66,38 @@ def regular_file(path, executable=False):
     if meta.st_uid not in (0, os.getuid()) or (executable and not meta.st_mode & 0o111):
         raise Refused("unsafe_artifact")
 
+
+def sealed_snapshot(path, expected_sha256=None, max_bytes=5_000_000):
+    """Immutable executable bytes; file replacement after checking cannot change them."""
+    regular_file(path)
+    source = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        meta = os.fstat(source)
+        if not stat.S_ISREG(meta.st_mode) or meta.st_size > max_bytes:
+            raise Refused("snapshot_size")
+        chunks=[]; total=0
+        while True:
+            chunk=os.read(source,min(65536,max_bytes+1-total))
+            if not chunk:break
+            chunks.append(chunk);total+=len(chunk)
+            if total>max_bytes:raise Refused("snapshot_size")
+        payload=b"".join(chunks)
+    finally:
+        os.close(source)
+    if expected_sha256 is not None and hashlib.sha256(payload).hexdigest()!=expected_sha256:
+        raise Refused("snapshot_pin")
+    flags=os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | getattr(os,"MFD_EXEC",0)
+    fd=os.memfd_create("rasklad-lab-artifact",flags)
+    try:
+        view=memoryview(payload)
+        while view:
+            count=os.write(fd,view);view=view[count:]
+        os.fchmod(fd,0o755)
+        fcntl.fcntl(fd,fcntl.F_ADD_SEALS,fcntl.F_SEAL_WRITE|fcntl.F_SEAL_GROW|fcntl.F_SEAL_SHRINK|fcntl.F_SEAL_SEAL)
+        os.lseek(fd,0,os.SEEK_SET)
+        return fd
+    except BaseException:
+        os.close(fd);raise
 
 def sandbox_argv(files, identity_files=None):
     argv = ["/usr/bin/bwrap", "--unshare-all", "--die-with-parent", "--new-session", "--cap-drop", "ALL", "--clearenv",

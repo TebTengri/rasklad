@@ -8,7 +8,8 @@
 //
 // Safety boundaries (see SECURITY.md, docs/ARCHITECTURE-RESET-001.md):
 //  * Active only when ALL metadata gates hold, checked before any buffering:
-//      - ic->program() == "rasklad-ime-lab" exactly (a fixed test harness name;
+//      - fixed lab identity (rasklad-ime-lab, or the explicitly compiled
+//        Chromium backend identifiers in separate lab variants;
 //        it is never used to guess prose/secret semantics of real apps),
 //      - the active input method entry is exactly "keyboard-us",
 //      - the context has focus and the Preedit capability,
@@ -268,9 +269,17 @@ private:
         if (!ic || !ic->hasFocus()) {
             return false;
         }
+#ifdef RASKLAD_CHROMIUM_LAB
+        // GTK/X11 supplies chromium; the observed native Wayland app-id is
+        // chromium-browser. Both designate only this lab's controlled client.
+        if (ic->program() != kLabProgram && ic->program() != "chromium-browser") {
+            return false;
+        }
+#else
         if (ic->program() != kLabProgram) {
             return false;
         }
+#endif
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
         if (!entry || entry->uniqueName() != kLabEntry) {
             return false;
