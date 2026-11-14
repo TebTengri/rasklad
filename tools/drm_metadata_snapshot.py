@@ -181,6 +181,9 @@ def write_snapshot(metadata, directory, *, project_root=ROOT):
         target.mkdir(mode=0o700)
         (target / 'device').symlink_to('../..')
         (target / 'dev').write_text(f"{node['major']}:{node['minor']}\n")
+        # drmGetDeviceNameFromFd2 reads node-level DEVNAME, not PCI uevent.
+        # Derived from the validated basename; no additional host metadata read.
+        (target / 'uevent').write_text('DEVNAME=dri/' + name + '\n')
         (sysfs / 'dev/char' / f"{node['major']}:{node['minor']}").symlink_to('../../devices/rasklad-pci/drm/' + name)
         (sysfs / 'class/drm' / name).symlink_to('../../devices/rasklad-pci/drm/' + name)
     return {'sysfs': str(sysfs), 'renderDevice': '/dev/dri/renderD128',

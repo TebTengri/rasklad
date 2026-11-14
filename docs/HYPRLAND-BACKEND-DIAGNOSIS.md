@@ -86,3 +86,31 @@ Omarchy skill и hyprland guide проверены: пользовательск
 редактируются и refresh/reload/restart не нужны. Context7 не экспортирован
 среди tools текущей сессии; использованы точные первичные upstream исходники.
 Новая рецензия Claude Opus не завершилась за90s и не засчитана как проверка.
+
+## Завершённая диагностическая серия
+
+Владелец отдельно разрешил до трёх bounded GDB запусков с теми же доступами.
+Все три использованы; новых live запусков это разрешение больше не покрывает.
+
+Первый SIGSEGV stack report был неполным: regex отбрасывал длинные C++ signatures
+и смешивал worker stacks. Это не свидетельство ошибки Mesa. Исправлено structured
+GDB Python: только остановленный поток, frame.name и basename system library,
+24frames максимум; никаких args/locals/адресов. No-host control прошёл.
+
+Вторая проба локализовала SIGSEGV в CGBMAllocator constructor через libc.
+Aquamarine v0.15.1 присваивает строке результат drmGetDeviceNameFromFd2 без
+проверки null. libdrm читает DEVNAME из /sys/dev/char/MAJ:MIN/uevent: node-level
+metadata, которого в snapshot не было. PCI-level uevent недостаточно.
+No-GPU фикстура подтвердила null при успешном discovery, затем ожидаемое имя
+после добавления node-level DEVNAME. Поле выводится из проверенного basename,
+без новых host metadata reads или прав.
+
+Третья проба с этим metadata исправлением прошла: private Wayland socket и
+1s liveness, wrapper exit0 с уничтожением namespace. Это подтверждает устранение
+наблюдавшегося startup failure в данной среде, не transport/serial/focus/ввод.
+Установленные библиотеки не менялись, upstream код не копировался.
+Aggregate: data/hyprland-debugger-001-result.json. Исправление касается developer
+lab, не добавляет GPU/sysfs logic в runtime ядро rasklad.
+
+Следующий этап — existing Chromium/Fcitx fixture в запускаемом Hyprland,
+затем adversarial focus/serial. Обычный Slack/IME пока не подключать.

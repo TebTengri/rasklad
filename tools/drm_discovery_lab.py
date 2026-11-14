@@ -72,7 +72,21 @@ def inside():
     result = lib.drmGetDeviceFromDevId(SYNTHETIC_DEVICE, 0, ctypes.byref(device))
     if result == 0:
         lib.drmFreeDevice(ctypes.byref(device))
-    return {'returnCode': result, 'realGpu': False, 'hostSysfs': False, 'displayConnected': False}
+    lib.drmGetDeviceNameFromFd2.argtypes = [ctypes.c_int]
+    lib.drmGetDeviceNameFromFd2.restype = ctypes.c_void_p
+    libc = ctypes.CDLL(None)
+    libc.free.argtypes = [ctypes.c_void_p]
+    fd = os.open('/dev/null', os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        name = lib.drmGetDeviceNameFromFd2(fd)
+        expected_name = b'/dev/dri/renderD128\0'
+        mapped = bool(name) and ctypes.string_at(name, len(expected_name)) == expected_name
+        if name:
+            libc.free(name)
+    finally:
+        os.close(fd)
+    return {'returnCode': result, 'deviceNamePresent': bool(name), 'deviceNameMatches': mapped,
+            'realGpu': False, 'hostSysfs': False, 'displayConnected': False}
 
 
 def run():
@@ -89,7 +103,10 @@ def run():
     with tempfile.TemporaryDirectory(prefix='drm-discovery-', dir=base.ensure_private_base(ROOT)) as name:
         directory = Path(name)
         create_sysfs(directory / 'sys')
-        for label, with_sysfs, expected in [('absent_sysfs', False, -22), ('synthetic_sysfs', True, 0), ('missing_vendor', True, -19)]:
+        for label, with_sysfs, expected in [('absent_sysfs', False, -22), ('synthetic_sysfs', True, 0),
+                                           ('node_devname', True, 0), ('missing_vendor', True, -19)]:
+            if label == 'node_devname':
+                (directory / 'sys/dev/char/1:3/uevent').write_text('DEVNAME=dri/renderD128\n')
             if label == 'missing_vendor':
                 (directory / 'sys/dev/char/1:3/device/vendor').unlink()
             child = None
@@ -101,12 +118,16 @@ def run():
                 if child.returncode or len(output) > 4096:
                     raise ValueError('sandbox_failed')
                 report = json.loads(output)
-                reports.append({'case': label, 'returnCode': report['returnCode'], 'expected': expected})
+                reports.append({'case': label, 'returnCode': report['returnCode'], 'expected': expected,
+                                'deviceNamePresent': report['deviceNamePresent'],
+                                'deviceNameMatches': report['deviceNameMatches']})
             finally:
                 if child and child.poll() is None:
                     os.killpg(child.pid, signal.SIGKILL)
                     child.wait(timeout=1)
-    return {'schema': 1, 'passed': all(row['returnCode'] == row['expected'] for row in reports),
+    return {'schema': 1, 'passed': all(row['returnCode'] == row['expected'] for row in reports)
+            and [row['deviceNamePresent'] for row in reports] == [False, False, True, True]
+            and reports[2]['deviceNameMatches'],
             'cases': reports, 'realGpu': False, 'hostSysfs': False, 'displayConnected': False,
             'limitation': 'proves metadata discovery only; no allocator, driver or compositor startup proof'}
 

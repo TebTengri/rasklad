@@ -17,7 +17,10 @@ class ProbeBoundaries(unittest.TestCase):
         for required in ('-nx', '-nh', 'set auto-load off', 'set debuginfod enabled off',
                          'set startup-with-shell off', 'set print frame-arguments none'):
             self.assertIn(required, args)
-        self.assertLess(args.index('backtrace 12'), args.index('thread apply all backtrace 6'))
+        structured = next(value for value in args if value.startswith('python\n'))
+        self.assertIn('gdb.newest_frame()', structured)
+        self.assertNotIn('read_var', structured)
+        self.assertNotIn('frame_args', structured)
         self.assertNotIn('full', args)
 
     def test_debugger_report_omits_arguments_and_non_system_paths(self):
@@ -28,6 +31,11 @@ class ProbeBoundaries(unittest.TestCase):
                                                      {'symbol': '??', 'library': None}])
         self.assertNotIn('never', str(summary))
         self.assertNotIn('/private', str(summary))
+
+    def test_structured_frames_preserve_cpp_names_without_arguments(self):
+        text = 'Program received signal SIGSEGV\nRASKLAD_FRAME:{"symbol":"some_function(std::string const&)","library":"libexample.so"}\n#0 other (secret="no")\n'
+        self.assertEqual(probe.parse_debugger_summary(text)['debuggerFrames'],
+                         [{'symbol': 'some_function(std::string const&)', 'library': 'libexample.so'}])
 
     def test_stat_only_card_requires_readonly_and_nodev(self):
         row = '31 20 0:5 /null /dev/dri/card0 ro,nosuid,nodev - devtmpfs udev rw'

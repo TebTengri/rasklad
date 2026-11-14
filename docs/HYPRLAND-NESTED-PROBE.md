@@ -75,4 +75,10 @@ auto-load и debuginfod off, без shell startup и frame arguments/locals.
 и ограниченный список symbols + basename системных библиотек; raw log остаётся
 в namespace и уничтожается. Debugger проверен на synthetic zero-global parent
 без host GPU/display: ожидаемый SIGABRT перехвачен, FD consumed, обе log controls
-сохранили ожидаемые категории. Live debugger ещё не запускался.
+сохранили ожидаемые категории.
+
+Обновление: выполнена отдельно согласованная серия3/3. После structured stack
+диагностики найден недостающий node-level DEVNAME в собственном snapshot.
+После его добавления третья проба прошла: private socket +1s liveness, exit0.
+См. HYPRLAND-BACKEND-DIAGNOSIS.md и data/hyprland-debugger-001-result.json.
+Полноценный ввод/IME/Slack ещё не проверены. Все три live-разрешения использованы.

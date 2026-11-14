@@ -145,12 +145,22 @@ def startup_reason():
 
 
 def debugger_command():
+    structured_frames = '''python
+import gdb, json, os
+frame = gdb.newest_frame()
+for index in range(24):
+    if frame is None:
+        break
+    module = gdb.solib_name(frame.pc())
+    print("RASKLAD_FRAME:" + json.dumps({"symbol": (frame.name() or "??")[:512], "library": os.path.basename(module) if module and module.startswith("/usr/lib/") else None}))
+    frame = frame.older()
+end'''
     return ['/usr/bin/gdb', '-nx', '-nh', '--batch',
             '-iex', 'set auto-load off', '-iex', 'set debuginfod enabled off',
             '-ex', 'set pagination off', '-ex', 'set confirm off',
             '-ex', 'set startup-with-shell off', '-ex', 'set disable-randomization off',
             '-ex', 'set print frame-arguments none', '-ex', 'set print address off',
-            '-ex', 'run', '-ex', 'backtrace 12', '-ex', 'thread apply all backtrace 6', '-ex', 'kill',
+            '-ex', 'run', '-ex', structured_frames, '-ex', 'kill',
             '--args', '/usr/bin/Hyprland', '--config', '/lab/hypr.conf']
 
 
@@ -158,6 +168,25 @@ def parse_debugger_summary(text):
     caught = re.search(r'received signal (SIG[A-Z0-9]+)', text)
     frames = []
     for line in text.splitlines():
+        if not line.startswith('RASKLAD_FRAME:'):
+            continue
+        try:
+            row = json.loads(line[len('RASKLAD_FRAME:'):])
+        except ValueError:
+            continue
+        symbol, library = row.get('symbol'), row.get('library')
+        if (not isinstance(symbol, str) or not 1 <= len(symbol) <= 512
+                or any(ord(c) < 32 or ord(c) > 126 for c in symbol)
+                or (library is not None and (not isinstance(library, str)
+                    or not re.fullmatch(r'[A-Za-z0-9_.+-]{1,128}', library)))):
+            continue
+        frames.append({'symbol': symbol, 'library': library})
+        if len(frames) >= 24:
+            break
+    structured = bool(frames)
+    for line in text.splitlines():
+        if structured:
+            break
         if not re.match(r'^#[0-9]+\s', line):
             continue
         # Keep only the symbol expression before arguments; never arbitrary frame text.
@@ -217,8 +246,9 @@ def inside():
                     report.update(debugger_summary())
                 return report
             if any(p.is_socket() for p in Path('/run/lab').glob('wayland-*')):
-                time.sleep(.25)
-                return {'passed': child.poll() is None, 'phase': 'private_socket_ready'}
+                time.sleep(1)
+                return {'passed': child.poll() is None, 'phase': 'private_socket_ready',
+                        'socketStableSeconds': 1}
             time.sleep(.05)
         return {'passed': False, 'phase': 'compositor_timeout'}
     finally:
@@ -287,8 +317,8 @@ def run(with_metadata=False, debug_startup=False):
                 parent.close()
                 child.wait(timeout=12)
                 output.seek(0)
-                raw = output.read(4097)
-                if len(raw) > 4096:
+                raw = output.read(32769)
+                if len(raw) > 32768:
                     raise ValueError('output_bound')
                 result = json.loads(raw)
                 result.update(schema=1, parentDisplayConnection=True, renderNodeGranted=True,

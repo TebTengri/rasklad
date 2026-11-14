@@ -2,6 +2,16 @@
 
 ## Актуальная контрольная точка
 
+SUCCESS startup smoke: серияGDB3/3 использована; third probe со generated
+node-level DEVNAME прошёл private_socket_ready +1s liveness, exit0. Причина
+SIGSEGV локализована CGBMAllocator constructor; наш snapshot давал
+drmGetDeviceNameFromFd2=null из-за отсутствующего node/uevent DEVNAME. No-GPU
+контроль подтвердил null→expectedname; host/installedlibs не менялись.
+data/hyprland-debugger-001-result.json, docs/HYPRLAND-BACKEND-DIAGNOSIS.md.
+Следующий шаг: подготовить exact Hyprland + existing Chromium/Fcitx fixture
+без debugger, затем focus/serial adversarial suite. Это ещё не поддержка ввода
+или Slack. Серия3liveпроб исчерпана; новых окон пока не запускать.
+
 Согласованная live-проба b366b5a со snapshot закончилась SIGSEGV до display,
 а не прежним SIGABRT; источник неизвестен. data/hyprland-nested-003-result.json.
 systemd metadata команды /lab/hypr.conf подтверждает test crash; core отсутствует.

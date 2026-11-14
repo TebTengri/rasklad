@@ -101,7 +101,10 @@ class MetadataSnapshot(unittest.TestCase):
         self.assertTrue(plan['primaryBindMustBeNodevReadOnly'])
         self.assertFalse(plan['hostSysfsBind'])
         files = [p for p in output.rglob('*') if p.is_file() and not p.is_symlink()]
-        self.assertEqual(len(files), 7)
+        self.assertEqual(len(files), 9)
+        for node in ('card1', 'renderD128'):
+            self.assertEqual((output/'sys/devices/rasklad-pci/drm'/node/'uevent').read_text(),
+                             'DEVNAME=dri/' + node + '\n')
         self.assertTrue(all('not-copied' not in p.read_text() for p in files))
         for path in output.rglob('*'):
             if path.is_symlink():
