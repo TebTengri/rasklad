@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Explicit isolated smoke test; default uses fictional dictionaries only.
+--real reads exactly the four pinned project inputs, after separate authorization.
+No download, trained model, user profile, desktop seat or installation.
+"""
+import argparse
+import json
+from pathlib import Path
+import os
+import stat
+import subprocess
+import sys
+import tempfile
+
+ROOT=Path(__file__).resolve().parent.parent
+sys.path.insert(0,str(ROOT/'tools'))
+import language_pack as pack
+
+
+def regular(path):
+    fd,name=pack._open_parent(path)
+    try:
+        info=os.stat(name,dir_fd=fd,follow_symlinks=False)
+        if not stat.S_ISREG(info.st_mode):raise pack.PackError('not-regular')
+    finally:os.close(fd)
+
+
+class Parser(argparse.ArgumentParser):
+    def error(self, message):
+        raise pack.PackError('usage')
+
+
+def main():
+    parser=Parser(description=__doc__)
+    parser.add_argument('--real',action='store_true')
+    parser.add_argument('--editor',action='store_true',help='Connect pinned model/stems and exercise the owner-side textarea')
+    parser.add_argument('--prosemirror',action='store_true',help='Exercise the actual pinned transactional rich editor')
+    parser.add_argument('--input-root',type=Path,help='Explicit rasklad checkout holding the four pinned files; required with --real')
+    args=parser.parse_args()
+    if args.prosemirror:
+        args.editor=True
+        subprocess.run([sys.executable,str(ROOT/'bin/prepare-prosemirror')],check=True,stdout=subprocess.DEVNULL,timeout=30)
+    if args.real != (args.input_root is not None):raise pack.PackError('usage')
+    files=['tools/language_pack.py','tools/dictionary_smoke.py','browser/spell.js',
+           'tests/browser/dictionary-smoke.mjs','tests/browser/isolated-chromium.mjs',
+           'tools/browser_spell/source-lock.json','data/morphology-003-sources.json',
+           'data/language-packs.json','data/language-pack-inputs.json',
+           'data/notices/en_US.README.txt','data/notices/ru_RU.README.txt',
+           'data/notices/LANGUAGE-PACKS-REVIEW.md','data/notices/LANGUAGE-PACK-MODIFICATIONS.txt',
+           'build/hunspell-source-build/out/hunspell.js','build/hunspell-source-build/out/hunspell.wasm',
+           'build/browser-spell-native/native_spell_fixture']
+    if not args.real:files.append('build/browser-spell-native/native.json')
+    if args.editor:
+        files+=['browser/session.js','browser/router.js','browser/scorer.js','browser/lexicon.js','browser/evidence.js','browser/adapter.js',
+                'tools/editor_profile.py','tests/browser/editor-run.mjs','build/browser-fixture/converter.js','build/browser-fixture/policy.js',
+                'data/browser-profile.json','data/notices/BROWSER-PROFILE-REVIEW.md','data/browser-editor-001-protocol.json',
+                'data/sources.json','data/experiment-002-protocol.json']
+        if not args.real:files.append('build/browser-fixture/synthetic-conformance.json')
+    if args.prosemirror:
+        files+=['browser/prosemirror.js','tests/browser/prosemirror-run.mjs','data/prosemirror-editor-001-protocol.json',
+                'build/prosemirror-fixture/modules.json','build/prosemirror-fixture/sources.json','tools/prosemirror/lock.json']
+    for f in files:regular(ROOT/f)
+    mounts=[]
+    if args.real:
+        catalog=pack.load_catalog(ROOT/'data/language-packs.json')
+        mappings=json.loads((ROOT/'data/language-pack-inputs.json').read_text())['inputs']
+        for lang,locale in [('en','en-US'),('ru','ru-RU')]:
+            selected=[r for r in catalog if r['locale']==locale]
+            if len(selected)!=1:raise pack.PackError('locale-admission')
+            record=selected[0];pack._trusted(record,'local-test')
+            for item in record['files']:
+                if item['role'] in ('aff','dic'):
+                    rel=mappings[record['id']][item['path']]
+                    pack._check_path(rel)
+                    source=args.input_root/rel;regular(source)
+                    mounts+=['--ro-bind',str(source),'/inputs/'+lang+'.'+item['role']]
+    if args.real and args.editor:
+        profile=json.loads((ROOT/'data/browser-profile.json').read_text())
+        if profile['local_test'] is not True or profile['distribution'] is not False:raise pack.PackError('profile-admission')
+        for name in ['model','stem','metadata','modifications','en-notice','ru-notice']:
+            rel=profile['files'][name]['path']
+            if name.endswith('-notice'):
+                rel='build/experiment-002-artifacts/'+{'en-notice':'en_US.NOTICE.txt','ru-notice':'ru_RU.NOTICE.txt'}[name]
+            pack._check_path(rel)
+            source=args.input_root/rel;regular(source)
+            mounts+=['--ro-bind',str(source),'/inputs/'+name]
+    build=ROOT/'build'
+    fd=pack._open_abs(pack._abs_parts(build));os.close(fd)
+    # Never reuse an existing output or delete another run's package.
+    output=Path(tempfile.mkdtemp(prefix='dictionary-smoke-',dir=build))
+    command=['/usr/bin/bwrap','--unshare-all','--die-with-parent','--new-session',
+             '--ro-bind','/usr','/usr','--symlink','usr/lib','/lib','--symlink','usr/lib','/lib64',
+             '--proc','/proc','--dev','/dev','--tmpfs','/tmp','--dir','/etc','--ro-bind','/etc/fonts','/etc/fonts',
+             '--dir','/inputs','--dir','/lab','--bind',str(output),'/out',
+             '--dir','/lab/build/browser-fixture']
+    for f in files:command+=['--ro-bind',str(ROOT/f),'/lab/'+f]
+    command+=mounts+['--chdir','/lab','--clearenv','--setenv','PATH','/usr/bin','--setenv','HOME','/tmp',
+                     '--setenv','PYTHONDONTWRITEBYTECODE','1','--','/usr/bin/python3','/lab/tools/dictionary_smoke.py',
+                     '--real' if args.real else '--synthetic']+(['--prosemirror'] if args.prosemirror else ['--editor'] if args.editor else [])
+    result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=110)
+    if result.returncode or len(result.stdout)>16384:
+        try:phase=json.loads(result.stderr[:4096]).get('phase')
+        except (ValueError,UnicodeDecodeError):phase=None
+        if phase in {'reference-library','read-pins','package-build','native-comparison','browser-comparison'}:
+            raise pack.PackError('failed-'+phase)
+        raise pack.PackError('isolated-test-failed')
+    report=json.loads(result.stdout)
+    if report.get('passed') is not True:raise pack.PackError('isolated-test-failed')
+    print(json.dumps(report,sort_keys=True))
+
+
+if __name__=='__main__':
+    try:main()
+    except pack.PackError as error:
+        print(json.dumps({'passed':False,'error':error.code}),file=sys.stderr)
+        sys.exit(1)
+    except Exception:
+        print(json.dumps({'passed':False,'error':'isolated-dictionary-test-failed'}),file=sys.stderr)
+        sys.exit(1)

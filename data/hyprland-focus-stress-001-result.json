@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "runnerCommit": "8008ad7",
+  "passed": false,
+  "exactCompositor": "installed nested Hyprland",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "baselineRequiredChecks": 17,
+  "baselinePassed": true,
+  "overallRequiredChecksIncludingStressAggregate": 18,
+  "focusStress": {
+    "passed": false,
+    "checks": 4,
+    "executedCases": 4,
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "cases": [
+      {
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true,
+        "cleanupPassed": true,
+        "hookHits": 0,
+        "errorCode": null
+      },
+      {
+        "id": "word_other_back_prose_space",
+        "passed": false,
+        "precondition": true,
+        "cleanupPassed": true,
+        "hookHits": 0,
+        "errorCode": "ASSERTION_FAILED"
+      },
+      {
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true,
+        "cleanupPassed": true,
+        "hookHits": 0,
+        "errorCode": null
+      },
+      {
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true,
+        "cleanupPassed": true,
+        "hookHits": 1,
+        "errorCode": null
+      }
+    ]
+  },
+  "failedCaseObservation": {
+    "caseIndex": 1,
+    "activeFieldIndex": 0,
+    "fieldValueClasses": [
+      2,
+      0,
+      0
+    ],
+    "sourceStarts": 1,
+    "sourceEnds": 1,
+    "stateOwned": true,
+    "meaning": "original word preserved in source, delimiter absent, second field and password empty",
+    "causeConfirmed": false
+  },
+  "reentrantWrongFieldRegressionPassed": true,
+  "compositorStayedAlive": true,
+  "dbusInputFrontendAbsent": true,
+  "cdpTyping": false,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "daemonStayedStopped": true,
+  "daemonRssKiB": 57504,
+  "daemonCpuSeconds": 0.2,
+  "resourceScope": "own Fcitx includingstartup/profile/queries, notidle/physical/fullbrowsercompositor",
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "parentDisplayConnection": true,
+  "primaryStatOnly": true,
+  "renderNodeGranted": true,
+  "slackConnected": false,
+  "slackSupport": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "81aed2cc3ee2477d4a5fb04c88399e9a33729a9e3e8e0f04b29858f9b28bb871",
+    "tests/chromium_ime/adversarial-focus.mjs": "efd6425b3c277ea3f7a3378991327bf5214e2d7dd04d4af587971465b1940b7b",
+    "tests/chromium_ime/driver.mjs": "ca9de3296d5c627a6c957a3fe4f2c4be3720b6415f2d9bc6b5614dda72e9f468",
+    "data/focus-source-review-001.json": "e0e43d7cb7002d016e1f71bf012ccd975af14c10ce5f83583e74c6e2d7004f19"
+  }
+}

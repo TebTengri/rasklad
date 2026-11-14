@@ -47,3 +47,264 @@ INPUT-LAB-002 — отдельный developer runner для уже устано
 Программа исправления ввода потенциально обрабатывает чувствительный текст. Ни отсутствие сети, ни открытые исходники сами по себе не гарантируют безопасность. До выпуска требуются анализ зависимостей, проверка прав и ручные проверки в реальных приложениях.
 
 Не публикуйте секреты и воспроизводящие их журналы в публичных issues. Для несекретных ошибок допустим минимальный пример с вымышленным текстом.
+
+SYS-242 browser adapter — отдельный opt-in developer fixture, не устанавливаемое
+расширение и не backend рабочего сеанса. Обрабатывается только textarea,
+зарегистрированный доверенным владельцем как US prose; hints/фокус проверяются
+до value/evidence, snapshots — после. Решение синхронное, текст не передаётся по
+IPC и не логируется. Реальные profile/model/dictionary файлы не читаются.
+Встроенная тестовая evidence живёт только в fixture, не является языковым
+детектором. Native execCommand deprecated; unexpected result отключает коррекцию
+без guessed rollback. Страница остаётся владельцем поля; адаптер не изолирует её
+от её скриптов. Лимит textarea применяется после получения value. Системные
+клавиши/раскладка, clipboard, настройки и host browser profile не меняются.
+Тест Chromium — closed bwrap с временным HOME/profile, network namespace, без
+host bus/input/GPU; Chromium sandbox включён, CDP только дочерние pipes. См.
+[Browser adapter](docs/BROWSER-ADAPTER-001.md) и [границы](browser/README.md).
+
+Browser core 002 добавляет build-time exporter: он исполняет существующий native
+DecisionRouter на всех 512 состояниях синтетических признаков и canonicalizeToken
+на BMP, не загружая словари/модель. В браузере применяется его конечная таблица,
+а не IPC к desktop-процессу. Runtime binding проверяет gates до evidence, строгие
+boolean/model поля, синхронность результата и bounds; Suggest не auto-edit.
+Таблица и карты копируются в приватный snapshot factory. Это не изоляция от
+скриптов того же JS realm и не проверка реальной языковой точности. Provenance
+фиксирует хеши исходников developer build, но не заменяет подпись дистрибутива.
+Exporter требует только уже установленный Qt/qmake/C++ toolchain и не устанавливает
+пакеты. Детали: [Browser core 002](docs/BROWSER-CORE-002.md).
+
+Browser evidence 003: RSKN loader принимает только фиксированный v1 Uint8Array
+с собственным ограниченным снимком, отвергает shared/detached buffers, неверный
+header/размер/веса. Исключения нормализуются без входных данных. Арифметический
+JS scorer проверен по native gold, ключи не кэшируются; dispose зануляет только
+собственную копию best effort, не гарантируя стирание swap/исходного буфера.
+Проверка формата не доказывает provenance/SHA-256/лицензию. Runtime evidence binding
+проверяет token/layout/canonical keys до локальных lookup и использует только
+строгие bool ответы точных full/control/stem интерфейсов; неизвестный/ошибочный/
+асинхронный lookup даёт отсутствие evidence, а не false membership. В fixture
+только сгенерированные числовые веса и искусственные Set, не замена Hunspell.
+Реальные артефакты не открывались/не допущены к browser distribution, сети/IPC/
+истории/host config нет. См. [Browser evidence 003](docs/BROWSER-EVIDENCE-003.md).
+
+ECC review 004: browser loader теперь допускает только frozen профиль порогов,
+router повторно проверяет canonical соответствие кандидата, evidence снимает
+конфигурацию одним чтением. Независимый native oracle передаёт явные evidence
+поля, а не ожидаемый индекс browser table. Контракт owner-registration не
+заменяется поиском password по всей странице. Статическое ECC-review и отдельно
+исполненные Codex тесты разделены: [ECC review 004](docs/ECC-REVIEW-004.md).
+
+RSKF browser stem-reader: фиксированный ограниченный снимок Uint8Array, проверка
+всех смещений/префиксов/сортировки и точной длины файла до использования; shared,
+detached и несовместимые buffers отклоняются. Держит compact payload и bounded
+first-key index, не историю query. Временные копии при загрузке возможны; dispose
+best-effort зануляет только собственную память. Это reader canonical stem-ключей,
+не full/control Hunspell. Данные текущей fixture целиком искусственные.
+
+2026-11-13 владелец явно выбрал MIT для собственного кода/документации, добавлен
+LICENSE. Предыдущий pending-статус в исторических отчётах не является текущим;
+правила допуска/лицензии сторонних файлов и данных остаются отдельными.
+
+Опциональная browser full/control-обвязка получает уже созданный trusted module,
+не выполняет fetch/код-загрузку. Проверяет UTF8/NUL/size до создания четырёх
+handles в одном heap, удаляет временные metadata-only MEMFS файлы, не сохраняет
+запросы. Query UTF16 1..32, without Cc/unpaired surrogates; временные UTF8/Cstring
+копии зануляются перед free best effort, не внутренние allocator buffers engine.
+Trap отключает профиль; dispose/ошибки constructor чистят зарегистрированные
+handles. Provenance/version, source offer/notices и ограничение максимального
+WASM heap ещё не допущены к выпуску. Candidate lock release_approved=false;
+никаких бинарников/чужого кода в Git или default runtime.
+
+Закрытый browser fixture теперь монтирует только build/browser-fixture, не весь
+проект/build; никаких auth/cache/реальных артефактов ему не открывается. Общее
+CDP управление выделено в isolated-chromium.mjs и ожидает loadEventFired до
+использования документа. Подробнее: browser/README.md (opt-in full/control).
+
+## Language package preparation
+
+`tools/language_pack.py` is an explicit offline developer CLI. Its reviewer-owned
+catalog is the trust anchor; a downloaded package cannot approve itself. Validation
+checks exact bytes/hash, full notice files and a mandatory modification record.
+Distribution and local-test grants are independent and distribution remains denied
+for the current RU/EN records. There are no executable hooks, downloads or automatic
+language activation. File access uses bounded regular-file reads and descriptor-based
+no-follow traversal. Linux publication uses renameat2 NOREPLACE; fallback uses exclusive
+output mkdir. Failed preparation rolls back only entries it created, not arbitrary
+recursive directories. This is not a sandbox against hostile code with the same UID.
+Standalone verification is a snapshot check, not a lock against later modification:
+a future runtime consumer must use the verified bytes, not reopen mutable paths.
+No real dictionaries/model/user text were read by the package tests.
+
+## Prepared dictionary compatibility smoke
+
+`bin/test-reviewed-dictionaries` defaults to project-authored fictional data.
+Its explicit `--real --input-root` mode is prepared for a separately authorized
+one-shot read of the four catalog-pinned .aff/.dic files, not an implicit reuse of
+an old test permission. The launcher mounts exactly those files read-only and
+selected code/notices into an outer networkless bwrap; no project tree/HOME/model
+is mounted. Raw source bytes are hash/size checked before package assembly.
+The native oracle receives pinned immutable snapshots via stdin in its explicit
+`--stdin-profiles` mode; default mode remains synthetic. The browser has a nested
+sandbox and only an empty fixture directory. Developer CDP carries public dictionary
+bytes and fixed smoke cases, never user input. Network and host session access
+remain absent. Only aggregate results are printed. Unique ignored output directories
+hold raw local packages and their notices, never overwrite old runs, and are not
+release-approved. The resource report measures WASM heap capacity, not process RSS;
+batch lookup means are not physical keystroke latency. A separately authorized real-data run completed on 2026-11-13; aggregate results
+and consumed one-shot scope are recorded in data/language-pack-smoke-001.json.
+Default remains fictional and further raw-input runs are not automatically authorized.
+
+The native stdin oracle now reads bounded chunks to EOF instead of assuming one
+pipe read contains the entire input. Error reports expose only enumerated stage
+codes (pins/package/native/browser), never dictionary words, stderr or paths.
+A large fictional-input regression covers the multi-chunk case. The completed
+real run kept the same four read-only inputs and no model/seat/network access.
+
+## Verified session / scoped local editor integration
+
+The separately confirmed editor step reads only the four catalog-pinned raw files,
+existing pinned RSKN model/RSKP pair and their metadata/notices in isolated bwrap.
+It does not reuse the earlier raw-smoke authorization, train, access corpora/user
+text or install anything. The review and consumed operation/result are recorded
+in data/browser-profile.json and data/browser-editor-001-result.json.
+
+Session inputs are bounded owned snapshots before async hashing. Every listed file,
+including notices, must match the trusted manifest before any component initializes.
+Model/stem formats must pass before verified third-party engine code executes.
+Dependency callbacks and the manifest/digest implementation are trusted; a malicious
+same-realm script or attacker-owned catalog is outside this boundary. No downloaded
+manifest self-approval or implicit distribution permission. The page owner remains
+responsible for the registered prose field and protected spans.
+
+Atomic lifecycle cleanup removes adapter hooks and disposes engines/model/stems on
+initialization failure or runtime engine failure; there is no fallback evidence.
+Exactly four handles and valid heap capacity <=128 MiB are required. Temporary byte
+copies are wiped best effort, without claims about allocator copies or swap.
+Registration occurs only after ready; queries remain synchronous and unlogged.
+The owner-side test uses fixed fictional text, no messaging account or host profile.
+The browser receives only minimal editor HTML plus explicitly verified in-memory
+assets; outer mounts do not expose model/seat/home directories as a tree.
+
+## ProseMirror owner adapter
+
+The owner passes public editor/history APIs and an explicit range classifier.
+No registered context is inferred from a window title or DOM appearance. Metadata
+(code/link/current stored marks, role, credential form, focus, composition) gates
+all bounded prefix extraction. Exact EditorState identity and registration are
+rechecked after synchronous evidence, including revocation/reconfigure. Per-run
+marks are retained and native Space marks applied separately. Native history
+boundaries provide Undo/Redo without execCommand/replay. WeakMap records contain
+only busy/disabled flags, no queries/documents. Stale/unexpected owner changes are
+not rolled back; an exceptional Space may be consumed rather than misapplied.
+The verified third-party editor is executed only in the closed fixture; it is not
+installed into Slack. Details: docs/PROSEMIRROR-ADAPTER-005.md.
+
+## Native Slack target
+
+The owner chose native desktop Slack. The metadata-only developer probe scopes
+accessibility peers to that executable and whitelists four non-text methods. It
+cannot request text/names/attributes/values, edit/focus/actions or register event
+listeners through its guarded reader. Only counts/enums/booleans leave the probe;
+peer IDs and object paths do not. The current snapshot had no matching Slack a11y
+connection and queried zero UI nodes. Native correction is NOT enabled.
+
+A separately reviewable launch helper defaults to a plan and never kills a running
+Slack. Its optional explicit run requests only force-renderer-accessibility, no
+config/app patch or debugging port, and starts no corrector. This exposes UI to
+local assistive clients and uses Slack's normal app profile; it requires owner
+approval before launch. The probe still reads metadata only. Trial/rollback and
+unresolved buffer/Undo/code-role gates: docs/SLACK-DESKTOP-001.md.
+
+## Fcitx transport developer lab (SYS-244)
+
+This separate optional lab is not loaded by bin/build, bin/run or the host IME.
+The addon is a project-authored synthetic preedit rule, scoped to the fixed named
+lab client; program-name matching is not authentication and is not a production
+security boundary. It must never be presented as generic prose/password detection.
+The launcher defaults to a plan; explicit --build compiles local sources, and
+--run requires bwrap with no unsandboxed fallback. The private namespace has no
+host HOME, runtime, D-Bus, display, GPU/input devices or network. Only fixed addon,
+client, runner and private session-bus configuration files are bound read-only,
+alongside installed system runtime. Fcitx enables only keyboard, dbus,
+dbusfrontend and the lab addon; no cloud/dictionary/notification/autostart addons.
+
+The offscreen Qt fixture explicitly invokes the real installed platform input
+context filter, performing the responsibility of a native keyboard backend. Its
+synthetic key events travel through the real Qt Fcitx module and private D-Bus
+to a real Fcitx daemon; QInputMethodEvent/preedit/commit are received from that
+module, not fabricated. This can demonstrate transport but not ordinary physical
+input, compositor routing, native Slack compatibility or arbitrary editor safety.
+Qt QPA private API usage is version-specific developer code.
+
+Only fixed project-authored test strings are processed; no model/raw dictionaries
+or user content is read. Public reports contain aggregate booleans/counts and
+source/environment hashes, not real text. Shutdown targets only child processes
+in the lab's private namespace; no existing Slack/Fcitx process is signalled.
+Focus/capability loss clears lab state. Crash and incomplete-preedit behavior are
+measured rather than assumed lossless. Host integration, permissions, installation
+and rollback require a later concrete review; no release approval is implied.
+
+## Real Chromium IM transport lab
+
+The optional chromium-ime lab uses an official signed/hash-pinned project-local
+Xvfb binary, private X server, private D-Bus/Fcitx and disposable Chromium profile
+in bwrap --unshare-all. No host display/profile/seat/bus/input/GPU/network. Fixed
+synthetic XTest events target only the owned, viewable private browser PID; this
+is not a permitted system replay fallback. CDP Input.* is forbidden. The browser
+keeps its sandbox; its shared-memory files need a larger128MiB file cap.
+
+The separate addon compile variant gates program=chromium, not the default Qt
+fixture. It is synthetic developer code, not a generic context classifier or a
+production app allowlist. Provisional composition text can already exist in DOM.
+No raw dictionaries/model/profile/account/message data are read by this test.
+See docs/CHROMIUM-IME-001.md and data/chromium-ime-001-result.json.
+
+## Optional native evidence bridge in Chromium lab
+
+The separate --run-profile action requires an explicit input root and binds
+exactly20 known profile/metadata/notice files read-only; default synthetic run
+never reads these inputs. Existing productionPins/loader validate all hashes,
+formats, provenance notices/control pairs and loaded Hunspell before queries.
+No new data/training or distribution approval. The bridge has no synthetic
+fallback; a deliberately invalid virtual manifest leaves ordinary input intact.
+Only the explicitly owned lab prose context supplies Prose; program name is not
+a semantic classifier. CPU/RSS and crash-loss limitations are recorded in
+docs/CHROMIUM-IME-PROFILE-001.md. Current composition is lost on abrupt daemon
+death; live use is not approved by passing the transport scenarios.
+
+## Native focus stress developer checks
+
+`--focus-stress` is an explicit lab option; it is never enabled by normal app
+startup. Reference Sway remains no-host-display/GPU. The separately approved
+nested Hyprland runner exposes one render node, a RO/NODEV primary identity and
+a reconstructed minimal sysfs, not host HOME/bus/input/KMS or a whole sysfs bind.
+No normal IME or Slack is connected. Reports contain fixed case IDs, booleans,
+bounded counts and fixed value-class enums; no field text or raw event data.
+
+The strict baseline now requires original-word preservation on blur. Four
+additional owned-DOM scenarios use captured-node/state identity, bounded event
+barriers, atomic final predicates and verified cleanup. Cleanup failure marks
+dependent cases not run. All runtime typing uses fixed private VK commands;
+JavaScript never fabricates composition/keyboard/input events.
+
+Chromium155's observed native compositionend has isTrusted=false. The suite
+defaults to trusted_only; its scoped-end exception requires reviewed source
+SHA pins, exact browser version and a real VK positive control. This is closed
+fixture provenance, NOT authentication of arbitrary DOM events or permission
+to weaken production input gates. Text/focus/count predicates stay strict.
+
+The suite exposed our early empty-preedit notification allowing a reentrant
+hook to move a payload into another field. Claude's fix stages local state,
+commits payload before notifying preedit end and guards the remaining call
+with tracked lifetime/focus. Sway, Qt and GTK regression pass; this is not an
+atomic multi-message transaction, stale-serial proof, or generic app guarantee.
+Exact Hyprland revalidation after this change remains pending. See
+docs/FOCUS-STRESS-PLAN.md and data/focus-stress-reference-001.json.
+
+
+SYS-245 addon witness — отдельный compile-time developer вариант, не рабочая
+функция. Обычный preprocessed profile code не меняется. В закрытой fixture
+readonly GetStats на уже private bus возвращает только fixed bounded counters;
+key callback не делает I/O/логирование и не сохраняет payload. Нет setter/reset
+или input API. Тестовый вариант не устанавливается, требует явных private
+markers и отдельного бинаря. Ограничения корреляции/насыщения и позитивный
+Sway контроль: [Addon witness](docs/ADDON-WITNESS-001.md).

@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "target": "native Slack desktop",
+  "probe": {
+    "a11yBusAvailable": true,
+    "pidQueriesSucceeded": true,
+    "slackConnectionFound": false,
+    "uiNodesQueried": 0,
+    "textRead": false,
+    "writes": false,
+    "safeAutoCorrection": false
+  },
+  "scope": "Bounded accessibility/process metadata and whitelisted launcher-environment presence checks only. No message/draft text or profile contents read. Explicitly approved SIGTERM and temporary ordinary-profile launch.",
+  "trial": {
+    "ownerApprovedTermination": true,
+    "signal": "SIGTERM",
+    "fullyExited": true,
+    "sigkillUsed": false,
+    "launchRequested": true,
+    "forceAccessibilityFlagConfirmed": true,
+    "postLaunchSlackA11yConnections": 0,
+    "postLaunchUiNodesQueried": 0,
+    "x11A11yBusPropertyPresent": false,
+    "correctorStarted": false,
+    "configurationEdited": false,
+    "rollback": "Pending normal quit and ordinary launch; trial Slack is still running."
+  },
+  "source_sha256": {
+    "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
+    "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0",
+    "bin/slack-request-quit": "10f9d292760d3f024cb215cbbf92e021dfa550756d865818d3dfab6ee6c9af87"
+  },
+  "updated_local_date": "2026-11-14"
+}

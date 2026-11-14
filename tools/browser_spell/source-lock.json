@@ -1,0 +1,22 @@
+{
+  "hunspell": {
+    "url": "https://codeload.github.com/hunspell/hunspell/tar.gz/e8342700b4dde06130cdbba75f7e6500ffa58864",
+    "sha256": "dad2aba72c9058561748e7b3d72feef54af68dffe718ff8bcc1be837802f0b69",
+    "bytes": 585424
+  },
+  "sdk": {
+    "url": "https://storage.googleapis.com/webassembly/emscripten-releases-builds/linux/6afbd83493d647051772d491124187d4e9a0cda9/wasm-binaries.tar.xz",
+    "sha256": "6e7c6d26cf8bde31e6cf6a377c113f913cb2d30f4c2d671c1042e1c4bcd16495",
+    "bytes": 322310412
+  },
+  "version": "1.7.5",
+  "source_commit": "e8342700b4dde06130cdbba75f7e6500ffa58864",
+  "sdk_version": "7.0.0",
+  "release_approved": false,
+  "native_reference_version": "1.7.5",
+  "maximum_memory_bytes": 134217728,
+  "loader_path": "build/hunspell-source-build/out/hunspell.js",
+  "loader_sha256": "80a9381af5cf519daad6a09731162cb88dbec0724ee6e908dc7c2a2fd5daa296",
+  "wasm_path": "build/hunspell-source-build/out/hunspell.wasm",
+  "wasm_sha256": "80e3faca715320621185421668e16375fb2516e74f4b05fdd7dfb75c5475d7be"
+}

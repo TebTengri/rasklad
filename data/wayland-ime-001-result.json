@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "reportKind": "selected aggregate fields from successful local run",
+  "application": "installed Chromium native Wayland IM",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "passed": true,
+  "checks": 16,
+  "guardChecks": 12,
+  "referenceCompositor": "Sway/wlroots software only",
+  "dbusInputFrontendAbsent": true,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "daemonRssKiB": 57492,
+  "daemonHighWaterKiB": 57492,
+  "daemonCpuSeconds": 0.26,
+  "resourceScope": "own private Fcitx including startup/profile/queries; not idle, browser RSS or physical input latency",
+  "hostInput": false,
+  "hostConfigurationChanged": false,
+  "hyprlandSupport": false,
+  "slackSupport": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "2c22cb665169d1fe685aff54f63f199d2308675a628dde69a21f7597ab4aa9ad",
+    "src/fcitxlabprofile.cpp": "1a3fbbc329652d37609e0c4d9d0b50c4be4e6370b6932303f427f2fe345fd16e",
+    "src/fcitxlabprofile.h": "da68eddebe1e9474e38ae210c37007e148d49ab8a170d1643437aef91b4191a4",
+    "tools/wayland_ime_lab.py": "cec10fb96b77df679b695bf226ed040e69d94a4bd49463416fc60326dd6abc44",
+    "tools/fcitx_lab_runner.py": "a55f3c8c4d7eb157f998257e8534df658b9b9f98572286fee583aa69196912b5",
+    "tests/chromium_ime/driver.mjs": "90c73271841774aa1ec98f24ec9ef1f6165851673461b1e730c59503524ae597",
+    "tests/wayland_ime/keys.cpp": "d9de854f90b8de3bf66a9e3c898e2f49f80bb765060d6f4b9dc098b2f418f302",
+    "data/wayland-lab-runtime-lock.json": "3cf8dbb07274b4141a3b84a9f586969a31833bade4f48dd1c5e1f77660843ac1"
+  }
+}

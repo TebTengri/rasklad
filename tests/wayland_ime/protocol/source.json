@@ -1,0 +1,9 @@
+{
+  "url": "https://raw.githubusercontent.com/fcitx/fcitx5/5.1.23/src/lib/fcitx-wayland/input-method-v2/virtual-keyboard-unstable-v1.xml",
+  "release": "5.1.23",
+  "sha256": "7ad7870003ecd592cae47dc19d277a609b7f18fd7b7be012623cf3225a7294f5",
+  "license": "MIT, original complete copyright/permission retained in XML",
+  "modifications": false,
+  "commit": "27cca6e0239938b2d53937061d0980c087856b22",
+  "pinnedUrl": "https://raw.githubusercontent.com/fcitx/fcitx5/27cca6e0239938b2d53937061d0980c087856b22/src/lib/fcitx-wayland/input-method-v2/virtual-keyboard-unstable-v1.xml"
+}

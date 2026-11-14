@@ -1,6 +1,6 @@
 # Сторонние компоненты и данные
 
-Проверка 2026-11-12, [PROJECT-AUDIT-001](docs/PROJECT-AUDIT-001.md). Это инвентаризация текущего исходного проекта и локальной сборки, не готовый комплект лицензий бинарного релиза. Лицензия собственного кода пока не выбрана; условия сторонних файлов действуют независимо.
+Проверка 2026-11-12, [PROJECT-AUDIT-001](docs/PROJECT-AUDIT-001.md). Это инвентаризация текущего исходного проекта и локальной сборки, не готовый комплект лицензий бинарного релиза. Обновление 2026-11-13: владелец выбрал [MIT](LICENSE) для собственного кода и документации. Условия сторонних файлов действуют независимо; лицензия проекта их не заменяет.
 
 | Компонент | Использование | Условия и состояние |
 | --- | --- | --- |
@@ -24,3 +24,59 @@
 5. Для каждого словаря/weights провести отдельный release review, сохранить происхождение, полные notices и пометки преобразований. Сжатие и обучение не отменяют условий источника.
 
 Первичные источники: [Qt licensing](https://doc.qt.io/qt-6/licensing.html), [Qt LGPL obligations](https://www.qt.io/development/open-source-lgpl-obligations), [Qt Quick Controls license/attributions](https://doc.qt.io/qt-6/qtquickcontrols-index.html#license-and-attributions), [Hunspell 1.7.5](https://github.com/hunspell/hunspell/tree/v1.7.5), [паспорта и первичные словарные notices](data/README.md). Это техническая проверка известных источников и границ использования; спорные права на будущие артефакты не считаются разрешёнными автоматически.
+
+Опциональный developer-кандидат `hunspell-wasm@0.3.0` (rotemdan): registry metadata
+декларирует `(LGPL-2.0 OR GPL-2.0 OR MPL-1.1)`, архив содержит COPYING/COPYING.LESSER/
+COPYING.MPL. Это не выбранная лицензия бинарного релиза: точный source build/version
+WASM и полный комплект Hunspell/MySpell/Emscripten notices требуют отдельной
+проверки. Lock: tools/browser_spell/candidate.json, release_approved=false.
+Код/бинарник находятся только в ignored build/ для закрытого synthetic-теста,
+не vendored и не включены в default build/runtime. Собственная C API обвязка MIT;
+это не перелицензирует сторонний engine.
+
+Текущий закрытый browser-тест заменил этот бинарный кандидат source-сборкой
+Hunspell 1.7.5 (upstream commit и SHA-256 архивов в
+`tools/browser_spell/source-lock.json`), Emscripten 7.0.0. Исходники upstream
+не изменены; генерируются version/visibility headers. Две сборки совпали.
+Hunspell/MySpell сохраняют собственные лицензии и notices; Emscripten/toolchain
+и runtime требуют полного списка attribution перед распространением бинарника.
+Рецепт и обвязка проекта MIT, бинарный release ещё не разрешён.
+
+The optional ProseMirror editor fixture uses the eight pinned packages in
+`tools/prosemirror/lock.json`. Each actual archive LICENSE was read and hashed;
+all are MIT. Complete byte-distinct notices: `data/notices/ProseMirror-MIT.txt`,
+`OrderedMap-MIT.txt`, `RopeSequence-MIT.txt`; per-package notices accompany ignored
+cached/derived code. ESM specifier/source-map rewriting is marked in the fixture's
+MODIFICATIONS. No npm install/scripts or third-party code vendoring. Registry
+reported gitHead is provenance metadata; archive/code pins are the tested identity.
+These permissions do not relicense model/dictionary/Hunspell components or approve
+real artifact distribution. See docs/PROSEMIRROR-ADAPTER-005.md.
+
+## Fcitx transport developer lab (SYS-244)
+
+The optional project-authored addon and fixture link to installed Fcitx5 libraries
+and use the installed Qt Fcitx platform input module. No upstream implementation
+is copied/vendored. Installed package metadata: Fcitx5 5.1.23-1
+(LGPL-2.1-or-later, Unicode-DFS-2016), fcitx5-qt 5.1.16-2
+(LGPL-2.1-or-later, BSD-3-Clause, GPL-2.0-or-later: component-specific), Qt 6.12.0
+with the existing Qt licensing conditions. Installed Fcitx Core/Utils headers
+carry LGPL-2.1-or-later; the used Qt QPA private header offers LGPL-3.0-only or
+GPL/commercial alternatives. The private QPA driver is a version-dependent lab
+fixture, not a supported public Qt API or packaged product dependency.
+
+Sources: https://github.com/fcitx/fcitx5 and https://github.com/fcitx/fcitx5-qt ;
+Qt https://code.qt.io/cgit/qt/qtbase.git/ . Local files/versions/hashes are recorded
+in data/fcitx-transport-environment.json. This local linking experiment does not
+approve redistribution of system binaries, SDKs or their bundled dependencies.
+Before packaging, audit exact component licenses, source/notice/relinking duties
+separately. Own addon code remains MIT; that does not relicense Fcitx/Qt.
+
+## Project-local Xvfb developer fixture
+
+Official Arch xorg-server-xvfb21.1.26-1 package (MIT/GPL-2.0-only package metadata)
+is downloaded only with explicit prepare --fetch, signature verified against the
+installed public Arch keyring and exact signer, with immutable SHA/size pins.
+Only Xvfb and its unmodified full COPYING are extracted into ignored build/.
+No system installation or redistribution. Scripts/package/runtime dependencies
+are not relicensed by own MIT code; shipping requires a separate component audit.
+Pins/source: data/xvfb-lab-lock.json, docs/CHROMIUM-IME-001.md.

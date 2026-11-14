@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "name": "hunspell-wasm",
+  "version": "0.3.0",
+  "source_url": "https://github.com/rotemdan/hunspell-wasm",
+  "tarball_url": "https://registry.npmjs.org/hunspell-wasm/-/hunspell-wasm-0.3.0.tgz",
+  "tarball_sha256": "796ed8e22cecac1e1563e370f19f1c51d011f9b792a219790a56c34da1d1c74a",
+  "loader_path": "build/wasm-source-audit/hunspell-wasm-0.3.0/package/wasm/hunspell.js",
+  "loader_sha256": "709ab4c8c1b37921b9c6ec4bf9452f3dae65a298a0fce56c5e4a987bb3311833",
+  "wasm_path": "build/wasm-source-audit/hunspell-wasm-0.3.0/package/wasm/hunspell.wasm",
+  "wasm_sha256": "72152324049c9215da17abceb12555b3ef9094c0524327e660f8145aaa9c68e0",
+  "upstream_declared_license": "(LGPL-2.0 OR GPL-2.0 OR MPL-1.1)",
+  "native_reference_version": "1.7.5",
+  "wasm_core_version": null,
+  "release_approved": false,
+  "notes": "Developer candidate only. Binary core version/source-build provenance and complete notices are not attested. No candidate code/binary is vendored or included by default build. Registry integrity and file hashes are not source attestation. No real dictionary/model admission."
+}
