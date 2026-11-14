@@ -213,3 +213,32 @@ config/app patch or debugging port, and starts no corrector. This exposes UI to
 local assistive clients and uses Slack's normal app profile; it requires owner
 approval before launch. The probe still reads metadata only. Trial/rollback and
 unresolved buffer/Undo/code-role gates: docs/SLACK-DESKTOP-001.md.
+
+## Fcitx transport developer lab (SYS-244)
+
+This separate optional lab is not loaded by bin/build, bin/run or the host IME.
+The addon is a project-authored synthetic preedit rule, scoped to the fixed named
+lab client; program-name matching is not authentication and is not a production
+security boundary. It must never be presented as generic prose/password detection.
+The launcher defaults to a plan; explicit --build compiles local sources, and
+--run requires bwrap with no unsandboxed fallback. The private namespace has no
+host HOME, runtime, D-Bus, display, GPU/input devices or network. Only fixed addon,
+client, runner and private session-bus configuration files are bound read-only,
+alongside installed system runtime. Fcitx enables only keyboard, dbus,
+dbusfrontend and the lab addon; no cloud/dictionary/notification/autostart addons.
+
+The offscreen Qt fixture explicitly invokes the real installed platform input
+context filter, performing the responsibility of a native keyboard backend. Its
+synthetic key events travel through the real Qt Fcitx module and private D-Bus
+to a real Fcitx daemon; QInputMethodEvent/preedit/commit are received from that
+module, not fabricated. This can demonstrate transport but not ordinary physical
+input, compositor routing, native Slack compatibility or arbitrary editor safety.
+Qt QPA private API usage is version-specific developer code.
+
+Only fixed project-authored test strings are processed; no model/raw dictionaries
+or user content is read. Public reports contain aggregate booleans/counts and
+source/environment hashes, not real text. Shutdown targets only child processes
+in the lab's private namespace; no existing Slack/Fcitx process is signalled.
+Focus/capability loss clears lab state. Crash and incomplete-preedit behavior are
+measured rather than assumed lossless. Host integration, permissions, installation
+and rollback require a later concrete review; no release approval is implied.

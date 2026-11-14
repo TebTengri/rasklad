@@ -51,3 +51,22 @@ MODIFICATIONS. No npm install/scripts or third-party code vendoring. Registry
 reported gitHead is provenance metadata; archive/code pins are the tested identity.
 These permissions do not relicense model/dictionary/Hunspell components or approve
 real artifact distribution. See docs/PROSEMIRROR-ADAPTER-005.md.
+
+## Fcitx transport developer lab (SYS-244)
+
+The optional project-authored addon and fixture link to installed Fcitx5 libraries
+and use the installed Qt Fcitx platform input module. No upstream implementation
+is copied/vendored. Installed package metadata: Fcitx5 5.1.23-1
+(LGPL-2.1-or-later, Unicode-DFS-2016), fcitx5-qt 5.1.16-2
+(LGPL-2.1-or-later, BSD-3-Clause, GPL-2.0-or-later: component-specific), Qt 6.12.0
+with the existing Qt licensing conditions. Installed Fcitx Core/Utils headers
+carry LGPL-2.1-or-later; the used Qt QPA private header offers LGPL-3.0-only or
+GPL/commercial alternatives. The private QPA driver is a version-dependent lab
+fixture, not a supported public Qt API or packaged product dependency.
+
+Sources: https://github.com/fcitx/fcitx5 and https://github.com/fcitx/fcitx5-qt ;
+Qt https://code.qt.io/cgit/qt/qtbase.git/ . Local files/versions/hashes are recorded
+in data/fcitx-transport-environment.json. This local linking experiment does not
+approve redistribution of system binaries, SDKs or their bundled dependencies.
+Before packaging, audit exact component licenses, source/notice/relinking duties
+separately. Own addon code remains MIT; that does not relicense Fcitx/Qt.
