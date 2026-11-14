@@ -14,15 +14,18 @@
 //      - the context has focus and the Preedit capability,
 //      - none of Password / Sensitive / NoSpellCheck / Terminal /
 //        Disable capability flags is set.
-//  * The only rewrite is the synthetic rule "ghbdtn" -> "привет".
+//  * Default variants use one synthetic rule. The separate PROFILE_LAB build
+//    replaces it with the verified local evidence core; no synthetic fallback.
 //  * State lives in a per-InputContext property (InputContextProperty factory).
 //    There is no global map of raw InputContext pointers. The property does not
 //    override needCopy(), so Fcitx never copies a buffer to another context
 //    (e.g. under shared input state policies).
 //  * Buffer: at most 32 lowercase ASCII letters. Zeroed best effort on clear;
 //    std::string temporaries for preedit/commit may leave allocator copies.
-//  * No logging, stdout/stderr, files, env, clipboard, deleteSurroundingText,
+//  * No logging, stdout/stderr, env, clipboard, deleteSurroundingText,
 //    forwardKey, network, IPC of our own, child processes or evaluation.
+//    Only PROFILE_LAB initialization reads fixed verified /lab/profile files;
+//    key handling performs no file I/O.
 //  * Every commit goes to the SAME context whose key event is being handled,
 //    synchronously, while it is focused and gated. Focus-out, focus-in, reset,
 //    input method switch (incl. deactivate) and capability change discard the
@@ -38,8 +41,9 @@
 //  * Space (no modifiers) with non-empty buffer: clear preedit, commit
 //    corrected-or-original word plus one space as ONE commitString, consume.
 //  * BackSpace (no modifiers) with non-empty buffer: drop last letter, consume.
-//  * Escape (no modifiers) with non-empty buffer: discard buffer and preedit
-//    (explicit cancel, nothing committed), consume.
+//  * Escape flushes the ORIGINAL word and passes through like other app
+//    shortcuts. Clearing composition alone has toolkit-dependent semantics;
+//    explicit original commit preserves typed text in both Qt and Chromium.
 //  * Anything else (modifier keys themselves, Shift/Ctrl/Alt/Super combos,
 //    Enter, Tab, navigation, punctuation, digits, uppercase, ...): if the
 //    buffer is non-empty, FLUSH the ORIGINAL (uncorrected) letters as one
@@ -68,6 +72,10 @@
 //    in the transport run.
 //  * The keyboard engine also owns the client preedit slot; we only clear the
 //    preedit if we set it ourselves (preeditShown flag).
+
+#ifdef RASKLAD_PROFILE_LAB
+#include "fcitxlabprofile.h"
+#endif
 
 #include <fcitx-utils/capabilityflags.h>
 #include <fcitx-utils/handlertable.h>
@@ -106,8 +114,10 @@ constexpr const char kLabEntry[] = "keyboard-us";
 constexpr const char kPropertyName[] = "raskladlabState";
 
 // Synthetic test rule only. No dictionaries, model or other strings.
+#ifndef RASKLAD_PROFILE_LAB
 constexpr const char kRuleFrom[] = "ghbdtn";
 constexpr const char kRuleTo[] = "привет";
+#endif
 
 void wipeString(std::string &s) {
     volatile char *p = s.empty() ? nullptr : &s[0];
@@ -201,6 +211,9 @@ private:
 class RaskladLab final : public fcitx::AddonInstance {
 public:
     explicit RaskladLab(fcitx::Instance *instance) : instance_(instance) {
+#ifdef RASKLAD_PROFILE_LAB
+        if (!profile_.ready()) return; // Invalid/missing profile: no interception.
+#endif
         // If the name is taken we stay inert: no property, no watchers.
         registered_ = instance_->inputContextManager().registerProperty(
             kPropertyName, &factory_);
@@ -249,6 +262,9 @@ private:
 
     // Metadata gates. Must pass before anything is buffered.
     bool eligible(fcitx::InputContext *ic) const {
+#ifdef RASKLAD_PROFILE_LAB
+        if (!profile_.ready()) return false;
+#endif
         if (!ic || !ic->hasFocus()) {
             return false;
         }
@@ -364,7 +380,12 @@ private:
         if (plain && !s->empty()) {
             if (sym == FcitxKey_space) {
                 std::string w = s->word();
+#ifdef RASKLAD_PROFILE_LAB
+                auto corrected = profile_.correct(w);
+                std::string out = corrected ? std::move(*corrected) : w;
+#else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
+#endif
                 wipeString(w);
                 out.push_back(' ');
                 commitAndClear(ic, *s, std::move(out));
@@ -383,13 +404,6 @@ private:
                 event.filterAndAccept();
                 return;
             }
-            if (sym == FcitxKey_Escape) {
-                s->clearBuffer();
-                clearPreedit(ic, *s);
-                s->addPending(key);
-                event.filterAndAccept();
-                return;
-            }
         }
 
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
@@ -401,6 +415,9 @@ private:
     }
 
     fcitx::Instance *instance_;
+#ifdef RASKLAD_PROFILE_LAB
+    rasklad::fcitxlab::ProfileDecision profile_;
+#endif
     fcitx::LambdaInputContextPropertyFactory<LabState> factory_{
         [](fcitx::InputContext &) { return new LabState; }};
     bool registered_ = false;

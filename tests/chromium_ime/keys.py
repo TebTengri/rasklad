@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 import time
 
-CASES={'word':'ghbdtn','space':' ','xspace':'x ','hello':'hello ','mixed':'1ghbdtn ','long':'a'*33+'ghbdtn '}
+CASES={'word':'ghbdtn','space':' ','xspace':'x ','hello':'hello ','sample2':'ghbvth ','mixed':'1ghbdtn ','long':'a'*33+'ghbdtn '}
 if (os.environ.get('RASKLAD_CHROMIUM_IME_LAB')!='1' or os.environ.get('DISPLAY')!=':77'
         or os.environ.get('HOME')!='/home/lab' or not Path('/lab/fixture.html').is_file()
         or os.environ.get('WAYLAND_DISPLAY')):raise SystemExit('not private lab')

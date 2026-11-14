@@ -257,3 +257,16 @@ fixture. It is synthetic developer code, not a generic context classifier or a
 production app allowlist. Provisional composition text can already exist in DOM.
 No raw dictionaries/model/profile/account/message data are read by this test.
 See docs/CHROMIUM-IME-001.md and data/chromium-ime-001-result.json.
+
+## Optional native evidence bridge in Chromium lab
+
+The separate --run-profile action requires an explicit input root and binds
+exactly20 known profile/metadata/notice files read-only; default synthetic run
+never reads these inputs. Existing productionPins/loader validate all hashes,
+formats, provenance notices/control pairs and loaded Hunspell before queries.
+No new data/training or distribution approval. The bridge has no synthetic
+fallback; a deliberately invalid virtual manifest leaves ordinary input intact.
+Only the explicitly owned lab prose context supplies Prose; program name is not
+a semantic classifier. CPU/RSS and crash-loss limitations are recorded in
+docs/CHROMIUM-IME-PROFILE-001.md. Current composition is lost on abrupt daemon
+death; live use is not approved by passing the transport scenarios.

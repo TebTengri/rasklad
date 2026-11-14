@@ -18,7 +18,6 @@ SOURCES += $$PWD/../src/fcitxlab.cpp
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
 QMAKE_LFLAGS += -Wl,--no-undefined
 
-QMAKE_PREFIX_SHLIB =
 
 QMAKE_PREFIX_PLUGIN =
 CONFIG += no_plugin_name_prefix

@@ -26,3 +26,13 @@
 подпись проверена; в систему ничего не установлено. Следующий незавершённый шаг:
 подключить существующее локальное evidence core вместо фиксированного правила,
 не заявляя качество по transport-тесту; затем exact Slack trial.
+
+Полный evidence core теперь проверен в Chromium: 16 functional checks +8 guards,
+2 разных исправления/English Keep, invalid-profile fail-closed, Backspace/Escape,
+blur/Undo. Source/report: data/chromium-ime-profile-001-result.json. Fcitx+core
+около54.7MiB RSS, CPU0.15s в тесте. Abrupt IME death теряет текущее слово — OPEN.
+Следующие приоритеты: (1) native Wayland/Hyprland transport и focus safety,
+(2) exact Slack backend/test plan без автоматического X11 downgrade,
+(3) crash composition recovery. Нельзя возвращаться к detector research/UI.
+Read-only Slack metadata:8 verified processes,0 matching X11 windows/platform
+flags absent; это не доказательство native Wayland (окно может быть скрыто).

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // CDP only observes/configures our fixture. All typing uses private XTest.
 import {spawn,execFileSync} from 'node:child_process';
+import {readFileSync,readlinkSync} from 'node:fs';
 if(process.env.RASKLAD_CHROMIUM_IME_LAB!=='1'||process.env.DISPLAY!==':77'||process.env.HOME!=='/home/lab')throw Error('not private lab');
 const child=spawn('/usr/lib/chromium/chromium',[
  '--ozone-platform=x11','--gtk-version=3','--disable-gpu','--disable-dev-shm-usage',
@@ -39,14 +40,42 @@ try{
  phase='space';await type('space');
  report.correctedOnce=await ev(`prose.value==='привет '`);
  report.compositionEnded=await ev(`imeEvents.some(x=>x.type==='compositionend')`);
+ if(process.env.RASKLAD_PROFILE_REJECT_TEST==='1'){
+  report.profileRejectedNoInterception=await ev(`prose.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
+  report.rejectionTest=true;report.passed=report.profileRejectedNoInterception;report.checks=1;
+ }else{
  phase='nextword';await type('xspace');report.nextWordPreserved=await ev(`prose.value==='привет x '`);
  phase='undo';const beforeUndo=await ev(`prose.value`);await type('undo');report.nativeUndoChangesDocument=await ev(`prose.value!==${JSON.stringify(beforeUndo)}`);report.nativeUndoRestoresPreviousCommit=await ev(`prose.value==='привет '`);
+ phase='backspace_escape';await reset();await type('word');await type('backspace');report.backspaceEditsComposition=await ev(`prose.value==='ghbdt'`);await type('escape');report.escapePreservesOriginal=await ev(`prose.value==='ghbdt'`);
  phase='mixed';await reset();await type('mixed');report.mixedTokenPreserved=await ev(`prose.value==='1ghbdtn '`);
  phase='long';await reset();await type('long');report.longTokenPreserved=await ev(`prose.value==='a'.repeat(33)+'ghbdtn '`);
  phase='password';await reset('secret');await type('word');await type('space');report.passwordPassthrough=await ev(`secret.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
  phase='focus';await reset();await type('word');await ev(`other.focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,120));await type('space');report.focusDoesNotLeak=await ev(`other.value===' '&&!imeEvents.some(x=>x.type==='compositionstart')`);report.focusOriginalWordPreserved=await ev(`prose.value==='ghbdtn'`);
- const required=['preeditObserved','compositionActiveBeforeSpace','correctedOnce','compositionEnded','nextWordPreserved','nativeUndoRestoresPreviousCommit','mixedTokenPreserved','longTokenPreserved','passwordPassthrough','focusDoesNotLeak'];
+ if(process.env.RASKLAD_REVIEWED_PROFILE_LAB==='1'){
+  phase='profile_second_word';await reset();await type('sample2');report.secondWordCorrected=await ev(`prose.value==='пример '`);
+  phase='profile_known_english';await reset();await type('hello');report.knownEnglishPreserved=await ev(`prose.value==='hello '`);
+  report.profileVariant=true;
+ }
+ const required=['preeditObserved','compositionActiveBeforeSpace','correctedOnce','compositionEnded','nextWordPreserved','nativeUndoRestoresPreviousCommit','backspaceEditsComposition','escapePreservesOriginal','mixedTokenPreserved','longTokenPreserved','passwordPassthrough','focusDoesNotLeak'];
+ if(report.profileVariant)required.push('secondWordCorrected','knownEnglishPreserved');
+ phase='crash_recovery';await reset();await type('word');
+ const daemonPid=Number(process.env.RASKLAD_OWN_FCITX_PID);
+ if(!Number.isSafeInteger(daemonPid)||daemonPid<=1||readlinkSync(`/proc/${daemonPid}/exe`)!=='/usr/bin/fcitx5')throw Error('owned private daemon missing');
+ const status=readFileSync(`/proc/${daemonPid}/status`,'utf8');
+ report.daemonRssKiB=Number(status.match(/^VmRSS:\s+(\d+)/m)?.[1]||0);
+ report.daemonHighWaterKiB=Number(status.match(/^VmHWM:\s+(\d+)/m)?.[1]||0);
+ const stat=readFileSync(`/proc/${daemonPid}/stat`,'utf8').split(')')[1].trim().split(/\s+/);
+ report.daemonCpuSeconds=(Number(stat[11])+Number(stat[12]))/Number(process.env.RASKLAD_CLK_TCK);
+ process.kill(daemonPid,'SIGKILL');await new Promise(r=>setTimeout(r,500));
+ await type('hello');
+ report.postCrashInputContinues=await ev(`prose.value.endsWith('hello ')`);
+ report.pendingWordSurvivedCrash=await ev(`prose.value==='ghbdtnhello '`);
+ report.crashDocumentLength=await ev(`prose.value.length`);
+ const owner=execFileSync('/usr/bin/gdbus',['call','--session','--dest','org.freedesktop.DBus','--object-path','/org/freedesktop/DBus','--method','org.freedesktop.DBus.NameHasOwner','org.fcitx.Fcitx5'],{encoding:'utf8',timeout:1000});
+ report.daemonStayedStopped=owner==='(false,)\n';
+ required.push('postCrashInputContinues','daemonStayedStopped');
  report.passed=required.every(k=>report[k]===true);report.checks=required.length;
+ }
 }catch(e){report.passed=false;report.failedPhase=phase;report.browserExit=lastExit;report.failure=String(e.message).startsWith('Command failed:')?'private_key_driver_failed':String(e.message).slice(0,80);}
 finally{
  try{await Promise.race([call('Browser.close'),new Promise(r=>setTimeout(r,1000))]);}catch{}

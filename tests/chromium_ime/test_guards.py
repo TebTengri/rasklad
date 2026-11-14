@@ -35,6 +35,18 @@ class IsolationGuards(unittest.TestCase):
    with patch.object(lab,'ROOT',root),patch.object(lab.base,'regular_file'),patch.object(lab.os,'geteuid',return_value=1000),patch.object(lab.os,'stat',return_value=SimpleNamespace(st_uid=0,st_mode=0o755)),patch.object(lab.subprocess,'Popen') as popen:
     with self.assertRaisesRegex(lab.base.Refused,'xvfb_pin'):lab.run()
     popen.assert_not_called()
+ def test_profile_requires_explicit_input_root(self):
+  with patch.object(lab.os,'geteuid',return_value=1000),patch.object(lab.base,'regular_file') as regular,patch.object(lab.subprocess,'Popen') as popen:
+   with self.assertRaisesRegex(lab.base.Refused,'explicit_input_root_required'):lab.run(True)
+   regular.assert_not_called();popen.assert_not_called()
+ def test_profile_mount_is_fixed_files_not_project_tree(self):
+  profile={name:Path('/chosen-input')/name for name in lab.PROFILE_PATHS}
+  a=lab.argv(lab.files(),{},profile)
+  ro=[(a[i+1],a[i+2]) for i,x in enumerate(a) if x=='--ro-bind']
+  self.assertEqual(len([t for s,t in ro if t.startswith('/lab/profile/')]),20)
+  self.assertNotIn(('/chosen-input','/lab/profile'),ro)
+  self.assertIn('RASKLAD_REVIEWED_PROFILE_LAB',a)
+  self.assertNotIn('RASKLAD_PROFILE_REJECT_TEST',a)
  def test_root_is_rejected_before_runtime_access(self):
   with patch.object(lab.os,'geteuid',return_value=0),patch.object(lab,'files') as files:
    with self.assertRaisesRegex(lab.base.Refused,'root_not_admitted'):lab.run()
