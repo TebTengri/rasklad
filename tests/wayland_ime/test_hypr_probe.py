@@ -12,6 +12,17 @@ spec.loader.exec_module(probe)
 
 
 class ProbeBoundaries(unittest.TestCase):
+    def test_specific_error_takes_priority_over_generic_abort(self):
+        self.assertEqual(probe.classify_startup(b'drmGetDeviceFromDevId failed\nCBackend::create() failed'),
+                         'drm_device_discovery_failed')
+
+    def test_missing_evidence_is_not_guessed(self):
+        self.assertEqual(probe.classify_startup(b''), 'unclassified_startup_failure')
+
+    def test_diagnostic_does_not_return_raw_log_text(self):
+        self.assertEqual(probe.classify_startup(b'private value\nwl_display_connect failed'),
+                         'parent_wayland_connect_failed')
+
     def test_default_does_not_connect_or_run(self):
         with patch('sys.argv', ['probe']), patch.object(probe, 'run') as run, patch.object(probe.socket, 'socket') as sock:
             self.assertEqual(probe.main(), 0)

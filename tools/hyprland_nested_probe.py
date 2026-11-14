@@ -21,6 +21,9 @@ import time
 ROOT = Path(__file__).resolve().parent.parent
 INSIDE = Path(__file__) == Path('/lab/probe.py')
 CONFIG = '''monitor = , 1000x800@30, auto, 1
+debug {
+ enable_stdout_logs = true
+}
 xwayland {
  enabled = false
 }
@@ -87,6 +90,23 @@ def limits():
         resource.setrlimit(kind, (value, value))
 
 
+def classify_startup(payload):
+    for marker, category in (
+        (b'drmGetDeviceFromDevId failed', 'drm_device_discovery_failed'),
+        (b'wl_display_connect failed', 'parent_wayland_connect_failed'),
+        (b'Missing protocols', 'parent_protocols_missing'),
+        (b'zwp_linux_dmabuf_v1: Failed to open node', 'dmabuf_node_open_failed'),
+        (b'reopenDRMNode failed', 'allocator_node_reopen_failed'),
+        (b'no allocator available', 'gpu_allocator_unavailable'),
+        (b'Failed to initialize EGL', 'egl_initialization_reported'),
+        (b'eglInitialize', 'egl_initialization_reported'),
+        (b'CBackend::create() failed', 'backend_creation_failed'),
+    ):
+        if marker in payload:
+            return category
+    return 'unclassified_startup_failure'
+
+
 def startup_reason():
     # Only this namespace's bounded logs; return enums, never raw display/input data.
     payload = b''
@@ -97,11 +117,7 @@ def startup_reason():
             with path.open('rb') as source:
                 source.seek(max(0, path.stat().st_size - 32768))
                 payload += source.read(32768)
-    if b'CBackend::create() failed' in payload:
-        return 'backend_creation_failed'
-    if b'Failed to initialize EGL' in payload or b'eglInitialize' in payload:
-        return 'egl_initialization_reported'
-    return 'unclassified_startup_failure'
+    return classify_startup(payload)
 
 
 def inside():
