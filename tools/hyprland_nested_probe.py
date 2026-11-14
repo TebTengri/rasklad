@@ -87,6 +87,23 @@ def limits():
         resource.setrlimit(kind, (value, value))
 
 
+def startup_reason():
+    # Only this namespace's bounded logs; return enums, never raw display/input data.
+    payload = b''
+    paths = [Path('/tmp/probe-startup.log'), Path('/home/lab/.cache/hyprland/hyprlandCrashReport.txt')]
+    paths += list(Path('/run/lab').glob('hypr/*/hyprland.log'))[:4]
+    for path in paths:
+        if path.is_file() and not path.is_symlink():
+            with path.open('rb') as source:
+                source.seek(max(0, path.stat().st_size - 32768))
+                payload += source.read(32768)
+    if b'CBackend::create() failed' in payload:
+        return 'backend_creation_failed'
+    if b'Failed to initialize EGL' in payload or b'eglInitialize' in payload:
+        return 'egl_initialization_reported'
+    return 'unclassified_startup_failure'
+
+
 def inside():
     if not INSIDE or os.environ.get('RASKLAD_NESTED_PROBE') != '1' or os.environ.get('HOME') != '/home/lab':
         raise ValueError('private_probe_required')
@@ -98,16 +115,18 @@ def inside():
     os.chmod('/run/lab', 0o700)
     child = None
     try:
-        child = subprocess.Popen(['/usr/bin/Hyprland', '--config', '/lab/hypr.conf'],
-                                 env=env, pass_fds=(fd,), stdin=subprocess.DEVNULL,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        with open('/tmp/probe-startup.log', 'wb') as log:
+            child = subprocess.Popen(['/usr/bin/Hyprland', '--config', '/lab/hypr.conf'],
+                                     env=env, pass_fds=(fd,), stdin=subprocess.DEVNULL,
+                                     stdout=log, stderr=subprocess.STDOUT)
     finally:
         os.close(fd)
     try:
         deadline = time.monotonic() + 7
         while time.monotonic() < deadline:
             if child.poll() is not None:
-                return {'passed': False, 'phase': 'compositor_start', 'exitCode': child.returncode}
+                return {'passed': False, 'phase': 'compositor_start', 'exitCode': child.returncode,
+                        'startupReason': startup_reason()}
             if any(p.is_socket() for p in Path('/run/lab').glob('wayland-*')):
                 time.sleep(.25)
                 return {'passed': child.poll() is None, 'phase': 'private_socket_ready'}

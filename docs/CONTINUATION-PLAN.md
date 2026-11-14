@@ -2,6 +2,12 @@
 
 ## Актуальная контрольная точка
 
+Первая согласованная live nested Hyprland проба завершилась SIGABRT до создания
+private display (data/hyprland-nested-001-result.json). Причина неизвестна: logs
+первого runner отбрасывались, core отключён. Добавлен bounded private startup
+log classifier; повтор не выполнен и требует согласования. Не расширять /dev
+или /sys и не трогать host Slack/IME для обхода отказа.
+
 Native Wayland reference прошёл 16 checks +8 guards с полным локальным ядром;
 см. WAYLAND-IME-001.md и MULTI-MODEL-REVIEW-002.md. Не расширять reference labs
 и не возвращаться к обучению/словарам. Подготовить bounded nested test именно

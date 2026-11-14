@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "passed": false,
+  "phase": "compositor_start",
+  "exitCode": -6,
+  "signal": "SIGABRT",
+  "parentDisplayConnection": true,
+  "renderNodeGranted": true,
+  "hostConfigurationWritten": false,
+  "slackConnected": false,
+  "typingTested": false,
+  "causeConfirmed": false,
+  "diagnosticLimitation": "startup logs discarded by first runner; core disabled; cannot infer backend cause from signal alone",
+  "runnerCommit": "e674fde"
+}
