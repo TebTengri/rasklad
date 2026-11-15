@@ -308,3 +308,10 @@ key callback не делает I/O/логирование и не сохраня
 или input API. Тестовый вариант не устанавливается, требует явных private
 markers и отдельного бинаря. Ограничения корреляции/насыщения и позитивный
 Sway контроль: [Addon witness](docs/ADDON-WITNESS-001.md).
+
+
+Core-entry witness — следующий явно выбранный developer вариант с собственным
+ELF wrapper только в закрытом Fcitx child. ABI закреплён хешами; constructor
+удаляет preload env для потомков. Строгая thread confinement защищает простые
+counters. Default/profile не содержат bridge; runner/Node/Chromium не получают
+preload. Контракт, guards, калибровка и ограничения: [Core entry](docs/CORE-ENTRY-WITNESS-001.md).

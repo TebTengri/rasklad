@@ -1,0 +1,6 @@
+{
+ global:
+  _ZN5fcitx12InputContext8keyEventERNS_8KeyEventE;
+  rasklad_core_entry_snapshot_v1;
+ local: *;
+};

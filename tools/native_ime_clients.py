@@ -16,6 +16,18 @@ def input_frontend_absent(returncode, output, error):
                 and b'Object does not exist' in error))
 
 
+def fcitx_child_env(base):
+    if os.environ.get('RASKLAD_CORE_ENTRY_WITNESS_LAB') != '1':
+        return None
+    if (os.environ.get('RASKLAD_ADDON_WITNESS_LAB') != '1'
+            or os.environ.get('RASKLAD_FOCUS_STRESS_LAB') != '1'
+            or os.environ.get('RASKLAD_SPACE_TELEMETRY_LAB') != '1'
+            or os.environ.get('RASKLAD_ADDON_WITNESS_NO_QUERY_LAB') == '1'):
+        raise base.Refused('private_core_entry_witness_required')
+    # Never mutate the runner environment: only the own Fcitx child is instrumented.
+    return dict(os.environ,LD_PRELOAD='/lab/raskladcoreentry.so')
+
+
 def run(base, children):
     if (os.environ.get('RASKLAD_NATIVE_WAYLAND_LAB') != '1'
             or os.environ.get('HOME') != '/home/lab'
@@ -24,7 +36,9 @@ def run(base, children):
             or os.environ.get('DISPLAY') or os.environ.get('WAYLAND_SOCKET')
             or os.environ.get('RASKLAD_PARENT_FD')):
         raise base.Refused('private_native_clients_required')
-    fcitx=subprocess.Popen(['/usr/bin/fcitx5','-D','-k','--disable','all','--enable','keyboard,dbus,wayland,waylandim,raskladlab','--verbose','*=0'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);children.append(fcitx)
+    fcitx_env=fcitx_child_env(base)
+    child_options={} if fcitx_env is None else {'env':fcitx_env}
+    fcitx=subprocess.Popen(['/usr/bin/fcitx5','-D','-k','--disable','all','--enable','keyboard,dbus,wayland,waylandim,raskladlab','--verbose','*=0'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,**child_options);children.append(fcitx)
     end=time.monotonic()+4
     while time.monotonic()<end:
      if fcitx.poll() is not None:raise base.Refused('fcitx_exited')

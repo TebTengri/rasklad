@@ -1,0 +1,320 @@
+{
+  "application": "installed Chromium native Wayland IM",
+  "backspaceEditsComposition": true,
+  "beforeSpaceDomLength": 6,
+  "browserVersion": "Chrome/155.0.8059.84",
+  "cdpTyping": false,
+  "checks": 18,
+  "compositionActiveBeforeSpace": true,
+  "compositionEnded": true,
+  "compositorStayedAlive": true,
+  "correctedOnce": true,
+  "crashDocumentLength": 12,
+  "daemonCpuSeconds": 0.2,
+  "daemonHighWaterKiB": 57472,
+  "daemonRssKiB": 57472,
+  "daemonStayedStopped": true,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 1,
+  "escapePreservesOriginal": true,
+  "exactCompositor": "installed nested Hyprland",
+  "focusDoesNotLeak": true,
+  "focusEventControl": {
+    "sourceEnds": 1,
+    "totalEnds": 1,
+    "totalStarts": 1,
+    "trustedSourceEnds": 0,
+    "trustedSourceStarts": 1,
+    "untrustedSourceEnds": 1
+  },
+  "focusOriginalWordPreserved": true,
+  "focusSourceReviewPassed": true,
+  "focusStress": {
+    "addonWitnessQueriesEnabled": true,
+    "cases": [
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "addonWitness": {
+          "after": [
+            10,
+            11,
+            10,
+            0,
+            10,
+            8,
+            4,
+            2,
+            2,
+            2,
+            2,
+            4,
+            0,
+            5,
+            11,
+            10,
+            0,
+            88,
+            0,
+            4,
+            108,
+            109
+          ],
+          "before": [
+            10,
+            10,
+            10,
+            0,
+            10,
+            8,
+            4,
+            2,
+            2,
+            2,
+            2,
+            4,
+            0,
+            5,
+            9,
+            8,
+            0,
+            72,
+            0,
+            4,
+            102,
+            102
+          ],
+          "complete": true,
+          "delta": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            0,
+            16,
+            0,
+            0,
+            6,
+            7
+          ],
+          "valid": true
+        },
+        "cleanupPassed": true,
+        "errorCode": "ASSERTION_FAILED",
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_other_back_prose_space",
+        "lateDelivery": {
+          "lateMatchesOriginalOracle": false,
+          "lateSnapshotCode": 0,
+          "primarySnapshotCode": 0,
+          "traceCompleteAtWait": true,
+          "waitStatus": "deadline"
+        },
+        "passed": false,
+        "precondition": true,
+        "spaceTelemetry": {
+          "armed": true,
+          "complete": true,
+          "dropped": 0,
+          "records": [],
+          "valid": true
+        },
+        "witnessPostQuery": {
+          "matchesOriginalOracle": false,
+          "snapshotCode": 0
+        }
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 1,
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true
+      }
+    ],
+    "checks": 4,
+    "diagnostics": [
+      {
+        "activeFieldIndex": 0,
+        "caseIndex": 1,
+        "documentCompositionEnds": 1,
+        "documentCompositionStarts": 1,
+        "documentEndTargets": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "documentTrustedEnds": 0,
+        "endMark": 0,
+        "ends": [
+          1,
+          0,
+          0
+        ],
+        "fieldValueClasses": [
+          2,
+          0,
+          0
+        ],
+        "hookHits": 0,
+        "proseIsOriginal": true,
+        "stage": "final_snapshot",
+        "starts": [
+          1,
+          0,
+          0
+        ],
+        "stateOwned": true,
+        "statePresent": true
+      },
+      {
+        "activeFieldIndex": 0,
+        "caseIndex": 1,
+        "documentCompositionEnds": 1,
+        "documentCompositionStarts": 1,
+        "documentEndTargets": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "documentTrustedEnds": 0,
+        "endMark": 0,
+        "ends": [
+          1,
+          0,
+          0
+        ],
+        "fieldValueClasses": [
+          2,
+          0,
+          0
+        ],
+        "hookHits": 0,
+        "proseIsOriginal": true,
+        "stage": "final_snapshot",
+        "starts": [
+          1,
+          0,
+          0
+        ],
+        "stateOwned": true,
+        "statePresent": true
+      },
+      {
+        "activeFieldIndex": 0,
+        "caseIndex": 1,
+        "documentCompositionEnds": 1,
+        "documentCompositionStarts": 1,
+        "documentEndTargets": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "documentTrustedEnds": 0,
+        "endMark": 0,
+        "ends": [
+          1,
+          0,
+          0
+        ],
+        "fieldValueClasses": [
+          2,
+          0,
+          0
+        ],
+        "hookHits": 0,
+        "proseIsOriginal": true,
+        "stage": "final_snapshot",
+        "starts": [
+          1,
+          0,
+          0
+        ],
+        "stateOwned": true,
+        "statePresent": true
+      }
+    ],
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "executedCases": 4,
+    "instrumentedAddonTrial": true,
+    "instrumentedSpaceTrial": true,
+    "passed": false,
+    "provenance": "test_fixture_only_not_authentication",
+    "scope": "DOM_intra_surface_only"
+  },
+  "focusStressPassed": false,
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "knownEnglishPreserved": true,
+  "longTokenPreserved": true,
+  "maxTrialSeconds": 75,
+  "mixedTokenPreserved": true,
+  "nativeUndoChangesDocument": true,
+  "nativeUndoRestoresPreviousCommit": true,
+  "nextWordPreserved": true,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "passwordPassthrough": true,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "preeditObserved": true,
+  "primaryStatOnly": true,
+  "profileVariant": true,
+  "readyForLiveUse": false,
+  "renderNodeGranted": true,
+  "schema": 1,
+  "secondWordCorrected": true,
+  "slackConnected": false,
+  "slackSupport": false,
+  "syntheticInputOnly": true,
+  "date": "2026-11-15",
+  "runnerCommit": "5c0d69e",
+  "singleTrialApprovalConsumed": true,
+  "baselineRequiredChecks": 17,
+  "witnessSchema": 2,
+  "fixConfirmed": false,
+  "measuredTotals": [
+    6,
+    7
+  ],
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "ab245af9521edb460a06e3fd6dc1f8f06335a6eedb74c87c310a6b403c6dc1d4",
+    "tools/fcitxlabwitness.h": "43c6b1119cf27d24749fdd7724247e3022cbf943d9e1fa99492763e916d3c3d1",
+    "tests/chromium_ime/addon-witness.mjs": "9145b61a96e47dd0cba1cea0c862b98ab139e449a6376f393d76ebe41facf230",
+    "tests/chromium_ime/driver.mjs": "99f8f0ae895ede36e8a63186c7da5bdcb3e42b5016ca3625201f3f59f2f7a09b"
+  }
+}

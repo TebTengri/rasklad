@@ -32,16 +32,21 @@ def load(name, path):
 base = load('ime_base', Path('/lab/fcitx_lab_runner.py') if INSIDE else ROOT/'tools/fcitx_lab_runner.py')
 probe = load('hypr_probe', Path('/lab/probe.py') if INSIDE else ROOT/'tools/hyprland_nested_probe.py')
 chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py')
+core_guard = None if INSIDE else load('core_entry_guard', ROOT/'tools/core_entry_witness_guard.py')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False):
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False):
+    if core_entry_witness and (not addon_witness or witness_no_query):
+        raise base.Refused('core_entry_witness_requires_querying_addon_witness')
     if witness_no_query and not addon_witness:
         raise base.Refused('witness_no_query_requires_addon_witness')
     if addon_witness and not (focus_stress and space_telemetry):
         raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+    if core_entry_witness and '/lab/raskladcoreentry.so' not in snapshots:
+        raise base.Refused('core_entry_snapshot_required')
     if addon_witness:
         paths = dict(paths)
-        paths['addon'] = ROOT/'build/chromium-ime/witness-addon/raskladlab.so'
+        paths['addon'] = ROOT/('build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so')
         paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladwitness.conf'
         base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
     args = probe.sandbox_args(directory, parent_fd, metadata_plan)
@@ -71,6 +76,9 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
                   '--setenv', 'RASKLAD_ADDON_WITNESS_LAB', '1']
     if witness_no_query:
         extra += ['--setenv', 'RASKLAD_ADDON_WITNESS_NO_QUERY_LAB', '1']
+    if core_entry_witness:
+        extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/raskladcoreentry.so']), '/lab/raskladcoreentry.so',
+                  '--setenv', 'RASKLAD_CORE_ENTRY_WITNESS_LAB', '1']
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
     for relative, path in profile.items():
         extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
@@ -182,11 +190,15 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False):
+    if core_entry_witness and (not addon_witness or witness_no_query):
+        raise base.Refused('core_entry_witness_requires_querying_addon_witness')
     if witness_no_query and not addon_witness:
         raise base.Refused('witness_no_query_requires_addon_witness')
     if addon_witness and not (focus_stress and space_telemetry):
         raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+    if core_entry_witness:
+        core_guard.validate_core_entry(base, ROOT)
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
     if input_root is None:
@@ -202,10 +214,12 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     paths.pop('xvfb')
     paths.pop('keys')
     paths['runner'] = ROOT/'tools/hyprland_ime_lab.py'
-    paths['addon'] = ROOT/('build/chromium-ime/witness-addon/raskladlab.so' if addon_witness else 'build/chromium-ime/profile-addon/raskladlab.so')
+    paths['addon'] = ROOT/('build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so' if addon_witness else 'build/chromium-ime/profile-addon/raskladlab.so')
     if addon_witness:
         paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladwitness.conf'
         base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
+    if core_entry_witness:
+        base.regular_file(ROOT/'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
     for path in [*paths.values(), ROOT/'tools/native_ime_clients.py']:
         base.regular_file(path)
     if focus_stress:
@@ -226,6 +240,8 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     try:
         plan = collector.write_snapshot(metadata, directory/'gpu-metadata')
         snapshots['/lab/addons/raskladlab.so'] = base.sealed_snapshot(paths['addon'])
+        if core_entry_witness:
+            snapshots['/lab/raskladcoreentry.so'] = base.sealed_snapshot(ROOT/'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
         snapshots['/lab/rasklad-wayland-keys'] = base.sealed_snapshot(keys)
         (directory/'hypr.conf').write_text(probe.CONFIG)
         (directory/'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
@@ -247,7 +263,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -287,8 +303,11 @@ def main():
     parser.add_argument('--space-telemetry', action='store_true')
     parser.add_argument('--addon-witness', action='store_true')
     parser.add_argument('--witness-no-query', action='store_true')
+    parser.add_argument('--core-entry-witness', action='store_true')
     args = parser.parse_args()
     try:
+        if args.core_entry_witness and (not args.addon_witness or args.witness_no_query):
+            raise base.Refused('core_entry_witness_requires_querying_addon_witness')
         if args.witness_no_query and not args.addon_witness:
             raise base.Refused('witness_no_query_requires_addon_witness')
         if args.addon_witness and not (args.focus_stress and args.space_telemetry):
@@ -297,13 +316,14 @@ def main():
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
             'focusStressPlanned': args.focus_stress,
             'spaceTelemetryPlanned': args.space_telemetry,
             'addonWitnessPlanned': args.addon_witness,
             'witnessNoQueryPlanned': args.witness_no_query,
+            'coreEntryWitnessPlanned': args.core_entry_witness,
             'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
         print(json.dumps(report, sort_keys=True))
         return 0 if report.get('passed', True) else 1

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Closed synthetic fixture only. Read-only fixed counters, never input payload.
-// Counter order is schema 2 (22 counters / 24 reply words); schema 1 is rejected. 255 means saturation.
+// Default schema 2: 22 counters / 24 words. Explicit coreEntry schema 3:
+// own 22 counters + shim markers + core 10 counters / 36 words. 255 means saturation.
 // noQuery=true is the zero-GetStats control: no witness object, query never called.
 export const WITNESS_COUNTERS=Object.freeze([
  'spaceCodePressSeen','spaceCodeReleaseSeen','normalizedSpacePress','priorFilteredPress',
@@ -9,20 +10,33 @@ export const WITNESS_COUNTERS=Object.freeze([
  'focusIn','focusOut','reset','capabilityChange','noStatePress','releaseFiltered',
  'allKeyPressSeen','allKeyReleaseSeen',
 ]);
+export const CORE_ENTRY_COUNTERS=Object.freeze([
+ 'coreAllPressSeen','coreAllReleaseSeen','coreSpacePressSeen','coreSpaceReleaseSeen',
+ 'coreSpacePressFocused','coreSpacePressUnfocused','coreSpacePressReturnedTrue',
+ 'coreSpacePressReturnedFalse','coreSpaceReleaseReturnedTrue','coreSpaceReleaseReturnedFalse',
+]);
 const invalid=()=>({valid:false,complete:false,before:[],after:[],delta:[]});
-export function parseWitnessReply(raw){
+export function parseWitnessReply(raw,coreEntry=false){
  if(typeof raw!=='string'||raw.length>768||!/^\(\[\s*(?:uint32 )?\d+(?:,\s*(?:uint32 )?\d+)*\s*\],\)\s*$/.test(raw))return null;
  const values=raw.replaceAll('uint32 ','').match(/\d+/g).map(Number);
- if(values.length!==24||values[0]!==2||values[1]!==1||!values.every(x=>Number.isInteger(x)&&x>=0&&x<=255))return null;
+ if(!values.every(x=>Number.isInteger(x)&&x>=0&&x<=255)||values[1]!==1)return null;
+ if(coreEntry===true){
+  if(values.length!==36||values[0]!==3||values[24]!==1||values[25]!==1)return null;
+  return [...values.slice(2,24),...values.slice(26)];
+ }
+ if(values.length!==24||values[0]!==2)return null;
  return values.slice(2);
 }
 export function createAddonWitness(options){
  if(options.noQuery===true)return null;
- const {query}=options;
+ const {query,coreEntry=false}=options;
  let before=null,used=false;
- const read=async()=>{try{return parseWitnessReply(await query());}catch{return null;}};
+ const read=async()=>{try{return parseWitnessReply(await query(),coreEntry);}catch{return null;}};
  return Object.freeze({
-  async begin(){if(before!==null||used)return false;used=true;before=await read();return before!==null;},
+  async begin(){if(before!==null||used)return false;used=true;before=await read();
+   // Prior baseline typing must have reached both observer layers in core mode.
+   if(coreEntry===true&&before!==null&&!(before[20]>0&&before[22]>0))before=null;
+   return before!==null;},
   async sample(){
    if(before===null||!used)return invalid();used=false;
    const after=await read();if(after===null||after.some((x,i)=>x<before[i]))return invalid();

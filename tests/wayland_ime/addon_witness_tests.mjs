@@ -2,7 +2,7 @@
 // Fixed-counter contract and integration faults; not a real D-Bus transport proof.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseWitnessReply,createAddonWitness,WITNESS_COUNTERS} from '../chromium_ime/addon-witness.mjs';
+import {parseWitnessReply,createAddonWitness,WITNESS_COUNTERS,CORE_ENTRY_COUNTERS} from '../chromium_ime/addon-witness.mjs';
 import {runFocusScenarios} from '../chromium_ime/adversarial-focus.mjs';
 import {fixture} from './focus_fixture.mjs';
 const reply=(values=Array(22).fill(0),schema=2,enabled=1)=>`([uint32 ${[schema,enabled,...values].join(', ')}],)\n`;
@@ -63,4 +63,44 @@ test('no-query control never invokes query and uses unchanged strict oracle path
  let calls=0;const witness=createAddonWitness({query:async()=>{calls++;throw Error('MUST_NOT_RUN');},noQuery:true});
  assert.equal(witness,null);const f=fixture();const r=await runFocusScenarios({...f,addonWitness:witness});
  assert.equal(r.passed,true);assert.equal(calls,0);assert.ok(r.cases.every(c=>c.addonWitness===undefined));
+});
+
+const coreReply=(own=Array(22).fill(0),core=Array(10).fill(0),schema=3,shimSchema=1,ready=1)=>
+ `([uint32 ${[schema,1,...own,shimSchema,ready,...core].join(', ')}],)`;
+test('core entry requires explicit mode, exact schema and loaded ready shim',()=>{
+ assert.equal(CORE_ENTRY_COUNTERS.length,10);
+ assert.equal(parseWitnessReply(coreReply()),null);
+ assert.equal(parseWitnessReply(reply(),true),null);
+ assert.deepEqual(parseWitnessReply(coreReply(),true),Array(32).fill(0));
+ for(const bad of [coreReply(undefined,undefined,2),coreReply(undefined,undefined,3,0),
+  coreReply(undefined,undefined,3,1,0),coreReply(Array(22).fill(0),Array(10).fill(256)),
+  coreReply(Array(22).fill(0),Array(9).fill(0)),coreReply(Array(22).fill(-1))])
+  assert.equal(parseWitnessReply(bad,true),null);
+});
+test('core entry deltas preserve own then core counter order and saturation',async()=>{
+ let calls=0;
+ const p=createAddonWitness({coreEntry:true,query:async()=>{
+  const after=calls++!==0;
+  return coreReply(Array.from({length:22},(_,i)=>after?i+2:1),
+   Array.from({length:10},(_,i)=>after?i+31:1));
+ }});
+ assert.equal(await p.begin(),true);const r=await p.sample();
+ assert.equal(r.valid,true);assert.equal(r.complete,true);
+ assert.deepEqual(r.delta,[...Array.from({length:22},(_,i)=>i+1),...Array.from({length:10},(_,i)=>i+30)]);
+ let n=0;const q=createAddonWitness({coreEntry:true,query:async()=>coreReply(Array(22).fill(1),Array(10).fill(n++?255:1))});
+ await q.begin();const saturated=await q.sample();assert.equal(saturated.complete,false);
+ assert.deepEqual(saturated.delta.slice(22),Array(10).fill(-1));
+});
+
+test('core mode requires prior own and core press calibration, not ready flag alone',async()=>{
+ for(const [ownPress,corePress] of [[0,1],[1,0],[0,0]]){
+  let calls=0;const own=Array(22).fill(1),core=Array(10).fill(1);
+  own[20]=ownPress;core[0]=corePress;
+  const p=createAddonWitness({coreEntry:true,query:async()=>{calls++;return coreReply(own,core);}});
+  assert.equal(await p.begin(),false);assert.equal((await p.sample()).valid,false);
+  assert.equal(calls,1);assert.equal(await p.begin(),false);
+ }
+ const own=Array(22).fill(1),core=Array(10).fill(1);own[20]=2;core[0]=9;
+ const p=createAddonWitness({coreEntry:true,query:async()=>coreReply(own,core)});
+ assert.equal(await p.begin(),true);assert.equal((await p.sample()).valid,true);
 });

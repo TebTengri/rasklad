@@ -2,34 +2,36 @@
 
 ## Актуальная контрольная точка
 
-Согласованная серия 005 завершена: ровно A→B→C, все три допуска использованы.
-Обычная сборка, witness без запросов и witness с запросами воспроизвели отказ
-case2. Во всех вариантах прошли 17 базовых проверок, три остальных сценария
-фокуса и очистка; compositor остался жив. Агрегат:
-data/witness-comparison-005-summary.json. План 001 помечен выполненным;
-повторно запускать серию по старому разрешению нельзя.
+Проба006 schema2 выполнена с отдельного разрешения: baseline17/прочие3focus
+прошли, case2 FAIL. Валидный ненасыщенный witness дал totals6/7 и Space-code0/1;
+все press-ветки/commit0, DOMtrace пуста, primary/late/post-query0. Допуск
+использован. data/hyprland-witness-schema2-006-result.json. Это сужает отказ
+до входа нашего watcher; ранняя Core-фильтрация и более ранний маршрут ещё
+не различены. Старые серии не повторять по использованным разрешениям.
 
-В C счётчик показал Space-code press=0, release=1; все ветки обработки press
-и commit=0. FocusIn/Out=2/2, capabilityChange=16. DOM-трасса пуста,
-первичная, поздняя и post-query проверки провалены. Обычная ветка коррекции
-Space не выполнялась в наблюдаемом интервале. Ранняя фильтрация, иной raw-code
-и отложенные callbacks пока не исключены. Успех 004 оказался неустойчивым.
+Следующий developer probe подготовлен: отдельный Core-entry shim вызывает
+исходный InputContext::keyEvent ровно один раз и возвращает его bool, считая
+entry до dispatch и результат после. Текст/сырой payload не сохраняется.
+LD_PRELOAD только в собственном Fcitx child внутри bwrap, constructor удаляет
+его для потомков. Неверный ABI/hash/thread/marker отклоняется. Нормальный
+профиль после препроцессора прежний. Установленные библиотеки не меняются.
 
-Подготовлена схема 2: Claude предложил два общих счётчика press/release на
-входе handler; Codex интегрировал и проверил. API: schema2 + enabled +
-22 счётчика, всего 24 числа. Старый ответ schema1 отвергается. Независимое
-ревью C++ и JS завершено без блокеров, девять reader-тестов и отрицательные
-проверки environment проходят. Обычный код после препроцессора не изменился.
-Закрытый Sway прошёл baseline17/focus4, новые totals дали ожидаемые 7/7:
-data/addon-witness-schema2-preflight-002.json.
+68 Python guards,12 reader tests,12 закрытых ABI/admission/thread контролей
+проходят. Настоящий headless Sway baseline17/focus4 PASS; own и Core дали7/7,
+Space1/1, фактическая preemption подтверждена активным baseline. Данные:
+data/core-entry-witness-preflight-001.json; контракт/границы/авторство:
+docs/CORE-ENTRY-WITNESS-001.md. Независимое C++/ABI/JS ревью без блокеров;
+reviewer самостоятельно тесты не запускали. Первый полный запрос Claude
+имел timeout и не считается реализацией; меньший запрос дал предложение,
+которое Codex исправил и интегрировал.
 
-Следующий опыт — ОДНА отдельно согласованная проба Hyprland до75 секунд с
---focus-stress --space-telemetry --addon-witness и прежним input-root.
-Нового разрешения пока нет. Для шести букв + Space нормальный контроль7/7;
-6/7 поддержит пропущенный press на входе handler, 7/7 при code65 press0 —
-другое представление либо лишнее событие. Это не идентификатор пары и не
-доказательство причины во frontend. Текст, core, Slack, host IME и настройки
-не менялись; raw-логи и interposer не добавлены.
+Следующий запуск — ОДНА отдельно согласуемая проба Hyprland до75s:
+bin/test-hyprland-ime --run-approved --focus-stress --space-telemetry
+--addon-witness --core-entry-witness --input-root /home/mvn/Work/rasklad.
+Нового host-разрешения ещё нет. Corepress0/own0 укажет до Core entry;
+Corepress1/own0 — между entry и watcher; focus0/false выделит no-focus entry.
+Это счётчики интервала, не pairing/protocol trace; getter/shim могут менять
+timing. Даже PASS не объявлять исправлением. Slack/hostIME/config не менялись.
 
 ## Предыдущие контрольные точки (история)
 

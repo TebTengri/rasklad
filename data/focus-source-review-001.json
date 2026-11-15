@@ -5,11 +5,11 @@
   "scope": "closed owned fixture only; not authentication of native DOM events",
   "scopedBrowserVersion": "Chrome/155.0.8059.84",
   "sourceSha256": {
-    "driver.mjs": "99f8f0ae895ede36e8a63186c7da5bdcb3e42b5016ca3625201f3f59f2f7a09b",
+    "driver.mjs": "5375c7d66a7ff81569c0bf85b38328d5566ab5cace434618a0b3316c6ef0692e",
     "adversarial-focus.mjs": "1584046d788a59dcbef3ed3992566ce77848d2fe49995077f3fff277419385ea",
     "focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "fixture.html": "6e9a29febcb72c35ca8c90ea615cbbd1312457b07800b8617ce9e27ad2230539",
     "space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
-    "addon-witness.mjs": "9145b61a96e47dd0cba1cea0c862b98ab139e449a6376f393d76ebe41facf230"
+    "addon-witness.mjs": "2d34e6cb46f7180450e8f9a9901531a340180b9ee2b2d5d5a205a72aa5743aa1"
   }
 }

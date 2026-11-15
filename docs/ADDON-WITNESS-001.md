@@ -199,8 +199,8 @@ Space-codepress0 поддерживает иной code, но не исключ�
 событие вместо недостающего. Это не pairing и не доказательство frontend loss.
 Иные числа требуют отдельной трактовки, не разрешать ошибку ради PASS.
 
-Никакого вмешательства в установленные Fcitx/Hyprland, LD_PRELOAD или
-переноса watcher в запрещённую ReservedFirst фазу. Если totals подтвердят
+Этот schema2 вариант не использует LD_PRELOAD и не меняет установленные
+Fcitx/Hyprland. Перенос watcher в ReservedFirst запрещён API. Если totals подтвердят
 пропуск до handler, только затем рассматривать узкую точку наблюдения
 frontend, не общий протокольный лог. Новый host допуск ещё не получен.
 
@@ -209,3 +209,27 @@ frontend, не общий протокольный лог. Новый host до�
 Данные data/addon-witness-schema2-preflight-002.json. Бинарь schema1 сохранён
 в ignored build с прежним хешем для воспроизводимости; активная диагностическая
 сборка теперь schema2. Новый host опыт ещё не выполнялся.
+
+## Exact Hyprland 006: totals6/7
+
+Один отдельно разрешённый запуск5c0d69e выполнен; допуск использован.
+Baseline17 и остальные три focus cases прошли, case2 FAIL, compositor/cleanup
+валидны. Schema2 getter полный, ненасыщенный: allPress6/allRelease7,
+Space-code0/1, все ветки press/commit0. Primary/late/post-query0, DOMtrace[].
+data/hyprland-witness-schema2-006-result.json.
+
+По сравнению с положительным Sway7/7 в этом измеренном интервале нет одного
+handler-entry press; просто пришедший с другим code седьмой press не наблюдался.
+Это не доказывает место upstream-отказа или идентичность пары release/press.
+Следующая граница — вход InputContext::keyEvent до внутренних проверок,
+чтобы отделить Core dispatch от более раннего маршрута.
+
+Публичный symbol этой функции экспортируется Core5.1.23, frontend ссылается
+на него динамически. Коллеги проверили допустимость точечного lab-only
+ELF wrapper на exact Linux x86_64 ABI; runtime-перехват ещё надо подтвердить
+закрытым положительным контролем. Системные библиотеки не меняются.
+
+Следующий отдельный Core-entry вариант подготовлен и проверен на закрытом
+стенде: [контракт и границы](CORE-ENTRY-WITNESS-001.md). Он использует только
+собственный preload shim внутри private Fcitx, не установленные библиотеки.
+Новый host допуск требуется отдельно.
