@@ -18,5 +18,14 @@
   "rawForwardingRejected": true,
   "reentrantHandoffPolicy": "abort125 before retirement state changes during key/repeat work",
   "review": "independent static review; specific scoped findings addressed; no runtime reviewer execution",
-  "claude": "65s timeout; no result counted"
+  "claude": "65s timeout; no result counted",
+  "senderSourceReview": {
+    "commit": "efb50993780079460b0cbed1363e2166a2de1d9f",
+    "files": {
+      "InputMethodV2.cpp": "a1f5f7827fa44cffac0352bdb2e5bacb01b83f6f2f984fc69b73ade12e89677f",
+      "InputManager.cpp": "feedf32e2e3d23aeaed7a02ef4ab94be2d66f4b22873b3166026da1e9ece4765"
+    },
+    "executed": false,
+    "rootCauseConfirmed": false
+  }
 }

@@ -62,3 +62,21 @@ is not a proof that all client-only approaches are impossible; it identifies
 the guarantees missing from the current proposal. Keep the existing keyboard
 correction core separate, and retain the smallest reproducer for an upstream
 interoperability report draft. No upstream publication is authorized here.
+
+## Sender source checkpoint
+
+Inspected the already pinned local Hyprland snapshot, commit
+`efb50993780079460b0cbed1363e2166a2de1d9f`, `InputMethodV2.cpp` and
+`InputManager.cpp`; no compositor code was modified or executed.
+`deactivate()` changes active state and emits its event, while `hasGrab()` checks
+only the grab vector. `sendKey()` iterates live grabs. Keyboard routing uses
+IME grab availability. This is consistent with an old-grab delivery window;
+source inspection alone does not establish the exact runtime root cause.
+The inspected input-method `setCommit` receives `serial` but does not use it in
+its body. Do not infer that adding a serial check alone fixes keyboard handoff.
+
+Next closed design must distinguish old resource lifetime from acknowledged
+activation, handle IMEs retaining grabs, and keep complete key pairs/modifiers
+with the intended focus. Use the existing trial010 as a bounded reproducer;
+no repeated host probe is authorized. A compositor activation-only gate is
+insufficient when a new active state coexists with an old grab.

@@ -16,7 +16,10 @@ frontend change, no host probes; environment ownership admission still blocks.
 functional candidate. Full report: docs/FCITX-RETIREMENT-REVIEW-001.md and
 aggregate data/retirement-review-001-result.json.
 
-NEXT: inspect compositor handoff semantics/source and establish explicit target /
+Sender source inspected: deactivate does not clear grab vector; hasGrab uses
+vector presence; sendKey iterates grabs; commit serial unused in inspected body.
+Consistent with old-grab window, not a new runtime root-cause proof.
+NEXT: design acknowledged handoff in closed peer and establish explicit target /
 key-pair ownership in closed peers. Do not reintroduce raw forwarding to make
 1/1 green. Compositor cooperation may be required; investigate rather than claim
 client-only impossibility. Existing recognizer/core unchanged. No new host/GPU /
