@@ -1,3 +1,25 @@
+## 2026-11-15 — cooperative handoff screen; real Claude implementation
+
+Claude Opus5.5 returned a small pure symbolic model; Codex added delivered-key
+ownership and rejected silent held-state grab migration, added regressions and
+aggregate runner. Independent contract/code review found no scoped acceptance
+counterexample; reporting limitations addressed, oracle checks target AND grab.
+11 tests PASS;11110 command prefixes length<=4 (incl terminal no-op continuations,
+not distinct states/unbounded proof). Nine fixed cases:3 accepted delivery,
+6 explicit rejections. Held-target and held-grab switches remain unsupported,
+with an outstanding delivered press; do not claim lossless cleanup or fix.
+Data: data/handoff-screen-001-result.json. Scope/commands/authorship:
+tests/handoff_screen/README.md. No real transport/Fcitx/desktop/network in screen.
+
+Pinned input-method XML commit serial describes done count/text state, not explicit
+target/grab/held-state binding; compositor may not further process forwarded keys.
+Invented ack in model is a hypothetical cooperative contract, not existing API.
+NEXT: map this contract to actual sender/IME ordering in existing protocol and
+identify what requires additional cooperation BEFORE inventing another wire
+protocol or making compositor patches. Keep modifier/keymap, repeat, timeout,
+disconnect, identity incarnation and active field loss explicit gaps. No new
+host permissions; do not loosen runtime ownership gate or replay to current field.
+
 ## 2026-11-15 — backend lifetime integrated, unsafe forwarding rejected
 
 Three ordered patches now implement private bounded retirement and wrapper

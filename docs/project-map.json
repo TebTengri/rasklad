@@ -301,6 +301,24 @@
       ],
       "status": "lifetime_diagnostic_not_delivery_fix",
       "notes": "Lifetime integration syntax/nested-depth controls pass. Raw old-event forwarding rejected on independent review; diagnostic aborts125. Actual Fcitx/runtime ownership remains blocked; next investigate compositor handoff contract."
+    },
+    {
+      "id": "handoff-screen",
+      "kind": "component",
+      "title": "Cooperative IME handoff symbolic screen",
+      "paths": [
+        "tests/handoff_screen/README.md",
+        "tests/handoff_screen/model.py",
+        "tests/handoff_screen/test_model.py",
+        "tests/handoff_screen/run.py",
+        "data/handoff-screen-001-result.json"
+      ],
+      "tests": [
+        "python3 -m unittest discover -s tests/handoff_screen -v",
+        "python3 tests/handoff_screen/run.py --run"
+      ],
+      "status": "symbolic_contract_only_not_transport_fix",
+      "notes": "Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof."
     }
   ],
   "edges": [

@@ -24,6 +24,7 @@
 - [Current010](current008.md)
 - [Wire lifecycle contrast](lifecycle.md)
 - [Actual Fcitx drain fixture draft](fcitx-drain-fixture.md)
+- [Cooperative IME handoff symbolic screen](handoff-screen.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.
