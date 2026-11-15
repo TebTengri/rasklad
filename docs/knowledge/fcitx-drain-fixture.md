@@ -1,6 +1,6 @@
 # Actual Fcitx drain fixture draft
 
-Synthetic peer source reviewed; no actual Fcitx runtime result or drain implementation. Runtime ownership admission blocks this environment.
+Synthetic peer reviewed; unused wrapper primitive passes intercepted ownership controls. No backend integration or actual-Fcitx runtime evidence. Full runtime admission blocks this environment.
 
 Статус: compiled_peer_not_runtime_validated
 
@@ -13,6 +13,11 @@ Synthetic peer source reviewed; no actual Fcitx runtime result or drain implemen
 - `tools/fcitx_frontend_build.py`
 - `tools/fcitx_frontend_lab.pro`
 - `data/fcitx-frontend-source-lock.json`
+- `patches/fcitx5/README.md`
+- `patches/fcitx5/0001-lab-grab-release-without-local-destroy.patch`
+- `tests/fcitx_drain_server/check_wrapper.py`
+- `tests/fcitx_drain_server/wrapper_ownership.cpp`
+- `data/wrapper-ownership-001-result.json`
 
 ## Связи
 
@@ -20,5 +25,6 @@ Synthetic peer source reviewed; no actual Fcitx runtime result or drain implemen
 ## Проверки
 
 - `python3 tests/fcitx_drain_server/test_runner.py`
+- `python3 tests/fcitx_drain_server/check_wrapper.py --run`
 
 Снимок из `docs/project-map.json`; перед решениями проверьте `bin/project-map check`.

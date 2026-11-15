@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "ownershipControlsPassed": true,
+  "realWire": false,
+  "fcitxStarted": false,
+  "backendIntegrated": false,
+  "patchSha256": "e50fea779d930ba3c99bd23308c2caeb3702215f46a7062c33ab2b39b736ed33",
+  "controls": [
+    "ordinary destructor sends exactly one release with local-destroy flag",
+    "drain sends exactly one release without destroy flag",
+    "repeat release is rejected",
+    "queued key listener still targets live wrapper",
+    "drained destructor destroys local proxy once without second release",
+    "intercepted requests target expected proxy"
+  ],
+  "author": "Codex",
+  "independentReview": "fresh-context static review; no concrete blocker under owner contract; proxy-identity and private-output recommendations incorporated",
+  "claudeAttempt": "65-second timeout; no code delivered; not counted as implementation or review",
+  "scope": "intercepted C API ownership controls, not actual Fcitx or wire delivery"
+}

@@ -1,3 +1,25 @@
+## 2026-11-15 — unused wrapper ownership primitive verified
+
+Codex added patches/fcitx5/0001-lab-grab-release-without-local-destroy.patch
+(LGPL upstream derivative, source+patch hashes recorded). No caller exists:
+releaseForDrain() sends server release without local proxy destroy; whole wrapper
+must be retained through same-queue async sync. Destructor then locally destroys
+only, without second release. Patched wrapper syntax check and intercepted C API
+controls passed. The controls exercise both destructor paths, repeated-release
+rejection, live queued listener and exact proxy identity. Fresh private build
+directory per invocation; pristine upstream/install remain unchanged.
+
+Independent reviewer found no blocker under the stated owner contract; review
+recommendations for proxy identity/private build output were incorporated.
+Claude's isolated small test request timed out65s, delivered no code, not counted.
+Data: data/wrapper-ownership-001-result.json; command:
+python3 tests/fcitx_drain_server/check_wrapper.py --run.
+This is NOT real wire or actual Fcitx runtime evidence. No backend retirement,
+focus routing or paired input fix exists yet. Next implement bounded retirement
+owner with same-queue barrier and shutdown cancellation, then closed baseline /
+drain comparison when ordinary runtime admission is available. Host permissions
+remain consumed; no host/Slack/config/system binary changed.
+
 ## 2026-11-15 — fixture review and admission checks
 
 Peer rebuilt after independent source review. Fixed module-map inspection before

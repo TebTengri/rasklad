@@ -1,0 +1,50 @@
+--- a/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.h
++++ b/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.h
+@@ -22,6 +22,10 @@
+         ZwpInputMethodKeyboardGrabV2 &&other) noexcept = delete;
+     ZwpInputMethodKeyboardGrabV2 &
+     operator=(ZwpInputMethodKeyboardGrabV2 &&other) noexcept = delete;
++    ~ZwpInputMethodKeyboardGrabV2();
++    // Lab-only ownership primitive. The owner must retain this whole wrapper
++    // until a sync callback on the same event queue has dispatched.
++    bool releaseForDrain();
+     auto actualVersion() const { return version_; }
+     void *userData() const { return userData_; }
+     void setUserData(void *userData) { userData_ = userData; }
+@@ -40,6 +44,7 @@
+         modifiersSignal_;
+     fcitx::Signal<void(int32_t, int32_t)> repeatInfoSignal_;
+ 
++    bool releasedForDrain_ = false;
+     uint32_t version_;
+     void *userData_ = nullptr;
+     UniqueCPtr<zwp_input_method_keyboard_grab_v2, &destructor> data_;
+--- a/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.cpp
++++ b/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.cpp
+@@ -54,6 +54,26 @@
+         *this, &ZwpInputMethodKeyboardGrabV2::listener, this);
+ }
+ 
++ZwpInputMethodKeyboardGrabV2::~ZwpInputMethodKeyboardGrabV2() {
++    if (releasedForDrain_) {
++        // The server release was already sent. Destroy only the local proxy;
++        // the normal deleter would send a second destructor request.
++        auto *proxy = data_.release();
++        wl_proxy_destroy(reinterpret_cast<wl_proxy *>(proxy));
++    }
++}
++
++bool ZwpInputMethodKeyboardGrabV2::releaseForDrain() {
++    if (releasedForDrain_ || !data_ || version_ < 1) {
++        return false;
++    }
++    releasedForDrain_ = true;
++    auto *proxy = reinterpret_cast<wl_proxy *>(data_.get());
++    wl_proxy_marshal_flags(proxy, ZWP_INPUT_METHOD_KEYBOARD_GRAB_V2_RELEASE,
++                           nullptr, version_, 0);
++    return true;
++}
++
+ void ZwpInputMethodKeyboardGrabV2::destructor(
+     zwp_input_method_keyboard_grab_v2 *data) {
+     const auto version = zwp_input_method_keyboard_grab_v2_get_version(data);

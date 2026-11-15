@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "2ce44614bf583d8ebbc6c83b4e3bd97f8adfe15c66e25469c4889b42127a0888",
+  "curatedSha256": "736634f2ef0c6b4fe03449bc53c07014c7f84561c084cb96b25ab26f0f36a490",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -39,7 +39,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "f3f6d9b5a44e290b1ae255bee0590e83fa1f2c931d4906c37a93ce48ac592272",
+    "docs/CONTINUATION-PLAN.md": "87b1886bfcff6b2ffd3026212c5bfb75336b18d7aa48882b21e392e2ae791b0d",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -160,10 +160,12 @@
     "tests/domain/domain_tests.cpp": "b66e742b9f90ffd15bc5458e8022c247effa0cfdb4dd04325330dc78c489bdaf",
     "tests/domain/domain_tests.pro": "947393ae0be0b22d8200d4e0075a532ee005707ef3606a47b6a869db486f1109",
     "tests/fcitx_drain_server/README.md": "e8cbc1919f4b246640048706d193b6be46530d764c69873358ecac53ec98a2c0",
+    "tests/fcitx_drain_server/check_wrapper.py": "527e418488bd23c673778f05b454beec84eb85d0c295d84c333ebab17b4f0a9c",
     "tests/fcitx_drain_server/run.py": "866b45a3498b60dba6e5a82480f391ac0081a603d38f49ad73c12668e04a8e5a",
     "tests/fcitx_drain_server/server.cpp": "61100376e2ff3a5b57de726e015153d4411d211e226b74ab29120f1b751775c6",
     "tests/fcitx_drain_server/server.pro": "bf8e35924c1cdcf414444a8473a8c52844ac51856d12913e024b6cb909497900",
     "tests/fcitx_drain_server/test_runner.py": "3118f84aae951f69a66a1500015ccc29b8dc1e18232ca5b34f6109fedcd6fab3",
+    "tests/fcitx_drain_server/wrapper_ownership.cpp": "5144c0524777cf69280acb1b25b6ce69a1b178ee3110b8302cee2bac7a890baf",
     "tests/fcitx_transport/client.cpp": "7b6e282ef76cf4b80d7f8a4ffc4801857f01f9eecc3fc3f6d268833fcbda4595",
     "tests/fcitx_transport/client.pro": "9d87f3304b07350e156a05587fcc74e3ba62fb384477721439a4618533cee4e5",
     "tests/fcitx_transport/core_entry_fake.cpp": "68fe2905fcaf6f795fe2c2a88f96c2697fbfff167ee60cd845d377833198b82a",
@@ -1051,6 +1053,31 @@
       "symbols": []
     },
     {
+      "path": "tests/fcitx_drain_server/check_wrapper.py",
+      "symbols": [
+        {
+          "name": "checked",
+          "line": 13,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_and_run",
+          "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 50,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "cmd",
+          "line": 34,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/fcitx_drain_server/run.py",
       "symbols": [
         {
@@ -1137,6 +1164,10 @@
           "kind": "FunctionDef"
         }
       ]
+    },
+    {
+      "path": "tests/fcitx_drain_server/wrapper_ownership.cpp",
+      "symbols": []
     },
     {
       "path": "tests/fcitx_transport/client.cpp",
@@ -5542,7 +5573,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "e4b005460fd79ac73422878ea384b1ed6aafaa6671a3e0b0f82de32b974ce2df",
+    "docs/knowledge/fcitx-drain-fixture.md": "88cfae6000cdd3efed9ad0e34372598f61bbcc200393f0bed70d194939aa6d56",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",
