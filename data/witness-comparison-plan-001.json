@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-11-15",
-  "status": "prepared_not_executed",
+  "status": "executed_once_approval_consumed",
   "purpose": "separate ordinary configuration from witness bundle and query observations after instrumented PASS004",
   "requiresFreshOwnerApproval": true,
   "maxTrials": 3,
@@ -83,5 +83,6 @@
     "tests/chromium_ime/adversarial-focus.mjs": "1584046d788a59dcbef3ed3992566ce77848d2fe49995077f3fff277419385ea",
     "tools/hyprland_ime_lab.py": "3f8691a3370f8c64cc9eab996ee5d0f68dcec031f7786247543a37f9affcae47",
     "data/focus-source-review-001.json": "fceb1c6273c5834c5bd5fa2decdc0760a9ed501f8242e9f6411926a92e6e36dc"
-  }
+  },
+  "resultSummary": "data/witness-comparison-005-summary.json"
 }

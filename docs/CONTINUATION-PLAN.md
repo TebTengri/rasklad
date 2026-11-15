@@ -2,27 +2,34 @@
 
 ## Актуальная контрольная точка
 
-Проба004 witness на exact Hyprland отдельно разрешена и выполненаb744238:
-baseline17/focus4/4 PASS, вcase2 Spacepress/release1/1, passEmpty1 commit0,
-FocusIn/Out2/2, DOMSpacepresent. data/hyprland-addon-witness-004-result.json.
-Исправления correction logic нет: диагностический bundle и before-wordGetStats
-могли изменить timing. Допуск004 использован, новых host запусков нет.
+Согласованная серия 005 завершена: ровно A→B→C, все три допуска использованы.
+Обычная сборка, witness без запросов и witness с запросами воспроизвели отказ
+case2. Во всех вариантах прошли 17 базовых проверок, три остальных сценария
+фокуса и очистка; compositor остался жив. Агрегат:
+data/witness-comparison-005-summary.json. План 001 помечен выполненным;
+повторно запускать серию по старому разрешению нельзя.
 
-Claude реализовал минимальный no-query control, Codex интегрировал/тестировал;
-runneragent добавил --witness-no-query требует--addon-witness. Это тот же
-witnessbinary/config/env/module, нольGetStats. C++не менялся. 55Python и9reader
-тестов проходят; исходные19oracle/19telemetry пройдены и не изменялись.
-Private Sway no-query baseline17/focus4/4 PASS (data/witness-noquery-preflight-001.json).
-JSreview блокеров не нашло; Pythonguard сравнивает argv кроме одногоenvmarker.
+В C счётчик показал Space-code press=0, release=1; все ветки обработки press
+и commit=0. FocusIn/Out=2/2, capabilityChange=16. DOM-трасса пуста,
+первичная, поздняя и post-query проверки провалены. Обычная ветка коррекции
+Space не выполнялась в наблюдаемом интервале. Ранняя фильтрация, иной raw-code
+и отложенные callbacks пока не исключены. Успех 004 оказался неустойчивым.
 
-Подготовлен первый ограниченный triple A→B→C: ordinary originalconfig;
-witnessnoqueries; samewitnessfullqueries. data/witness-comparison-plan-001.json
-с argv/хешами/stopconditions. Всего3 последовательные пробы до75s каждая,
-без автоматических повторов; НОВОЕ отдельное согласие пока не получено.
-Это не полныйfactorial, n1неустанавливаетчастоту/причинность. A/Bменяетbundle
-(dbUSdependency/startup/endpoint тоже), B/Cqueries+observations. PeerPingпока
-не добавлен. Послеfreshapproval проверитьхеши и выполнитьтолькоэту первуютройку.
-Slack/hostIME/configне меняются. Любой диагностическийPASSнеобъявлятьfix.
+Подготовлена схема 2: Claude предложил два общих счётчика press/release на
+входе handler; Codex интегрировал и проверил. API: schema2 + enabled +
+22 счётчика, всего 24 числа. Старый ответ schema1 отвергается. Независимое
+ревью C++ и JS завершено без блокеров, девять reader-тестов и отрицательные
+проверки environment проходят. Обычный код после препроцессора не изменился.
+Закрытый Sway прошёл baseline17/focus4, новые totals дали ожидаемые 7/7:
+data/addon-witness-schema2-preflight-002.json.
+
+Следующий опыт — ОДНА отдельно согласованная проба Hyprland до75 секунд с
+--focus-stress --space-telemetry --addon-witness и прежним input-root.
+Нового разрешения пока нет. Для шести букв + Space нормальный контроль7/7;
+6/7 поддержит пропущенный press на входе handler, 7/7 при code65 press0 —
+другое представление либо лишнее событие. Это не идентификатор пары и не
+доказательство причины во frontend. Текст, core, Slack, host IME и настройки
+не менялись; raw-логи и interposer не добавлены.
 
 ## Предыдущие контрольные точки (история)
 

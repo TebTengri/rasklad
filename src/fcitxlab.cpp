@@ -418,6 +418,9 @@ private:
 
     void handleKey(fcitx::KeyEvent &event) {
 #ifdef RASKLAD_WITNESS_LAB
+        // Schema 2 totals: no code, sym, text or timing read or stored here.
+        lw::inc(event.isRelease() ? lw::Counter::allKeyReleaseSeen
+                                  : lw::Counter::allKeyPressSeen);
         // Observation only, BEFORE the filtered check and all gates: raw code
         // 65 (evdev KEY_SPACE 57 + 8). Code and sym are compared, never stored
         // or exported. A prior-filtered press returns below, so no further

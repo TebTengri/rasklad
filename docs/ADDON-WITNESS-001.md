@@ -1,5 +1,8 @@
 # Лабораторный свидетель ветки addon
 
+Текущий диагностический контракт — schema2 (описан в конце).
+Разделы schema1 и результаты001–005 ниже сохранены как история экспериментов.
+
 2026-11-15, SYS-245. Предпосылка: exact trial003 подтвердил case2 FAIL,
 ALL-key/input trace пустой и после500ms event wait. Причина не установлена.
 Повторно расширять DOM trace не нужно; следующий вопрос — достиг ли Space
@@ -136,3 +139,73 @@ addonWitnessQueriesEnabled=false; ни в одном case нет counter sample.
 C++/бинарь/config прежние. Агрегат data/witness-noquery-preflight-001.json.
 Исходные19oracle/19telemetry tests ранее проходили и в этом изменении не
 затронуты. Независимый static JSreview без блокеров, reviewer не запускал тесты.
+
+## Согласованный triple005: три отказа
+
+Выполнены ровно A→B→C по плану, без повторов. Все baseline17 и три прочих
+focus cases прошли; case2 FAIL во всех arms, compositor/cleanup валидны.
+Серия полностью использовала3 допуска, remaining=0. Агрегат
+data/witness-comparison-005-summary.json и три отдельных result JSON.
+
+C full witness поймал отказ: code65press delta0, release delta1; все
+press-ветки и commitString delta0. FocusIn/Out2/2, capabilityChange16,
+Reset0. Getter валиден/ненасыщен; primary/late/post-query0, ALL DOMtrace[].
+Следовательно, зарегистрированный нашим watcher Space press не выполнял
+коррекцию/commit. Счётчики не идентифицируют пару событий; release нельзя
+безусловно приписать именно этой Space-команде. Raw-code remapping, ранняя
+фильтрация и поздний callback остаются возможными. Предыдущий PASS004 не
+был устойчивым эффектом getter: C снова FAIL. Частоту не оцениваем.
+
+Exact Fcitx5.1.23 postEvent прекращает handlers/phases после filtered;
+InputContext::keyEvent возвращается до dispatch без фокуса. Публичный
+watchEvent запрещает ReservedFirst. Поэтому просто переносить watcher
+раньше нельзя. Ctrl+Space trigger выполняется после нашего PreInputMethod,
+а ранний togglePreedit вызывает Reset, которого delta не показала. Это
+source-review, не runtime-исключение всех возможных фильтров.
+
+Минимальный следующий разделитель — два bounded totals всех press/release
+в существующей закрытой fixture. Ожидаемый обычный интервал —6letters+Space,
+7/7;6/7 поддержит пропущенный handler press,7/7 приSpace65press0 — изменённое
+представление. Иные totals неоднозначны. Никаких rawkeys/текста/newrights.
+Для этого нужен versioned schema2, чтобы старый бинарь не выдавал ложные нули.
+До newprobe — реализацияClaude, ревью и Swaypositivecontrol.
+
+Hyprland duplicate-suppression и отбрасывание события старого grab остаются
+гипотезами. Для первого нужен доказанный route transition +stale pressed-state;
+в стабильномUSEIME ветка m_pressed не используется. Для второго надо ещё
+проверить libwayland proxy-destruction semantics. Не менять систему по догадке.
+
+## Schema2: totals без raw-кодов
+
+По результату005 Claude Opus5.5 предложил минимальное расширение: два
+счётчика allKeyPressSeen/allKeyReleaseSeen, инкремент в самом начале
+существующего handler до проверкиcode/gates/filter. Только isRelease bool,
+никаких code/sym/text/time для этих двух счётчиков. Старые20индексов сохранены,
+новые20/21, всего22счётчика. GetStats возвращает24uint32: schema2, enabled1,
+22значения. JS отклоняет schema1 и неверную длину; saturating255/-1 прежние.
+Read-only/private-bus/runtimeguards и no-query control не меняются.
+
+Codex интегрировал предложение и исправил отрицательный enabled-test по
+замечанию двух независимых reviewer: schema2/disabled0 проверяется отдельно
+от корректного старого schema1/20counter reply. 9reader tests проходят.
+Независимые C++/JSreview без блокеров; reviewer тесты не запускали.
+Обычный profile preprocessed code побайтово прежний (SHAf5d53921...).
+C++negative environment controls повторно прошли без запуска служб.
+
+В before-word→after-oracle интервале обычный fixed stimulus содержит6букв
+иSpace: ожидается7/7 при нормальном потоке без лишних/повторных событий.
+6/7 поддерживает отсутствие одного press в handler до getter;7/7 при
+Space-codepress0 поддерживает иной code, но не исключает дополнительное
+событие вместо недостающего. Это не pairing и не доказательство frontend loss.
+Иные числа требуют отдельной трактовки, не разрешать ошибку ради PASS.
+
+Никакого вмешательства в установленные Fcitx/Hyprland, LD_PRELOAD или
+переноса watcher в запрещённую ReservedFirst фазу. Если totals подтвердят
+пропуск до handler, только затем рассматривать узкую точку наблюдения
+frontend, не общий протокольный лог. Новый host допуск ещё не получен.
+
+Закрытый положительный контроль схемы2 завершён: Sway baseline17/focus4 pass,
+валидный ненасыщенный getter дал allKeyPress/Release=7/7 и Space-code1/1.
+Данные data/addon-witness-schema2-preflight-002.json. Бинарь schema1 сохранён
+в ignored build с прежним хешем для воспроизводимости; активная диагностическая
+сборка теперь schema2. Новый host опыт ещё не выполнялся.

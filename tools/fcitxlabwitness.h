@@ -6,9 +6,9 @@
 // Default and plain PROFILE_LAB builds never include this header, so they have
 // no endpoint, no counters, no D-Bus module dependency and no environment reads.
 //
-// What it is: 20 process-wide saturating (max 255) observation counters plus a
-// single read-only D-Bus method GetStats() -> au (22 x uint32):
-//   [0] schema = 1, [1] enabled = 1, [2..21] counters in Counter order.
+// What it is: 22 process-wide saturating (max 255) observation counters plus a
+// single read-only D-Bus method GetStats() -> au (24 x uint32):
+//   [0] schema = 2, [1] enabled = 1, [2..23] counters in Counter order.
 // What it is NOT: no setter, no reset method, no properties, no signals, no
 // text, key codes, keysyms, timestamps, pointers, files, logging or payload.
 // Serialization happens only when GetStats is called; the key path performs
@@ -41,7 +41,7 @@
 
 namespace rasklad::fcitxlab::witness {
 
-// Exact index order is part of schema 1. Do not reorder.
+// Exact index order is part of schema 2. Do not reorder.
 enum class Counter : std::size_t {
     spaceCodePressSeen = 0,  // press with raw code 65, before filtered/gates
     spaceCodeReleaseSeen,    // release with raw code 65, before filtered/gates
@@ -64,14 +64,20 @@ enum class Counter : std::size_t {
     capabilityChange,        // CapabilityAboutToChange + CapabilityChanged
     noStatePress,            // code-65 eligible press without LabState
     releaseFiltered,         // code-65 release swallowed via pending list
+    allKeyPressSeen,         // every handler-entry press, any code/sym
+    allKeyReleaseSeen,       // every handler-entry release, any code/sym
     count
 };
 
 constexpr std::size_t kCounterCount = static_cast<std::size_t>(Counter::count);
-static_assert(kCounterCount == 20, "schema 1 has exactly 20 counters");
+static_assert(kCounterCount == 22, "schema 2 has exactly 22 counters");
+static_assert(static_cast<std::size_t>(Counter::releaseFiltered) == 19 &&
+              static_cast<std::size_t>(Counter::allKeyPressSeen) == 20 &&
+              static_cast<std::size_t>(Counter::allKeyReleaseSeen) == 21,
+              "schema 2 appends counters without shifting schema 1 indices");
 constexpr std::size_t kReplyWords = 2 + kCounterCount;
-static_assert(kReplyWords == 22, "schema 1 reply has exactly 22 words");
-constexpr std::uint32_t kSchema = 1;
+static_assert(kReplyWords == 24, "schema 2 reply has exactly 24 words");
+constexpr std::uint32_t kSchema = 2;
 constexpr std::uint8_t kSaturate = 255;
 // evdev KEY_SPACE (57) + 8 (XKB offset) as delivered in fcitx::Key::code().
 constexpr int kSpaceKeyCode = 65;

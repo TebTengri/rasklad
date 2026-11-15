@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Closed synthetic fixture only. Read-only fixed counters, never input payload.
-// Counter order is the versioned C++ witness contract. 255 means saturation.
+// Counter order is schema 2 (22 counters / 24 reply words); schema 1 is rejected. 255 means saturation.
 // noQuery=true is the zero-GetStats control: no witness object, query never called.
 export const WITNESS_COUNTERS=Object.freeze([
  'spaceCodePressSeen','spaceCodeReleaseSeen','normalizedSpacePress','priorFilteredPress',
  'focusedPress','eligiblePress','bufferNonemptyPress','bypassPress','passIneligible',
  'passBypass','passEmpty','commitSpaceBranch','flushOriginalSpaceCode','commitStringCalls',
  'focusIn','focusOut','reset','capabilityChange','noStatePress','releaseFiltered',
+ 'allKeyPressSeen','allKeyReleaseSeen',
 ]);
 const invalid=()=>({valid:false,complete:false,before:[],after:[],delta:[]});
 export function parseWitnessReply(raw){
  if(typeof raw!=='string'||raw.length>768||!/^\(\[\s*(?:uint32 )?\d+(?:,\s*(?:uint32 )?\d+)*\s*\],\)\s*$/.test(raw))return null;
  const values=raw.replaceAll('uint32 ','').match(/\d+/g).map(Number);
- if(values.length!==22||values[0]!==1||values[1]!==1||!values.every(x=>Number.isInteger(x)&&x>=0&&x<=255))return null;
+ if(values.length!==24||values[0]!==2||values[1]!==1||!values.every(x=>Number.isInteger(x)&&x>=0&&x<=255))return null;
  return values.slice(2);
 }
 export function createAddonWitness(options){
