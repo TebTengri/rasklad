@@ -1,8 +1,8 @@
 # Actual Fcitx drain fixture draft
 
-Synthetic peer reviewed; unused wrapper primitive passes intercepted ownership controls. No backend integration or actual-Fcitx runtime evidence. Full runtime admission blocks this environment.
+Lifetime integration syntax/nested-depth controls pass. Raw old-event forwarding rejected on independent review; diagnostic aborts125. Actual Fcitx/runtime ownership remains blocked; next investigate compositor handoff contract.
 
-Статус: compiled_peer_not_runtime_validated
+Статус: lifetime_diagnostic_not_delivery_fix
 
 ## Файлы
 
@@ -18,6 +18,11 @@ Synthetic peer reviewed; unused wrapper primitive passes intercepted ownership c
 - `tests/fcitx_drain_server/check_wrapper.py`
 - `tests/fcitx_drain_server/wrapper_ownership.cpp`
 - `data/wrapper-ownership-001-result.json`
+- `patches/fcitx5/0002-lab-track-listener-depth.patch`
+- `patches/fcitx5/0003-lab-bounded-grab-retirement.patch`
+- `tools/fcitx_retirement_candidate.py`
+- `docs/FCITX-RETIREMENT-REVIEW-001.md`
+- `data/retirement-review-001-result.json`
 
 ## Связи
 
@@ -26,5 +31,7 @@ Synthetic peer reviewed; unused wrapper primitive passes intercepted ownership c
 
 - `python3 tests/fcitx_drain_server/test_runner.py`
 - `python3 tests/fcitx_drain_server/check_wrapper.py --run`
+- `python3 tests/fcitx_drain_server/check_wrapper.py --run --depth`
+- `python3 tools/fcitx_retirement_candidate.py --syntax`
 
 Снимок из `docs/project-map.json`; перед решениями проверьте `bin/project-map check`.

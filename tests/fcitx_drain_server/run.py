@@ -96,6 +96,7 @@ def inside(variant):
             except subprocess.TimeoutExpired:child.kill();child.wait(timeout=1)
 
 def run(variant):
+    if variant=='drain':raise RuntimeError('diagnostic_candidate_not_delivery_fix')
     b=base()
     if os.geteuid()==0:raise b.Refused('root_not_admitted')
     paths={'server':BUILD/'fcitx-drain-server','runner.py':Path(__file__),'addons/libwaylandim.so':ROOT/f'build/wayland-ime/frontend-{variant}/libwaylandim.so'}

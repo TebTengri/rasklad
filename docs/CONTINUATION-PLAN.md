@@ -1,3 +1,27 @@
+## 2026-11-15 — backend lifetime integrated, unsafe forwarding rejected
+
+Three ordered patches now implement private bounded retirement and wrapper
+callback-depth tracking. The initial raw-old-event forwarding draft was rejected
+on independent review (wrong-field/keymap/pairing/repeat/reentrancy risks).
+Revised diagnostic never forwards retired key/modifier/keymap events: exits125.
+It also aborts reentrant retirement/destruction while active key/repeat work is
+on stack. Late barrier reclamation waits for zero wrapper listener depth.
+
+Fresh pinned archive plus all three patches: 3 C++ syntax units PASS; intercepted
+nested listener ownership PASS; launcher/report controls6 PASS. Specific static
+review findings addressed, no broader/runtime safety claim. Claude review request
+timed out65s, no delivered result. Codex implementation. No installed/runtime
+frontend change, no host probes; environment ownership admission still blocks.
+`run.py --run --variant drain` now refuses this lifetime-only diagnostic as a
+functional candidate. Full report: docs/FCITX-RETIREMENT-REVIEW-001.md and
+aggregate data/retirement-review-001-result.json.
+
+NEXT: inspect compositor handoff semantics/source and establish explicit target /
+key-pair ownership in closed peers. Do not reintroduce raw forwarding to make
+1/1 green. Compositor cooperation may be required; investigate rather than claim
+client-only impossibility. Existing recognizer/core unchanged. No new host/GPU /
+Slack permission exists; consumed probes must not be repeated.
+
 ## 2026-11-15 — unused wrapper ownership primitive verified
 
 Codex added patches/fcitx5/0001-lab-grab-release-without-local-destroy.patch

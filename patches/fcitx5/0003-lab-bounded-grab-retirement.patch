@@ -1,0 +1,224 @@
+--- a/src/frontend/waylandim/waylandimserverv2.h
++++ b/src/frontend/waylandim/waylandimserverv2.h
+@@ -9,6 +9,7 @@
+ 
+ #include <cstdint>
+ #include <memory>
++#include <list>
+ #include <optional>
+ #include <string>
+ #include <tuple>
+@@ -117,6 +118,26 @@
+     void updatePreeditDelegate(InputContext *ic) override;
+ 
+ private:
++    unsigned inputWorkDepth_ = 0;
++    struct InputWorkGuard {
++        unsigned &depth;
++        explicit InputWorkGuard(unsigned &value) : depth(value) { ++depth; }
++        ~InputWorkGuard() { --depth; }
++    };
++    struct RetiredGrab {
++        WaylandIMInputContextV2 *owner;
++        std::unique_ptr<wayland::ZwpInputMethodKeyboardGrabV2> grab;
++        wl_callback *barrier = nullptr;
++        bool drained = false;
++        ~RetiredGrab();
++    };
++    std::list<std::unique_ptr<RetiredGrab>> retiredGrabs_;
++    void collectDrainedGrabs();
++    void retireKeyboardGrab();
++    void retiredKey(uint32_t time, uint32_t key, uint32_t state);
++    void retiredModifiers(uint32_t depressed, uint32_t latched,
++                          uint32_t locked, uint32_t group);
++    static void drainDone(void *data, wl_callback *callback, uint32_t serial);
+     void repeat();
+     void surroundingTextCallback(const char *text, uint32_t cursor,
+                                  uint32_t anchor);
+--- a/src/frontend/waylandim/waylandimserverv2.cpp
++++ b/src/frontend/waylandim/waylandimserverv2.cpp
+@@ -9,6 +9,8 @@
+ #include <sys/types.h>
+ #include <algorithm>
+ #include <cstdint>
++#include <cstdlib>
++#include <unistd.h>
+ #include <cstring>
+ #include <ctime>
+ #include <memory>
+@@ -173,7 +175,7 @@
+         ++serial_;
+         if (pendingDeactivate_) {
+             pendingDeactivate_ = false;
+-            keyboardGrab_.reset();
++            retireKeyboardGrab();
+             repeatInfo_.reset();
+             // This is the only place we update wayland xkb mask, so it is ok to
+             // reset it to 0. This breaks the caps lock or num lock. But we have
+@@ -215,29 +217,43 @@
+             // It is possible when switching between two client, there will be
+             // two activate. In that case we will have already one grab. The
+             // second request would fail and cause invalid object.
+-            keyboardGrab_.reset();
++            retireKeyboardGrab();
+             keyboardGrab_.reset(ic_->grabKeyboard());
+             if (!keyboardGrab_) {
+                 WAYLANDIM_DEBUG() << "Failed to grab keyboard";
+             } else {
+                 keyboardGrab_->keymap().connect(
+-                    [this](uint32_t format, int32_t fd, uint32_t size) {
++                    [this, origin = keyboardGrab_.get()](uint32_t format, int32_t fd, uint32_t size) {
++                        if (origin != keyboardGrab_.get()) {
++                            close(fd);
++                            std::_Exit(125);
++                        }
+                         keymapCallback(format, fd, size);
+                     });
+-                keyboardGrab_->key().connect([this](uint32_t serial,
++                keyboardGrab_->key().connect([this, origin = keyboardGrab_.get()](uint32_t serial,
+                                                     uint32_t time, uint32_t key,
+                                                     uint32_t state) {
++                    if (origin != keyboardGrab_.get()) {
++                        retiredKey(time, key, state);
++                        return;
++                    }
+                     keyCallback(serial, time, key, state);
+                 });
+                 keyboardGrab_->modifiers().connect(
+-                    [this](uint32_t serial, uint32_t mods_depressed,
++                    [this, origin = keyboardGrab_.get()](uint32_t serial, uint32_t mods_depressed,
+                            uint32_t mods_latched, uint32_t mods_locked,
+                            uint32_t group) {
++                        if (origin != keyboardGrab_.get()) {
++                            retiredModifiers(mods_depressed, mods_latched,
++                                             mods_locked, group);
++                            return;
++                        }
+                         modifiersCallback(serial, mods_depressed, mods_latched,
+                                           mods_locked, group);
+                     });
+                 keyboardGrab_->repeatInfo().connect(
+-                    [this](int32_t rate, int32_t delay) {
++                    [this, origin = keyboardGrab_.get()](int32_t rate, int32_t delay) {
++                        if (origin != keyboardGrab_.get()) { return; }
+                         repeatInfoCallback(rate, delay);
+                     });
+                 focusInWrapper();
+@@ -280,11 +296,77 @@
+ }
+ 
+ WaylandIMInputContextV2::~WaylandIMInputContextV2() {
++    if (inputWorkDepth_) { std::_Exit(125); }
++    if (keyboardGrab_ && keyboardGrab_->inCallback()) { std::_Exit(125); }
++    for (const auto &record : retiredGrabs_) {
++        if (record->grab->inCallback()) { std::_Exit(125); }
++    }
++    retiredGrabs_.clear();
+     server_->remove(seat_.get());
+     destroy();
+ }
+ 
++// Private lab only: records retain the complete listener target, never just proxy.
++WaylandIMInputContextV2::RetiredGrab::~RetiredGrab() {
++    if (barrier) { wl_callback_destroy(barrier); }
++}
++
++void WaylandIMInputContextV2::drainDone(void *data, wl_callback *callback,
++                                      uint32_t) {
++    auto *record = static_cast<RetiredGrab *>(data);
++    if (record->barrier != callback) { std::_Exit(125); }
++    wl_callback_destroy(callback);
++    record->barrier = nullptr;
++    record->drained = true;
++    record->owner->collectDrainedGrabs();
++}
++
++void WaylandIMInputContextV2::collectDrainedGrabs() {
++    for (auto it = retiredGrabs_.begin(); it != retiredGrabs_.end();) {
++        if ((*it)->drained && !(*it)->grab->inCallback()) {
++            it = retiredGrabs_.erase(it);
++        } else { ++it; }
++    }
++}
++
++void WaylandIMInputContextV2::retireKeyboardGrab() {
++    // Reject reentrant handoff before it can resume old input against new focus.
++    if (inputWorkDepth_) { std::_Exit(125); }
++    collectDrainedGrabs();
++    if (!keyboardGrab_) { return; }
++    timeEvent_->setEnabled(false);
++    repeatKey_ = 0;
++    repeatSym_ = FcitxKey_None;
++    if (retiredGrabs_.size() >= 8) { std::_Exit(125); }
++    auto record = std::make_unique<RetiredGrab>();
++    record->owner = this;
++    if (!keyboardGrab_->releaseForDrain()) { std::_Exit(125); }
++    record->grab = std::move(keyboardGrab_);
++    // Pinned upstream dispatches both grab and display.sync on default queue.
++    record->barrier = wl_display_sync(*server_->display());
++    if (!record->barrier) { std::_Exit(125); }
++    static const wl_callback_listener listener = {drainDone};
++    if (wl_callback_add_listener(record->barrier, &listener, record.get()) < 0) {
++        std::_Exit(125);
++    }
++    retiredGrabs_.push_back(std::move(record));
++}
++
++void WaylandIMInputContextV2::retiredKey(uint32_t, uint32_t, uint32_t) {
++    // Lifetime observation only. The old event has no proven target/focus
++    // ownership or press/release pairing. Never replay it into a new field.
++    // A deliberate FAIL is preferable to a false transport success.
++    std::_Exit(125);
++}
++
++void WaylandIMInputContextV2::retiredModifiers(uint32_t, uint32_t,
++                                             uint32_t, uint32_t) {
++    // Old masks may describe a different keymap/focus generation.
++    std::_Exit(125);
++}
++
+ void WaylandIMInputContextV2::repeat() {
++    InputWorkGuard inputWork(inputWorkDepth_);
+     if (!realFocus()) {
+         return;
+     }
+@@ -488,6 +570,7 @@
+ 
+ void WaylandIMInputContextV2::keyCallback(uint32_t serial, uint32_t time,
+                                           uint32_t key, uint32_t state) {
++    InputWorkGuard inputWork(inputWorkDepth_);
+     FCITX_UNUSED(serial);
+     time_ = time;
+     if (!server_->state_) {
+--- a/src/frontend/waylandim/waylandim.cpp
++++ b/src/frontend/waylandim/waylandim.cpp
+@@ -6,6 +6,8 @@
+  */
+ #include "waylandim.h"
+ #include <memory>
++#include <cstdlib>
++#include <cstring>
+ #include <string>
+ #include "fcitx-utils/log.h"
+ #include "fcitx-utils/misc_p.h"
+@@ -32,6 +34,20 @@
+ 
+ WaylandIMModule::WaylandIMModule(Instance *instance) : instance_(instance) {
+     reloadConfig();
++    auto labEquals = [](const char *name, const char *value) {
++        auto *actual = std::getenv(name);
++        return actual && std::strcmp(actual, value) == 0;
++    };
++    if (!labEquals("RASKLAD_FCITX_DRAIN_LAB", "1") ||
++        !labEquals("RASKLAD_NATIVE_WAYLAND_LAB", "1") ||
++        !labEquals("HOME", "/home/lab") ||
++        !labEquals("XDG_RUNTIME_DIR", "/run/lab") ||
++        !labEquals("WAYLAND_DISPLAY", "wayland-lab") ||
++        std::getenv("DISPLAY") || std::getenv("WAYLAND_SOCKET") ||
++        std::getenv("WAYLAND_DEBUG") || std::getenv("RASKLAD_PARENT_WAYLAND_FD") ||
++        !*config_.persistentVirtualKeyboard || !*config_.preferKeyEvent) {
++        std::_Exit(125);
++    }
+     persistentVirtualKeyboard_ = *config_.persistentVirtualKeyboard;
+     createdCallback_ =
+         wayland()->call<IWaylandModule::addConnectionCreatedCallback>(

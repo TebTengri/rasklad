@@ -35,6 +35,12 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'server_eof'):
             self.report('pass')
 
+    def test_diagnostic_candidate_cannot_run_as_delivery_fix(self):
+        with patch.object(fixture.subprocess,'Popen') as start:
+            with self.assertRaisesRegex(RuntimeError,'diagnostic_candidate_not_delivery_fix'):
+                fixture.run('drain')
+            start.assert_not_called()
+
     def test_forged_environment_cannot_enter_private_mode(self):
         env={'RASKLAD_NATIVE_WAYLAND_LAB':'1','HOME':'/home/lab',
              'XDG_RUNTIME_DIR':'/run/lab','WAYLAND_DISPLAY':'wayland-lab'}

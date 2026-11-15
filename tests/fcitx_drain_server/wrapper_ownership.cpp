@@ -44,12 +44,23 @@ int main(){
   check(calls.userdata==&grab && calls.listenerData==&grab);
   // Queued listener dispatch must still target the living wrapper.
   unsigned keys=0;
+  auto *listener=reinterpret_cast<const zwp_input_method_keyboard_grab_v2_listener*>(calls.listener);
   grab.key().connect([&](uint32_t,uint32_t,uint32_t key,uint32_t state){
    check(key==57 && state==1);++keys;
+#ifdef RASKLAD_DEPTH_TEST
+   check(grab.inCallback());
+   if (keys==1) {
+    listener->key(calls.listenerData,proxy,2,11,57,1);
+    check(grab.inCallback()); // Nested return must not clear the outer depth.
+   }
+#endif
   });
-  auto *listener=reinterpret_cast<const zwp_input_method_keyboard_grab_v2_listener*>(calls.listener);
   listener->key(calls.listenerData,proxy,1,10,57,1);
+#ifdef RASKLAD_DEPTH_TEST
+  check(keys==2 && !grab.inCallback());
+#else
   check(keys==1);
+#endif
  }
  check(calls.release==1 && calls.destroy==1);
  std::printf("{\"ownershipControlsPassed\":%s,\"realWire\":false,\"fcitxStarted\":false}\n",errors?"false":"true");

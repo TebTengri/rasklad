@@ -33,3 +33,14 @@ record: `data/wrapper-ownership-001-result.json`. Claude was asked for this smal
 test but timed out after 65 seconds without output; Codex implemented the test.
 The independent reviewer did not run tests. The compiler and test run locally;
 this is not the namespace-isolated full-frontend build or its ABI admission.
+
+## Bounded retirement diagnostic (not a delivery candidate)
+
+Patches `0002` and `0003` add listener-depth tracking and private backend
+retirement. Apply after `0001`; hashes: `retirement-lock.json`.
+Retired input and reentrant key/repeat handoff deliberately abort the lab125.
+The initial raw-forward proposal was rejected on independent review; this
+candidate must not be presented as a lossless correction fix.
+Current evidence/next decision: `docs/FCITX-RETIREMENT-REVIEW-001.md`.
+Checks: `python3 tests/fcitx_drain_server/check_wrapper.py --run --depth` and
+`python3 tools/fcitx_retirement_candidate.py --syntax`.
