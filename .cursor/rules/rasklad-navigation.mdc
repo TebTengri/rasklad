@@ -1,0 +1,5 @@
+---
+description: Compact navigation for rasklad components and test evidence
+alwaysApply: true
+---
+Follow root AGENTS.md. Start with `bin/project-map check` and `bin/project-map find <topic>`, then read the needed files. Shared project skill: `.cursor/skills/rasklad-navigation/SKILL.md`. Current status: `docs/CONTINUATION-PLAN.md`. The map is navigation, not test results or permission for live probes; avoid loading all history/build data.

@@ -1,0 +1,4 @@
+{
+ global: wl_display_create; rasklad_server_route_snapshot_v1;
+ local: *;
+};

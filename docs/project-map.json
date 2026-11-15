@@ -1,0 +1,439 @@
+{
+  "schema": 1,
+  "snapshot_date": "2026-11-15",
+  "scope": "Curated own-project navigation; not a generated exhaustive call graph or live status service.",
+  "freshness": "Recheck source and current evidence before decisions; root maintains freshness tooling separately.",
+  "evidence_labels": {
+    "verified_source": "Relation checked against current source/contracts; not a claim of fresh runtime execution.",
+    "documented_evidence": "Historical result documented in project; bounded experiment only.",
+    "documented_contract": "Requirement, not automatic proof of enforcement.",
+    "planned": "Proposed integration, not shipped support.",
+    "inferred": "Hypothesis only; none used as a proven dependency here."
+  },
+  "nodes": [
+    {
+      "id": "policy",
+      "kind": "contract",
+      "paths": [
+        "AGENTS.md",
+        "SECURITY.md",
+        "docs/DATA_POLICY.md"
+      ],
+      "title": "Policy",
+      "notes": "Current project boundaries; read applicable instructions first.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "architecture",
+      "kind": "decision",
+      "paths": [
+        "docs/ADR-001-DETECTOR-ROUTING.md",
+        "docs/ADR-001-input-boundary.md"
+      ],
+      "title": "Architecture",
+      "notes": "Recognition and safe execution are separate.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "converter",
+      "kind": "implementation",
+      "paths": [
+        "src/layoutconverter.cpp",
+        "src/layoutconverter.h",
+        "tests/rasklad_tests.cpp"
+      ],
+      "title": "Converter",
+      "notes": "Bounded fixed US/RU mapping; explicit manual direction.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "router",
+      "kind": "implementation",
+      "paths": [
+        "src/decisionrouter.cpp",
+        "src/decisionrouter.h",
+        "docs/ADR-001-DETECTOR-ROUTING.md"
+      ],
+      "title": "Router",
+      "notes": "Keep/Correct/Suggest/Abstain; safeConfirmed decision rules.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "evidence",
+      "kind": "implementation",
+      "paths": [
+        "src/localprofile.cpp",
+        "src/localprofile.h",
+        "src/profileverify.cpp",
+        "src/ngramdetector.cpp"
+      ],
+      "title": "Evidence",
+      "notes": "Local verified Hunspell full/control, stem indices and frozen quantized n-gram evidence; single processing owner.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation",
+      "aliases": [
+        "dictionary",
+        "dictionaries",
+        "словарь",
+        "словари",
+        "model",
+        "модель"
+      ]
+    },
+    {
+      "id": "gui",
+      "kind": "implementation",
+      "paths": [
+        "src/main.cpp",
+        "src/uisetup.cpp",
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp",
+        "src/Main.qml",
+        "src/clipboardwriter.cpp"
+      ],
+      "title": "Gui",
+      "notes": "Owned Qt preview; explicit Apply/Copy/Undo, not arbitrary application injection.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "browser",
+      "kind": "lab_adapter",
+      "paths": [
+        "browser/adapter.js",
+        "browser/session.js",
+        "browser/prosemirror.js",
+        "browser/README.md"
+      ],
+      "title": "Browser",
+      "notes": "Owned textarea/ProseMirror fixtures; not a deployed Slack integration.",
+      "tests": [
+        "node tests/browser/adapter.test.mjs",
+        "node tests/browser/router.test.mjs",
+        "node tests/browser/run.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "fcitx",
+      "kind": "lab_adapter",
+      "paths": [
+        "src/fcitxlab.cpp",
+        "src/fcitxlabprofile.cpp",
+        "tools/fcitx_profile_lab.pro"
+      ],
+      "title": "Fcitx",
+      "notes": "Developer Fcitx composition transport and full local core profile.",
+      "tests": [],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "fixture",
+      "kind": "test",
+      "paths": [
+        "tests/chromium_ime/driver.mjs",
+        "tests/chromium_ime/adversarial-focus.mjs",
+        "tests/wayland_ime/keys.cpp"
+      ],
+      "title": "Fixture",
+      "notes": "Fixed native Chromium fixture; CDP observes, private VK types.",
+      "tests": [
+        "node --test tests/wayland_ime/space_telemetry_tests.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "reference",
+      "kind": "test_runner",
+      "paths": [
+        "tools/wayland_ime_lab.py",
+        "bin/test-wayland-ime"
+      ],
+      "title": "Reference",
+      "notes": "Private software Sway reference; no host display/GPU.",
+      "tests": [
+        "bin/test-wayland-ime"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "exact",
+      "kind": "test_runner",
+      "paths": [
+        "tools/hyprland_ime_lab.py",
+        "bin/test-hyprland-ime"
+      ],
+      "title": "Exact",
+      "notes": "Nested installed Hyprland; parent display/render access requires scoped owner approval.",
+      "tests": [
+        "bin/test-hyprland-ime"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "witness",
+      "kind": "diagnostic",
+      "paths": [
+        "tests/chromium_ime/addon-witness.mjs",
+        "tools/fcitxlabwitness.h",
+        "tools/core_entry_witness.cpp"
+      ],
+      "title": "Witness",
+      "notes": "Bounded lab addon/Core/grab counters; separate artifacts, no production fix.",
+      "tests": [
+        "node --test tests/wayland_ime/addon_witness_tests.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "server",
+      "kind": "diagnostic",
+      "paths": [
+        "tools/server_route_witness_guard.py",
+        "tests/chromium_ime/server-route-witness.mjs",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "title": "Server",
+      "notes": "Next server emission/request witness; preflight pending at this map snapshot.",
+      "tests": [
+        "node --test tests/wayland_ime/server_route_witness_tests.mjs"
+      ],
+      "status": "preflight_pending"
+    },
+    {
+      "id": "licensing",
+      "kind": "contract",
+      "paths": [
+        "LICENSE",
+        "THIRD_PARTY.md",
+        "docs/DATA_POLICY.md"
+      ],
+      "title": "Licensing",
+      "notes": "Own code MIT; dependency/data licenses and provenance remain separate.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "app_policy",
+      "kind": "planned_contract",
+      "paths": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "title": "App Policy",
+      "notes": "Per-app opt-in; unavailable adapters must not appear supported.",
+      "tests": [],
+      "status": "planned"
+    },
+    {
+      "id": "current008",
+      "kind": "evidence_summary",
+      "paths": [
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "title": "Current008",
+      "notes": "Trial008: Space press absent at registered grab callback entry in5 correlated repeats; cause unresolved. Server witness closed preflight passed; new exact trial not authorized.",
+      "tests": [],
+      "status": "historical_evidence"
+    }
+  ],
+  "edges": [
+    {
+      "from": "gui",
+      "to": "converter",
+      "relation": "explicit conversion",
+      "evidence": [
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "gui",
+      "to": "evidence",
+      "relation": "analysis worker local provider",
+      "evidence": [
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "evidence",
+      "to": "router",
+      "relation": "supplies dictionary/model evidence",
+      "evidence": [
+        "src/localprofile.cpp",
+        "src/localprofile.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "router",
+      "to": "architecture",
+      "relation": "implements safeConfirmed policy",
+      "evidence": [
+        "src/decisionrouter.cpp",
+        "src/decisionrouter.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "browser",
+      "to": "architecture",
+      "relation": "separate snapshot/execution boundary",
+      "evidence": [
+        "browser/adapter.js",
+        "browser/session.js"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "fcitx",
+      "to": "evidence",
+      "relation": "profile bridge reuses local decision core",
+      "evidence": [
+        "src/fcitxlab.cpp",
+        "src/fcitxlabprofile.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "fixture",
+      "to": "fcitx",
+      "relation": "native IME exercise",
+      "evidence": [
+        "tests/chromium_ime/driver.mjs",
+        "tests/chromium_ime/adversarial-focus.mjs"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "reference",
+      "to": "fixture",
+      "relation": "launches isolated reference fixture",
+      "evidence": [
+        "tools/wayland_ime_lab.py",
+        "bin/test-wayland-ime"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "exact",
+      "to": "fixture",
+      "relation": "launches exact nested fixture",
+      "evidence": [
+        "tools/hyprland_ime_lab.py",
+        "bin/test-hyprland-ime"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "witness",
+      "to": "fixture",
+      "relation": "case2 interval sampling",
+      "evidence": [
+        "tests/chromium_ime/addon-witness.mjs",
+        "tools/fcitxlabwitness.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "server",
+      "to": "exact",
+      "relation": "optional compositor-only preload",
+      "evidence": [
+        "tools/server_route_witness_guard.py",
+        "tests/chromium_ime/server-route-witness.mjs"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "current008",
+      "to": "server",
+      "relation": "motivates next boundary observation",
+      "evidence": [
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_evidence"
+    },
+    {
+      "from": "current008",
+      "to": "fcitx",
+      "relation": "missing press observed before callback; cause unresolved",
+      "evidence": [
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_evidence"
+    },
+    {
+      "from": "app_policy",
+      "to": "browser",
+      "relation": "future product integration gate",
+      "evidence": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
+    },
+    {
+      "from": "app_policy",
+      "to": "fcitx",
+      "relation": "future product integration gate",
+      "evidence": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
+    },
+    {
+      "from": "policy",
+      "to": "exact",
+      "relation": "scoped permission and isolation required",
+      "evidence": [
+        "AGENTS.md",
+        "SECURITY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_contract"
+    },
+    {
+      "from": "licensing",
+      "to": "evidence",
+      "relation": "asset provenance separate from own MIT code",
+      "evidence": [
+        "LICENSE",
+        "THIRD_PARTY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_contract"
+    }
+  ]
+}

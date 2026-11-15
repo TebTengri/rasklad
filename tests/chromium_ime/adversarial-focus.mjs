@@ -115,7 +115,7 @@ const snapshot = (K, x) => `(()=>{${pre(K)}if(!live)return -1;
  const h=s.hits;if(!Number.isInteger(h)||h<0||h>${HITS_CAP})return -1;
  return (ok?100:0)+h;})()`;
 
-export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null, addonWitness = null, addonWitnessFactory = null, repeatCount = 1 }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
+export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null, addonWitness = null, addonWitnessFactory = null, serverWitnessFactory = null, repeatCount = 1 }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
   if(!Number.isInteger(repeatCount)||repeatCount<1||repeatCount>5) return {passed:false,checks:0,cases:[],errorCode:'INVALID_REPEAT_COUNT'};
   if(repeatCount>1&&addonWitness!==null&&typeof addonWitnessFactory!=='function') return {passed:false,checks:0,cases:[],errorCode:'WITNESS_FACTORY_REQUIRED'};
   let policy = null;
@@ -138,6 +138,10 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
     if(setupClean&&id==='word_other_back_prose_space') {
       try { witness=typeof addonWitnessFactory==='function'?addonWitnessFactory():addonWitness; }
       catch { setupClean=false;r.errorCode='WITNESS_SETUP_FAILED';return r; }
+    }
+    let server=null,serverOk=true;
+    if(setupClean&&id==='word_other_back_prose_space'&&typeof serverWitnessFactory==='function'){
+     try{server=serverWitnessFactory();if(!server)throw Error();}catch{setupClean=false;r.errorCode='SERVER_WITNESS_SETUP_FAILED';return r;}
     }
     let witnessOk = true, witnessBegun = false;
     const telArm = tel === null ? null : async () => {
@@ -165,6 +169,10 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
         witnessBegun = true;
         try { witnessOk = await witness.begin() === true; } catch { witnessOk = false; }
         if (!witnessOk) { r.errorCode = 'WITNESS_SETUP_FAILED'; return r; }
+      }
+      if(server!==null){
+       try{serverOk=await server.begin()===true;}catch{serverOk=false;}
+       if(!serverOk){r.dataUnusable=true;r.errorCode='SERVER_WITNESS_SETUP_FAILED';return r;}
       }
       await type('word');
       r.precondition = await is(sourceActive(K));
@@ -202,6 +210,15 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
           };
         }
       }
+      if(server!==null&&expect){
+       try{const c=await server.sample();serverOk=c&&c.valid===true&&c.complete===true;
+        r.serverRouteWitness=serverOk?c:{valid:false,complete:false,before:[],after:[],delta:[]};
+       }catch{serverOk=false;r.serverRouteWitness={valid:false,complete:false,before:[],after:[],delta:[]};}
+       if(!serverOk)r.dataUnusable=true;
+       const post=await ev(snapshot(K,expect));
+       r.serverPostQuery={snapshotCode:Number.isInteger(post)&&post>=0&&post<=101?post:-1,
+        matchesOriginalOracle:post===100+(hook?1:0)};
+      }
       if (witness !== null && witnessBegun && expect) {
         try {
           const counters = await witness.sample();
@@ -220,7 +237,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
       r.passed = false;
       r.errorCode = 'CASE_ERROR';
     } finally {
-      let cleanOk = true;
+      let cleanOk = serverOk===true;
       if (tel !== null && telBegun) {
         let snap = null;
         try {

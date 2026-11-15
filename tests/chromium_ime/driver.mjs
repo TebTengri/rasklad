@@ -81,6 +81,7 @@ try{
   const review=JSON.parse(readFileSync('/lab/focus-source-review.json','utf8'));
   const sourceNames=['driver.mjs','adversarial-focus.mjs','focus-policy.mjs','space-telemetry.mjs','fixture.html'];
   if(process.env.RASKLAD_ADDON_WITNESS_LAB==='1')sourceNames.push('addon-witness.mjs');
+  if(process.env.RASKLAD_SERVER_ROUTE_WITNESS_LAB==='1')sourceNames.push('server-route-witness.mjs');
   const sourcesReviewed=review.schema===1&&review.reviewedNoScriptEventGeneration===true&&sourceNames.every(name=>{
    const bytes=readFileSync('/lab/'+name);return bytes.length<=40000&&createHash('sha256').update(bytes).digest('hex')===review.sourceSha256?.[name];
   });
@@ -124,10 +125,16 @@ try{
     'call','--session','--dest','org.fcitx.Fcitx5','--object-path','/org/rasklad/LabWitness',
     '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']}),noQuery:process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB==='1',coreEntry:process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1',grabEntry:process.env.RASKLAD_GRAB_ENTRY_WITNESS_LAB==='1'});
   }
+  let serverWitnessFactory=null;
+  if(process.env.RASKLAD_SERVER_ROUTE_WITNESS_LAB==='1'){
+   const {createServerRouteWitness}=await import('file:///lab/server-route-witness.mjs');
+   serverWitnessFactory=()=>createServerRouteWitness();
+  }
   const repeatRaw=process.env.RASKLAD_FOCUS_REPEATS_LAB??'1';
   const repeatCount=/^[1-5]$/.test(repeatRaw)?Number(repeatRaw):NaN;
-  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitnessFactory,repeatCount},endEventPolicy);
+  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitnessFactory,serverWitnessFactory,repeatCount},endEventPolicy);
   report.focusStress.instrumentedAddonTrial=process.env.RASKLAD_ADDON_WITNESS_LAB==='1';
+  report.focusStress.instrumentedServerRouteTrial=serverWitnessFactory!==null;
   report.focusStress.instrumentedGrabEntryTrial=process.env.RASKLAD_GRAB_ENTRY_WITNESS_LAB==='1';
   report.focusStress.instrumentedCoreEntryTrial=process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1';
   report.focusStress.addonWitnessQueriesEnabled=addonWitnessFactory!==null&&process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB!=='1';

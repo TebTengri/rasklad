@@ -1,5 +1,11 @@
 # План продолжения: SYS-244
 
+## Быстрый вход
+
+`bin/project-map check` и `bin/project-map find <тема>`; обзор
+`docs/PROJECT-MAP.md`, Obsidian-заметки в `docs/knowledge/Start.md`.
+Не загружать всю историю или docs/project-graph.json целиком.
+
 ## Актуальная контрольная точка
 
 Разрешённая проба008 выполнена: все5 повторов case2 FAIL в одном сеансе.
@@ -15,9 +21,12 @@ headless контроль: data/grab-entry-witness-preflight-001.json.
 Разрешение008 использовано. Новый host запуск автоматически не повторять.
 Следующий шаг: различить synthetic VK request на стороне compositor,
 server emission в IM grab/обычный keyboard и доставку до callback.
-Проверяется возможность избирательного public protocol logger в private
-compositor вместо пересборки/патча системного Hyprland. Дизайн ещё не готов
-к запуску; новые host probes отдельно согласовывать после preflight.
+Избирательный public protocol logger подготовлен в private compositor без
+патча установленного Hyprland.88 Python/22 reader/22 C++ checks и filesystem
+reader проходят. Headless Sway baseline17/focus8 PASS,5 target rows VK2/2,
+grab emission1/1, ordinary keyboard1/1. Данные/авторство/ограничения:
+data/server-route-witness-preflight-001.json и docs/SERVER-ROUTE-WITNESS-001.md.
+Новая exact проба отдельно согласуется; прежний scope008 использован.
 Slack, рабочий IME и настройки не менялись. Исправления пока нет.
 Codex ведёт работу, остальные помогают с реализацией и ревью.
 

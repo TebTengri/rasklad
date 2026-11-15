@@ -5,11 +5,12 @@
   "scope": "closed owned fixture only; not authentication of native DOM events",
   "scopedBrowserVersion": "Chrome/155.0.8059.84",
   "sourceSha256": {
-    "driver.mjs": "4e1406584721063d502b79b2c03f0f7eff827cf9ddd419cb1b6b2e73a2fdb066",
-    "adversarial-focus.mjs": "d511e56d8709c94486613387520dc0a170566b9f11cce8cc08549b0de547bfdf",
+    "driver.mjs": "a25542b4920bfe4fbfde78c8bb56948e69f1506691d6a3f40e6dbd628ec26eea",
+    "adversarial-focus.mjs": "1c36e6a1a2d5e75079e43273fa451b6adc8a32f516667c63e795b5671d241543",
     "focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "fixture.html": "6e9a29febcb72c35ca8c90ea615cbbd1312457b07800b8617ce9e27ad2230539",
     "space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
-    "addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9"
+    "addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9",
+    "server-route-witness.mjs": "65cb0db541312334b966e0cdb39d959d8e9b3a39bcd13942e695c561126a8967"
   }
 }
