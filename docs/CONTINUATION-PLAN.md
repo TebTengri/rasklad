@@ -1,3 +1,40 @@
+## 2026-11-15 — fixture review and admission checks
+
+Peer rebuilt after independent source review. Fixed module-map inspection before
+server teardown, stale protocol resources and attribution to the tracked VK.
+Added a bounded 100ms post-release duplicate observation (not an unlimited
+no-duplicate guarantee). Private entry now checks its sealed script location;
+report reads reject partial/hung, oversized and EOF reports with deadlines.
+Five Python controls passed. Second independent review found no remaining
+blocker in the reviewed changes; no runtime tests were executed by reviewer.
+Details: tests/fcitx_drain_server/README.md. Actual-Fcitx baseline/drain remain
+unexecuted and no drain frontend exists. Ownership admission is still blocking;
+no system guard, installed library, host setting or old permission was changed.
+
+## 2026-11-15 — private frontend preparation (unfinished)
+
+Working tree adds a pinned Fcitx 5.1.23 source lock, narrow qmake baseline
+builder, and actual-Fcitx synthetic protocol peer under tests/fcitx_drain_server.
+These are experimental drafts, not an installed fix. The protocol peer compiled;
+default launchers are inert and Python syntax checks passed. No Fcitx runtime
+or host-display probe was run in this continuation.
+
+The baseline build is currently blocked by environment ownership: the fixed
+system Core/frontend/Wayland libraries appear owned by nobody, which existing
+regular_file admission rejects. Preserve that guard; do not chown system files
+or refresh ABI pins merely to bypass it. Build must resume in the ordinary
+machine environment with admitted SDK binaries. Scanner output now uses a
+seekable temporary file; ext-workspace header generation was checked separately.
+No successful final frontend link is claimed.
+
+Claude's requested drain diff was stopped by its safety classifier and delivered
+no patch. The helper prepared server/launcher drafts but its turn also failed;
+these files require independent review before --run. No actual frontend drain
+implementation exists yet. Prior trial010 remains the latest host evidence.
+All old host permissions remain consumed. Next: review the server lifetime and
+failure controls, finish unmodified baseline build and actual-Fcitx negative
+control, then implement/review drain ownership and compare in the closed fixture.
+
 # План продолжения: SYS-244
 
 ## Быстрый вход

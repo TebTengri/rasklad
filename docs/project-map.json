@@ -269,6 +269,25 @@
       ],
       "status": "closed_wire_pass_not_fcitx_fix",
       "notes": "Private actual libwayland socketpair; expected drop0/1 vsdrain1/1; one-server-grab and async barrier. No Fcitx/compositor/host input."
+    },
+    {
+      "id": "fcitx-drain-fixture",
+      "kind": "component",
+      "title": "Actual Fcitx drain fixture draft",
+      "paths": [
+        "tests/fcitx_drain_server/README.md",
+        "tests/fcitx_drain_server/run.py",
+        "tests/fcitx_drain_server/server.cpp",
+        "tests/fcitx_drain_server/test_runner.py",
+        "tools/fcitx_frontend_build.py",
+        "tools/fcitx_frontend_lab.pro",
+        "data/fcitx-frontend-source-lock.json"
+      ],
+      "tests": [
+        "python3 tests/fcitx_drain_server/test_runner.py"
+      ],
+      "status": "compiled_peer_not_runtime_validated",
+      "notes": "Synthetic peer source reviewed; no actual Fcitx runtime result or drain implementation. Runtime ownership admission blocks this environment."
     }
   ],
   "edges": [
