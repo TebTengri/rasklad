@@ -87,3 +87,52 @@ readyForLiveUse=false, normal Slack не подключён.
 статическое ревью без блокеров; самостоятельно тесты и live-пробы не запускали.
 Дельта покрывает word→focus→Space→getter целиком. Монотонность обнаруживает
 сброс лишь при уменьшении: её отсутствие само по себе не доказывает тот же PID.
+
+## Exact Hyprland trial004: PASS без исправления
+
+Отдельно разрешённая ОДНА пробаb744238 выполнена. Baseline17/focus4/4 pass,
+case2 strict primaryPASS, Spacepress/release1/1 normalized/focused/eligible1,
+passEmpty1 commit0, FocusIn/Out2/2. Getter и DOM trace валидны, не насыщены;
+post-query oracle100. data/hyprland-addon-witness-004-result.json.
+
+Это НЕ установленное исправление: correction logic не менялась. По сравнению
+с прежним normal вариантом одновременно изменились diagnostic binary/layout/
+инкременты, явная runtime dependency dbus и before-word getter. Late getter
+после primary не может объяснять уже случившийся primaryPASS. В этой пробе
+нет failed ветки для локализации. Частоту/детерминированность не оценивали.
+
+Следующий минимальный контроль — та же witness binary/config/private markers
+и imports, но БЕЗ GetStats queries. Сопоставить с обычным вариантом в отдельной
+ограниченной паре. No-query не выключает C++ counters, только их чтение;
+никаких новых логов, barrier/sleep/retry/прав. Сам control может также изменить
+тайминг; один исход недостаточен для установления причинности. Допуск004
+использован, новых host запусков нет.
+
+## Контроль без запросов и ограниченное сравнение
+
+Claude подготовил no-query factory; Codex интегрировал и проверил, что ни
+query getter, ни вызов не выполняются. При --witness-no-query сохраняется
+вся witness binary/config/private env, модуль импортируется тем же способом,
+но объект наблюдения null: GetStats не вызывается. Отчёт отдельно отмечает
+instrumentedAddonTrial и addonWitnessQueriesEnabled. Условия oracle прежние.
+Флаг требует --addon-witness и не добавляет доступов.
+
+Подготовлена ОДНА последовательность A→B→C, каждое новое закрытое окружение:
+обычный вариант; witness без queries; тот же witness с queries. Максимум
+3×75s=225s, один parent connection/render node одновременно. Аргументы и
+хеши артефактов data/witness-comparison-plan-001.json. Ничего не выполнено.
+Нужен отдельный допуск на эту конкретную тройку, а не автоматические повторы.
+
+Это не полный factorial и не доказательство причинности по одному исходу.
+A/B меняет весь bundle, включая явную dbus dependency и регистрацию endpoint.
+Если AFAIL/BPASS/CPASS, следующий контроль только конфигурационный, не
+приписывать эффект инкрементам. Если AFAIL/BFAIL/CPASS, queries становятся
+направлением проверки, не найденным механизмом. При всехPASS/нестабильных
+результатах воспроизводимость изменилась, фикса нет. Peer.Ping пока не добавлен.
+
+No-query preflight завершён:55Pythonguards и9reader tests проходят. Private
+headless Sway baseline17/focus4/4 PASS, instrumentedAddonTrial=true и
+addonWitnessQueriesEnabled=false; ни в одном case нет counter sample.
+C++/бинарь/config прежние. Агрегат data/witness-noquery-preflight-001.json.
+Исходные19oracle/19telemetry tests ранее проходили и в этом изменении не
+затронуты. Независимый static JSreview без блокеров, reviewer не запускал тесты.

@@ -2,27 +2,27 @@
 
 ## Актуальная контрольная точка
 
-Проба003 с diagnosticv2 на exact Hyprland выполнена по отдельному допуску:
-baseline17/focus3/4, primary0/late0, waitdeadline, ALLkeyboard+input records[]
-(valid/armed/complete,dropped0). Допуск использован.
-data/hyprland-space-telemetry-v2-003-result.json. Причина ещё не установлена.
+Проба004 witness на exact Hyprland отдельно разрешена и выполненаb744238:
+baseline17/focus4/4 PASS, вcase2 Spacepress/release1/1, passEmpty1 commit0,
+FocusIn/Out2/2, DOMSpacepresent. data/hyprland-addon-witness-004-result.json.
+Исправления correction logic нет: диагностический bundle и before-wordGetStats
+могли изменить timing. Допуск004 использован, новых host запусков нет.
 
-Следующий отдельно подготовленный опыт — compile-time addon witness. Claude
-реализовал C++, Codex интегрировал readonlyJS reader, oracle и проверки;
-runneragent добавил optional flags/guards. В keypath только counters в памяти,
-GetStats readonly на existingprivatebus, без текста/кодовых payload/timestamps.
-Обычный profile preprocessed code побайтово прежний. Witness variant собран.
-52Python +19oracle +19telemetry +8witness tests pass; C++negativeenv controls
-pass. Private Sway baseline17/focus4/4 pass: Space1press/1release, passEmpty1,
-commit0, focusIn/Out2/2. Подробно docs/ADDON-WITNESS-001.md и
-data/addon-witness-preflight-001.json. Независимые C++ иJSreview блокеров не нашли;
-DBus runtime dependency в отдельном conf явно указана.
+Claude реализовал минимальный no-query control, Codex интегрировал/тестировал;
+runneragent добавил --witness-no-query требует--addon-witness. Это тот же
+witnessbinary/config/env/module, нольGetStats. C++не менялся. 55Python и9reader
+тестов проходят; исходные19oracle/19telemetry пройдены и не изменялись.
+Private Sway no-query baseline17/focus4/4 PASS (data/witness-noquery-preflight-001.json).
+JSreview блокеров не нашло; Pythonguard сравнивает argv кроме одногоenvmarker.
 
-Следующая команда: bin/test-hyprland-ime --run-approved --focus-stress
---space-telemetry --addon-witness --input-root /home/mvn/Work/rasklad.
-Нужен НОВЫЙ однократный допуск до75s с теми же ресурсами. Не запускать
-по использованному003. Сохранить первоначальныйFAIL и post-query snapshot.
-Если witnesspass/missing наблюдения неоднозначны, не объявлятьfix. Slackoff.
+Подготовлен первый ограниченный triple A→B→C: ordinary originalconfig;
+witnessnoqueries; samewitnessfullqueries. data/witness-comparison-plan-001.json
+с argv/хешами/stopconditions. Всего3 последовательные пробы до75s каждая,
+без автоматических повторов; НОВОЕ отдельное согласие пока не получено.
+Это не полныйfactorial, n1неустанавливаетчастоту/причинность. A/Bменяетbundle
+(dbUSdependency/startup/endpoint тоже), B/Cqueries+observations. PeerPingпока
+не добавлен. Послеfreshapproval проверитьхеши и выполнитьтолькоэту первуютройку.
+Slack/hostIME/configне меняются. Любой диагностическийPASSнеобъявлятьfix.
 
 ## Предыдущие контрольные точки (история)
 

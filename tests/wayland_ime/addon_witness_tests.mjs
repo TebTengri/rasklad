@@ -56,3 +56,11 @@ for(const failAt of [1,2])test(`query${failAt} failure cannot pass and gates dep
  assert.ok(r.cases.slice(2).every(c=>c.errorCode==='DEPENDENT_NOT_RUN'));
  assert.equal(JSON.stringify(r).includes('PRIVATE_PAYLOAD'),false);assert.equal(f.timers.size,0);
 });
+
+test('no-query control never invokes query and uses unchanged strict oracle path',async()=>{
+ const forbidden={noQuery:true};Object.defineProperty(forbidden,'query',{get(){throw Error('query getter must not run');}});
+ assert.equal(createAddonWitness(forbidden),null);
+ let calls=0;const witness=createAddonWitness({query:async()=>{calls++;throw Error('MUST_NOT_RUN');},noQuery:true});
+ assert.equal(witness,null);const f=fixture();const r=await runFocusScenarios({...f,addonWitness:witness});
+ assert.equal(r.passed,true);assert.equal(calls,0);assert.ok(r.cases.every(c=>c.addonWitness===undefined));
+});

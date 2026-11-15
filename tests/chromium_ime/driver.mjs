@@ -122,10 +122,11 @@ try{
    const {createAddonWitness}=await import('file:///lab/addon-witness.mjs');
    addonWitness=createAddonWitness({query:async()=>execFileSync('/usr/bin/gdbus',[
     'call','--session','--dest','org.fcitx.Fcitx5','--object-path','/org/rasklad/LabWitness',
-    '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']})});
+    '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']}),noQuery:process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB==='1'});
   }
   report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitness},endEventPolicy);
-  report.focusStress.instrumentedAddonTrial=addonWitness!==null;
+  report.focusStress.instrumentedAddonTrial=process.env.RASKLAD_ADDON_WITNESS_LAB==='1';
+  report.focusStress.addonWitnessQueriesEnabled=addonWitness!==null;
   report.focusStress.instrumentedSpaceTrial=spaceTelemetry!==null;
   report.focusStress.scope='DOM_intra_surface_only';
   report.focusStress.diagnostics=diagnostics;

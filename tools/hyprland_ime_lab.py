@@ -34,7 +34,9 @@ probe = load('hypr_probe', Path('/lab/probe.py') if INSIDE else ROOT/'tools/hypr
 chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False):
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False):
+    if witness_no_query and not addon_witness:
+        raise base.Refused('witness_no_query_requires_addon_witness')
     if addon_witness and not (focus_stress and space_telemetry):
         raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
     if addon_witness:
@@ -67,6 +69,8 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
     if addon_witness:
         extra += ['--ro-bind', str(ROOT/'tests/chromium_ime/addon-witness.mjs'), '/lab/addon-witness.mjs',
                   '--setenv', 'RASKLAD_ADDON_WITNESS_LAB', '1']
+    if witness_no_query:
+        extra += ['--setenv', 'RASKLAD_ADDON_WITNESS_NO_QUERY_LAB', '1']
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
     for relative, path in profile.items():
         extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
@@ -178,7 +182,9 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False):
+    if witness_no_query and not addon_witness:
+        raise base.Refused('witness_no_query_requires_addon_witness')
     if addon_witness and not (focus_stress and space_telemetry):
         raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
     if os.geteuid() == 0:
@@ -241,7 +247,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -280,20 +286,24 @@ def main():
     parser.add_argument('--focus-stress', action='store_true')
     parser.add_argument('--space-telemetry', action='store_true')
     parser.add_argument('--addon-witness', action='store_true')
+    parser.add_argument('--witness-no-query', action='store_true')
     args = parser.parse_args()
     try:
+        if args.witness_no_query and not args.addon_witness:
+            raise base.Refused('witness_no_query_requires_addon_witness')
         if args.addon_witness and not (args.focus_stress and args.space_telemetry):
             raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
         if args.inside and args.focus_stress:
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
             'focusStressPlanned': args.focus_stress,
             'spaceTelemetryPlanned': args.space_telemetry,
             'addonWitnessPlanned': args.addon_witness,
+            'witnessNoQueryPlanned': args.witness_no_query,
             'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
         print(json.dumps(report, sort_keys=True))
         return 0 if report.get('passed', True) else 1

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Closed synthetic fixture only. Read-only fixed counters, never input payload.
 // Counter order is the versioned C++ witness contract. 255 means saturation.
+// noQuery=true is the zero-GetStats control: no witness object, query never called.
 export const WITNESS_COUNTERS=Object.freeze([
  'spaceCodePressSeen','spaceCodeReleaseSeen','normalizedSpacePress','priorFilteredPress',
  'focusedPress','eligiblePress','bufferNonemptyPress','bypassPress','passIneligible',
@@ -14,7 +15,9 @@ export function parseWitnessReply(raw){
  if(values.length!==22||values[0]!==1||values[1]!==1||!values.every(x=>Number.isInteger(x)&&x>=0&&x<=255))return null;
  return values.slice(2);
 }
-export function createAddonWitness({query}){
+export function createAddonWitness(options){
+ if(options.noQuery===true)return null;
+ const {query}=options;
  let before=null,used=false;
  const read=async()=>{try{return parseWitnessReply(await query());}catch{return null;}};
  return Object.freeze({

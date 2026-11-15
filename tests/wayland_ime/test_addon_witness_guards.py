@@ -58,7 +58,9 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
-                    self.assertEqual(parameters[-1].name, 'addon_witness')
+                    self.assertEqual(parameters[-2].name, 'addon_witness')
+                    self.assertIs(parameters[-2].default, False)
+                    self.assertEqual(parameters[-1].name, 'witness_no_query')
                     self.assertIs(parameters[-1].default, False)
 
     def test_invalid_combinations_refuse_before_endpoint_files_or_process(self):
@@ -115,6 +117,56 @@ class WitnessGuards(unittest.TestCase):
                 self.assertEqual(added,{(str(BINARY),'/lab/addons/raskladlab.so'),(str(CONFIG),'/lab/addon.conf'),
                                         (str(MODULE),'/lab/addon-witness.mjs')})
 
+    def test_no_query_adds_only_one_environment_marker(self):
+        for module,make_args in ((REFERENCE,reference_args),(EXACT,exact_args)):
+            with self.subTest(module=module.__name__),patch.object(module.base,'regular_file'):
+                options=dict(focus_stress=True,space_telemetry=True,addon_witness=True)
+                full=make_args(**options)
+                no_query=make_args(**options,witness_no_query=True)
+                self.assertNotIn('RASKLAD_ADDON_WITNESS_NO_QUERY_LAB',full)
+                marker=no_query.index('RASKLAD_ADDON_WITNESS_NO_QUERY_LAB')
+                self.assertEqual(no_query[marker-1:marker+2],['--setenv','RASKLAD_ADDON_WITNESS_NO_QUERY_LAB','1'])
+                del no_query[marker-1:marker+2]
+                self.assertEqual(no_query,full)
+
+    def test_no_query_requires_witness_before_files_endpoint_or_base_plan(self):
+        reason='witness_no_query_requires_addon_witness'
+        for module,make_args,owner,helper in ((REFERENCE,reference_args,REFERENCE.chrome,'argv'),
+                                             (EXACT,exact_args,EXACT.probe,'sandbox_args')):
+            with self.subTest(module=module.__name__),patch.object(module.base,'regular_file') as regular,patch.object(module.subprocess,'Popen') as popen,patch.object(owner,helper) as base_plan:
+                with self.assertRaisesRegex(module.base.Refused,reason):
+                    make_args(witness_no_query=True)
+                if module is EXACT:
+                    with patch.object(module.probe,'endpoint') as endpoint:
+                        with self.assertRaisesRegex(module.base.Refused,reason):
+                            module.run('/unused',witness_no_query=True)
+                        endpoint.assert_not_called()
+                else:
+                    with patch.object(module.chrome,'files') as files:
+                        with self.assertRaisesRegex(module.base.Refused,reason):
+                            module.run('/unused',witness_no_query=True)
+                        files.assert_not_called()
+                regular.assert_not_called();popen.assert_not_called();base_plan.assert_not_called()
+
+    def test_no_query_cli_is_inert_and_dependency_checked(self):
+        for module in (REFERENCE,EXACT):
+            for arguments,expected in ((['--witness-no-query'],2),
+                (['--witness-no-query','--focus-stress','--space-telemetry'],2),
+                (['--witness-no-query','--addon-witness'],2),
+                (['--witness-no-query','--addon-witness','--focus-stress','--space-telemetry'],0)):
+                with self.subTest(module=module.__name__,arguments=arguments):
+                    output=io.StringIO()
+                    with patch('sys.argv',['lab',*arguments]),patch.object(module,'run') as run,patch.object(module,'inside') as inside,patch.object(module.subprocess,'Popen') as popen,contextlib.redirect_stdout(output):
+                        self.assertEqual(module.main(),expected)
+                        run.assert_not_called();inside.assert_not_called();popen.assert_not_called()
+                    report=json.loads(output.getvalue())
+                    if expected==0:
+                        self.assertIs(report['witnessNoQueryPlanned'],True)
+                        self.assertIs(report['addonWitnessPlanned'],True)
+                    elif '--addon-witness' not in arguments:
+                        self.assertEqual(report['reason'],'witness_no_query_requires_addon_witness')
+                    else:self.assertEqual(report['reason'],REASON)
+
     def test_selected_module_must_pass_regular_file_guard(self):
         for module, make_args in ((REFERENCE,reference_args),(EXACT,exact_args)):
             with self.subTest(module=module.__name__), patch.object(module.base,'regular_file',side_effect=module.base.Refused('unsafe_artifact')):
@@ -132,6 +184,7 @@ class WitnessGuards(unittest.TestCase):
                     report=json.loads(output.getvalue())
                     self.assertEqual(report['status'],'plan_only')
                     self.assertIs(report['addonWitnessPlanned'],witness)
+                    self.assertIs(report['witnessNoQueryPlanned'],False)
 
     def test_cli_invalid_selection_does_not_start_run(self):
         for module in (REFERENCE,EXACT):
