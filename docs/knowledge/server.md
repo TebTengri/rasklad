@@ -1,8 +1,8 @@
 # Server
 
-Next server emission/request witness; preflight pending at this map snapshot.
+Server Space emission/request witness: closed checks and headless Sway5-repeat preflight passed; exact Hyprland trial not authorized after008.
 
-Статус: preflight_pending
+Статус: headless_preflight_pass_exact_pending
 
 ## Файлы
 

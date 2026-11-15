@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "1888a3b971267fcaa56a10813954394e78630099a3e296bf5839aec24e9a9740",
+  "curatedSha256": "9aa6e9108c244e9a7e62cc46e0b6efb0323f0148127f5e98a6db923a02960c3e",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -5244,7 +5244,7 @@
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
-    "docs/knowledge/server.md": "6f1049d9dee5171d8d414700ee979163827a8a0cab8ddc057c81cbc56203b88c",
+    "docs/knowledge/server.md": "cf1607f113f5ce695777a57747fb1ca428885c2611649824ce221b61a8d65a5d",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }

@@ -86,7 +86,8 @@ callback-интервалах, не доказанная причина внут
 Следующий server-route witness должен различить incoming private VK requests
 и server emission attempts. Он учитывает ВСЕ private VK, включая forwarding;
 `wl_keyboard` может дублироваться по ресурсам. Emission не равен доставке.
-На момент этой карты preflight pending; разрешения прошлых host-проб использованы.
+Закрытые проверки и headless preflight прошли; exact-проба ещё не разрешена.
+Разрешения прошлых host-проб использованы.
 Сначала закрытая проверка, затем отдельное разрешение на следующую exact пробу.
 Не считать подготовленный shim, passing mock или согласие моделей исправлением.
 

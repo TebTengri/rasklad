@@ -206,11 +206,11 @@
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Server",
-      "notes": "Next server emission/request witness; preflight pending at this map snapshot.",
+      "notes": "Server Space emission/request witness: closed checks and headless Sway5-repeat preflight passed; exact Hyprland trial not authorized after008.",
       "tests": [
         "node --test tests/wayland_ime/server_route_witness_tests.mjs"
       ],
-      "status": "preflight_pending"
+      "status": "headless_preflight_pass_exact_pending"
     },
     {
       "id": "licensing",
