@@ -26,14 +26,23 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstdint>
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+#include "server_grab_epoch.h"
+#endif
 #include <cstdlib>
 #include <cstring>
 
 
 // 20 native little-endian uint32 words == 80 bytes. 32-bit atomics must be lockfree.
 static_assert(__atomic_always_lock_free(sizeof(uint32_t), 0), "need lockfree 32bit");
-static constexpr unsigned WORDS = 20;
-static constexpr unsigned BYTES = 80;
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+static constexpr unsigned WORDS=28, BYTES=112;
+static constexpr uint32_t SCHEMA=2;
+static constinit raskladlab::ServerGrabEpoch g_epoch{};
+#else
+static constexpr unsigned WORDS=20, BYTES=80;
+static constexpr uint32_t SCHEMA=1;
+#endif
 static constexpr uint32_t MAGIC = 0x52535731u; // 'RSW1'
 static constexpr uint32_t SAT   = 65535u;
 static constexpr uint32_t SPACE = 57u;         // Linux evdev KEY_SPACE
@@ -45,34 +54,48 @@ static wl_display_create_t g_orig = nullptr;   // resolved once in constructor
 static pthread_t g_owner;                       // only this thread may mutate/snapshot
 
 // ---- shared-word primitives (atomic builtins; seqlock on word 2) ------------
-static inline void set_coverage_zero() { __atomic_store_n(&g_map[4], 0u, __ATOMIC_SEQ_CST); }
+static inline void set_coverage_zero() noexcept { __atomic_store_n(&g_map[4], 0u, __ATOMIC_SEQ_CST); }
 
-static inline void seq_begin() {
+static inline void seq_begin() noexcept {
     uint32_t g = __atomic_load_n(&g_map[2], __ATOMIC_RELAXED);
     if (g >= 0xFFFFFF00u) _exit(125);          // near-wrap -> fail closed
     __atomic_store_n(&g_map[2], g + 1u, __ATOMIC_SEQ_CST); // odd: update in progress
 }
-static inline void seq_end() {
+static inline void seq_end() noexcept {
     uint32_t g = __atomic_load_n(&g_map[2], __ATOMIC_RELAXED);
     __atomic_store_n(&g_map[2], g + 1u, __ATOMIC_SEQ_CST); // even: stable
 }
-static inline void bump(unsigned idx) {
+static inline void bump(unsigned idx) noexcept {
     uint32_t v = __atomic_load_n(&g_map[idx], __ATOMIC_RELAXED);
     if (v >= SAT) { set_coverage_zero(); return; }     // saturate, never wrap
     v += 1u;
     __atomic_store_n(&g_map[idx], v, __ATOMIC_SEQ_CST);
     if (v >= SAT) set_coverage_zero();                 // reaching limit drops coverage
 }
-static inline void txn_bump(unsigned idx) { seq_begin(); bump(idx); seq_end(); }
+static inline void txn_bump(unsigned idx) noexcept { seq_begin(); bump(idx); seq_end(); }
 static inline void txn_cov0() { seq_begin(); set_coverage_zero(); seq_end(); }
-static inline void txn_key(uint32_t st, unsigned p, unsigned r) {
+static inline void txn_key(uint32_t st, unsigned p, unsigned r, wl_resource *resource=nullptr) {
     seq_begin();
     if (st == 1u) bump(p);                             // 1 == press
     else if (st == 0u) bump(r);                        // 0 == release
     else { bump(12); set_coverage_zero(); }            // unknown state, no classification
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+    if(p==8 && r==9)g_epoch.onSpace(resource,st);
+#else
+    (void)resource;
+#endif
     seq_end();
 }
 static inline bool streq(const char *a, const char *b) { return a && b && std::strcmp(a, b) == 0; }
+
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+static void epoch_check_thread() noexcept {if(!pthread_equal(pthread_self(),g_owner))_exit(125);}
+static void epoch_max(unsigned index,uint32_t value) noexcept {
+    if(value>=SAT){set_coverage_zero();return;}
+    if(value>__atomic_load_n(&g_map[index],__ATOMIC_RELAXED))
+        __atomic_store_n(&g_map[index],value,__ATOMIC_SEQ_CST);
+}
+#endif
 
 // ---- protocol logger: receives ALL messages; ignore everything unrelated -----
 static void logger_cb(void *, enum wl_protocol_logger_type dir,
@@ -101,21 +124,37 @@ static void logger_cb(void *, enum wl_protocol_logger_type dir,
         // zwp_input_method_keyboard_grab_v2.release  metadata opcode0 argc0
         if (streq(cls, "zwp_input_method_keyboard_grab_v2") && streq(nm, "release")) {
             if (op != 0 || !streq(sig, "") || ac != 0) { txn_cov0(); return; }
-            txn_bump(15); return;
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+            seq_begin();bump(15);g_epoch.onRelease(msg->resource);seq_end();
+#else
+            txn_bump(15);
+#endif
+            return;
         }
         // zwp_input_method_manager_v2.get_input_method  metadata opcode0 sig on argc2 (no args read)
         if (streq(cls, "zwp_input_method_manager_v2") && streq(nm, "get_input_method")) {
             if (op != 0 || !streq(sig, "on") || ac != 2) { txn_cov0(); return; }
-            txn_bump(16); return;
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+            seq_begin();bump(16);g_epoch.onRequester(msg->resource);seq_end();
+#else
+            txn_bump(16);
+#endif
+            return;
         }
         return;
     }
 
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+    if(streq(cls,"zwp_input_method_keyboard_grab_v2") && streq(nm,"keymap")){
+        if(op!=0 || !streq(sig,"uhu") || ac!=3){txn_cov0();return;}
+        seq_begin();g_epoch.onKeymap(msg->resource);seq_end();return;
+    }
+#endif
     // EVENT (emission attempt only -- NOT flush/transmit/client-receipt)
     // zwp_input_method_keyboard_grab_v2.key  opcode1 sig uuuu argc4; key idx2 state idx3
     if (streq(cls, "zwp_input_method_keyboard_grab_v2") && streq(nm, "key")) {
         if (op != 1 || !streq(sig, "uuuu") || ac != 4 || !a) { txn_cov0(); return; }
-        if (a[2].u == SPACE) txn_key(a[3].u, 8, 9);
+        if (a[2].u == SPACE) txn_key(a[3].u, 8, 9,msg->resource);
         return;
     }
     // wl_keyboard.key  opcode3 sig uuuu argc4; key idx2 state idx3 (may duplicate resources)
@@ -126,13 +165,29 @@ static void logger_cb(void *, enum wl_protocol_logger_type dir,
     }
     // zwp_input_method_v2 metadata-only events
     if (streq(cls, "zwp_input_method_v2")) {
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+        if(streq(nm,"activate")){
+            if(op!=0 || !streq(sig,"") || ac!=0){txn_cov0();return;}
+            seq_begin();g_epoch.onIM(msg->resource,raskladlab::IMEvent::Activate);seq_end();return;
+        }
+#endif
         if (streq(nm, "deactivate")) {
             if (op != 1 || !streq(sig, "") || ac != 0) { txn_cov0(); return; }
-            txn_bump(13); return;
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+            seq_begin();bump(13);g_epoch.onIM(msg->resource,raskladlab::IMEvent::Deactivate);seq_end();
+#else
+            txn_bump(13);
+#endif
+            return;
         }
         if (streq(nm, "done")) {
             if (op != 5 || !streq(sig, "") || ac != 0) { txn_cov0(); return; }
-            txn_bump(14); return;
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+            seq_begin();bump(14);g_epoch.onIM(msg->resource,raskladlab::IMEvent::Done);seq_end();
+#else
+            txn_bump(14);
+#endif
+            return;
         }
         return; // other im_v2 events not of interest
     }
@@ -165,7 +220,12 @@ extern "C" WL_EXPORT struct wl_display *wl_display_create(void) {
 }
 
 // ---- owner-thread snapshot (exact 20 words; file is external-reader transport)
-extern "C" WL_EXPORT uint32_t rasklad_server_route_snapshot_v1(uint32_t *out, uint32_t cap) noexcept {
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+#define RASKLAD_SNAPSHOT rasklad_server_route_snapshot_v2
+#else
+#define RASKLAD_SNAPSHOT rasklad_server_route_snapshot_v1
+#endif
+extern "C" WL_EXPORT uint32_t RASKLAD_SNAPSHOT(uint32_t *out, uint32_t cap) noexcept {
     if (!pthread_equal(pthread_self(), g_owner)) return 0;    // foreign thread: fail closed
     if (!out || cap < WORDS || !g_map) return 0;
     for (unsigned i = 0; i < WORDS; ++i)
@@ -183,6 +243,9 @@ static void rasklad_server_route_init() {
     if (!env_is("XDG_RUNTIME_DIR", "/run/lab"))            _exit(125);
     if (!env_is("RASKLAD_NATIVE_WAYLAND_LAB", "1"))        _exit(125);
     if (!env_is("RASKLAD_SERVER_ROUTE_WITNESS_LAB", "1"))  _exit(125);
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+    if(!env_is("RASKLAD_GRAB_EPOCH_WITNESS_LAB","1")) _exit(125);
+#endif
     // Forbidden env.
     if (getenv("DISPLAY"))          _exit(125);
     if (getenv("WAYLAND_DEBUG"))    _exit(125);
@@ -210,8 +273,11 @@ static void rasklad_server_route_init() {
 
     for(unsigned i=0;i<WORDS;++i) __atomic_store_n(&g_map[i],0u,__ATOMIC_SEQ_CST);
     __atomic_store_n(&g_map[0],MAGIC,__ATOMIC_SEQ_CST);
-    __atomic_store_n(&g_map[1],1u,__ATOMIC_SEQ_CST);
+    __atomic_store_n(&g_map[1],SCHEMA,__ATOMIC_SEQ_CST);
     __atomic_store_n(&g_map[4],1u,__ATOMIC_SEQ_CST);      // all counters/reserved start 0
+#ifdef RASKLAD_GRAB_EPOCH_WITNESS_LAB
+    g_epoch.init({seq_begin,seq_end,bump,epoch_max,set_coverage_zero,epoch_check_thread});
+#endif
     // No destructor: OS unmaps on exit; never touch a freed wl_display.
 }
 

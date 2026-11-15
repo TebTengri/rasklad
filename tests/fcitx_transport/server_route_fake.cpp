@@ -20,3 +20,20 @@ EXPORTED const char *wl_resource_get_class(const wl_resource *resource){
     ++state.classQueries;
     return resource?reinterpret_cast<const ServerRouteResource*>(resource)->className:nullptr;
 }
+
+EXPORTED wl_client *wl_resource_get_client(wl_resource *resource){
+    return resource?reinterpret_cast<ServerRouteResource*>(resource)->client:nullptr;
+}
+EXPORTED void wl_resource_add_destroy_listener(wl_resource *resource,wl_listener *listener){
+    auto *fake=reinterpret_cast<ServerRouteResource*>(resource);
+    if(!fake->initialized){wl_list_init(&fake->listeners);fake->initialized=true;}
+    wl_list_insert(fake->listeners.prev,&listener->link);
+}
+EXPORTED void rasklad_server_fake_destroy(wl_resource *resource){
+    auto *fake=reinterpret_cast<ServerRouteResource*>(resource);
+    if(!fake->initialized)return;
+    while(!wl_list_empty(&fake->listeners)){
+        auto *listener=reinterpret_cast<wl_listener*>(fake->listeners.next);
+        listener->notify(listener,resource);
+    }
+}

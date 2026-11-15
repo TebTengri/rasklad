@@ -201,12 +201,14 @@
       "id": "server",
       "kind": "diagnostic",
       "paths": [
+        "docs/SERVER-GRAB-EPOCH-001.md",
+        "tools/server_grab_epoch.h",
         "tools/server_route_witness_guard.py",
         "tests/chromium_ime/server-route-witness.mjs",
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Server",
-      "notes": "Exact009: server grab Space emission1/1, client callback0/1 in5 correlated repeats. Gap after emission attempt, before callback; cause unresolved; approval009 consumed.",
+      "notes": "Exact009 emission-to-callback gap unresolved. Epoch discriminator unit/headless preflight PASS; new exact trial not authorized after009.",
       "tests": [
         "node --test tests/wayland_ime/server_route_witness_tests.mjs"
       ],
@@ -245,7 +247,7 @@
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Current009",
-      "notes": "Latest009: emission-to-callback gap; next old-grab lifecycle classification is preparation only. No unused host approval.",
+      "notes": "Latest009 gap unresolved. Prepared epoch discriminator has closed/headless PASS; no unused host approval.",
       "tests": [],
       "status": "historical_evidence"
     }

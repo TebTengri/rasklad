@@ -128,13 +128,14 @@ try{
   let serverWitnessFactory=null;
   if(process.env.RASKLAD_SERVER_ROUTE_WITNESS_LAB==='1'){
    const {createServerRouteWitness}=await import('file:///lab/server-route-witness.mjs');
-   serverWitnessFactory=()=>createServerRouteWitness();
+   serverWitnessFactory=()=>createServerRouteWitness({grabEpoch:process.env.RASKLAD_GRAB_EPOCH_WITNESS_LAB==='1'});
   }
   const repeatRaw=process.env.RASKLAD_FOCUS_REPEATS_LAB??'1';
   const repeatCount=/^[1-5]$/.test(repeatRaw)?Number(repeatRaw):NaN;
   report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitnessFactory,serverWitnessFactory,repeatCount},endEventPolicy);
   report.focusStress.instrumentedAddonTrial=process.env.RASKLAD_ADDON_WITNESS_LAB==='1';
   report.focusStress.instrumentedServerRouteTrial=serverWitnessFactory!==null;
+  report.focusStress.instrumentedGrabEpochTrial=process.env.RASKLAD_GRAB_EPOCH_WITNESS_LAB==='1';
   report.focusStress.instrumentedGrabEntryTrial=process.env.RASKLAD_GRAB_ENTRY_WITNESS_LAB==='1';
   report.focusStress.instrumentedCoreEntryTrial=process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1';
   report.focusStress.addonWitnessQueriesEnabled=addonWitnessFactory!==null&&process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB!=='1';

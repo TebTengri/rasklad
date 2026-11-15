@@ -12,5 +12,11 @@ struct ServerRouteFake {
     unsigned char displayTokens[4]{};
     unsigned char loggerToken=0;
 };
-struct ServerRouteResource {const char *className;};
+struct ServerRouteResource {
+    const char *className;
+    wl_client *client=reinterpret_cast<wl_client*>(0x1230);
+    wl_list listeners{};
+    bool initialized=false;
+};
+extern "C" void rasklad_server_fake_destroy(wl_resource *resource);
 inline wl_resource *asResource(ServerRouteResource &resource){return reinterpret_cast<wl_resource*>(&resource);}

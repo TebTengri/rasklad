@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "46b5ddcc362feec43806347313e9d8ab5d6763798a2f8c84d1bf46cf8e3058fb",
+  "curatedSha256": "47330fafc26143cd2976599290c0654188cec8b329f4e02f36afb81b425b0d52",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -39,7 +39,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "15b23381817dc6d0ea8cdf1fe094fd49187fd7aa0583de31700ca3bdf449be16",
+    "docs/CONTINUATION-PLAN.md": "3a155ca6afa297b6acb7d59152978d188141bdce068a9489e4fdb12d60f2f6c7",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -80,6 +80,7 @@
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
     "docs/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
+    "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "6bc032d7bb3d2c064b02ed936614f790bc0e556ec940e2ef72a68e5d2da781a7",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
@@ -140,10 +141,10 @@
     "tests/browser/spell.test.mjs": "1a9572b8c18f20208c194c6b8b2132ba1702b2da933af658a29b1aea93d3c496",
     "tests/chromium_ime/addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9",
     "tests/chromium_ime/adversarial-focus.mjs": "1c36e6a1a2d5e75079e43273fa451b6adc8a32f516667c63e795b5671d241543",
-    "tests/chromium_ime/driver.mjs": "a25542b4920bfe4fbfde78c8bb56948e69f1506691d6a3f40e6dbd628ec26eea",
+    "tests/chromium_ime/driver.mjs": "2c0ee4ca625e1ba1a9e286d7394993d48096f1fcad379e8e43c10fcc02e1a889",
     "tests/chromium_ime/focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "tests/chromium_ime/keys.py": "93693dd61cb687266cd613c648d1248b7d3291061fa26aacd01aa8fde6f6a42f",
-    "tests/chromium_ime/server-route-witness.mjs": "65cb0db541312334b966e0cdb39d959d8e9b3a39bcd13942e695c561126a8967",
+    "tests/chromium_ime/server-route-witness.mjs": "1ec0bfa5ab927cba1cdc31eb328f0786585dcbf002327dd07476a2eff6064d6a",
     "tests/chromium_ime/space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
     "tests/chromium_ime/test_guards.py": "cd9df2295a3858ab0b5e9e42106164b404d56b5b3310061932dc394a10a1db41",
     "tests/common/profilefixture.h": "08f9ca5e3c1e1d73140c7df37e79885f86021dd3de7054b7bc23061e2fb6d097",
@@ -167,12 +168,15 @@
     "tests/fcitx_transport/grab_entry_probe.pro": "9025f05b296f06a310236ec01d77e2831ae81834e0e3377b17a82d87ccedfdf7",
     "tests/fcitx_transport/grab_entry_unit.py": "d48ae066d492fda73671b290cf8ab4de5d01fb28eef2f523556500cb6c0fe7ac",
     "tests/fcitx_transport/grab_test_api.h": "73fc67bb8d687c4cc9695313575817004caf3588561a0fff94430783a6a542c2",
-    "tests/fcitx_transport/server_route_fake.cpp": "a0f73c2f778cd11ff32b162ec9d9cfcda64dfc27b8f48ad5ea6d7e40eb9f29f5",
-    "tests/fcitx_transport/server_route_fake.h": "0732744e802bd6ded8b58b97c64d66e54298545641024cd5264148389263bad4",
+    "tests/fcitx_transport/server_grab_epoch_probe.cpp": "7dc8945dc291b41b5010001dfaa2b7d163aaf8a9975c807129280861261591da",
+    "tests/fcitx_transport/server_grab_epoch_probe.pro": "5d27a6cfb8923520702f30d909b4934134de0e2deb79b468fc36d0e094c22306",
+    "tests/fcitx_transport/server_grab_epoch_unit.py": "b9c124111036ce76211e36ac5f37b6bcee99105e67147f45f1965b3a31d12347",
+    "tests/fcitx_transport/server_route_fake.cpp": "67225df4ddefb8b8eb06c61bf6c9214099687e97f4c00a74482c84039cd26889",
+    "tests/fcitx_transport/server_route_fake.h": "9326df0e28e6b07a38a29388758ce6127af40362fba3bc43d02b883f9565e386",
     "tests/fcitx_transport/server_route_fake.pro": "25a3c0eb4d79f048f46e672941649691dc406edf22765da2ad9eaecf8b993995",
     "tests/fcitx_transport/server_route_probe.cpp": "6af84b3c4dd67c6b719dae4ecfbf728457c43bfbddcc6aba21277157e0475020",
     "tests/fcitx_transport/server_route_probe.pro": "b01e4021d02b44a0c2d15e20d63692d34326c48f6ff6b470ffe898628c0be453",
-    "tests/fcitx_transport/server_route_reader_fs.mjs": "02ed72b3d79140743970536be5119afc93813b0f00f108420be0e9277ec71a28",
+    "tests/fcitx_transport/server_route_reader_fs.mjs": "56584c9f22471365de33f138f17309165ae1c13af7c84af896d16cbdd6c06ba9",
     "tests/fcitx_transport/server_route_unit.py": "5e704aff0aea66fae740bfe3ee8d3ed4bdd0e73904eaee1e26d728ce900ea9fc",
     "tests/fcitx_transport/test_runner.py": "f7ef659357d8911495c67fb24c6da32de8d86c373474bbce80ce77ca1ff5fc13",
     "tests/fcitx_transport/witness_guard.cpp": "8f7ae9296aaefe3e52887ab99bfbc8a27dc0e6c07b29615ee71883fb358511c2",
@@ -212,13 +216,14 @@
     "tests/wayland_ime/focus_oracle_tests.mjs": "d1d2ab4f211c425a1650be49f44224fa06e33971e2d05e1089910615c8247e5e",
     "tests/wayland_ime/keys.cpp": "d9de854f90b8de3bf66a9e3c898e2f49f80bb765060d6f4b9dc098b2f418f302",
     "tests/wayland_ime/keys.pro": "458e3410f8e67fdf735d1bcdb63070170fddcdd0f7ebdcd9ba510a50873e1faf",
-    "tests/wayland_ime/server_route_witness_tests.mjs": "4c055bfbea648219f496f15d33258e124f4604a1eb61b7fdf0e001c8dc4a2f6d",
+    "tests/wayland_ime/server_route_witness_tests.mjs": "cc2ac97af439e9be23f57b94a95581eddef3229e6ead83c5ba01ad9fa34f4bfb",
     "tests/wayland_ime/space_telemetry_tests.mjs": "587c5792186f69c379646a49d65634fbbb8f6cc0e9bcbc6facd9bc17d254f170",
-    "tests/wayland_ime/test_addon_witness_guards.py": "04140bc9deeea28e0c3b58a3abb6d6d0626f9fd586c43f065591a1e61eddeb7a",
+    "tests/wayland_ime/test_addon_witness_guards.py": "601c6a8e1b888a9c1745d6ddf254c063b7b623a11f6571710f3555e1e60a3788",
     "tests/wayland_ime/test_core_entry_witness_guards.py": "89124219b7d4fb7f7f1d91ba6ee705191a838a173cfc201016d7ebc5e89a4d47",
     "tests/wayland_ime/test_drm_discovery.py": "964c693539f0f09c0b80598073743b2408b3d42f59e080e8a6f4cc8b79cc6046",
     "tests/wayland_ime/test_drm_metadata_snapshot.py": "08cf4b51269a2a7d6d62db7247e998d0de2fa886980cec0dbbe6e7b5b63984b9",
     "tests/wayland_ime/test_grab_entry_witness_guards.py": "4c4371ea074447c07c25d9e6efcad81b63f55f4942e7c5038cc1a4e9bde6fc37",
+    "tests/wayland_ime/test_grab_epoch_witness_guards.py": "e9a3c34a4cc715ef14f77738ecdb4424bd4655d9b6d59656914900980771c948",
     "tests/wayland_ime/test_guards.py": "1d25f6d3277ac0b576a531a2d65e78be5d535323f42292776762e26c0e211aa2",
     "tests/wayland_ime/test_hypr_probe.py": "588c0a1026a360de4e4d532969bdeabc937edfc2ae41d42ab2113c3888970a15",
     "tests/wayland_ime/test_hyprland_ime.py": "542916e0c6eb340271acb4b4d3d0e3e387c98474e8810da4a98c8016c9d63fe3",
@@ -282,7 +287,7 @@
     "tools/hunspellengine.cpp": "a1030ac485865252f2354d0d7898f0b9ae7b9f7344a207403d3eb9b0756da051",
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
-    "tools/hyprland_ime_lab.py": "d9f7dd3a78df536c59d9fbaddbd5632cd1b452884cfc983cb9b87015b140a443",
+    "tools/hyprland_ime_lab.py": "85a8b4623aabf5c06e5342f520ec1987884979a309a27259e28800b657092f87",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
     "tools/measure_probe_resources.py": "1f6e0390d0f1b315e3d1e9e9b253ffe73115c92a0c9c7d93ba7caf2e05edc2f8",
@@ -305,12 +310,14 @@
     "tools/router_decisions.pro": "46d2446894a5ed996c08ae7722fd79bb2accf1b125b757981e36aa531c352682",
     "tools/routerpolicy.cpp": "bbdf101afb88968f3534f42dff851be5d6c537d689d95a05fae37828e5d541e5",
     "tools/routerpolicy.h": "545a855fcc412f88b7bfc94189b02a041b01916783ee963d7fc3100a69ed8f31",
-    "tools/server_route_witness.cpp": "6a70215908f552ad686713b2da851f538900896fd349520e293133da75025579",
+    "tools/server_grab_epoch.h": "1fa44e6c6ccd7799dfecbbd8527bb8dd9a1766d9c74fec3349190de89bdb5c07",
+    "tools/server_grab_epoch_witness.pro": "cec5cca6e54e96f4faff9257da7bfe62cead2cadb93b2ffc6cce277f5984c737",
+    "tools/server_route_witness.cpp": "b13baa7f20f3831d9b62d8bcf6cc70af9b30637305e8d6e41bd39e57c468782e",
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
-    "tools/wayland_ime_lab.py": "32e0f932618558effa47630404f17a1d2bb445b1b529748157453803653772bb"
+    "tools/wayland_ime_lab.py": "a479a60a86667e2be16505bf52632fe27d0676d331773649355414daa92eef60"
   },
   "files": [
     {
@@ -619,6 +626,10 @@
     },
     {
       "path": "docs/ROADMAP.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/SERVER-GRAB-EPOCH-001.md",
       "symbols": []
     },
     {
@@ -1103,6 +1114,49 @@
     {
       "path": "tests/fcitx_transport/grab_test_api.h",
       "symbols": []
+    },
+    {
+      "path": "tests/fcitx_transport/server_grab_epoch_probe.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/fcitx_transport/server_grab_epoch_probe.pro",
+      "symbols": []
+    },
+    {
+      "path": "tests/fcitx_transport/server_grab_epoch_unit.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "manager_metadata",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build",
+          "line": 63,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 149,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "limits",
+          "line": 130,
+          "kind": "FunctionDef"
+        }
+      ]
     },
     {
       "path": "tests/fcitx_transport/server_route_fake.cpp",
@@ -2300,6 +2354,31 @@
       ]
     },
     {
+      "path": "tests/wayland_ime/test_grab_epoch_witness_guards.py",
+      "symbols": [
+        {
+          "name": "GrabEpochGuards",
+          "line": 11,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_selected_plan_diff_is_only_epoch_marker",
+          "line": 12,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_missing_server_gate_refuses_before_reads_or_processes",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_epoch_still_requires_entire_querying_witness_chain",
+          "line": 31,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/wayland_ime/test_guards.py",
       "symbols": [
         {
@@ -3205,22 +3284,22 @@
         },
         {
           "name": "start_bus",
-          "line": 113,
+          "line": 117,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 140,
+          "line": 144,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 213,
+          "line": 217,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 331,
+          "line": 337,
           "kind": "FunctionDef"
         }
       ]
@@ -3875,6 +3954,14 @@
       "symbols": []
     },
     {
+      "path": "tools/server_grab_epoch.h",
+      "symbols": []
+    },
+    {
+      "path": "tools/server_grab_epoch_witness.pro",
+      "symbols": []
+    },
+    {
       "path": "tools/server_route_witness.cpp",
       "symbols": []
     },
@@ -4022,17 +4109,17 @@
         },
         {
           "name": "run",
-          "line": 72,
+          "line": 74,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 137,
+          "line": 140,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 176,
+          "line": 179,
           "kind": "FunctionDef"
         }
       ]
@@ -4440,6 +4527,12 @@
       "to": "tests/fcitx_transport/grab_test_api.h",
       "kind": "literal_include_or_import",
       "line": 4
+    },
+    {
+      "from": "tests/fcitx_transport/server_grab_epoch_probe.cpp",
+      "to": "tests/fcitx_transport/server_route_fake.h",
+      "kind": "literal_include_or_import",
+      "line": 3
     },
     {
       "from": "tests/fcitx_transport/server_route_fake.cpp",
@@ -5226,6 +5319,12 @@
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
       "line": 19
+    },
+    {
+      "from": "tools/server_route_witness.cpp",
+      "to": "tools/server_grab_epoch.h",
+      "kind": "literal_include_or_import",
+      "line": 30
     }
   ],
   "vaultSha256": {
@@ -5234,7 +5333,7 @@
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
-    "docs/knowledge/current008.md": "265dbe2c016c57409c3dd30064c36fbefdee4bfeba740498576ae4e91e0b4d01",
+    "docs/knowledge/current008.md": "e8951371eb7f0cc24bb45faeec1c5e779162eefa461187330c50e311cb4d2382",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
     "docs/knowledge/fcitx.md": "e6f78defb80cff5300eaadc102e7b92d42ac3f352eb5f24cea277cb1323d9ef3",
@@ -5244,7 +5343,7 @@
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
-    "docs/knowledge/server.md": "a4d0db1a60026ea7a9b445b13187c6386dbf5fd45b157f08150701473984c998",
+    "docs/knowledge/server.md": "dbe61021ed5fe48bd3a4f053f715cc151db2e12d127206e07c454605237d0d6d",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }

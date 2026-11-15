@@ -21,7 +21,11 @@ Logger вызывается до send/queue, поэтому это не дока
 Счётчики не определяют ресурс/поколение, гипотеза destroyed old grab пока
 не доказана. Следующий узкий discriminator: определить, послан ли press grab,
 созданному до последнего deactivate/done, без текста/ID/сырого протокольного лога.
-Подготовку и closed source/unit проверки можно делать без рабочего сеанса.
+Epoch discriminator подготовлен:91 Python/24 reader/27 epoch unit/22 schema1
+regression PASS;112B filesystem reader PASS. Headless Sway baseline17/focus8
+PASS:5target rows old0/0,current1/1,unknown0/0,peakLive1. Контракт/источники:
+docs/SERVER-GRAB-EPOCH-001.md,data/server-grab-epoch-preflight-001.json.
+Новая exact проба с --grab-epoch-witness ещё не разрешена.
 Нового host-разрешения нет;008/009 автоматически не повторять.
 Slack/native integration ещё не готова; цель не завершена.
 

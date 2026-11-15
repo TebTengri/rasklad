@@ -58,11 +58,11 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
-                    for offset,name in ((-6,'addon_witness'),(-5,'witness_no_query'),(-4,'core_entry_witness'),(-3,'grab_entry_witness'),(-1,'server_route_witness')):
+                    for offset,name in ((-7,'addon_witness'),(-6,'witness_no_query'),(-5,'core_entry_witness'),(-4,'grab_entry_witness'),(-2,'server_route_witness'),(-1,'grab_epoch_witness')):
                         self.assertEqual(parameters[offset].name,name)
                         self.assertIs(parameters[offset].default,False)
-                    self.assertEqual(parameters[-2].name,'focus_repeats')
-                    self.assertEqual(parameters[-2].default,1)
+                    self.assertEqual(parameters[-3].name,'focus_repeats')
+                    self.assertEqual(parameters[-3].default,1)
 
     def test_invalid_combinations_refuse_before_endpoint_files_or_process(self):
         for module in (REFERENCE, EXACT):

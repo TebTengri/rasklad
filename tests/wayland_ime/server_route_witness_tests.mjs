@@ -46,3 +46,25 @@ test('reader remains one shot after successful sample',async()=>{
  assert.equal(await p.begin(),true);assert.equal((await p.sample()).valid,true);
  assert.equal(await p.begin(),false);assert.equal((await p.sample()).valid,false);assert.equal(calls,2);
 });
+
+const epochPair=(patch={})=>{
+ const v=[0x52535731,2,2,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,0,1,1,0,0,0,1,1,0];
+ for(const [i,n]of Object.entries(patch))v[Number(i)]=n;
+ const b=Buffer.alloc(112);v.forEach((n,i)=>b.writeUInt32LE(n,i*4));return[b,Buffer.from(b)];
+};
+test('epoch schema is explicit and enforces complete classification accounting',()=>{
+ assert.equal(parseServerSnapshots(epochPair()),null);
+ assert.equal(parseServerSnapshots(pair(),true),null);
+ assert.equal(parseServerSnapshots(epochPair(),true).length,21);
+ for(const patch of [{16:2},{18:2},{22:1},{25:129},{25:2},{26:129},{27:2},{24:2},{4:0},{20:65535}])
+  assert.equal(parseServerSnapshots(epochPair(patch),true),null);
+ assert.equal(parseServerSnapshots(epochPair({18:1,19:1,20:0,21:0}),true)[11],1);
+});
+test('epoch reader calibrates registrations and preserves per-interval accounting',async()=>{
+ let calls=0;const r=createServerRouteWitness({grabEpoch:true,readSnapshots:()=>epochPair(calls++?{8:2,18:1}: {})});
+ assert.equal(await r.begin(),true);const s=await r.sample();
+ assert.equal(s.complete,true);assert.equal(s.delta[2],1);assert.equal(s.delta[11],1);
+ assert.equal(s.delta[13],0);assert.equal(await r.begin(),false);
+ const empty=createServerRouteWitness({grabEpoch:true,readSnapshots:()=>epochPair({25:0,26:0})});
+ assert.equal(await empty.begin(),false);
+});

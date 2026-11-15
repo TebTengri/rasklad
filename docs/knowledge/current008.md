@@ -1,6 +1,6 @@
 # Current009
 
-Latest009: emission-to-callback gap; next old-grab lifecycle classification is preparation only. No unused host approval.
+Latest009 gap unresolved. Prepared epoch discriminator has closed/headless PASS; no unused host approval.
 
 Статус: historical_evidence
 

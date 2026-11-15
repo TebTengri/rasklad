@@ -35,7 +35,9 @@ chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py'
 core_guard = None if INSIDE else load('core_entry_guard', ROOT/'tools/core_entry_witness_guard.py')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False):
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+    if grab_epoch_witness and not server_route_witness:
+        raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
         raise base.Refused('server_route_requires_grab_entry_witness')
     if type(focus_repeats) is not int or not 1<=focus_repeats<=5:
@@ -96,6 +98,8 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
                   '--ro-bind',str(ROOT/'tools/server_route_witness_guard.py'),'/lab/server_route_witness_guard.py',
                   '--ro-bind',str(ROOT/'tests/chromium_ime/server-route-witness.mjs'),'/lab/server-route-witness.mjs',
                   '--setenv','RASKLAD_SERVER_ROUTE_WITNESS_LAB','1']
+    if grab_epoch_witness:
+        extra += ['--setenv','RASKLAD_GRAB_EPOCH_WITNESS_LAB','1']
     if focus_repeats>1:
         extra += ['--setenv', 'RASKLAD_FOCUS_REPEATS_LAB', str(focus_repeats)]
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
@@ -210,7 +214,9 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+    if grab_epoch_witness and not server_route_witness:
+        raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
         raise base.Refused('server_route_requires_grab_entry_witness')
     if type(focus_repeats) is not int or not 1<=focus_repeats<=5:
@@ -230,7 +236,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     if server_route_witness:
         load('server_route_guard',ROOT/'tools/server_route_witness_guard.py').validate(base,ROOT,exact=True)
         base.regular_file(ROOT/'tests/chromium_ime/server-route-witness.mjs')
-        base.regular_file(ROOT/'build/chromium-ime/server-route-shim/raskladserverroute.so')
+        base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
     if input_root is None:
@@ -276,7 +282,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         if core_entry_witness:
             snapshots['/lab/raskladcoreentry.so'] = base.sealed_snapshot(shim)
         if server_route_witness:
-            snapshots['/lab/raskladserverroute.so'] = base.sealed_snapshot(ROOT/'build/chromium-ime/server-route-shim/raskladserverroute.so')
+            snapshots['/lab/raskladserverroute.so'] = base.sealed_snapshot(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
         snapshots['/lab/rasklad-wayland-keys'] = base.sealed_snapshot(keys)
         (directory/'hypr.conf').write_text(probe.CONFIG)
         (directory/'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
@@ -298,7 +304,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -340,10 +346,13 @@ def main():
     parser.add_argument('--witness-no-query', action='store_true')
     parser.add_argument('--core-entry-witness', action='store_true')
     parser.add_argument('--grab-entry-witness', action='store_true')
+    parser.add_argument('--grab-epoch-witness',action='store_true')
     parser.add_argument('--server-route-witness',action='store_true')
     parser.add_argument('--focus-repeats', type=int, choices=range(1,6), default=1)
     args = parser.parse_args()
     try:
+        if args.grab_epoch_witness and not args.server_route_witness:
+            raise base.Refused('grab_epoch_requires_server_route_witness')
         if args.server_route_witness and not args.grab_entry_witness:
             raise base.Refused('server_route_requires_grab_entry_witness')
         if type(args.focus_repeats) is not int or not 1<=args.focus_repeats<=5:
@@ -362,7 +371,7 @@ def main():
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
             'focusStressPlanned': args.focus_stress,
@@ -373,6 +382,7 @@ def main():
             'grabEntryWitnessPlanned': args.grab_entry_witness,
             'focusRepeatCount': args.focus_repeats,
             'serverRouteWitnessPlanned':args.server_route_witness,
+            'grabEpochWitnessPlanned':args.grab_epoch_witness,
             'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
         print(json.dumps(report, sort_keys=True))
         return 0 if report.get('passed', True) else 1
