@@ -2,20 +2,24 @@
 
 ## Актуальная контрольная точка
 
-Проба007 выполнена: Core entry и addon оба дали all6/7 и Space0/1.
-Baseline17, остальные3 focus-сценария, cleanup и живость прошли.
-Это наблюдение до публичного Core entry; причина ещё не доказана.
-Данные: data/hyprland-core-entry-007-result.json. Разрешение007 использовано.
+Разрешённая проба008 выполнена: все5 повторов case2 FAIL в одном сеансе.
+На входе grab callback, Core и addon одинаковые6/7, Space0/1; новые grab
+registrations2 за каждый интервал. Coverage полная, unknown0, max216<255.
+Baseline17, прочие3focus, cleanup и compositor liveness прошли.
+DOMtrace пустая, primary/late/post-query0. Это отсутствие наблюдаемого press
+на входе перехваченных зарегистрированных grab callbacks, не доказательство,
+что compositor не отправлял событие. Повторы коррелированы, не IID.
+Данные: data/hyprland-grab-entry-008-result.json; отдельный положительный
+headless контроль: data/grab-entry-witness-preflight-001.json.
 
-Готовится избирательный grab callback witness + пять повторов case2.
-Контракт, ограничения, авторство и ревью: docs/GRAB-ENTRY-WITNESS-001.md.
-77 Python guards,17 reader/repeat,12 legacy Core и19 grab unit проходят.
-Headless Sway baseline17/focus8 PASS: все5 повторов own/Core/grab7/7,
-Space1/1, coverage полная, неизвестных state и saturation нет.
-Данные: data/grab-entry-witness-preflight-001.json.
-Нового разрешения на parent Wayland/renderD128 ещё нет. Host-конфигурация,
-Slack и рабочий IME не меняются. Никакой PASS не объявлять исправлением.
-Codex ведёт работу; Claude/агенты помогают реализацией и независимым ревью.
+Разрешение008 использовано. Новый host запуск автоматически не повторять.
+Следующий шаг: различить synthetic VK request на стороне compositor,
+server emission в IM grab/обычный keyboard и доставку до callback.
+Проверяется возможность избирательного public protocol logger в private
+compositor вместо пересборки/патча системного Hyprland. Дизайн ещё не готов
+к запуску; новые host probes отдельно согласовывать после preflight.
+Slack, рабочий IME и настройки не менялись. Исправления пока нет.
+Codex ведёт работу, остальные помогают с реализацией и ревью.
 
 ## Предыдущие контрольные точки (история)
 

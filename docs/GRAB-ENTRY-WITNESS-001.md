@@ -57,3 +57,19 @@ IME и настройки не изменяются. Ни диагностиче
 реальной привязки wrapper, а не только synthetic fake registration unit.
 Полные ограниченные результаты и source hashes:
 `data/grab-entry-witness-preflight-001.json`.
+
+## Выполненная exact проба008
+
+Одно отдельное разрешение использовано. Все5 повторов в одном сеансе дали
+FAIL с одинаковыми grab/Core/addon6/7 и Space0/1. Каждый интервал содержит
+две новые регистрации grab. Coverage полная, unknown0, saturation нет,
+max216; DOMtrace пустая, primary/late/post0. Baseline17, остальные3focus,
+cleanup и compositor liveness прошли. Данные:
+`data/hyprland-grab-entry-008-result.json`.
+
+Независимый critic подтвердил узкую формулировку: press не наблюдался на
+входе перехваченных зарегистрированных grab callbacks. Aggregate не связывает
+пары, один сеанс не является IID выборкой, наличие callback release не
+доказывает отправку press тому же ресурсу. Событие могло быть направлено
+обычному wl_keyboard, другому ресурсу или отброшено до callback.
+Следующая граница — compositor receipt/emission, не ещё один тот же повтор.
