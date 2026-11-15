@@ -24,7 +24,7 @@ flowchart TD
   Fcitx --> Chromium[Native Chromium fixture]
   Chromium --> Oracle[Строгие проверки текста / focus / composition]
   AddonDiag[Addon / Core / grab counters] -. наблюдение .-> Fcitx
-  ServerDiag[Server-route: headless PASS, exact pending] -. emission attempts .-> Compositor
+  ServerDiag[Server-route009: emission1/1, callback0/1] -. emission attempts .-> Compositor
 ```
 
 Сплошные стрелки — отношения реализации/тестового пути, проверенные по исходникам.
@@ -56,7 +56,7 @@ flowchart TD
 | Browser input/revision | `browser/README.md`, `browser/adapter.js`, `browser/session.js`, `browser/prosemirror.js` |
 | Fcitx composition/commit | `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/FCITX-TRANSPORT-001.md` |
 | Focus regression | `tests/chromium_ime/adversarial-focus.mjs`, `tests/chromium_ime/driver.mjs`, `docs/HYPRLAND-FOCUS-STRESS-001.md` |
-| Missing Space /008 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
+| Missing Space /009 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
 | Диагностика маршрута server | `docs/SERVER-ROUTE-WITNESS-001.md`, `tools/server_route_witness_guard.py`, `tests/chromium_ime/server-route-witness.mjs` |
 | Разрешения exact trial | `tools/hyprland_ime_lab.py`, `docs/HYPRLAND-IME-001.md`, `SECURITY.md` |
 | Лицензии/новый язык | `LICENSE`, `THIRD_PARTY.md`, `docs/DATA_POLICY.md` |
@@ -73,23 +73,20 @@ flowchart TD
 - Terminal: универсальное исправление произвольной командной строки не доказано.
 - Per-app выключатели: контракт opt-in; новая поддержка по умолчанию выключена.
 
-## Текущий узкий вопрос:008
+## Текущий узкий вопрос:009
 
-Исторический результат008: пять коррелированных повторов case2
-`word → other → prose → Space` завершились FAIL; исходное слово сохранено,
-пробел отсутствует. Остальные focus-кейсы, baseline и cleanup прошли.
-На grab/Core/addon наблюдались totals6/7 и Space0/1; coverage полная,
-unknown states0, saturation отсутствует. Это отсутствие press в наблюдённых
-callback-интервалах, не доказанная причина внутри Hyprland.
-Повторы одного сеанса не дают IID оценку частоты ошибки.
+Exact009: пять коррелированных повторов case2 `word → other → prose → Space`
+завершились FAIL. Server grab Space emission attempt1/1, ALL-private VK1/2,
+ordinary keyboard0/0. Client grab/Core/addonSpace0/1, all6/7. Coverage полная,
+unknown0. Остальные3focus, baseline17, cleanup и живость compositor PASS.
+Данные: `data/hyprland-server-route-009-result.json`.
 
-Следующий server-route witness должен различить incoming private VK requests
-и server emission attempts. Он учитывает ВСЕ private VK, включая forwarding;
-`wl_keyboard` может дублироваться по ресурсам. Emission не равен доставке.
-Закрытые проверки и headless preflight прошли; exact-проба ещё не разрешена.
-Разрешения прошлых host-проб использованы.
-Сначала закрытая проверка, затем отдельное разрешение на следующую exact пробу.
-Не считать подготовленный shim, passing mock или согласие моделей исправлением.
+Разрыв после server emission attempt и до callback. Emission не доказывает
+socket transmission; ресурс/поколение не идентифицированы. Гипотеза уничтожения
+старого grab пока не доказана. Следующий кандидат — ограниченная metadata
+классификация old-generation после deactivate/done, сначала closed preflight.
+Разрешение009 использовано; новое host окно автоматически не открывать.
+Повторы одного сеанса не являются IID; согласие моделей не является исправлением.
 
 ## Проверки и их зависимости
 

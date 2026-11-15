@@ -86,3 +86,26 @@ logger, не диагноз Hyprland. Отчёт/source pins:
 Следующий exact запуск ещё не разрешён: один nested Hyprland trial до75s,
 те же parent Wayland/renderD128, fixedfile metadata witness,5 повторов.
 Нет рабочего Slack/IME/settings изменений. Scope008 уже использован.
+
+## Exact проба009
+
+Одно отдельное разрешение использовано. Все5 target rows FAIL: ALL-private
+VKSpace1/2, grab emission attempt1/1, ordinary keyboard0/0, unknown0;
+client grab/Core/addonSpace0/1 и all6/7. Coverage полная; остальные3focus,
+baseline17, cleanup и compositor liveness PASS. Data:
+`data/hyprland-server-route-009-result.json`.
+
+Это разрыв после server emission attempt и до зарегистрированного callback.
+Не утверждаем socket transmission: публичный logger вызывается перед send/queue.
+Не доказано, что press/release относятся одному поколению grab. Следующая
+кандидатная проверка — ограниченная metadata-классификация old-generation после
+deactivate/done; повтор нынешнего опыта без новой границы малоинформативен.
+
+Независимое короткое ревью Claude Opus5.5 после009 подтвердило узкую
+интерпретацию. Следующая epoch-классификация покажет только server temporal
+relation, не client discard. Приняты замечания: различать deactivate-sent и
+done-sent, ограничить/отмечать несколько живых grabs, защититься от pointer
+reuse и не трактовать эпоху как подтверждение уничтожения proxy у клиента.
+Предложенные отдельные server/client биты без общей причинной привязки сами
+не доказывают порядок между процессами; не использовать их как готовый диагноз.
+Новых host запусков это ревью не разрешает.

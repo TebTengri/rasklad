@@ -1,8 +1,8 @@
 # Server
 
-Server Space emission/request witness: closed checks and headless Sway5-repeat preflight passed; exact Hyprland trial not authorized after008.
+Exact009: server grab Space emission1/1, client callback0/1 in5 correlated repeats. Gap after emission attempt, before callback; cause unresolved; approval009 consumed.
 
-Статус: headless_preflight_pass_exact_pending
+Статус: exact009_gap_observed
 
 ## Файлы
 

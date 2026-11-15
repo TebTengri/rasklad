@@ -206,11 +206,11 @@
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Server",
-      "notes": "Server Space emission/request witness: closed checks and headless Sway5-repeat preflight passed; exact Hyprland trial not authorized after008.",
+      "notes": "Exact009: server grab Space emission1/1, client callback0/1 in5 correlated repeats. Gap after emission attempt, before callback; cause unresolved; approval009 consumed.",
       "tests": [
         "node --test tests/wayland_ime/server_route_witness_tests.mjs"
       ],
-      "status": "headless_preflight_pass_exact_pending"
+      "status": "exact009_gap_observed"
     },
     {
       "id": "licensing",
@@ -240,11 +240,12 @@
       "id": "current008",
       "kind": "evidence_summary",
       "paths": [
+        "data/hyprland-server-route-009-result.json",
         "docs/GRAB-ENTRY-WITNESS-001.md",
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
-      "title": "Current008",
-      "notes": "Trial008: Space press absent at registered grab callback entry in5 correlated repeats; cause unresolved. Server witness closed preflight passed; new exact trial not authorized.",
+      "title": "Current009",
+      "notes": "Latest009: emission-to-callback gap; next old-grab lifecycle classification is preparation only. No unused host approval.",
       "tests": [],
       "status": "historical_evidence"
     }

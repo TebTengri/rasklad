@@ -8,27 +8,22 @@
 
 ## Актуальная контрольная точка
 
-Разрешённая проба008 выполнена: все5 повторов case2 FAIL в одном сеансе.
-На входе grab callback, Core и addon одинаковые6/7, Space0/1; новые grab
-registrations2 за каждый интервал. Coverage полная, unknown0, max216<255.
-Baseline17, прочие3focus, cleanup и compositor liveness прошли.
-DOMtrace пустая, primary/late/post-query0. Это отсутствие наблюдаемого press
-на входе перехваченных зарегистрированных grab callbacks, не доказательство,
-что compositor не отправлял событие. Повторы коррелированы, не IID.
-Данные: data/hyprland-grab-entry-008-result.json; отдельный положительный
-headless контроль: data/grab-entry-witness-preflight-001.json.
+Exact проба009 выполнена по отдельному разовому разрешению, оно использовано.
+Все5 коррелированных повторов case2 FAIL. Server witness complete/valid:
+ALL-private VK Space1/2, grab emission attempt1/1, ordinary keyboard0/0,
+unknown0. Client grab/Core/addonSpace0/1, all6/7. DOMtrace пустая,
+primary/late/post0. Baseline17, прочие3focus, cleanup и живость compositor PASS.
+Данные: data/hyprland-server-route-009-result.json. Исходники соответствуют
+preflight; installed компоненты и рабочие настройки не менялись.
 
-Разрешение008 использовано. Новый host запуск автоматически не повторять.
-Следующий шаг: различить synthetic VK request на стороне compositor,
-server emission в IM grab/обычный keyboard и доставку до callback.
-Избирательный public protocol logger подготовлен в private compositor без
-патча установленного Hyprland.88 Python/22 reader/22 C++ checks и filesystem
-reader проходят. Headless Sway baseline17/focus8 PASS,5 target rows VK2/2,
-grab emission1/1, ordinary keyboard1/1. Данные/авторство/ограничения:
-data/server-route-witness-preflight-001.json и docs/SERVER-ROUTE-WITNESS-001.md.
-Новая exact проба отдельно согласуется; прежний scope008 использован.
-Slack, рабочий IME и настройки не менялись. Исправления пока нет.
-Codex ведёт работу, остальные помогают с реализацией и ревью.
+Разрыв находится после server emission attempt и до client grab callback.
+Logger вызывается до send/queue, поэтому это не доказательство socket delivery.
+Счётчики не определяют ресурс/поколение, гипотеза destroyed old grab пока
+не доказана. Следующий узкий discriminator: определить, послан ли press grab,
+созданному до последнего deactivate/done, без текста/ID/сырого протокольного лога.
+Подготовку и closed source/unit проверки можно делать без рабочего сеанса.
+Нового host-разрешения нет;008/009 автоматически не повторять.
+Slack/native integration ещё не готова; цель не завершена.
 
 ## Предыдущие контрольные точки (история)
 

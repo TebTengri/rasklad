@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "9aa6e9108c244e9a7e62cc46e0b6efb0323f0148127f5e98a6db923a02960c3e",
+  "curatedSha256": "46b5ddcc362feec43806347313e9d8ab5d6763798a2f8c84d1bf46cf8e3058fb",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -39,7 +39,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "86ab8383cde148fbfea2b8203a995f73e95f51a4c53fa221b3f0bbcaa56c8647",
+    "docs/CONTINUATION-PLAN.md": "15b23381817dc6d0ea8cdf1fe094fd49187fd7aa0583de31700ca3bdf449be16",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -80,7 +80,7 @@
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
     "docs/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
-    "docs/SERVER-ROUTE-WITNESS-001.md": "55ab130dd87979b20a12ebf97e5f9f7a10e9775b78277638bf46e5d4b7aea4b0",
+    "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "6bc032d7bb3d2c064b02ed936614f790bc0e556ec940e2ef72a68e5d2da781a7",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
@@ -5229,12 +5229,12 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "6bb477c52ed76e630a89da5d5ec2eb115afb73431bf98fe694773e6058003300",
+    "docs/knowledge/Start.md": "13210d35ba975a8f97146cc4016581ba9c140acb2e2939776b0716bf77303116",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
-    "docs/knowledge/current008.md": "e21786af1ce38a1689ddf33fa50d410e2e408d31c17391d055b934d520b0ce4e",
+    "docs/knowledge/current008.md": "265dbe2c016c57409c3dd30064c36fbefdee4bfeba740498576ae4e91e0b4d01",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
     "docs/knowledge/fcitx.md": "e6f78defb80cff5300eaadc102e7b92d42ac3f352eb5f24cea277cb1323d9ef3",
@@ -5244,7 +5244,7 @@
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
-    "docs/knowledge/server.md": "cf1607f113f5ce695777a57747fb1ca428885c2611649824ce221b61a8d65a5d",
+    "docs/knowledge/server.md": "a4d0db1a60026ea7a9b445b13187c6386dbf5fd45b157f08150701473984c998",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }

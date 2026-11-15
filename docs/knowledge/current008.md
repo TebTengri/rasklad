@@ -1,11 +1,12 @@
-# Current008
+# Current009
 
-Trial008: Space press absent at registered grab callback entry in5 correlated repeats; cause unresolved. Server witness closed preflight passed; new exact trial not authorized.
+Latest009: emission-to-callback gap; next old-grab lifecycle classification is preparation only. No unused host approval.
 
 Статус: historical_evidence
 
 ## Файлы
 
+- `data/hyprland-server-route-009-result.json`
 - `docs/GRAB-ENTRY-WITNESS-001.md`
 - `docs/SERVER-ROUTE-WITNESS-001.md`
 

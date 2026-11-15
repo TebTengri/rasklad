@@ -21,7 +21,7 @@
 - [Server](server.md)
 - [Licensing](licensing.md)
 - [App Policy](app_policy.md)
-- [Current008](current008.md)
+- [Current009](current008.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.
