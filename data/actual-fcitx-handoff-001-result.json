@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "sameArtifacts": true,
+  "functionalHyprlandFix": false,
+  "closedFcitxPairPreserved": true,
+  "launcherTestsPassed": 7,
+  "original": {
+    "ackMatched": true,
+    "artifactSha256": {
+      "addons/libwaylandim.so": "6e3c5bae04b787a06b84223a2d31de4c0316b4b152ed0a10efa9675b03c23b0e",
+      "runner.py": "b027e087d09d0376021cb38535708b4a67f97b768eb87caba8a42ab91e302f08",
+      "server": "0a07ae2febaad82eaf086e84643b4ac12bf57de3d5e69d5cf2e2089523740885"
+    },
+    "commits": 2,
+    "completed": true,
+    "fcitxExitCode": null,
+    "gatedPairSent": false,
+    "gpu": false,
+    "grabs": 2,
+    "handoffMode": "original",
+    "hostDisplay": false,
+    "moduleLoaded": true,
+    "network": false,
+    "oneLiveGrabInvariant": true,
+    "passed": true,
+    "protocolSha256": {
+      "tests/input_lab/protocol/input-method-unstable-v2.xml": "99414dbad9458e71aa1fa01bc45f94ca6685787bfcb4d98948f72c1b45b60703",
+      "tests/wayland_ime/protocol/virtual-keyboard-unstable-v1.xml": "7ad7870003ecd592cae47dc19d277a609b7f18fd7b7be012623cf3225a7294f5"
+    },
+    "raced": true,
+    "realInput": false,
+    "schema": 1,
+    "scope": "closed actual Fcitx protocol fixture; no GUI or password proof",
+    "variant": "baseline",
+    "vkPress": 0,
+    "vkReady": true,
+    "vkRelease": 1,
+    "waitedForAck": false
+  },
+  "ackGated": {
+    "ackMatched": true,
+    "artifactSha256": {
+      "addons/libwaylandim.so": "6e3c5bae04b787a06b84223a2d31de4c0316b4b152ed0a10efa9675b03c23b0e",
+      "runner.py": "b027e087d09d0376021cb38535708b4a67f97b768eb87caba8a42ab91e302f08",
+      "server": "0a07ae2febaad82eaf086e84643b4ac12bf57de3d5e69d5cf2e2089523740885"
+    },
+    "commits": 2,
+    "completed": true,
+    "fcitxExitCode": null,
+    "gatedPairSent": true,
+    "gpu": false,
+    "grabs": 2,
+    "handoffMode": "ack-gated",
+    "hostDisplay": false,
+    "moduleLoaded": true,
+    "network": false,
+    "oneLiveGrabInvariant": true,
+    "passed": true,
+    "protocolSha256": {
+      "tests/input_lab/protocol/input-method-unstable-v2.xml": "99414dbad9458e71aa1fa01bc45f94ca6685787bfcb4d98948f72c1b45b60703",
+      "tests/wayland_ime/protocol/virtual-keyboard-unstable-v1.xml": "7ad7870003ecd592cae47dc19d277a609b7f18fd7b7be012623cf3225a7294f5"
+    },
+    "raced": true,
+    "realInput": false,
+    "schema": 1,
+    "scope": "closed actual Fcitx protocol fixture; no GUI or password proof",
+    "variant": "baseline",
+    "vkPress": 1,
+    "vkReady": true,
+    "vkRelease": 1,
+    "waitedForAck": true
+  },
+  "scope": "actual unmodified Fcitx + synthetic protocol peer only; no GUI/host/compositor runtime",
+  "author": "Codex; independent static fixture/gate review; reviewer executed nothing"
+}

@@ -35,6 +35,19 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'server_eof'):
             self.report('pass')
 
+    def test_matching_counts_without_gate_evidence_cannot_pass(self):
+        report={'completed':True,'vkPress':1,'vkRelease':1,
+                'gatedPairSent':True,'ackMatched':True,'waitedForAck':True}
+        self.assertTrue(fixture.delivery_passed(report,'baseline','ack-gated',True,0))
+        for key in ('gatedPairSent','ackMatched','waitedForAck'):
+            broken=dict(report);broken[key]=False
+            self.assertFalse(fixture.delivery_passed(broken,'baseline','ack-gated',True,0))
+        self.assertFalse(fixture.delivery_passed(report,'baseline','ack-gated',False,0))
+        self.assertFalse(fixture.delivery_passed(report,'baseline','ack-gated',True,2))
+        report['vkPress']=0
+        self.assertFalse(fixture.delivery_passed(report,'baseline','ack-gated',True,0))
+        self.assertTrue(fixture.delivery_passed(report,'baseline','original',True,0))
+
     def test_diagnostic_candidate_cannot_run_as_delivery_fix(self):
         with patch.object(fixture.subprocess,'Popen') as start:
             with self.assertRaisesRegex(RuntimeError,'diagnostic_candidate_not_delivery_fix'):

@@ -33,3 +33,14 @@ Checks performed on 2026-11-15:
 - Full build/run remains blocked in this environment: installed runtime
   binaries and bwrap appear owned by uid65534, rejected by existing admission.
   Keep that admission intact and resume on the ordinary admitted machine.
+
+## Actual runtime update (supersedes initial blocked status)
+
+Ordinary execution preserves true system ownership; the outer restricted
+sandbox's nobody view was a mapping artifact. Existing admission now passes in
+that context. Synthetic identity files resolve private D-Bus without host /etc.
+The actual rebuilt unmodified frontend ran: original mode0/1, ack-gated mode1/1,
+same artifacts, module mapping confirmed. The latter holds a NEW fixed pair
+until second grab plus current commit, not replaying already-forwarded input.
+Seven launcher controls pass. See docs/ACTUAL-FCITX-HANDOFF-001.md for exact
+scope; no Hyprland/GUI/generalqueue/held-key fix claim. `drain` still refuses.

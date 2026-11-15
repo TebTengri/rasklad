@@ -1,8 +1,8 @@
 # Actual Fcitx drain fixture draft
 
-Lifetime integration syntax/nested-depth controls pass. Raw old-event forwarding rejected on independent review; diagnostic aborts125. Actual Fcitx/runtime ownership remains blocked; next investigate compositor handoff contract.
+Ordinary admitted context resolves sandbox UID mapping. Unmodified rebuilt Fcitx actual original0/1 vs sender ack-gated fixedpair1/1, same artifacts. No client retired replay, GUI/compositor/held-state/generalqueue proof.
 
-Статус: lifetime_diagnostic_not_delivery_fix
+Статус: actual_fcitx_peer_controls_pass_not_hyprland_fix
 
 ## Файлы
 
@@ -23,6 +23,9 @@ Lifetime integration syntax/nested-depth controls pass. Raw old-event forwarding
 - `tools/fcitx_retirement_candidate.py`
 - `docs/FCITX-RETIREMENT-REVIEW-001.md`
 - `data/retirement-review-001-result.json`
+- `docs/ACTUAL-FCITX-HANDOFF-001.md`
+- `data/actual-fcitx-handoff-001-result.json`
+- `data/fcitx-frontend-baseline-build-001-result.json`
 
 ## Связи
 

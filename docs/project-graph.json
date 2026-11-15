@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "3442ced6d7479d0edd9ad688c2c22419059386d2b46a2862cbd2b68394dda517",
+  "curatedSha256": "c9130b87b93e48c7d39e93bf86e604d003affbc4f8ab5d4721e78b932e016c78",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -28,6 +28,7 @@
     "bin/test-input-lab": "b9f0accbba63fa706230753e2dd0f9c95451064f8188a1ca9f9d8dce17caa596",
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
+    "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
     "docs/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
@@ -39,7 +40,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "701dba13d257a63ed94a09d3292d0f62eb9a6daa50df51fcbc866c7fcefc309f",
+    "docs/CONTINUATION-PLAN.md": "7c2aafc75485e92cbd54fdc76ce30e83ee560996a35225eeb5121026f4c4954b",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -161,12 +162,12 @@
     "tests/detector/detector_tests.pro": "fe0ffe8d8f95ccc2a8a34559a78382c35e04db37d1f0db8b6c381984a4bcccc1",
     "tests/domain/domain_tests.cpp": "b66e742b9f90ffd15bc5458e8022c247effa0cfdb4dd04325330dc78c489bdaf",
     "tests/domain/domain_tests.pro": "947393ae0be0b22d8200d4e0075a532ee005707ef3606a47b6a869db486f1109",
-    "tests/fcitx_drain_server/README.md": "e8cbc1919f4b246640048706d193b6be46530d764c69873358ecac53ec98a2c0",
+    "tests/fcitx_drain_server/README.md": "356982ba9f318a68b135e8c3321ad034986a2da6288c687843cbc4eb3dae1772",
     "tests/fcitx_drain_server/check_wrapper.py": "3e48124ecf2c544213063c9904631d974f45867402da5b9cadee1c10b8eaeeb1",
-    "tests/fcitx_drain_server/run.py": "69213e6d409ca041466c1aac545c1ce7a70d1ea0ef7e9ba1ff364c96581cefc2",
-    "tests/fcitx_drain_server/server.cpp": "61100376e2ff3a5b57de726e015153d4411d211e226b74ab29120f1b751775c6",
+    "tests/fcitx_drain_server/run.py": "b027e087d09d0376021cb38535708b4a67f97b768eb87caba8a42ab91e302f08",
+    "tests/fcitx_drain_server/server.cpp": "efe99d55231fa57c77b1cf1ce1d03e5abbdaa806ae57090ba8dccb674f0ee7f3",
     "tests/fcitx_drain_server/server.pro": "bf8e35924c1cdcf414444a8473a8c52844ac51856d12913e024b6cb909497900",
-    "tests/fcitx_drain_server/test_runner.py": "886f1dc7df0b691b0e88e1baaeb5f43419c3475351623edc570628491201ccda",
+    "tests/fcitx_drain_server/test_runner.py": "dc8434a377f7f28240b90db7eedfebec8e2f7750ce5eeacbfe60bed2b5752a45",
     "tests/fcitx_drain_server/wrapper_ownership.cpp": "5704899ad569a6aa0f50c46203b8b70fd37edc29de0204fdd8e4487b4b0f9cfd",
     "tests/fcitx_transport/client.cpp": "7b6e282ef76cf4b80d7f8a4ffc4801857f01f9eecc3fc3f6d268833fcbda4595",
     "tests/fcitx_transport/client.pro": "9d87f3304b07350e156a05587fcc74e3ba62fb384477721439a4618533cee4e5",
@@ -441,6 +442,10 @@
     },
     {
       "path": "bin/test-wayland-ime",
+      "symbols": []
+    },
+    {
+      "path": "docs/ACTUAL-FCITX-HANDOFF-001.md",
       "symbols": []
     },
     {
@@ -1111,23 +1116,28 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "inside",
+          "name": "delivery_passed",
           "line": 57,
           "kind": "FunctionDef"
         },
         {
+          "name": "inside",
+          "line": 63,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "run",
-          "line": 98,
+          "line": 110,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 126,
+          "line": 164,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 116,
+          "line": 138,
           "kind": "FunctionDef"
         }
       ]
@@ -1174,13 +1184,18 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_diagnostic_candidate_cannot_run_as_delivery_fix",
+          "name": "test_matching_counts_without_gate_evidence_cannot_pass",
           "line": 38,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_diagnostic_candidate_cannot_run_as_delivery_fix",
+          "line": 51,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_forged_environment_cannot_enter_private_mode",
-          "line": 44,
+          "line": 57,
           "kind": "FunctionDef"
         }
       ]
@@ -5757,7 +5772,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "bdb2c536217ffa900f33fa8dbde3eb887decd166c3420d70b0f51fae175ff964",
+    "docs/knowledge/fcitx-drain-fixture.md": "aa37a8d7c64fb3041031411819741d704f1a40b016fa8c93ac0c261ba2d16a06",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

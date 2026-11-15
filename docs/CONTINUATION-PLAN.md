@@ -1,3 +1,29 @@
+## 2026-11-15 — ACTUAL Fcitx controls now run (runtime blocker resolved)
+
+Important correction: restricted sandbox maps system root to nobody; ordinary
+escalated context sees correct root ownership and passes existing admission.
+No owner guard/system file changed. Baseline source frontend built in bwrap,
+953 upstream files verified. Fixed fixture /lab ROOT and missing synthetic
+passwd/group/machine-id (private D-Bus startup); errors now preserved privately.
+
+Actual unmodified Fcitx frontend loaded by dev/inode: original peer reproduces
+0press/1release; optional ack-gated peer holds NEW fixed pair until replacement
+grab+matching done-count commit and yields1/1. Both run on identical frontend,
+peer and runner hashes, one-live servergrab preserved. Positive explicitly
+waited for ack and proves gate passage.7 launcher/report controls PASS.
+Data: data/actual-fcitx-handoff-001-result.json and
+ data/fcitx-frontend-baseline-build-001-result.json.
+Report/reproduction/bounds: docs/ACTUAL-FCITX-HANDOFF-001.md.
+
+NO client patch/raw retired replay used, no custom protocol, no Hyprland/GUI /
+Slack/host probe. Full production focus/held keys/modifiers/repeat/timeout /
+capability/generic IME guarantees absent. Old frontend patches remain diagnostic.
+NEXT: smallest reviewed sender-side handoff proposal for pinned compositor,
+explicitly scoped and bounded, with held-state policy. Do not simply gate all
+IMEs on optional commits or confuse this fixed-pair positive with generalqueue.
+Closed runtime is available through ordinary admitted context; older notes saying
+machine-wide ownership blocked are historical and superseded. No host consent.
+
 ## 2026-11-15 — cooperative handoff screen; real Claude implementation
 
 Claude Opus5.5 returned a small pure symbolic model; Codex added delivered-key
