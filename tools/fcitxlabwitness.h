@@ -82,10 +82,19 @@ static_assert(static_cast<std::size_t>(Counter::releaseFiltered) == 19 &&
 #ifdef RASKLAD_CORE_ENTRY_WITNESS_LAB
 // The separate Core-entry variant appends the shim's own version/ready markers
 // and ten fixed counters. Schema 2 and all existing counter indices stay intact.
+#ifdef RASKLAD_GRAB_ENTRY_WITNESS_LAB
+constexpr std::size_t kCoreReplyWords = 19;
+#else
 constexpr std::size_t kCoreReplyWords = 12;
+#endif
 constexpr std::size_t kReplyWords = 2 + kCounterCount + kCoreReplyWords;
+#ifdef RASKLAD_GRAB_ENTRY_WITNESS_LAB
+static_assert(kReplyWords == 43, "schema 4 reply has exactly 43 words");
+constexpr std::uint32_t kSchema = 4;
+#else
 static_assert(kReplyWords == 36, "schema 3 reply has exactly 36 words");
 constexpr std::uint32_t kSchema = 3;
+#endif
 using CoreSnapshot = std::uint32_t (*)(std::uint32_t *, std::uint32_t) noexcept;
 #else
 constexpr std::size_t kReplyWords = 2 + kCounterCount;
@@ -134,6 +143,9 @@ inline bool privateLabEnvironment() {
            envAbsent("RASKLAD_PARENT_FD") && busAddressPrivate()
 #ifdef RASKLAD_CORE_ENTRY_WITNESS_LAB
            && envEquals("RASKLAD_CORE_ENTRY_WITNESS_LAB", "1")
+#ifdef RASKLAD_GRAB_ENTRY_WITNESS_LAB
+           && envEquals("RASKLAD_GRAB_ENTRY_WITNESS_LAB", "1")
+#endif
 #endif
         ;
 }
@@ -146,7 +158,13 @@ inline bool readCoreSnapshot(
     std::array<std::uint32_t, kCoreReplyWords> &out) noexcept {
     if (!snapshot || snapshot(out.data(), static_cast<std::uint32_t>(out.size())) !=
                          kCoreReplyWords ||
-        out[0] != 1 || out[1] != 1) {
+        out[0] !=
+#ifdef RASKLAD_GRAB_ENTRY_WITNESS_LAB
+            2 || out[12] != 1 ||
+#else
+            1 ||
+#endif
+        out[1] != 1) {
         return false;
     }
     for (std::size_t i = 2; i < out.size(); ++i) {
@@ -228,7 +246,13 @@ public:
         }
 #ifdef RASKLAD_CORE_ENTRY_WITNESS_LAB
         const auto coreSnapshot = reinterpret_cast<CoreSnapshot>(
-            dlsym(RTLD_DEFAULT, "rasklad_core_entry_snapshot_v1"));
+            dlsym(RTLD_DEFAULT,
+#ifdef RASKLAD_GRAB_ENTRY_WITNESS_LAB
+                  "rasklad_core_entry_snapshot_v2"
+#else
+                  "rasklad_core_entry_snapshot_v1"
+#endif
+            ));
         std::array<std::uint32_t, kCoreReplyWords> core{};
         if (!detail::readCoreSnapshot(coreSnapshot, core)) {
             return false; // Missing or non-ready shim: export nothing.

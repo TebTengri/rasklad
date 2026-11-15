@@ -117,17 +117,20 @@ try{
    const {createSpaceTelemetry}=await import('file:///lab/space-telemetry.mjs');
    spaceTelemetry=createSpaceTelemetry({ev});
   }
-  let addonWitness=null;
+  let addonWitness=null,addonWitnessFactory=null;
   if(process.env.RASKLAD_ADDON_WITNESS_LAB==='1'){
    const {createAddonWitness}=await import('file:///lab/addon-witness.mjs');
-   addonWitness=createAddonWitness({query:async()=>execFileSync('/usr/bin/gdbus',[
+   addonWitnessFactory=()=>createAddonWitness({query:async()=>execFileSync('/usr/bin/gdbus',[
     'call','--session','--dest','org.fcitx.Fcitx5','--object-path','/org/rasklad/LabWitness',
-    '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']}),noQuery:process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB==='1',coreEntry:process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1'});
+    '--method','org.rasklad.LabWitness1.GetStats'],{encoding:'utf8',timeout:1000,maxBuffer:1024,stdio:['ignore','pipe','ignore']}),noQuery:process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB==='1',coreEntry:process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1',grabEntry:process.env.RASKLAD_GRAB_ENTRY_WITNESS_LAB==='1'});
   }
-  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitness},endEventPolicy);
+  const repeatRaw=process.env.RASKLAD_FOCUS_REPEATS_LAB??'1';
+  const repeatCount=/^[1-5]$/.test(repeatRaw)?Number(repeatRaw):NaN;
+  report.focusStress=await runFocusScenarios({ev:focusEv,type,reset,spaceTelemetry,addonWitnessFactory,repeatCount},endEventPolicy);
   report.focusStress.instrumentedAddonTrial=process.env.RASKLAD_ADDON_WITNESS_LAB==='1';
+  report.focusStress.instrumentedGrabEntryTrial=process.env.RASKLAD_GRAB_ENTRY_WITNESS_LAB==='1';
   report.focusStress.instrumentedCoreEntryTrial=process.env.RASKLAD_CORE_ENTRY_WITNESS_LAB==='1';
-  report.focusStress.addonWitnessQueriesEnabled=addonWitness!==null;
+  report.focusStress.addonWitnessQueriesEnabled=addonWitnessFactory!==null&&process.env.RASKLAD_ADDON_WITNESS_NO_QUERY_LAB!=='1';
   report.focusStress.instrumentedSpaceTrial=spaceTelemetry!==null;
   report.focusStress.scope='DOM_intra_surface_only';
   report.focusStress.diagnostics=diagnostics;

@@ -115,7 +115,9 @@ const snapshot = (K, x) => `(()=>{${pre(K)}if(!live)return -1;
  const h=s.hits;if(!Number.isInteger(h)||h<0||h>${HITS_CAP})return -1;
  return (ok?100:0)+h;})()`;
 
-export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null, addonWitness = null }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
+export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null, addonWitness = null, addonWitnessFactory = null, repeatCount = 1 }, endEventPolicy = END_POLICY_TRUSTED_ONLY) {
+  if(!Number.isInteger(repeatCount)||repeatCount<1||repeatCount>5) return {passed:false,checks:0,cases:[],errorCode:'INVALID_REPEAT_COUNT'};
+  if(repeatCount>1&&addonWitness!==null&&typeof addonWitnessFactory!=='function') return {passed:false,checks:0,cases:[],errorCode:'WITNESS_FACTORY_REQUIRED'};
   let policy = null;
   if (endEventPolicy === END_POLICY_TRUSTED_ONLY) policy = END_POLICY_TRUSTED_ONLY;
   else if (endEventPolicy === END_POLICY_SCOPED) policy = END_POLICY_SCOPED;
@@ -127,11 +129,16 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
   const is = async expression => (await ev(expression)) === true;
   let setupClean = true;
 
-  async function runCase(id, hook, body, tel = null) {
+  async function runCase(id, hook, body, tel = null, iteration = null) {
     const r = { id, passed: false, precondition: false, hookHits: null, errorCode: null, executed: false, cleanupPassed: null };
+    if(iteration!==null)r.iteration=iteration;
     if (tel !== null) r.spaceTelemetry = null;
     let telOk = true, telBegun = false;
-    const witness = id === 'word_other_back_prose_space' ? addonWitness : null;
+    let witness = null;
+    if(setupClean&&id==='word_other_back_prose_space') {
+      try { witness=typeof addonWitnessFactory==='function'?addonWitnessFactory():addonWitness; }
+      catch { setupClean=false;r.errorCode='WITNESS_SETUP_FAILED';return r; }
+    }
     let witnessOk = true, witnessBegun = false;
     const telArm = tel === null ? null : async () => {
       try {
@@ -198,7 +205,8 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
       if (witness !== null && witnessBegun && expect) {
         try {
           const counters = await witness.sample();
-          witnessOk = counters && counters.valid === true;
+          witnessOk = counters && counters.valid === true && counters.complete === true;
+          if(!witnessOk)r.dataUnusable=true;
           r.addonWitness = witnessOk ? counters : {valid:false,complete:false,before:[],after:[],delta:[]};
         } catch { witnessOk = false; r.addonWitness = {valid:false,complete:false,before:[],after:[],delta:[]}; }
         // The getter is not atomic with DOM; record a separate post-query observation.
@@ -225,7 +233,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
         } catch {
           cleanOk = false;
         }
-        if (!snap || typeof snap !== 'object' || snap.valid !== true) cleanOk = false;
+        if (!snap || typeof snap !== 'object' || snap.valid !== true || snap.complete !== true) { cleanOk = false;r.dataUnusable=true; }
         r.spaceTelemetry = snap && typeof snap === 'object' ? snap : { valid: false, armed: false, records: [], dropped: 0 };
       }
       if (tel !== null && !telOk) cleanOk = false;
@@ -268,7 +276,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
   }));
 
   // 2: word preedit -> other focus (source must end first) -> prose focus -> space
-  cases.push(await runCase('word_other_back_prose_space', false, async (K, telArm) => {
+  for(let iteration=1;iteration<=repeatCount;iteration++) cases.push(await runCase('word_other_back_prose_space', false, async (K, telArm) => {
     if (!(await is(markEnd(K)))) return false;
     if (!(await is(focusTo(K, 'other')))) return false;
     if (!(await is(sourceEnded(K)))) return false;
@@ -279,7 +287,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
     if (telArm !== null) await telArm();
     await type('space');
     return { prose: PROSE_WORD + ' ', other: '', secret: '', active: 'prose', sinceMark: true };
-  }, spaceTelemetry));
+  }, spaceTelemetry, iteration));
 
   // 3: word preedit -> escape (must end source BEFORE any blur) -> other focus -> space
   cases.push(await runCase('word_escape_other_space', false, async K => {
@@ -303,7 +311,7 @@ export async function runFocusScenarios({ ev, type, reset, spaceTelemetry = null
   }));
 
   return {
-    passed: cases.length === 4 && cases.every(c => c.passed === true),
+    passed: cases.length === 3+repeatCount && cases.every(c => c.passed === true),
     checks: cases.length,
     executedCases: cases.filter(c => c.executed).length,
     cases,

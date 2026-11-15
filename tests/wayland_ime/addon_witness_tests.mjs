@@ -104,3 +104,51 @@ test('core mode requires prior own and core press calibration, not ready flag al
  const p=createAddonWitness({coreEntry:true,query:async()=>coreReply(own,core)});
  assert.equal(await p.begin(),true);assert.equal((await p.sample()).valid,true);
 });
+
+const grabReply=(own=Array(22).fill(1),core=Array(10).fill(1),grab=Array(6).fill(1),coverage=1)=>
+ `([uint32 ${[4,1,...own,2,1,...core,coverage,...grab].join(', ')}],)`;
+test('grab mode rejects missing coverage, old schema and uncalibrated callback',async()=>{
+ assert.equal(parseWitnessReply(grabReply(),true),null);
+ assert.equal(parseWitnessReply(coreReply(),true,true),null);
+ assert.equal(parseWitnessReply(grabReply(undefined,undefined,undefined,0),true,true),null);
+ assert.equal(parseWitnessReply(grabReply(undefined,undefined,Array(6).fill(256)),true,true),null);
+ assert.deepEqual(parseWitnessReply(grabReply(),true,true),Array(38).fill(1));
+ for(const grab of [[0,1,1,1,1,1],[1,0,1,1,1,1]]) {
+  const p=createAddonWitness({grabEntry:true,query:async()=>grabReply(undefined,undefined,grab)});
+  assert.equal(await p.begin(),false);
+ }
+ let n=0;const p=createAddonWitness({grabEntry:true,query:async()=>grabReply(Array(22).fill(1),Array(10).fill(1),Array(6).fill(++n))});
+ assert.equal(await p.begin(),true);assert.deepEqual((await p.sample()).delta,[...Array(32).fill(0),...Array(6).fill(1)]);
+});
+test('bounded repeats create fresh witnesses, preserve cleanup and exact deltas',async()=>{
+ const f=fixture();let factories=0,queries=0;
+ const r=await runFocusScenarios({...f,repeatCount:5,addonWitnessFactory:()=>{
+  factories++;let n=0;return createAddonWitness({query:async()=>{queries++;return reply(Array(22).fill(n++));}});
+ }});
+ assert.equal(r.passed,true);assert.equal(r.checks,8);assert.equal(factories,5);assert.equal(queries,10);
+ const rows=r.cases.filter(c=>c.iteration!==undefined);assert.deepEqual(rows.map(c=>c.iteration),[1,2,3,4,5]);
+ assert.ok(rows.every(c=>c.cleanupPassed&&c.addonWitness.delta.every(n=>n===1)));
+});
+test('repeat validation fails closed and saturation stops further samples',async()=>{
+ for(const repeatCount of [0,6,1.5,'2',null]) {
+  const r=await runFocusScenarios({...fixture(),repeatCount});assert.equal(r.passed,false);assert.equal(r.checks,0);
+ }
+ let factories=0;const r=await runFocusScenarios({...fixture(),repeatCount:5,addonWitnessFactory:()=>{
+  factories++;return createAddonWitness({query:async()=>reply(Array(22).fill(255))});
+ }});
+ assert.equal(r.passed,false);assert.equal(r.cases[1].dataUnusable,true);
+ assert.ok(r.cases.slice(2).every(c=>c.errorCode==='DEPENDENT_NOT_RUN'));
+});
+test('repeating a failing strict row never converts it to pass',async()=>{
+ const r=await runFocusScenarios({...fixture('word_lost'),repeatCount:3});
+ assert.equal(r.passed,false);assert.equal(r.checks,6);
+ assert.ok(r.cases.filter(c=>c.iteration!==undefined).every(c=>c.passed===false));
+});
+
+test('unknown grab callback states make diagnostic interval incomplete',async()=>{
+ let n=0;const p=createAddonWitness({grabEntry:true,query:async()=>{
+  const grab=[1,1,1,1,1,n++];return grabReply(undefined,undefined,grab);
+ }});
+ assert.equal(await p.begin(),true);const r=await p.sample();
+ assert.equal(r.valid,true);assert.equal(r.complete,false);assert.equal(r.delta[37],1);
+});

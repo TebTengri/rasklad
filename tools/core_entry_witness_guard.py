@@ -12,6 +12,8 @@ ROOT=Path(__file__).resolve().parent.parent
 CORE_PATH=Path('/usr/lib/libFcitx5Core.so.5.1.23')
 FRONTEND_PATH=Path('/usr/lib/fcitx5/libwaylandim.so')
 SONAME_PATH=Path('/usr/lib/libFcitx5Core.so.7')
+WAYLAND_PATH=Path('/usr/lib/libwayland-client.so.0.26.0')
+WAYLAND_SONAME_PATH=Path('/usr/lib/libwayland-client.so.0')
 MAX_LOCK_BYTES=16384
 MAX_LIBRARY_BYTES=5_000_000
 
@@ -40,12 +42,14 @@ def validate_core_entry(base,root=ROOT):
     if (not isinstance(lock,dict) or type(lock.get('schema')) is not int or lock['schema']!=1
             or lock.get('arch')!='x86_64' or platform.machine()!='x86_64'):
         raise base.Refused('core_entry_abi_lock')
-    expected={str(CORE_PATH),str(FRONTEND_PATH)}
+    expected={str(CORE_PATH),str(FRONTEND_PATH),str(WAYLAND_PATH)}
     if not isinstance(lock.get('files'),dict) or set(lock['files'])!=expected:
         raise base.Refused('core_entry_abi_paths')
     if not SONAME_PATH.is_symlink() or SONAME_PATH.resolve(strict=True)!=CORE_PATH:
         raise base.Refused('core_entry_soname')
-    for path in (CORE_PATH,FRONTEND_PATH):
+    if not WAYLAND_SONAME_PATH.is_symlink() or WAYLAND_SONAME_PATH.resolve(strict=True)!=WAYLAND_PATH:
+        raise base.Refused('core_entry_wayland_soname')
+    for path in (CORE_PATH,FRONTEND_PATH,WAYLAND_PATH):
         row=lock['files'][str(path)]
         if (not isinstance(row,dict) or not isinstance(row.get('sha256'),str)
                 or not re.fullmatch('[0-9a-f]{64}',row['sha256'])):

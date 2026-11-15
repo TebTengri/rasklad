@@ -1,0 +1,8 @@
+{
+ global:
+  _ZN5fcitx12InputContext8keyEventERNS_8KeyEventE;
+  rasklad_core_entry_snapshot_v1;
+  rasklad_core_entry_snapshot_v2;
+  wl_proxy_add_listener;
+ local: *;
+};

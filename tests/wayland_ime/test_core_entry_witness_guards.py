@@ -110,11 +110,13 @@ class CoreEntryAbi(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);(self.root/'data').mkdir();libs=self.root/'libs';libs.mkdir()
         self.core=libs/'libFcitx5Core.so.5.1.23';self.frontend=libs/'libwaylandim.so';self.soname=libs/'libFcitx5Core.so.7'
+        self.wayland=libs/'libwayland-client.so.0.26.0';self.wayland_soname=libs/'libwayland-client.so.0'
         elf=bytearray(32);elf[:6]=b'\x7fELF\x02\x01';elf[18:20]=b'\x3e\x00'
         self.core.write_bytes(bytes(elf)+b'core');self.frontend.write_bytes(bytes(elf)+b'frontend');self.soname.symlink_to(self.core.name)
-        self.lock={'schema':1,'arch':'x86_64','files':{str(path):{'sha256':hashlib.sha256(path.read_bytes()).hexdigest()} for path in (self.core,self.frontend)}}
+        self.wayland.write_bytes(bytes(elf)+b'wayland');self.wayland_soname.symlink_to(self.wayland.name)
+        self.lock={'schema':1,'arch':'x86_64','files':{str(path):{'sha256':hashlib.sha256(path.read_bytes()).hexdigest()} for path in (self.core,self.frontend,self.wayland)}}
         self.lock_path=self.root/'data/core-entry-witness-lock.json';self.write_lock()
-        for name,path in (('CORE_PATH',self.core),('FRONTEND_PATH',self.frontend),('SONAME_PATH',self.soname)):
+        for name,path in (('CORE_PATH',self.core),('FRONTEND_PATH',self.frontend),('SONAME_PATH',self.soname),('WAYLAND_PATH',self.wayland),('WAYLAND_SONAME_PATH',self.wayland_soname)):
             context=patch.object(guard,name,path);context.start();self.addCleanup(context.stop)
         context=patch.object(guard.platform,'machine',return_value='x86_64');context.start();self.addCleanup(context.stop)
 
@@ -142,6 +144,13 @@ class CoreEntryAbi(unittest.TestCase):
         with self.assertRaisesRegex(REFERENCE.base.Refused,'core_entry_file_bound'):self.validate()
         self.lock_path.unlink();real=self.root/'lock';real.write_text(json.dumps(self.lock));self.lock_path.symlink_to(real)
         with self.assertRaisesRegex(REFERENCE.base.Refused,'symlink'):self.validate()
+
+    def test_changed_wayland_client_or_soname_is_rejected(self):
+        original=self.wayland.read_bytes();self.wayland.write_bytes(b'changed-wayland')
+        with self.assertRaisesRegex(REFERENCE.base.Refused,'core_entry_abi_hash'):self.validate()
+        self.wayland.write_bytes(original)
+        self.wayland_soname.unlink();self.wayland_soname.symlink_to(self.frontend.name)
+        with self.assertRaisesRegex(REFERENCE.base.Refused,'core_entry_wayland_soname'):self.validate()
 
     def test_pinned_non_x86_elf_is_rejected(self):
         payload=bytearray(self.core.read_bytes());payload[18:20]=b'\xb7\x00';self.core.write_bytes(payload)

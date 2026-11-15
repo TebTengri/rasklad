@@ -84,3 +84,12 @@ data/core-entry-witness-preflight-001.json.
 Aggregate counters не идентифицируют пары и не являются трассой каждого
 frontend callback; getter и обёртка могут менять timing. Собственный Fcitx
 и compositor уничтожаются после пробы; Slack и рабочий IME не подключаются.
+
+## Выполненная проба007
+
+Разрешённый один запуск выполнен. Core и addon оба увидели all6/7,
+Space0/1; baseline17, остальные3 focus-сценария, cleanup и живость прошли.
+Следовательно, зарегистрированного press на публичном Core entry в этом
+интервале нет. Причина раньше этой границы пока не установлена. Данные:
+`data/hyprland-core-entry-007-result.json`. Разрешение007 использовано;
+новый план описан в `GRAB-ENTRY-WITNESS-001.md`.

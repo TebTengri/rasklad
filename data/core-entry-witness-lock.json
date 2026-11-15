@@ -7,6 +7,9 @@
     },
     "/usr/lib/fcitx5/libwaylandim.so": {
       "sha256": "bac2cbaf958a8bfacae4d18dfbf6402306dc08c294df073646d9dde40bad30f5"
+    },
+    "/usr/lib/libwayland-client.so.0.26.0": {
+      "sha256": "39c83ae7b73d22f18b4f81da14749c4535c304b7e62910a2f1aae682f279cc9d"
     }
   }
 }
