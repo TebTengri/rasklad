@@ -1,8 +1,8 @@
 # Server
 
-Exact009 emission-to-callback gap unresolved. Epoch discriminator unit/headless preflight PASS; new exact trial not authorized after009.
+Exact010: old-after-done press1, current release1, callback0/1. No current host approval. Next closed wire lifetime primitive, not another unchanged trial.
 
-Статус: exact009_gap_observed
+Статус: exact010_split_generation_observed
 
 ## Файлы
 

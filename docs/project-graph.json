@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "47330fafc26143cd2976599290c0654188cec8b329f4e02f36afb81b425b0d52",
+  "curatedSha256": "8e684b0db0b8873a6bae3aebfdc50062b35698cf0a0570732bc6b148440af7d8",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -39,7 +39,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "3a155ca6afa297b6acb7d59152978d188141bdce068a9489e4fdb12d60f2f6c7",
+    "docs/CONTINUATION-PLAN.md": "e097b0d3dfe01482b36af541b389bcd3698ca19dbd0410267decd69cb01da249",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -61,6 +61,7 @@
     "docs/EXPERIMENT-006-METHOD.md": "c1db14177f9376f4c3a036a2bc0433bcb881a929aaa6a8e36d653693a53df6a6",
     "docs/EXPERIMENT-006-PREREG.md": "7b8b63d34c154ed8f87d632d3ffb7dff13032d8460bd3f9baa1f72e628aad45b",
     "docs/EXPERIMENT-006.md": "9e6a067346f0bb9d482ebef9d62247422baf14868cc56f0d711c3d720ae32f1b",
+    "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md": "5dffcd11d89121a3c8e5c65789f1237378ff926cc25973254996000a83340d92",
     "docs/FCITX-TRANSPORT-001.md": "6ea5b3f33cd342d5484fbdae8ccd8c267a9aa501993da77ad49d3afafc91a2cf",
     "docs/FOCUS-STRESS-PLAN.md": "ea3702e1c6421716eb4625931911daec6938d78fda7b63b59e4cf8a1b9f1ba77",
     "docs/GITHUB_SECURITY.md": "d734268c2c3faf7a67c7ebb2eece700fb4b0e002453a60961c2f3ec018dc3e6f",
@@ -69,12 +70,13 @@
     "docs/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
     "docs/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
     "docs/HYPRLAND-NESTED-PROBE.md": "a80c6a46c9d4445eea2805593b728f523049c294bde161216204e16c0b406459",
+    "docs/INPUT-GRAB-RACE-001.md": "b8dfa881c8edb224c96f86dd617e6a49bccc01b8f2ba60f7cb991509bc8b76c7",
     "docs/INPUT-LAB-001.md": "b34e6588ee761b03a8d2f5de0bbe26f8c26a34492063208d8afac787b0845d1a",
     "docs/INPUT-LAB-002.md": "6d722f2deba59a06c192f7f54d49d1271d613703913c7daa2826d167939d2122",
     "docs/MULTI-MODEL-REVIEW-002.md": "40d09ad9e4c551ac0f998e43f917f805291f565b5cf8b124be2fb92ee8d1ce85",
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
-    "docs/NAVIGATION-TOOLS.md": "d7fd7febf28bd61302067ecac9b6e8a3b04ff154a18873c7857e9bb198edddf0",
+    "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -228,6 +230,11 @@
     "tests/wayland_ime/test_hypr_probe.py": "588c0a1026a360de4e4d532969bdeabc937edfc2ae41d42ab2113c3888970a15",
     "tests/wayland_ime/test_hyprland_ime.py": "542916e0c6eb340271acb4b4d3d0e3e387c98474e8810da4a98c8016c9d63fe3",
     "tests/wayland_ime/test_server_route_witness_guards.py": "90929a1d6db228011466fda350e6316757c856e1a96f21346ed1ee003dbefad5",
+    "tests/wayland_lifecycle/run.py": "53144c47e769ae018221cdb839c12d801051a3a2ee2fb160f872da100d740eb1",
+    "tests/wayland_lifecycle/wire_client.cpp": "f4cfce91a4e682145a9469fd0f22de2249f984407e83711dbad8f6428d01ed0a",
+    "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
+    "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
+    "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
     "tools/audit_natural_router_metrics.py": "50d345858a638529f0ca3880dacaf618351432a8e9a106af13a9ffcdd86f0d16",
@@ -553,6 +560,10 @@
       "symbols": []
     },
     {
+      "path": "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+      "symbols": []
+    },
+    {
       "path": "docs/FCITX-TRANSPORT-001.md",
       "symbols": []
     },
@@ -582,6 +593,10 @@
     },
     {
       "path": "docs/HYPRLAND-NESTED-PROBE.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/INPUT-GRAB-RACE-001.md",
       "symbols": []
     },
     {
@@ -2684,6 +2699,52 @@
       ]
     },
     {
+      "path": "tests/wayland_lifecycle/run.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare",
+          "line": 21,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "limits",
+          "line": 60,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/wayland_lifecycle/wire_client.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/wayland_lifecycle/wire_common.h",
+      "symbols": []
+    },
+    {
+      "path": "tests/wayland_lifecycle/wire_lifecycle.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/wayland_lifecycle/wire_lifecycle.pro",
+      "symbols": []
+    },
+    {
       "path": "tools/audit_context_aggregates.py",
       "symbols": [
         {
@@ -4745,6 +4806,18 @@
       "line": 7
     },
     {
+      "from": "tests/wayland_lifecycle/wire_client.cpp",
+      "to": "tests/wayland_lifecycle/wire_common.h",
+      "kind": "literal_include_or_import",
+      "line": 3
+    },
+    {
+      "from": "tests/wayland_lifecycle/wire_lifecycle.cpp",
+      "to": "tests/wayland_lifecycle/wire_common.h",
+      "kind": "literal_include_or_import",
+      "line": 3
+    },
+    {
       "from": "tools/benchmarkeval.cpp",
       "to": "tools/benchmarkeval.h",
       "kind": "literal_include_or_import",
@@ -5328,22 +5401,23 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "13210d35ba975a8f97146cc4016581ba9c140acb2e2939776b0716bf77303116",
+    "docs/knowledge/Start.md": "952eaecbff3d94ed76e66025ecdc5692c0a3a927a641fb73600760d14979fbd7",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
-    "docs/knowledge/current008.md": "e8951371eb7f0cc24bb45faeec1c5e779162eefa461187330c50e311cb4d2382",
+    "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx.md": "e6f78defb80cff5300eaadc102e7b92d42ac3f352eb5f24cea277cb1323d9ef3",
+    "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",
     "docs/knowledge/licensing.md": "cdba76b8f7ed8a5a8b83c7af3af1b1829b5d42ab070d9f99253843dc3b801655",
+    "docs/knowledge/lifecycle.md": "50885f98a7d4943a430318cfa158626921209a78cf40959a0598faec0fcf31e6",
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
-    "docs/knowledge/server.md": "dbe61021ed5fe48bd3a4f053f715cc151db2e12d127206e07c454605237d0d6d",
+    "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="rasklad_wire_lab_v1">
+  <copyright>Copyright 2026 rasklad contributors. SPDX-License-Identifier: MIT</copyright>
+  <interface name="rasklad_wire_control_v1" version="1">
+    <description summary="closed lifetime experiment">Synthetic private socketpair only. Not an input-method implementation.</description>
+    <request name="get_grab"><arg name="id" type="new_id" interface="rasklad_wire_grab_v1"/></request>
+    <request name="begin"/>
+    <event name="retire"/>
+  </interface>
+  <interface name="rasklad_wire_grab_v1" version="1">
+    <request name="release" type="destructor"/>
+    <event name="key"><arg name="state" type="uint" summary="fixed synthetic Space: 1 press, 0 release"/></event>
+  </interface>
+</protocol>

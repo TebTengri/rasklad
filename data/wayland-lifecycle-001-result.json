@@ -1,0 +1,47 @@
+{
+  "artifactSha256": "64172064aad95d18b702708993d581f56a91839bccea455693a9091a572f5b5e",
+  "fcitxLoaded": false,
+  "gpu": false,
+  "hostDisplay": false,
+  "modes": [
+    {
+      "barrierCompleted": true,
+      "clientPress": 0,
+      "clientRelease": 1,
+      "mode": "drop",
+      "oneLiveGrabInvariant": true,
+      "passed": true,
+      "protocolError": 0,
+      "semanticScope": "Wayland object lifetime only; not a Fcitx fix",
+      "serverPress": 1,
+      "serverRelease": 1
+    },
+    {
+      "barrierCompleted": true,
+      "clientPress": 1,
+      "clientRelease": 1,
+      "mode": "drain",
+      "oneLiveGrabInvariant": true,
+      "passed": true,
+      "protocolError": 0,
+      "semanticScope": "Wayland object lifetime only; not a Fcitx fix",
+      "serverPress": 1,
+      "serverRelease": 1
+    }
+  ],
+  "network": false,
+  "passed": true,
+  "realInput": false,
+  "schema": 1,
+  "scope": "actual libwayland private socketpair with own toy lifecycle protocol; not input-method compatibility or Fcitx fix",
+  "sourceSha256": {
+    "tests/wayland_lifecycle/rasklad-wire-lab-v1.xml": "76403111c459465ec63338dd7ee9cb4c069debdd4c3ecc921d9ab3fdcb98dbe0",
+    "tests/wayland_lifecycle/run.py": "53144c47e769ae018221cdb839c12d801051a3a2ee2fb160f872da100d740eb1",
+    "tests/wayland_lifecycle/wire_client.cpp": "f4cfce91a4e682145a9469fd0f22de2249f984407e83711dbad8f6428d01ed0a",
+    "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
+    "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
+    "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27"
+  },
+  "functionalFcitxFix": false,
+  "authorship": "ClaudeOpus5.5 client; Codex server/launcher/review/error handling; independent helper six-file review, no rerun"
+}

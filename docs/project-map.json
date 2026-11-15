@@ -208,11 +208,11 @@
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Server",
-      "notes": "Exact009 emission-to-callback gap unresolved. Epoch discriminator unit/headless preflight PASS; new exact trial not authorized after009.",
+      "notes": "Exact010: old-after-done press1, current release1, callback0/1. No current host approval. Next closed wire lifetime primitive, not another unchanged trial.",
       "tests": [
         "node --test tests/wayland_ime/server_route_witness_tests.mjs"
       ],
-      "status": "exact009_gap_observed"
+      "status": "exact010_split_generation_observed"
     },
     {
       "id": "licensing",
@@ -242,14 +242,33 @@
       "id": "current008",
       "kind": "evidence_summary",
       "paths": [
+        "docs/INPUT-GRAB-RACE-001.md",
+        "data/hyprland-grab-epoch-010-result.json",
         "data/hyprland-server-route-009-result.json",
         "docs/GRAB-ENTRY-WITNESS-001.md",
         "docs/SERVER-ROUTE-WITNESS-001.md"
       ],
-      "title": "Current009",
-      "notes": "Latest009 gap unresolved. Prepared epoch discriminator has closed/headless PASS; no unused host approval.",
+      "title": "Current010",
+      "notes": "Exact010 split-generation pair observed. Real-wire toy contrast PASS: drop0/1 vsdrain1/1. ActualFcitx repair pending; no unused host approval.",
       "tests": [],
       "status": "historical_evidence"
+    },
+    {
+      "id": "lifecycle",
+      "kind": "implementation_test",
+      "title": "Wire lifecycle contrast",
+      "paths": [
+        "tests/wayland_lifecycle/run.py",
+        "tests/wayland_lifecycle/wire_client.cpp",
+        "tests/wayland_lifecycle/wire_lifecycle.cpp",
+        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+        "data/wayland-lifecycle-001-result.json"
+      ],
+      "tests": [
+        "python3 tests/wayland_lifecycle/run.py"
+      ],
+      "status": "closed_wire_pass_not_fcitx_fix",
+      "notes": "Private actual libwayland socketpair; expected drop0/1 vsdrain1/1; one-server-grab and async barrier. No Fcitx/compositor/host input."
     }
   ],
   "edges": [
@@ -437,6 +456,16 @@
       ],
       "confidence": "explicit",
       "evidence_kind": "documented_contract"
+    },
+    {
+      "from": "lifecycle",
+      "to": "fcitx",
+      "relation": "candidate retirement primitive; actualfrontend repair not implemented",
+      "evidence": [
+        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
     }
   ]
 }

@@ -24,7 +24,7 @@ flowchart TD
   Fcitx --> Chromium[Native Chromium fixture]
   Chromium --> Oracle[Строгие проверки текста / focus / composition]
   AddonDiag[Addon / Core / grab counters] -. наблюдение .-> Fcitx
-  ServerDiag[Server-route009: emission1/1, callback0/1] -. emission attempts .-> Compositor
+  ServerDiag[Server010: old press / new release] -. emission attempts .-> Compositor
 ```
 
 Сплошные стрелки — отношения реализации/тестового пути, проверенные по исходникам.
@@ -56,7 +56,7 @@ flowchart TD
 | Browser input/revision | `browser/README.md`, `browser/adapter.js`, `browser/session.js`, `browser/prosemirror.js` |
 | Fcitx composition/commit | `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/FCITX-TRANSPORT-001.md` |
 | Focus regression | `tests/chromium_ime/adversarial-focus.mjs`, `tests/chromium_ime/driver.mjs`, `docs/HYPRLAND-FOCUS-STRESS-001.md` |
-| Missing Space /009 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
+| Missing Space /010 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
 | Диагностика маршрута server | `docs/SERVER-ROUTE-WITNESS-001.md`, `tools/server_route_witness_guard.py`, `tests/chromium_ime/server-route-witness.mjs` |
 | Разрешения exact trial | `tools/hyprland_ime_lab.py`, `docs/HYPRLAND-IME-001.md`, `SECURITY.md` |
 | Лицензии/новый язык | `LICENSE`, `THIRD_PARTY.md`, `docs/DATA_POLICY.md` |
@@ -73,20 +73,17 @@ flowchart TD
 - Terminal: универсальное исправление произвольной командной строки не доказано.
 - Per-app выключатели: контракт opt-in; новая поддержка по умолчанию выключена.
 
-## Текущий узкий вопрос:009
+## Текущий узкий вопрос:010
 
-Exact009: пять коррелированных повторов case2 `word → other → prose → Space`
-завершились FAIL. Server grab Space emission attempt1/1, ALL-private VK1/2,
-ordinary keyboard0/0. Client grab/Core/addonSpace0/1, all6/7. Coverage полная,
-unknown0. Остальные3focus, baseline17, cleanup и живость compositor PASS.
-Данные: `data/hyprland-server-route-009-result.json`.
+Exact010: пять коррелированных case2 FAIL. Server Space press направлен grab
+с marker до последнего deactivate+done, release — текущему. Unknown0,peakLive1;
+client callback/Core/addon0/1. Остальные3focus/baseline17/cleanup/alive PASS.
+Данные: `data/hyprland-grab-epoch-010-result.json`. Разовый допуск использован.
 
-Разрыв после server emission attempt и до callback. Emission не доказывает
-socket transmission; ресурс/поколение не идентифицированы. Гипотеза уничтожения
-старого grab пока не доказана. Следующий кандидат — ограниченная metadata
-классификация old-generation после deactivate/done, сначала closed preflight.
-Разрешение009 использовано; новое host окно автоматически не открывать.
-Повторы одного сеанса не являются IID; согласие моделей не является исправлением.
+Закрытый real-libwayland toy control воспроизводит drop0/1 и drain1/1 при
+server1/1, one-live-grab и async barrier. Это object-lifetime primitive,
+НЕ Fcitx fix и не доказательство его client discard. Следующий actualfrontend
+experiment: `docs/FCITX-DRAIN-EXPERIMENT-PLAN.md`. Нет нового host допуска.
 
 ## Проверки и их зависимости
 

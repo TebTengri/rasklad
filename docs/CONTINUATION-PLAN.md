@@ -8,26 +8,26 @@
 
 ## Актуальная контрольная точка
 
-Exact проба009 выполнена по отдельному разовому разрешению, оно использовано.
-Все5 коррелированных повторов case2 FAIL. Server witness complete/valid:
-ALL-private VK Space1/2, grab emission attempt1/1, ordinary keyboard0/0,
-unknown0. Client grab/Core/addonSpace0/1, all6/7. DOMtrace пустая,
-primary/late/post0. Baseline17, прочие3focus, cleanup и живость compositor PASS.
-Данные: data/hyprland-server-route-009-result.json. Исходники соответствуют
-preflight; installed компоненты и рабочие настройки не менялись.
+Exact010 выполнена, разовый допуск использован. Все5 case2 FAIL:
+server old-after-deactivate-done press1/release0, currentpress0/release1,
+server emission1/1, client callback/Core/addon0/1, unknown0,peakLive1.
+Остальные3focus/baseline17/cleanup/compositor alive PASS. Это наблюдаемая
+server split-generation пара, не прямое измерение client discard.
+Данные data/hyprland-grab-epoch-010-result.json; анализ/ограничения:
+docs/INPUT-GRAB-RACE-001.md, source pins data/ime-source-review-010.json.
 
-Разрыв находится после server emission attempt и до client grab callback.
-Logger вызывается до send/queue, поэтому это не доказательство socket delivery.
-Счётчики не определяют ресурс/поколение, гипотеза destroyed old grab пока
-не доказана. Следующий узкий discriminator: определить, послан ли press grab,
-созданному до последнего deactivate/done, без текста/ID/сырого протокольного лога.
-Epoch discriminator подготовлен:91 Python/24 reader/27 epoch unit/22 schema1
-regression PASS;112B filesystem reader PASS. Headless Sway baseline17/focus8
-PASS:5target rows old0/0,current1/1,unknown0/0,peakLive1. Контракт/источники:
-docs/SERVER-GRAB-EPOCH-001.md,data/server-grab-epoch-preflight-001.json.
-Новая exact проба с --grab-epoch-witness ещё не разрешена.
-Нового host-разрешения нет;008/009 автоматически не повторять.
-Slack/native integration ещё не готова; цель не завершена.
+Следующий шаг — реальный closed Wayland object-lifetime contrast через
+socketpair с собственным toy protocol: destructor vs release+client-drain
+до async sync barrier, server one-live-grab. tests/wayland_lifecycle/run.py
+по умолчанию инертен. Wire control завершён: real libwayland server1/1, dropcallback0/1, drain1/1,
+async barrier/one-live-grab PASS. Отчёт data/wayland-lifecycle-001-result.json.
+Claude5.5 client, Codex server/launcher/review, independent six-file review
+без блокеров. Это не Fcitx fix. Следующий actualfrontend experiment:
+docs/FCITX-DRAIN-EXPERIMENT-PLAN.md (generatedwrapper lifetime, sameeventqueue,
+VK readiness, rawkeys/focus/password/keypair gates). Сборка/патч ещё не сделаны. Никаких raw-proxy hooks под
+освобождённым C++ объектом, replay/sleep/clipboard или system config changes.
+Нового host допуска после010 нет. Slack/native integration ещё не готова;
+цель не завершена.
 
 ## Предыдущие контрольные точки (история)
 
