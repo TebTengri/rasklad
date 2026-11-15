@@ -36,14 +36,14 @@ screen; no result here proves them or compatibility with existing IMEs.
 
 Run `python3 -m unittest discover -s tests/handoff_screen -v` and
 `python3 tests/handoff_screen/run.py --run`. The latter defaults to inert without
-`--run`. Eleven tests passed. Enumeration covers 11,110 command prefixes up to
+`--run`. Twelve tests passed. Enumeration covers 11,110 command prefixes up to
 length four, including continuations after terminal rejection; these are not
 11,110 distinct reachable states or an unbounded correctness proof. The oracle
 checks both target and grab pairing in the delivery-binding trace, queue bounds,
 stale/unacknowledged dispatch and terminal trace stability.
 
-The nine fixed aggregate scenarios contain three accepted delivery cases and six
-explicit rejection cases. Rejection must never be counted as preserved input.
+The ten fixed aggregate scenarios contain three accepted delivery cases, six
+explicit rejection cases and one missing-ack case that stays pending. Rejection must never be counted as preserved input.
 A rejected held-target/grab switch leaves a delivered press without a delivered
 release in its prefix; the screen makes no successful cleanup/cancellation claim.
 Same-target replacement after an undelivered queued press is allowed; replacement
@@ -63,3 +63,6 @@ runner and fixed result checks. An independent agent reviewed the contract and
 code statically, found no concrete reachable acceptance counterexample within the
 scope and identified reporting/oracle limits. Codex strengthened the oracle to
 include grab identity; reviewer executed no tests.
+
+Existing protocol/source mapping and the missing-ack gap:
+`docs/HANDOFF-PROTOCOL-MAPPING-001.md`. Pending is not successful delivery.

@@ -16,6 +16,11 @@ class HandoffTests(unittest.TestCase):
         self.assertEqual(m.trace,[('A','K','press'),('A','K','release')])
         self.assertFalse(m.delivered)
 
+    def test_missing_ack_stays_pending_without_liveness_claim(self):
+        m=ScreeningModel();m.offer('A','g1');m.key('K','press');m.key('K','release')
+        self.assertEqual(m.outcome(),Outcome.AWAITING_ACK)
+        self.assertEqual(m.trace,[]);self.assertEqual(len(m.queue),2)
+
     def test_same_target_new_grab_before_queued_press_delivery(self):
         m=ScreeningModel();old=m.offer('A','g1');m.key('K','press')
         new=m.offer('A','g2');m.ack(old,'A','g1');self.assertFalse(m.trace)

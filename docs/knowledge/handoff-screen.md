@@ -1,6 +1,6 @@
 # Cooperative IME handoff symbolic screen
 
-Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof.
+Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases plus1 pending case;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof.
 
 Статус: symbolic_contract_only_not_transport_fix
 
@@ -11,6 +11,7 @@ Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6
 - `tests/handoff_screen/test_model.py`
 - `tests/handoff_screen/run.py`
 - `data/handoff-screen-001-result.json`
+- `docs/HANDOFF-PROTOCOL-MAPPING-001.md`
 
 ## Связи
 

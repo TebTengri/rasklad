@@ -4,9 +4,9 @@ Claude Opus5.5 returned a small pure symbolic model; Codex added delivered-key
 ownership and rejected silent held-state grab migration, added regressions and
 aggregate runner. Independent contract/code review found no scoped acceptance
 counterexample; reporting limitations addressed, oracle checks target AND grab.
-11 tests PASS;11110 command prefixes length<=4 (incl terminal no-op continuations,
-not distinct states/unbounded proof). Nine fixed cases:3 accepted delivery,
-6 explicit rejections. Held-target and held-grab switches remain unsupported,
+12 tests PASS;11110 command prefixes length<=4 (incl terminal no-op continuations,
+not distinct states/unbounded proof). Ten fixed cases:3 accepted delivery,
+6 explicit rejections,1 missing-ack pending. Held-target and held-grab switches remain unsupported,
 with an outstanding delivered press; do not claim lossless cleanup or fix.
 Data: data/handoff-screen-001-result.json. Scope/commands/authorship:
 tests/handoff_screen/README.md. No real transport/Fcitx/desktop/network in screen.
@@ -14,9 +14,13 @@ tests/handoff_screen/README.md. No real transport/Fcitx/desktop/network in scree
 Pinned input-method XML commit serial describes done count/text state, not explicit
 target/grab/held-state binding; compositor may not further process forwarded keys.
 Invented ack in model is a hypothetical cooperative contract, not existing API.
-NEXT: map this contract to actual sender/IME ordering in existing protocol and
-identify what requires additional cooperation BEFORE inventing another wire
-protocol or making compositor patches. Keep modifier/keymap, repeat, timeout,
+Protocol mapping complete at source level: docs/HANDOFF-PROTOCOL-MAPPING-001.md.
+No unconditional Fcitx readiness reply established; forced preedit/commit path is
+realFocus-dependent. Pinned activated done creates grab before preedit update,
+a possible ordered signal but no generic API or runtime guarantee.
+NEXT: design an explicitly negotiated pinned-client handoff experiment with
+bounded missing-ack outcome and held-state cancellation; do not stall arbitrary
+IMEs waiting for an optional commit. Full runtime remains ownership-blocked. Keep modifier/keymap, repeat, timeout,
 disconnect, identity incarnation and active field loss explicit gaps. No new
 host permissions; do not loosen runtime ownership gate or replay to current field.
 

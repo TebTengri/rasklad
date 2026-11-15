@@ -120,6 +120,9 @@ def _result(m, **extra):
 
 def run_cases():
     r = {}
+    m = ScreeningModel(); m.offer("A", "g1")
+    m.key("K", "press"); m.key("K", "release")
+    r["missing_ack_pending"] = _result(m, pending=len(m.queue))
     m = ScreeningModel(); e = m.offer("A", "g1")
     m.key("K", "press"); m.key("K", "release"); m.ack(e, "A", "g1")
     r["same_target_race_pair"] = _result(m)

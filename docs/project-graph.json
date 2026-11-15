@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "c7bc86104398eae503f21a8d3e683b4fe94d0702394379b4fdae2877307adb67",
+  "curatedSha256": "3442ced6d7479d0edd9ad688c2c22419059386d2b46a2862cbd2b68394dda517",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -39,7 +39,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "7497a6d5cae8f15b0eda1ba0a8ef88c7ebcd4ffa0c54eb07fff79a4501e9f236",
+    "docs/CONTINUATION-PLAN.md": "701dba13d257a63ed94a09d3292d0f62eb9a6daa50df51fcbc866c7fcefc309f",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -67,6 +67,7 @@
     "docs/FOCUS-STRESS-PLAN.md": "ea3702e1c6421716eb4625931911daec6938d78fda7b63b59e4cf8a1b9f1ba77",
     "docs/GITHUB_SECURITY.md": "d734268c2c3faf7a67c7ebb2eece700fb4b0e002453a60961c2f3ec018dc3e6f",
     "docs/GRAB-ENTRY-WITNESS-001.md": "4d74cdc97ff913475bf5a57bfbd5bb46337e48668bf1095948a7810d6ceccca7",
+    "docs/HANDOFF-PROTOCOL-MAPPING-001.md": "457598557041f29fc96a33d8e324f9329cab5c4304cd777d270dedd05a34d9e8",
     "docs/HYPRLAND-BACKEND-DIAGNOSIS.md": "9b5a7ca45c17a7a89d87e30e7790c918a8a0541f945f3f6f6335b9152ab8c401",
     "docs/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
     "docs/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
@@ -190,10 +191,10 @@
     "tests/fcitx_transport/server_route_unit.py": "5e704aff0aea66fae740bfe3ee8d3ed4bdd0e73904eaee1e26d728ce900ea9fc",
     "tests/fcitx_transport/test_runner.py": "f7ef659357d8911495c67fb24c6da32de8d86c373474bbce80ce77ca1ff5fc13",
     "tests/fcitx_transport/witness_guard.cpp": "8f7ae9296aaefe3e52887ab99bfbc8a27dc0e6c07b29615ee71883fb358511c2",
-    "tests/handoff_screen/README.md": "44b94db530b5e16977941b053ffa1d49470d83e026fa79abd560f78fe6637cd1",
-    "tests/handoff_screen/model.py": "8836dd76adca0456661d9e2e3f41d334a67bd0ee5fb8846ae47cfed9097e2ab4",
-    "tests/handoff_screen/run.py": "96c7dd441a3e8d5b1bbd272e7e961a21b669d905a8adc66f3015635a22d7e9c1",
-    "tests/handoff_screen/test_model.py": "f4198e5687ed95401192e040a07254b50964acfb7f3f900778027c35be3d4e4a",
+    "tests/handoff_screen/README.md": "a0c6d090462df39e59449d3644ec47e76d4abc5a27213785984c4e1bd4768a53",
+    "tests/handoff_screen/model.py": "a993d324562924c5fa3b12a1f73c4c82d886a707433aafc4ee40324597f0e06c",
+    "tests/handoff_screen/run.py": "437ae859c54742815c2600c4cd1b257891543cb5ddb845df7dafec2495c6682f",
+    "tests/handoff_screen/test_model.py": "63799b6fb40e9e4b4ea8edbdad4ad5a2ca98a46fc77e9ae62c496d5cd9d44fcb",
     "tests/input_lab/input_lab_tests.pro": "6d70832b97736d21f3f1116ea4bdd859f928330404d9cc9fb2e47e0092f5685e",
     "tests/input_lab/labclient.cpp": "b4b23ba518075fbaf34c65f4193f5022678b9468f3c2a32ba2a29b45f63b7a82",
     "tests/input_lab/labclient.h": "2db9e014d554343cf06dd973ce14c25f627c3bf862591ef3763e4b25b8cc6bcd",
@@ -596,6 +597,10 @@
     },
     {
       "path": "docs/GRAB-ENTRY-WITNESS-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/HANDOFF-PROTOCOL-MAPPING-001.md",
       "symbols": []
     },
     {
@@ -1529,53 +1534,58 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_same_target_new_grab_before_queued_press_delivery",
+          "name": "test_missing_ack_stays_pending_without_liveness_claim",
           "line": 19,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_same_target_new_grab_before_queued_press_delivery",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_persistent_same_grab_preserves_held_pair",
-          "line": 25,
+          "line": 30,
           "kind": "FunctionDef"
         },
         {
           "name": "test_delivered_press_cannot_silently_move_to_new_grab",
-          "line": 32,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "test_queued_switch_rejects_without_replay",
           "line": 37,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_held_switch_rejects_before_new_target_acceptance",
+          "name": "test_queued_switch_rejects_without_replay",
           "line": 42,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_held_switch_rejects_before_new_target_acceptance",
+          "line": 47,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_overflow_rejects_without_flushing",
-          "line": 48,
+          "line": 53,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_ack_before_offer_or_boolean_epoch",
-          "line": 55,
+          "line": 60,
           "kind": "FunctionDef"
         },
         {
           "name": "test_target_roundtrip_does_not_accept_old_ack",
-          "line": 59,
+          "line": 64,
           "kind": "FunctionDef"
         },
         {
           "name": "test_duplicate_press_and_unmatched_release_reject",
-          "line": 65,
+          "line": 70,
           "kind": "FunctionDef"
         },
         {
           "name": "test_exhaustive_short_traces",
-          "line": 71,
+          "line": 76,
           "kind": "FunctionDef"
         }
       ]
@@ -5751,7 +5761,7 @@
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",
-    "docs/knowledge/handoff-screen.md": "9d228221e695901b905dcdf80401e46b7f9a3666c8114d39b1cc411ca40993a8",
+    "docs/knowledge/handoff-screen.md": "b3b532b4747cc4faca38e4070eee025681782995c0864e21adf1305a6333bde4",
     "docs/knowledge/licensing.md": "cdba76b8f7ed8a5a8b83c7af3af1b1829b5d42ab070d9f99253843dc3b801655",
     "docs/knowledge/lifecycle.md": "50885f98a7d4943a430318cfa158626921209a78cf40959a0598faec0fcf31e6",
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",

@@ -7,6 +7,7 @@ from model import run_cases
 
 def run():
     expected={
+        'missing_ack_pending':('awaiting_ack',0,0),
         'same_target_race_pair':('active',1,1),
         'stale_ack':('active',1,1),
         'persistent_rebind':('active',1,1),
@@ -27,7 +28,7 @@ def run():
         rows.append({'case':name,'outcome':case['outcome'],'deliveredPresses':press,
                      'deliveredReleases':release,'acceptedDelivery':case['outcome']=='active'})
     return {'schema':1,'scope':'pure cooperative symbolic contract screen; no protocol compatibility',
-            'expectedScreenOutcomesMatched':True,'acceptedDeliveryCases':3,'explicitRejectionCases':6,
+            'expectedScreenOutcomesMatched':True,'acceptedDeliveryCases':3,'explicitRejectionCases':6,'pendingCases':1,
             'functionalFix':False,'realWire':False,'fcitxStarted':False,'compositorStarted':False,
             'cases':rows,'missing':['timeouts','target incarnation reuse','keymap/modifier coherence',
                                   'repeat','disconnect/shutdown','real protocol binding']}

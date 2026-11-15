@@ -2,6 +2,13 @@
   "acceptedDeliveryCases": 3,
   "cases": [
     {
+      "acceptedDelivery": false,
+      "case": "missing_ack_pending",
+      "deliveredPresses": 0,
+      "deliveredReleases": 0,
+      "outcome": "awaiting_ack"
+    },
+    {
       "acceptedDelivery": true,
       "case": "same_target_race_pair",
       "deliveredPresses": 1,
@@ -78,10 +85,11 @@
     "disconnect/shutdown",
     "real protocol binding"
   ],
+  "pendingCases": 1,
   "realWire": false,
   "schema": 1,
   "scope": "pure cooperative symbolic contract screen; no protocol compatibility",
-  "unitTestsPassed": 11,
+  "unitTestsPassed": 12,
   "enumeratedCommandPrefixes": 11110,
   "maxPrefixLength": 4,
   "enumerationLimit": "includes terminal no-op continuations; not distinct reachable states or unbounded proof",

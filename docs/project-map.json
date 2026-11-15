@@ -311,14 +311,15 @@
         "tests/handoff_screen/model.py",
         "tests/handoff_screen/test_model.py",
         "tests/handoff_screen/run.py",
-        "data/handoff-screen-001-result.json"
+        "data/handoff-screen-001-result.json",
+        "docs/HANDOFF-PROTOCOL-MAPPING-001.md"
       ],
       "tests": [
         "python3 -m unittest discover -s tests/handoff_screen -v",
         "python3 tests/handoff_screen/run.py --run"
       ],
       "status": "symbolic_contract_only_not_transport_fix",
-      "notes": "Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof."
+      "notes": "Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases plus1 pending case;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof."
     }
   ],
   "edges": [
