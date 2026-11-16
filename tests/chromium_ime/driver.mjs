@@ -66,8 +66,18 @@ try{
   const rawOffset=await ev('imeEvents.length');
   phase='disable_passthrough';await type('word');await type('space');
   report.disableRawPassthrough=await ev(`prose.value==='ghbdtn '&&!imeEvents.slice(${rawOffset}).some(x=>x.type==='compositionstart')`);
+  phase='on_mid_token';await type('word');
+  const onOffset=await ev('imeEvents.length');
+  await type('lab-on');await type('word');await type('space');
+  report.onMidTokenPreserved=await ev(`prose.value==='ghbdtn ghbdtnghbdtn '&&!imeEvents.slice(${onOffset}).some(x=>x.type==='compositionstart')`);
+  const resumedOffset=await ev('imeEvents.length');
+  phase='on_new_word';await type('word');await type('space');
+  report.onNewWordCorrected=await ev(`prose.value==='ghbdtn ghbdtnghbdtn привет '&&imeEvents.slice(${resumedOffset}).some(x=>x.type==='compositionstart'&&x.trusted)`);
+  phase='off_again';await type('lab-off');
+  const offAgainOffset=await ev('imeEvents.length');await type('hello');
+  report.offAgainPassthrough=await ev(`prose.value==='ghbdtn ghbdtnghbdtn привет hello '&&!imeEvents.slice(${offAgainOffset}).some(x=>x.type==='compositionstart')`);
   report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
-  const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo'];
+  const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo','onMidTokenPreserved','onNewWordCorrected','offAgainPassthrough'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else{
  await reset();phase='word';await type('word');

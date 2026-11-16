@@ -124,6 +124,7 @@
 #include <cstring>
 #include <cstdint>
 #include <memory>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -192,13 +193,14 @@ public:
     void invalidate() { ++epoch; callbackBinding->epoch = epoch; lease = {}; }
     const std::uint64_t id;
     std::uint64_t epoch = 1;
+    // Survives lifecycle invalidation: an On transition must never capture
+    // a suffix of raw input typed while Off, including in a later new context.
+    std::uint64_t resumeGeneration = 0;
+    bool needsBoundary = false;
     policy::Lease lease;
     std::shared_ptr<policy::CompositionDisable> disable =
         std::make_shared<policy::CompositionDisable>();
     policy::CompositionDisable::Token generation = 0;
-#ifdef RASKLAD_DISABLE_TEST_LAB
-    bool testOffSent = false;
-#endif
 
 
     bool stopping() const {
@@ -575,6 +577,54 @@ private:
         }
     }
 
+    // Owned-fixture lifecycle operation; synthetic LAB trigger only, no user UI.
+    // Inspect and stage on the event thread, with no client callbacks between
+    // these phases. An uncertain original blocks the entire family.
+    bool requestLabOn() {
+        if (!registered_ || !manager_ || !familyOff_ || !permissions_.ready())
+            return false;
+        std::vector<LabState *> targets;
+        bool safe = true;
+        manager_->foreach([&](fcitx::InputContext *candidate) {
+            bool matches = false;
+            for (const auto &adapter : kFixtureAdapters)
+                if (candidate->program() == adapter.id) matches = true;
+            if (matches) {
+                auto *s = state(candidate);
+                if (!s) { safe = false; return true; }
+                const auto phase = s->disable->state();
+                if ((phase != policy::CompositionDisable::State::Disabled &&
+                     phase != policy::CompositionDisable::State::Idle) ||
+                    !s->empty() || s->preeditShown()) safe = false;
+                targets.push_back(s);
+            }
+            return true;
+        });
+        if (!safe || resumeGeneration_ == std::numeric_limits<std::uint64_t>::max())
+            return false; // Generation exhaustion keeps the family Off.
+        for (const auto &adapter : kFixtureAdapters) {
+            if (!permissions_.enable(adapter.applicationId)) {
+                // Revision exhaustion permanently fails closed. Never expose
+                // partially enabled aliases, even if publication fails midway.
+                for (const auto &alias : kFixtureAdapters)
+                    permissions_.revoke(alias.applicationId);
+                return false;
+            }
+        }
+        for (auto *s : targets) {
+            s->invalidate(); // No stale lease survives the permission revision.
+            s->clearBuffer();
+            s->generation = 0;
+            s->setBypass(false);
+            if (s->disable->state() == policy::CompositionDisable::State::Disabled)
+                s->disable->enable();
+            // Pending consumed releases remain drainable after re-enable.
+        }
+        ++resumeGeneration_;
+        familyOff_ = false;
+        return true;
+    }
+
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
         std::string w = s.word();
         fcitx::Text text;
@@ -708,9 +758,9 @@ private:
         if (familyOff_) {
 #ifdef RASKLAD_DISABLE_TEST_LAB
             const char *testFlag = std::getenv("RASKLAD_DISABLE_TEST_LAB");
-            const bool repeatTestOff = testFlag && std::strcmp(testFlag, "1") == 0 &&
-                !key.hasModifier() && key.sym() == FcitxKey_F12;
-            if (!repeatTestOff) return;
+            const bool testControl = testFlag && std::strcmp(testFlag, "1") == 0 &&
+                !key.hasModifier() && (key.sym() == FcitxKey_F12 || key.sym() == FcitxKey_F10);
+            if (!testControl) return;
 #else
             return;
 #endif
@@ -755,13 +805,11 @@ private:
         // not user shortcuts. No default artifact contains this branch.
         if (std::getenv("RASKLAD_DISABLE_TEST_LAB") &&
             std::strcmp(std::getenv("RASKLAD_DISABLE_TEST_LAB"), "1") == 0 &&
-            !key.hasModifier() && key.sym() == FcitxKey_F12) {
+            !key.hasModifier() && (key.sym() == FcitxKey_F12 || key.sym() == FcitxKey_F10)) {
             s->addPending(key);
             event.filterAndAccept();
-            if (!s->testOffSent) {
-                s->testOffSent = true;
-                requestLabOff(ic, *s);
-            }
+            if (key.sym() == FcitxKey_F12) requestLabOff(ic, *s);
+            else requestLabOn();
             return;
         }
 #endif
@@ -777,6 +825,14 @@ private:
         const bool plain = !key.hasModifier();
         const bool boundary = plain && (sym == FcitxKey_space ||
             sym == FcitxKey_Tab || sym == FcitxKey_Return || sym == FcitxKey_KP_Enter);
+        if (s->resumeGeneration != resumeGeneration_) {
+            s->resumeGeneration = resumeGeneration_;
+            s->needsBoundary = true;
+        }
+        if (s->needsBoundary) {
+            if (boundary) s->needsBoundary = false;
+            return; // The delimiter itself and all preceding presses stay raw.
+        }
         // Never begin correcting a suffix of a token already passed through.
         // Mixed tokens, punctuation and overflow bypass until a safe delimiter.
         if (s->bypass()) {
@@ -866,6 +922,7 @@ private:
     fcitx::InputContextManager *manager_;
     policy::ApplicationPermissions permissions_{kFixtureRegistry};
     bool familyOff_ = false;
+    std::uint64_t resumeGeneration_ = 0;
 #ifdef RASKLAD_PROFILE_LAB
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
 #endif

@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Shared owned-family Off integrated and tested, fresh per-app permission revisions; watcher retirement/re-enable/UI and real-app identity remain open.
+Shared owned-family Off and controlled On tested; resume boundary prevents suffix correction. Resource retirement/UI and real-app identity remain open.
 
 Статус: source_contract_or_implementation
 
@@ -29,6 +29,7 @@ Shared owned-family Off integrated and tested, fresh per-app permission revision
 - `data/application-permissions-001-result.json`
 - `tests/fcitx_transport/application_off_tests.cpp`
 - `data/application-off-001-result.json`
+- `data/application-on-001-result.json`
 
 ## Связи
 

@@ -13,7 +13,17 @@ struct ApplicationOffTest {
         if (release) require(event.filtered());
         return event.filtered();
     }
+    static bool delimiter(RaskladLab &lab, fcitx::InputContext *ic) {
+        fcitx::KeyEvent event(ic, fcitx::Key(FcitxKey_space));
+        lab.handleKey(event);
+        return event.filtered();
+    }
+    static void reset(RaskladLab &lab, fcitx::InputContext *ic) {
+        RaskladLab::discard(ic, state(lab, ic));
+    }
     static void off(RaskladLab &lab, fcitx::InputContext *ic) { lab.requestLabOff(ic, state(lab, ic)); }
+    static auto context(fcitx::InputContext *ic, const LabState &s) { return RaskladLab::fixtureContext(ic, s); }
+    static bool on(RaskladLab &lab) { return lab.requestLabOn(); }
     static auto permission(RaskladLab &lab, const char *id) { return lab.permissions_.snapshot(id); }
 };
 class Context final : public fcitx::InputContext {
@@ -47,10 +57,13 @@ void scenario(int mode) {
     require(ApplicationOffTest::state(lab, second.get()).word() == "a");
     auto operation1 = ApplicationOffTest::state(lab, first.get()).disable;
     auto operation2 = ApplicationOffTest::state(lab, second.get()).disable;
+    const auto oldLease = ApplicationOffTest::state(lab, first.get()).lease;
+    const auto oldPermission = ApplicationOffTest::permission(lab, kLabProgram);
     unsigned callbacks = 0;
     std::unique_ptr<Context> fresh;
     auto callback = [&] {
         ++callbacks;
+        require(!ApplicationOffTest::on(lab)); // InFlight blocks family re-enable.
         require(ApplicationOffTest::permission(lab, kLabProgram).mode == policy::Mode::Off);
         require(ApplicationOffTest::permission(lab, "chromium-browser").mode == policy::Mode::Off);
         // Both controllers must already be stopped before the first write.
@@ -93,6 +106,37 @@ void scenario(int mode) {
     require(callbacks == (mode != 0 ? 1U : 2U));
     require(!ApplicationOffTest::key(lab, fresh.get()));
     require(ApplicationOffTest::state(lab, fresh.get()).empty());
+    if (mode < 2) {
+        require(ApplicationOffTest::on(lab));
+        const auto permission = ApplicationOffTest::permission(lab, kLabProgram);
+        require(permission.mode == policy::Mode::Automatic);
+        require(permission.revision > oldPermission.revision);
+        require(ApplicationOffTest::permission(lab, "chromium-browser").mode == policy::Mode::Automatic);
+        auto createdAfterOn = std::make_unique<Context>(manager, "chromium-browser");
+        for (auto *context : {remaining, fresh.get(), createdAfterOn.get()}) {
+            require(!ApplicationOffTest::key(lab, context));
+            require(ApplicationOffTest::state(lab, context).empty());
+            ApplicationOffTest::reset(lab, context);
+            require(!ApplicationOffTest::key(lab, context));
+            require(ApplicationOffTest::state(lab, context).empty());
+            require(!ApplicationOffTest::delimiter(lab, context));
+            require(ApplicationOffTest::key(lab, context));
+            require(ApplicationOffTest::state(lab, context).word() == "a");
+        }
+        const auto &state = ApplicationOffTest::state(lab, remaining);
+        const auto context = ApplicationOffTest::context(remaining, state);
+        require(state.lease.valid && state.lease.permissionRevision == permission.revision);
+        require(!policy::revalidateCorrection(kFixtureRegistry, permission, context, oldLease).allowed());
+        require(state.word() == "a");
+    } else {
+        auto *deferred = first->writes ? second.get() : first.get();
+        const auto original = ApplicationOffTest::state(lab, deferred).word();
+        require(original == "a");
+        require(!ApplicationOffTest::on(lab));
+        require(ApplicationOffTest::state(lab, deferred).word() == original);
+        require(ApplicationOffTest::permission(lab, kLabProgram).mode == policy::Mode::Off);
+        require(!ApplicationOffTest::key(lab, fresh.get()));
+    }
 }
 }
-int main() { for (int i=0; i<5; ++i) scenario(i); std::cout << "PASS: shared fixture family Off, callback creation/destruction/reentry, release drain\n"; }
+int main() { for (int i=0; i<5; ++i) scenario(i); std::cout << "PASS: 5 shared family Off/On scenarios, callback rejection, resume boundaries across reset/new contexts, fresh revisions, deferred preservation, release drain\n"; }

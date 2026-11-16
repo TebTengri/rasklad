@@ -1,3 +1,24 @@
+## 2026-11-16 — controlled On + full Off/On/Off E2E PASS
+
+Internal requestLabOn rejects any Pending/InFlight/Deferred/nonempty/preedit
+target; callback-free inspection then fresh permission revisions and epoch
+invalidation. Releases retained. Reviewer caught midtoken suffix correction:
+fixed dedicated resumeGeneration/needsBoundary preserved through reset, applies
+to existing and future contexts afterOn. Only plain safe delimiter resumescapture.
+Five SDK Off/On modes ASan+LSanPASS, oldlease denied. Separate LAB F10 On + F12 Off
+only guarded artifact, no user UI/endpoint. Off repeat afterOn works.
+
+Closed owned fullcycle8/8PASS inclrawprefix+On+rawtail unchanged, nextwordcorrected,
+secondOffraw, originalUndo. Normal18+focus4PASS afterOn gate. 60runnerguardsPASS.
+Independent On/lifetime/resume/driver review foundno blockers afterfix. Evidence
+data/application-on-001-result.json. Updated AGENTS autonomy peruser: checkpoints
+are not a reason to await 'continue'; no background promises afterfinalresponse.
+NEXT: resource ownership and subscription lifecycle / minimal deployable opt-in
+backend and appidentity plan. No realapp/UI readyclaim; watchers stillsubscribed
+(eventdriven fastpath, no polling). No host approval(active): exact011 consumed.
+No Slack, privateprofiles, installedIME/config/autostart changes. DraftPR17 and
+SYS246 remaininprogress. Read compact map rather than wholehistory.
+
 ## 2026-11-16 — shared family Off integrated and verified
 
 Current branch SYS-242/message-adapter /tmp/rasklad-message-adapter. Shared

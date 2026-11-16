@@ -239,3 +239,33 @@ ASan+LSan pass. Reset проверяет invalidation напрямую, не eve
 Обычный binary не содержит test flag marker, отдельный test addon содержит.
 Доступы и лицензии не расширены; UI/production app registry/On/preferences
 и снятие watchers не реализованы. Пользовательский режим не включён.
+
+## Контролируемый On и защита границы слова
+
+Внутренний requestLabOn сначала без callbacks проверяет все matching states:
+допустимы только пустые Disabled/Idle без preedit; Pending/InFlight/Deferred
+или retained original запрещают включение всей family. Затем выдаются новые
+permission revisions, инвалидируются старые epochs/leases и снимается общий Off.
+Consumed releases не очищаются. При переполнении revisions/generation — failclosed.
+
+Независимое ревью обнаружило дефект первой версии: включение посреди raw слова
+позволяло захватить и исправить только хвост. Исправлено отдельным resumeGeneration
+и needsBoundary, независимым от bypass: после On все существующие и новые
+контексты пропускают raw presses до plain Space/Tab/Return/KPEnter. Delimiter
+не поглощается. Lifecycle reset/discard сохраняет защиту. Initial fixture startup
+generation0 не меняется. До первого разрешённого delimiter capture не начинается.
+
+Пять SDK Off/On сценариев проходят ASan+LSan: On из commit callback отклоняется;
+после успешного Off выдаются свежие revisions, old lease невалидна; существующие,
+ранее созданные и новые после On контексты проходят delimiter guard даже через
+reset; unresolved original блокирует On. Присутствует только synthetic LAB F10
+триггер в отдельном disable-addon; F12 Off теперь повторяем после On. В обычной
+сборке нет этих команд, настроек или публичного endpoint.
+
+Owned Sway/Chromium full cycle прошёл 8/8: Off сохраняет original, duplicate
+не вставляет его снова, native Undo отменяет original; rawprefix при Off + On
++ rawtail не исправляются и не начинают composition, следующее целое слово
+исправляется, повторный Off возвращает raw passthrough. В измерении нет DOM
+записей/скриптовых events/CDP typing; source provenance reviewed. Normal input
+после добавления On gate также прошёл 18+focus4. Watcher retirement/UI/production
+identity и гарантия доставки остаются отдельными границами.

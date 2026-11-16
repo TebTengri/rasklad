@@ -226,7 +226,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -242,6 +242,7 @@ Cmd parse(std::string_view line)
     if (line == "escape") return Cmd::Escape;
     if (envIs("RASKLAD_DISABLE_TEST_LAB", "1")) {
         if (line == "lab-off") return Cmd::LabOff;
+        if (line == "lab-on") return Cmd::LabOn;
     }
     return Cmd::Unknown;
 }
@@ -263,6 +264,7 @@ bool run(Session &s, Cmd cmd)
     case Cmd::Backspace: return s.tap(KEY_BACKSPACE);
     case Cmd::Escape: return s.tap(KEY_ESC);
     case Cmd::LabOff: return s.tap(KEY_F12);
+    case Cmd::LabOn: return s.tap(KEY_F10);
     case Cmd::Unknown: break;
     }
     return false;
