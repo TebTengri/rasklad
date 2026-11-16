@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """Native Wayland reference test, never the user's compositor. Default plan only."""
-import argparse,hashlib,importlib.util,json,os,signal,subprocess,sys,tempfile,shutil,time
+import argparse,hashlib,importlib.util,json,os,signal,subprocess,sys,tempfile,shutil,time,stat
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
 INSIDE=Path(__file__)==Path('/lab/runner.py')
@@ -19,7 +19,63 @@ focus_follows_mouse no
 default_border none
 '''
 
-def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapshot_fds=None,focus_stress=False,space_telemetry=False,addon_witness=False,witness_no_query=False,core_entry_witness=False,grab_entry_witness=False,focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+FRONTEND_COMMIT='27cca6e0239938b2d53937061d0980c087856b22'
+
+def frontend_selection(variant,nested_smoke=False):
+ if variant not in ('system','baseline','keep-grab'):raise base.Refused('private_frontend_variant')
+ if variant!='system' and nested_smoke:raise base.Refused('private_frontend_sway_only')
+
+def validate_frontend(variant):
+ frontend_selection(variant)
+ if variant=='system':return None
+ core_guard.validate_core_entry(base,ROOT)
+ lock=json.loads(core_guard._read_bounded(base,ROOT/'data/fcitx-frontend-source-lock.json',16384))
+ record=ROOT/('build/wayland-ime/frontend-baseline-result.json' if variant=='baseline' else 'build/wayland-ime/frontend-keep-grab-build-result.json')
+ metadata=json.loads(core_guard._read_bounded(base,record,16384))
+ binary=ROOT/f'build/wayland-ime/frontend-{variant}/libwaylandim.so'
+ payload=core_guard._read_bounded(base,binary,5_000_000)
+ digest=hashlib.sha256(payload).hexdigest()
+ if not isinstance(lock,dict) or not isinstance(metadata,dict):raise base.Refused('private_frontend_build_record')
+ if (lock.get('commit')!=FRONTEND_COMMIT or metadata.get('sourceCommit')!=FRONTEND_COMMIT
+     or metadata.get('sourceArchiveSha256')!=lock.get('archiveSha256')
+     or not isinstance(lock.get('archiveSha256'),str) or len(lock['archiveSha256'])!=64 or set(lock['archiveSha256'])-set('0123456789abcdef')
+     or metadata.get('built') is not True or metadata.get('schema')!=1
+     or metadata.get('variant')!=('unmodified_source_control' if variant=='baseline' else 'private_keep_grab_experiment')
+     or metadata.get('artifactSha256')!=digest):raise base.Refused('private_frontend_build_record')
+ if variant=='keep-grab':
+  patch_lock=json.loads(core_guard._read_bounded(base,ROOT/'patches/fcitx5/keep-grab-lock.json',16384))
+  if (not isinstance(patch_lock,dict) or patch_lock.get('schema')!=1
+      or patch_lock.get('sourceCommit')!=FRONTEND_COMMIT):raise base.Refused('private_frontend_patch_record')
+  for key in ('patchSha256','cancellationPatchSha256'):
+   expected=patch_lock.get(key)
+   if (not isinstance(expected,str) or len(expected)!=64 or set(expected)-set('0123456789abcdef')
+       or metadata.get(key)!=expected):raise base.Refused('private_frontend_patch_record')
+ return binary,digest
+
+def extract_private_browser_diagnostic(result,variant):
+ raw=result.pop('_privateBrowserDiagnostic',None)
+ if (variant not in ('baseline','keep-grab') or result.get('passed') is not False
+     or not isinstance(raw,str)):return
+ raw=raw[-3500:]
+ path=ROOT/f'build/wayland-ime/native-browser-{variant}-error.log'
+ # Fixed private fixture output only; never follow or truncate an unsafe file.
+ for parent in (ROOT/'build',ROOT/'build/wayland-ime'):
+  info=parent.lstat()
+  if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.getuid() or info.st_mode&0o022:
+   raise base.Refused('private_browser_diagnostic_directory')
+ fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
+ try:
+  info=os.fstat(fd)
+  if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or info.st_uid!=os.getuid():
+   raise base.Refused('private_browser_diagnostic_file')
+  os.fchmod(fd,0o600);os.ftruncate(fd,0)
+  payload=raw.encode('utf8')
+  while payload:
+   count=os.write(fd,payload);payload=payload[count:]
+ finally:os.close(fd)
+
+def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapshot_fds=None,focus_stress=False,space_telemetry=False,addon_witness=False,witness_no_query=False,core_entry_witness=False,grab_entry_witness=False,focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+ frontend_selection(frontend_variant,nested_smoke)
  if grab_epoch_witness and not server_route_witness:raise base.Refused('grab_epoch_requires_server_route_witness')
  if server_route_witness and not grab_entry_witness:raise base.Refused('server_route_requires_grab_entry_witness')
  if type(focus_repeats) is not int or not 1<=focus_repeats<=5:raise base.Refused('focus_repeats_bound')
@@ -33,6 +89,7 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
  if addon_witness:
   paths=dict(paths);paths['addon']=ROOT/('build/chromium-ime/grab-entry-addon/raskladlab.so' if grab_entry_witness else 'build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so');paths['addon_conf']=ROOT/'tests/fcitx_transport/raskladwitness.conf'
   base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
+ if frontend_variant!='system' and (not snapshot_fds or '/lab/addons/libwaylandim.so' not in snapshot_fds):raise base.Refused('private_frontend_snapshot_required')
  a=chrome.argv(paths,identity,profile)
  # Drop X11/GTK routing; this test must use native text-input/input-method.
  clean=[];i=0
@@ -46,6 +103,7 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
  for k,v in {'LD_LIBRARY_PATH':'/lab/wayland-runtime','RASKLAD_NATIVE_WAYLAND_LAB':'1',
   'WLR_BACKENDS':'headless','WLR_RENDERER':'pixman','WLR_LIBINPUT_NO_DEVICES':'1',
   'XDG_CURRENT_DESKTOP':'sway','XDG_SESSION_DESKTOP':'sway','XDG_SESSION_TYPE':'wayland'}.items():extra+=['--setenv',k,v]
+ if frontend_variant!='system':extra+=['--perms','0755','--ro-bind-data',str(snapshot_fds['/lab/addons/libwaylandim.so']),'/lab/addons/libwaylandim.so','--setenv','RASKLAD_PRIVATE_FRONTEND_VARIANT',frontend_variant]
  if nested_smoke:extra+=['--setenv','RASKLAD_NESTED_HYPR_SMOKE','1']
  if focus_stress:
   extra+=['--setenv','RASKLAD_FOCUS_STRESS_LAB','1']
@@ -71,7 +129,8 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
   result=sealed
  return result
 
-def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,addon_witness=False,witness_no_query=False,core_entry_witness=False,grab_entry_witness=False,focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,addon_witness=False,witness_no_query=False,core_entry_witness=False,grab_entry_witness=False,focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+ frontend_selection(frontend_variant,nested_smoke)
  if grab_epoch_witness and not server_route_witness:raise base.Refused('grab_epoch_requires_server_route_witness')
  if server_route_witness and not grab_entry_witness:raise base.Refused('server_route_requires_grab_entry_witness')
  if type(focus_repeats) is not int or not 1<=focus_repeats<=5:raise base.Refused('focus_repeats_bound')
@@ -80,6 +139,7 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
  if core_entry_witness and (not addon_witness or witness_no_query):raise base.Refused('core_entry_witness_requires_querying_addon_witness')
  if witness_no_query and not addon_witness:raise base.Refused('witness_no_query_requires_addon_witness')
  if addon_witness and not (focus_stress and space_telemetry):raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+ frontend=validate_frontend(frontend_variant)
  if core_entry_witness:core_guard.validate_core_entry(base,ROOT)
  if server_route_witness:
   load('server_route_guard',ROOT/'tools/server_route_witness_guard.py').validate(base,ROOT)
@@ -111,6 +171,7 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
  for p in profile.values():base.regular_file(p)
  d=Path(tempfile.mkdtemp(prefix='native-wayland-',dir=base.ensure_private_base(ROOT)));child=None;snapshots={}
  try:
+  if frontend:snapshots['/lab/addons/libwaylandim.so']=base.sealed_snapshot(frontend[0],frontend[1])
   for name in RUNTIME:snapshots['/lab/wayland-runtime/'+name]=base.sealed_snapshot(runtime/name,lock['runtimeFiles'][name])
   snapshots['/lab/rasklad-wayland-keys']=base.sealed_snapshot(ROOT/'build/wayland-ime/keys/rasklad-wayland-keys')
   snapshots['/lab/addons/raskladlab.so']=base.sealed_snapshot(paths['addon'])
@@ -120,13 +181,14 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
   identity['passwd'].write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Private lab:/home/lab:/usr/bin/nologin\n');identity['group'].write_text(f'lab:x:{os.getgid()}:\n');identity['machine-id'].write_text('00000000000000000000000000000004\n')
   config=d/'sway.conf';config.write_text(SWAY_CONFIG)
   with (d/'stdout').open('w+b') as out:
-   child=subprocess.Popen(sandbox_args(paths,identity,profile,runtime,config,nested_smoke,snapshots,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness),stdin=subprocess.DEVNULL,stdout=out,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin'},start_new_session=True,preexec_fn=chrome.limits,pass_fds=tuple(snapshots.values()))
+   child=subprocess.Popen(sandbox_args(paths,identity,profile,runtime,config,nested_smoke,snapshots,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant),stdin=subprocess.DEVNULL,stdout=out,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin'},start_new_session=True,preexec_fn=chrome.limits,pass_fds=tuple(snapshots.values()))
    try:rc=child.wait(timeout=65)
    except subprocess.TimeoutExpired:raise base.Refused('outer_timeout')
    out.seek(0);raw=out.read(32769)
    if len(raw)>32768:raise base.Refused('output_bound')
    try:r=json.loads(raw)
    except ValueError:return {'schema':1,'passed':False,'phase':'sandbox','exitCode':rc}
+   extract_private_browser_diagnostic(r,frontend_variant)
    r.update({'sandboxed':True,'referenceCompositor':'Sway/wlroots software only','hyprlandSupport':False,'slackSupport':False,'hostInput':False,'hostConfigurationChanged':False,'boundaryBasis':'fixed namespaces/mounts/env and guard tests; not a global OS change audit','exitCode':rc})
    r['passed']=rc==0 and r.get('passed') is True;return r
  finally:
@@ -177,8 +239,9 @@ def inside():
     except subprocess.TimeoutExpired:child.kill();child.wait(timeout=1)
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');p.add_argument('--addon-witness',action='store_true');p.add_argument('--witness-no-query',action='store_true');p.add_argument('--core-entry-witness',action='store_true');p.add_argument('--grab-entry-witness',action='store_true');p.add_argument('--grab-epoch-witness',action='store_true');p.add_argument('--server-route-witness',action='store_true');p.add_argument('--focus-repeats',type=int,choices=range(1,6),default=1);args=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');p.add_argument('--addon-witness',action='store_true');p.add_argument('--witness-no-query',action='store_true');p.add_argument('--core-entry-witness',action='store_true');p.add_argument('--grab-entry-witness',action='store_true');p.add_argument('--grab-epoch-witness',action='store_true');p.add_argument('--server-route-witness',action='store_true');p.add_argument('--focus-repeats',type=int,choices=range(1,6),default=1);p.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system');args=p.parse_args()
  try:
+  frontend_selection(args.frontend_variant,args.smoke_nested_hypr)
   if args.grab_epoch_witness and not args.server_route_witness:raise base.Refused('grab_epoch_requires_server_route_witness')
   if args.server_route_witness and not args.grab_entry_witness:raise base.Refused('server_route_requires_grab_entry_witness')
   if type(args.focus_repeats) is not int or not 1<=args.focus_repeats<=5:raise base.Refused('focus_repeats_bound')
@@ -189,7 +252,7 @@ def main():
   if args.addon_witness and not (args.focus_stress and args.space_telemetry):raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
   if args.focus_stress and (args.inside or args.smoke_nested_hypr):raise base.Refused('focus_suite_outer_native_only')
   if args.space_telemetry and not args.focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
-  r=inside() if args.inside else run(args.input_root,True) if args.smoke_nested_hypr else run(args.input_root,focus_stress=args.focus_stress,space_telemetry=args.space_telemetry,addon_witness=args.addon_witness,witness_no_query=args.witness_no_query,core_entry_witness=args.core_entry_witness,grab_entry_witness=args.grab_entry_witness,focus_repeats=args.focus_repeats,server_route_witness=args.server_route_witness,grab_epoch_witness=args.grab_epoch_witness) if args.run else {'schema':1,'status':'plan_only','tested':False,'hostInput':False,'hyprlandSupport':False,'slackSupport':False,'focusStressPlanned':args.focus_stress,'spaceTelemetryPlanned':args.space_telemetry,'addonWitnessPlanned':args.addon_witness,'witnessNoQueryPlanned':args.witness_no_query,'coreEntryWitnessPlanned':args.core_entry_witness,'grabEntryWitnessPlanned':args.grab_entry_witness,'focusRepeatCount':args.focus_repeats,'serverRouteWitnessPlanned':args.server_route_witness,'grabEpochWitnessPlanned':args.grab_epoch_witness,'transport':'private headless Sway/pixman; virtual keyboard -> native Wayland Chromium -> real Fcitx; no host seat/GPU'}
+  r=inside() if args.inside else run(args.input_root,True,frontend_variant=args.frontend_variant) if args.smoke_nested_hypr else run(args.input_root,focus_stress=args.focus_stress,space_telemetry=args.space_telemetry,addon_witness=args.addon_witness,witness_no_query=args.witness_no_query,core_entry_witness=args.core_entry_witness,grab_entry_witness=args.grab_entry_witness,focus_repeats=args.focus_repeats,server_route_witness=args.server_route_witness,grab_epoch_witness=args.grab_epoch_witness,frontend_variant=args.frontend_variant) if args.run else {'schema':1,'frontendVariant':args.frontend_variant,'status':'plan_only','tested':False,'hostInput':False,'hyprlandSupport':False,'slackSupport':False,'focusStressPlanned':args.focus_stress,'spaceTelemetryPlanned':args.space_telemetry,'addonWitnessPlanned':args.addon_witness,'witnessNoQueryPlanned':args.witness_no_query,'coreEntryWitnessPlanned':args.core_entry_witness,'grabEntryWitnessPlanned':args.grab_entry_witness,'focusRepeatCount':args.focus_repeats,'serverRouteWitnessPlanned':args.server_route_witness,'grabEpochWitnessPlanned':args.grab_epoch_witness,'transport':'private headless Sway/pixman; virtual keyboard -> native Wayland Chromium -> real Fcitx; no host seat/GPU'}
   print(json.dumps(r,sort_keys=True));return 0 if r.get('passed',True) else 1
  except (base.Refused,OSError,ValueError,KeyError,subprocess.SubprocessError) as e:
   print(json.dumps({'schema':1,'passed':False,'reason':str(e) if isinstance(e,base.Refused) else type(e).__name__}));return 2

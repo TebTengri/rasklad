@@ -55,10 +55,27 @@ def read_line(child,timeout):
             if len(payload)>4096:raise RuntimeError('report_bound')
 
 def delivery_passed(report,variant,handoff_mode,loaded,server_returncode):
-    gate_ok=handoff_mode=='original' or all(report.get(k) is True for k in ('gatedPairSent','ackMatched','waitedForAck'))
-    expected=0 if variant=='baseline' and handoff_mode=='original' else 1
+    if handoff_mode=='inactive':
+        return (loaded and server_returncode==2 and report.get('raced') is True and
+                report.get('fcitxExitCode')==125 and report.get('grabs')==1 and
+                report.get('releasedGrabs')==0 and report.get('vkPress')==0 and report.get('vkRelease')==0)
+    gate_ok=handoff_mode in ('original','retained','grab-ab','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release') or all(report.get(k) is True for k in ('gatedPairSent','ackMatched','waitedForAck'))
+    if handoff_mode=='inactive-raw':
+        gate_ok=report.get('ackMatched') is True and report.get('inactiveRawPairCompleted') is True and report.get('grabs')==1 and report.get('releasedGrabs')==0
+    if handoff_mode in ('cross-deactivate','cross-active-release','fresh-after-cancel'):
+        gate_ok=report.get('crossTransitionSent') is True
+        expected_lifecycle=(1,0) if variant.startswith('keep-grab') else (2,1)
+        gate_ok=gate_ok and (report.get('grabs'),report.get('releasedGrabs'))==expected_lifecycle
+    if handoff_mode=='grab-ab':
+        gate_ok=report.get('releaseAfterAck') is True and report.get('ackMatched') is True
+        expected_lifecycle=(1,0) if variant.startswith('keep-grab') else (2,1)
+        gate_ok=gate_ok and (report.get('grabs'),report.get('releasedGrabs'))==expected_lifecycle
+    expected=0 if variant=='baseline' and handoff_mode in ('original','grab-ab') else 1
+    if handoff_mode=='unknown-release':expected=0
+    if handoff_mode=='fresh-after-cancel':expected=2
+    expected_releases=2 if handoff_mode=='fresh-after-cancel' else 1
     return (server_returncode==0 and report.get('completed') is True and
-            report.get('vkPress')==expected and report.get('vkRelease')==1 and loaded and gate_ok)
+            report.get('vkPress')==expected and report.get('vkRelease')==expected_releases and loaded and gate_ok)
 
 def inside(variant,handoff_mode='original'):
     if (Path(__file__)!=Path('/lab/runner.py') or os.environ.get('RASKLAD_NATIVE_WAYLAND_LAB')!='1' or os.environ.get('HOME')!='/home/lab' or os.environ.get('XDG_RUNTIME_DIR')!='/run/lab' or os.environ.get('DISPLAY') or os.environ.get('WAYLAND_SOCKET') or os.environ.get('WAYLAND_DISPLAY')!='wayland-lab'):raise RuntimeError('namespace_guard')
@@ -78,12 +95,14 @@ def inside(variant,handoff_mode='original'):
         if not address.startswith(b'unix:path=/run/lab/bus,guid=') or not address.endswith(b'\n'):
             raise RuntimeError('bus_address')
         del address # Never retain or report the bus identifier.
-        server=subprocess.Popen(['/lab/server']+(['ack-gated'] if handoff_mode=='ack-gated' else []),stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL);children.append(server)
+        server=subprocess.Popen(['/lab/server']+([handoff_mode] if handoff_mode!='original' else []),stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL);children.append(server)
         if read_line(server,2)!={'ready':True}:raise RuntimeError('server_not_ready')
         env=dict(os.environ,DBUS_SESSION_BUS_ADDRESS='unix:path=/run/lab/bus')
         if variant=='drain':env['RASKLAD_FCITX_DRAIN_LAB']='1'
+        if variant.startswith('keep-grab'):env['RASKLAD_FCITX_KEEP_GRAB_LAB']='1'
+        if handoff_mode in ('inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release'):env['RASKLAD_KEEP_GRAB_INACTIVE_RAW']='1'
         fcitx=subprocess.Popen(['/usr/bin/fcitx5','-D','-k','--disable','all','--enable','keyboard,dbus,wayland,waylandim','--verbose','*=2,key_trace=0'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=fcitx_log,env=env);children.append(fcitx)
-        report=read_line(server,6)
+        if read_line(server,6)!={'probeReady':True}:raise RuntimeError('probe_not_ready')
         info=os.stat('/lab/addons/libwaylandim.so');loaded=False
         # Only compare the owned child's mapping identity; never emit maps/paths/PIDs.
         for line in Path(f'/proc/{fcitx.pid}/maps').read_text().splitlines():
@@ -91,10 +110,19 @@ def inside(variant,handoff_mode='original'):
             if len(fields)>=6:
                 major,minor=(int(x,16) for x in fields[3].split(':'))
                 if int(fields[4])==info.st_ino and os.makedev(major,minor)==info.st_dev:loaded=True
+        server.stdin.write(b'\n');server.stdin.flush()
+        report=read_line(server,6)
+        if handoff_mode=='inactive':fcitx.wait(timeout=1)
+        report['fcitxExitCode']=fcitx.poll()
         if report.get('completed') is True:
             server.stdin.write(b'\n');server.stdin.flush()
         server.wait(timeout=1)
+        report['controlOutcome']=('expected_inactive_rejection' if handoff_mode=='inactive' else 'expected_loss_reproduced' if variant=='baseline' and handoff_mode in ('original','grab-ab') else 'pair_preserved')
+        if handoff_mode=='unknown-release':report['controlOutcome']='unrecorded_release_preserved'
+        report['functionalFix']=False
         report.update(schema=1,variant=variant,handoffMode=handoff_mode,moduleLoaded=loaded,passed=delivery_passed(report,variant,handoff_mode,loaded,server.returncode),hostDisplay=False,gpu=False,network=False,realInput=False,scope='closed actual Fcitx protocol fixture; no GUI or password proof')
+        if report.get('passed') is not True:
+            report['expectedControlOutcome']=report['controlOutcome'];report['controlOutcome']='expectation_not_met'
         fcitx_log.seek(0)
         report['_privateFcitxStderr']=fcitx_log.read(4096).decode(errors='replace')
         report['fcitxExitCode']=fcitx.poll()
@@ -108,6 +136,8 @@ def inside(variant,handoff_mode='original'):
         fcitx_log.close()
 
 def run(variant,handoff_mode='original'):
+    if variant.startswith('keep-grab') and handoff_mode not in ('retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release'):raise RuntimeError('keep_grab_requires_retained_peer')
+    if handoff_mode in ('retained','inactive','inactive-raw') and not variant.startswith('keep-grab'):raise RuntimeError('retained_peer_requires_keep_grab')
     if variant=='drain':raise RuntimeError('diagnostic_candidate_not_delivery_fix')
     b=base()
     if os.geteuid()==0:raise b.Refused('root_not_admitted')
@@ -162,7 +192,7 @@ def run(variant,handoff_mode='original'):
         for fd in fds:os.close(fd)
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',choices=['baseline','drain'],help=argparse.SUPPRESS);p.add_argument('--variant',choices=['baseline','drain'],default='baseline');p.add_argument('--handoff-mode',choices=['original','ack-gated'],default='original');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',choices=['baseline','drain','keep-grab','keep-grab-control'],help=argparse.SUPPRESS);p.add_argument('--variant',choices=['baseline','drain','keep-grab','keep-grab-control'],default='baseline');p.add_argument('--handoff-mode',choices=['original','ack-gated','retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release'],default='original');a=p.parse_args()
     try:r=inside(a.inside,a.handoff_mode) if a.inside else build() if a.build else run(a.variant,a.handoff_mode) if a.run else {'schema':1,'status':'plan_only','fcitxStarted':False,'variant':a.variant}
     except Exception as e:print(json.dumps({'schema':1,'passed':False,'reason':str(e) if type(e).__name__ in ('Refused','RuntimeError') else type(e).__name__}));return 2
     print(json.dumps(r,sort_keys=True));return 0 if r.get('passed',True) else 2

@@ -169,4 +169,5 @@ finally{
  if(alive)child.kill('SIGTERM');
  await Promise.race([exited,new Promise(r=>setTimeout(r,1000))]);if(alive)child.kill('SIGKILL');if(vk){vk.kill('SIGTERM');await Promise.race([vkExited,new Promise(r=>setTimeout(r,500))]);if(vkAlive){vk.kill('SIGKILL');await vkExited;}}clearTimeout(deadline);
 }
+if(report.passed===false&&nativeWayland&&['baseline','keep-grab'].includes(process.env.RASKLAD_PRIVATE_FRONTEND_VARIANT))report._privateBrowserDiagnostic=diagnostics.slice(-3500);
 console.log(JSON.stringify(report));process.exitCode=report.passed?0:1;

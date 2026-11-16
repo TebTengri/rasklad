@@ -33,9 +33,25 @@ base = load('ime_base', Path('/lab/fcitx_lab_runner.py') if INSIDE else ROOT/'to
 probe = load('hypr_probe', Path('/lab/probe.py') if INSIDE else ROOT/'tools/hyprland_nested_probe.py')
 chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py')
 core_guard = None if INSIDE else load('core_entry_guard', ROOT/'tools/core_entry_witness_guard.py')
+reference = None if INSIDE else load('reference_frontend', ROOT/'tools/wayland_ime_lab.py')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+def frontend_selection(variant):
+    try:
+        reference.frontend_selection(variant)
+    except reference.base.Refused as error:
+        raise base.Refused(str(error)) from error
+
+
+def validate_frontend(variant):
+    try:
+        return reference.validate_frontend(variant)
+    except reference.base.Refused as error:
+        raise base.Refused(str(error)) from error
+
+
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+    frontend_selection(frontend_variant)
     if grab_epoch_witness and not server_route_witness:
         raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
@@ -61,9 +77,14 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
         base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
     if server_route_witness and '/lab/raskladserverroute.so' not in snapshots:
         raise base.Refused('server_route_snapshot_required')
+    if frontend_variant!='system' and '/lab/addons/libwaylandim.so' not in snapshots:
+        raise base.Refused('private_frontend_snapshot_required')
     args = probe.sandbox_args(directory, parent_fd, metadata_plan)
     at = args.index('--')
     extra = ['--ro-bind', '/etc/fonts', '/etc/fonts', '--dir', '/lab/addons']
+    if frontend_variant!='system':
+        extra += ['--perms','0755','--ro-bind-data',str(snapshots['/lab/addons/libwaylandim.so']),'/lab/addons/libwaylandim.so',
+                  '--setenv','RASKLAD_PRIVATE_FRONTEND_VARIANT',frontend_variant]
     for key, path in paths.items():
         destination = chrome.TARGETS[key]
         if destination in snapshots:
@@ -214,7 +235,8 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+    frontend_selection(frontend_variant)
     if grab_epoch_witness and not server_route_witness:
         raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
@@ -231,6 +253,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         raise base.Refused('witness_no_query_requires_addon_witness')
     if addon_witness and not (focus_stress and space_telemetry):
         raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+    frontend = validate_frontend(frontend_variant)
     if core_entry_witness:
         core_guard.validate_core_entry(base, ROOT)
     if server_route_witness:
@@ -277,6 +300,8 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     child = None
     snapshots = {}
     try:
+        if frontend:
+            snapshots['/lab/addons/libwaylandim.so'] = base.sealed_snapshot(frontend[0],frontend[1])
         plan = collector.write_snapshot(metadata, directory/'gpu-metadata')
         snapshots['/lab/addons/raskladlab.so'] = base.sealed_snapshot(paths['addon'])
         if core_entry_witness:
@@ -304,7 +329,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -315,6 +340,10 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                 if len(raw) > 32768:
                     raise base.Refused('report_bound')
                 result = json.loads(raw)
+                try:
+                    reference.extract_private_browser_diagnostic(result,frontend_variant)
+                except reference.base.Refused as error:
+                    raise base.Refused(str(error)) from error
                 result.update(exactCompositor='installed nested Hyprland', parentDisplayConnection=True,
                               primaryStatOnly=True, renderNodeGranted=True, hostSysfsBound=False,
                               hostConfigurationWritten=False, slackConnected=False,
@@ -349,6 +378,7 @@ def main():
     parser.add_argument('--grab-epoch-witness',action='store_true')
     parser.add_argument('--server-route-witness',action='store_true')
     parser.add_argument('--focus-repeats', type=int, choices=range(1,6), default=1)
+    parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
     args = parser.parse_args()
     try:
         if args.grab_epoch_witness and not args.server_route_witness:
@@ -371,8 +401,9 @@ def main():
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
+            'frontendVariant': args.frontend_variant,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
             'focusStressPlanned': args.focus_stress,
             'spaceTelemetryPlanned': args.space_telemetry,

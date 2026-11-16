@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """Build only the pinned LGPL frontend in a closed namespace. Default inert."""
-import argparse,hashlib,importlib.util,json,os,resource,signal,stat,subprocess,sys,tarfile,tempfile
+import argparse,hashlib,importlib.util,json,os,resource,signal,stat,subprocess,sys,tarfile,tempfile,shutil
+from contextlib import ExitStack
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
 INSIDE=Path(__file__)==Path('/lab/build_frontend.py')
@@ -39,7 +40,12 @@ def inside():
     subprocess.run(['/usr/bin/qmake6','/lab/frontend.pro'],cwd=out,check=True,timeout=30)
     subprocess.run(['/usr/bin/make','-j2'],cwd=out,check=True,timeout=240)
 
-def build():
+def build(variant='baseline'):
+    with ExitStack() as stack:
+        return build_checked(variant,stack)
+
+def build_checked(variant,stack):
+    if variant not in ('baseline','keep-grab','keep-grab-control'):raise ValueError('variant')
     if os.geteuid()==0:raise ValueError('root_not_admitted')
     base=load('frontend_base',ROOT/'tools/fcitx_lab_runner.py')
     load('frontend_abi',ROOT/'tools/core_entry_witness_guard.py').validate_core_entry(base,ROOT)
@@ -72,8 +78,24 @@ def build():
             expected[str(path.relative_to(source))]=hashlib.sha256(payload).hexdigest()
     actual={str(p.relative_to(source)) for p in source.rglob('*') if p.is_file()}
     if actual!=set(expected):raise ValueError('source_tree_inventory')
+    patch_sha=None;cancel_sha=None
+    if variant in ('keep-grab','keep-grab-control'):
+        manifest=json.loads((ROOT/'patches/fcitx5/keep-grab-lock.json').read_text())
+        patch=ROOT/'patches/fcitx5/keep-grab-lab.patch';base.regular_file(patch)
+        patch_sha=hashlib.sha256(patch.read_bytes()).hexdigest()
+        if patch_sha!=manifest['patchSha256']:raise ValueError('patch_hash')
+        overlay=Path(stack.enter_context(tempfile.TemporaryDirectory(prefix='keep-grab-source-',dir=source.parent)))
+        shutil.copytree(source,overlay,dirs_exist_ok=True)
+        subprocess.run(['/usr/bin/git','apply','--directory='+str(overlay.relative_to(ROOT)),str(patch)],cwd=ROOT,env={'PATH':'/usr/bin'},check=True,timeout=10)
+        if variant=='keep-grab':
+            cancellation=ROOT/'patches/fcitx5/keep-grab-cancellation.patch';base.regular_file(cancellation)
+            cancel_sha=hashlib.sha256(cancellation.read_bytes()).hexdigest()
+            if cancel_sha!=manifest['cancellationPatchSha256']:raise ValueError('cancellation_patch_hash')
+            subprocess.run(['/usr/bin/git','apply','--directory='+str(overlay.relative_to(ROOT)),str(cancellation)],cwd=ROOT,env={'PATH':'/usr/bin'},check=True,timeout=10)
+        source=overlay
+        expected={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob('*') if p.is_file()}
     target=ROOT
-    for part in ['build','wayland-ime','frontend-baseline']:
+    for part in ['build','wayland-ime','frontend-'+variant]:
         target/=part;target.mkdir(mode=0o700,exist_ok=True);info=target.lstat()
         if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.getuid() or info.st_mode&0o022:raise ValueError('build_directory')
     for path in target.rglob('*'):
@@ -99,17 +121,17 @@ def build():
     if rc:raise ValueError('frontend_build_failed')
     binary=target/'libwaylandim.so';base.regular_file(binary)
     if any(hashlib.sha256((source/p).read_bytes()).hexdigest()!=h for p,h in expected.items()):raise ValueError('source_changed_during_build')
-    return {'schema':1,'built':True,'variant':'unmodified_source_control','sourceCommit':lock['commit'],
+    return {'schema':1,'built':True,'variant':'unmodified_source_control' if variant=='baseline' else 'private_keep_grab_uncancelled_control' if variant=='keep-grab-control' else 'private_keep_grab_experiment','patchSha256':patch_sha,'cancellationPatchSha256':cancel_sha,'sourceCommit':lock['commit'],
             'sourceArchiveSha256':lock['archiveSha256'],'sourceFilesVerified':len(expected),
             'artifactSha256':hashlib.sha256(binary.read_bytes()).hexdigest(),
             'hostDisplay':False,'network':False,'gpu':False,'installedLibrariesChanged':False,'executedFrontend':False}
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);m=parser.add_mutually_exclusive_group();m.add_argument('--build',action='store_true');m.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);a=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);m=parser.add_mutually_exclusive_group();m.add_argument('--build',action='store_true');m.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);parser.add_argument('--variant',choices=['baseline','keep-grab','keep-grab-control'],default='baseline');a=parser.parse_args()
     if not a.build and not a.inside:print(json.dumps({'schema':1,'status':'plan_only','systemChanges':False}));return 0
     try:
         if a.inside:inside();return 0
-        result=build()
+        result=build(a.variant)
     except Exception as e:
         print(json.dumps({'schema':1,'built':False,'reason':str(e) if type(e) is ValueError else type(e).__name__}));return 2
     print(json.dumps(result,sort_keys=True));return 0

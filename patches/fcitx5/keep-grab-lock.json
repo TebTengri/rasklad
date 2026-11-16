@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "sourceCommit": "27cca6e0239938b2d53937061d0980c087856b22",
+  "patchSha256": "977f45f3c80f696ef315562088cc053a60c2d8a51b5170054bd6abc26277daac",
+  "scope": "private retained-grab experiment; optional inactive raw forwarding; only known VK cleanup cancellations suppress physical release; no production claim",
+  "sourceFiles": {
+    "src/frontend/waylandim/waylandimserverv2.h": "80efb659e3d5e62b2ce0d1c595a7dc3dde8fef65f925c308e5146fa3db689008",
+    "src/frontend/waylandim/waylandimserverv2.cpp": "4c6bb63dac958b1cad6a9a4adf6629b0bf30f001c4d2844dff3d6459fe810b82",
+    "src/frontend/waylandim/waylandim.cpp": "ac99c30dee449129930651303b9fbe7127e2cc9e85f7bac9d4a47647a2620ca2"
+  },
+  "cancellationPatchSha256": "d95c3e845e366a8a17ba3ae05d599442a84d6c825b85c89bca861e7f64780000"
+}

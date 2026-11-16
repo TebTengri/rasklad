@@ -48,6 +48,33 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse(fixture.delivery_passed(report,'baseline','ack-gated',True,0))
         self.assertTrue(fixture.delivery_passed(report,'baseline','original',True,0))
 
+    def test_inactive_rejection_is_not_generic_failure(self):
+        report={'raced':True,'fcitxExitCode':125,'grabs':1,'releasedGrabs':0,'vkPress':0,'vkRelease':0}
+        self.assertTrue(fixture.delivery_passed(report,'keep-grab','inactive',True,2))
+        for key,value in [('fcitxExitCode',-9),('raced',False),('grabs',2),('vkPress',1)]:
+            broken=dict(report);broken[key]=value
+            self.assertFalse(fixture.delivery_passed(broken,'keep-grab','inactive',True,2))
+        self.assertFalse(fixture.delivery_passed(report,'keep-grab','inactive',False,2))
+        self.assertFalse(fixture.delivery_passed(report,'keep-grab','inactive',True,0))
+
+    def test_ab_lifecycle_and_release_evidence_required(self):
+        report={'completed':True,'vkPress':1,'vkRelease':1,'releaseAfterAck':True,
+                'ackMatched':True,'grabs':1,'releasedGrabs':0}
+        self.assertTrue(fixture.delivery_passed(report,'keep-grab','grab-ab',True,0))
+        for key,value in [('grabs',2),('releasedGrabs',1),('releaseAfterAck',False),('ackMatched',False)]:
+            broken=dict(report);broken[key]=value
+            self.assertFalse(fixture.delivery_passed(broken,'keep-grab','grab-ab',True,0))
+        report.update(vkPress=0,grabs=2,releasedGrabs=1)
+        self.assertTrue(fixture.delivery_passed(report,'baseline','grab-ab',True,0))
+
+    def test_raw_inactive_requires_pair_and_reactivation_evidence(self):
+        report={'completed':True,'vkPress':1,'vkRelease':1,'grabs':1,'releasedGrabs':0,
+                'inactiveRawPairCompleted':True,'ackMatched':True}
+        self.assertTrue(fixture.delivery_passed(report,'keep-grab','inactive-raw',True,0))
+        for key in ('inactiveRawPairCompleted','ackMatched'):
+            broken=dict(report);broken[key]=False
+            self.assertFalse(fixture.delivery_passed(broken,'keep-grab','inactive-raw',True,0))
+
     def test_diagnostic_candidate_cannot_run_as_delivery_fix(self):
         with patch.object(fixture.subprocess,'Popen') as start:
             with self.assertRaisesRegex(RuntimeError,'diagnostic_candidate_not_delivery_fix'):

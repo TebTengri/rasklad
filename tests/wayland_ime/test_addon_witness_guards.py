@@ -53,11 +53,14 @@ def exact_args(**options):
 
 
 class WitnessGuards(unittest.TestCase):
-    def test_optional_signature_is_trailing_and_defaults_false(self):
+    def test_legacy_optional_signature_preserved_with_inert_selector(self):
         for module in (REFERENCE, EXACT):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
+                    self.assertEqual(parameters[-1].name,'frontend_variant')
+                    self.assertEqual(parameters[-1].default,'system')
+                    parameters=parameters[:-1]
                     for offset,name in ((-7,'addon_witness'),(-6,'witness_no_query'),(-5,'core_entry_witness'),(-4,'grab_entry_witness'),(-2,'server_route_witness'),(-1,'grab_epoch_witness')):
                         self.assertEqual(parameters[offset].name,name)
                         self.assertIs(parameters[offset].default,False)

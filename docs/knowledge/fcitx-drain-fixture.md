@@ -1,8 +1,8 @@
 # Actual Fcitx drain fixture draft
 
-Ordinary admitted context resolves sandbox UID mapping. Unmodified rebuilt Fcitx actual original0/1 vs sender ack-gated fixedpair1/1, same artifacts. No client retired replay, GUI/compositor/held-state/generalqueue proof.
+Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof.
 
-Статус: actual_fcitx_peer_controls_pass_not_hyprland_fix
+Статус: keep_grab_peer_and_closed_native_pass_not_host_verified
 
 ## Файлы
 
@@ -26,6 +26,14 @@ Ordinary admitted context resolves sandbox UID mapping. Unmodified rebuilt Fcitx
 - `docs/ACTUAL-FCITX-HANDOFF-001.md`
 - `data/actual-fcitx-handoff-001-result.json`
 - `data/fcitx-frontend-baseline-build-001-result.json`
+- `patches/fcitx5/keep-grab-lab.patch`
+- `patches/fcitx5/keep-grab-cancellation.patch`
+- `patches/fcitx5/keep-grab-lock.json`
+- `docs/FCITX-KEEP-GRAB-001.md`
+- `data/fcitx-keep-grab-001-result.json`
+- `data/native-private-frontend-001-result.json`
+- `tests/wayland_ime/test_private_frontend.py`
+- `tests/wayland_ime/test_hyprland_private_frontend.py`
 
 ## Связи
 

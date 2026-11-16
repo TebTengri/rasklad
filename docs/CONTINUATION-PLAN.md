@@ -1,3 +1,73 @@
+## 2026-11-16 — KEEP-GRAB closed native preflight PASS
+
+Authoritative report docs/FCITX-KEEP-GRAB-001.md. Checkpoint contains: firstkeep patch+separateknown-cancellationpatch (LGPL), verifiedbwrap
+builder variantsbaseline/keep/knownbadcontrol; sourcearchive953files checked.
+Actualsame-peer A/Bstock0/1 vskeep1/1; unchangedgrab1/0. Rawinactive1/1 during350ms
+hold+reactivation; defaultinactive125. Founduncancelled1/2; separatelyreproducible
+control preserved. Knowncleanup trackingfixesinactive/activekeyup1/1,fresh2/2,
+unknownupstill0/1. Nine peer control records indata/fcitx-keep-grab-001-result.json;
+8expectedoutcomes plus1reproducedcounterexample. No text/payload/customprotocol.
+
+Closed software Sway/nativeChrome/actualFcitx+rasklad addon: SELECTEDunmodified
+baseline ANDkeep bothPASS18+focus4,password/Undo/inputafterownFcitxkill. Artifact
+mapping verified; no CDPtyping. Data/native-private-frontend-001-result.json.
+FcitxRSS57848KiB/57796KiB,CPU0.19s/0.20s finitewhole-daemon observations only.
+
+SelectedPersistentVK setup firstChromeSIGSEGV2/2 beforetyping; systemdefaultPASS.
+SilentseedkeyboardbeforeFcitx (selectedonly) allowedprogress/fullpass; sendsnokeys,
+providesinitialseat/keymap. NOT confirmedChromeinternalrootcause; no core (limit0),
+no unrelatedjournal/cores; private3500charstderrstrippedbeforepublicreports. One
+addeddiagnosticdriverline reviewed then driverSHA source-review updated explicitly.
+Sourceguard initiallyrefusedcorrectly; assertions/focus events notweakened.
+
+Optionalfrontend selectors inREFERENCE andEXACTrunners: defaultsystem unchanged,
+2patch/build/SDK admission,sealedmodule;KEEP/rawonlyownFcitxchild,privateconfig,
+seed+dev/inodemapping.105pureguardtests+10peerlaunchertestsPASS. Rootadjustedlegacy
+signaturetesttoassertnewtrailingdefaultsystem thenalllegacyoptionsunchanged.
+Exact selector independently reviewed,dryplanonly; never --run-approved.
+
+NEXT: add bounded modifier-state control before exact trial; prepare/commit all
+code/data/map/Linear. A fresh75s exactnestedHyprlandpermission is still REQUIRED
+(oneparentFD+renderD128+NODEVmetadata,ownprofile/noSlack/hostIME/config). Useris
+asleep; don'trunhostprobe onoldapprovals. Needexplicitrealmodifier/keymap/shortcut /
+feedback/long-run gates before anyproductionclaim. No systemfilesinstalledchanged.
+
+## 2026-11-16 — IN PROGRESS keep-grab + native GUI preflight
+
+Uncommitted own changes in worktree: standalone keep-grab-lab.patch (Claude
+scaffold+Codex privateguard/workdepth/raw-inactive); second cancellation patch
+(Codex, independently reviewed). Original fullFcitx keyboard-grab lifetime is
+retained, not oldwrapper replay. Actual SAME-peer grab-ab: stock0/1 vskeep1/1;
+one grab/zero releases forkeep. Inactive defaultguard125/VK0/0; optionalprivate
+inactive rawpath1/1 with350ms hold andreactivation ack, no boundedrepeat.
+
+Found REAL introduced bug: heldactive Space -> deactivate cleanupkeyup -> later
+physicalkeyup gave1/2. Preserved firstpatch as uncancelled control; secondpatch
+tracks ONLY actualcleanupVKrelease, consumes matching physicalkeyup beforeCore /
+raw (evenreactivated), clears onfreshpress, unknownkeyupstillforwarded. Bound64,
+pendingcancellation+keymapchange abort125. Crossinactive1/1,crossactive1/1,
+fresh2/2,unknownup0/1 actualcontrolsPASS. Scope repeatable keys tracked byoriginal
+pressedVKKey_, no general modifier/focus/native claims yet. Builder variant
+keep-grab-control omitssecondpatch; separatetarget, knownbad diagnostic only.
+
+Agent private_frontend_native changed wayland_ime_lab.py/native_ime_clients.py
+and test_private_frontend.py: optionalsystem/baseline/keep private sealed module,
+source+two patchpins+SDK admission, fixedprivateconfig forbaseline+keep, exact
+RASKLAD_FCITX_KEEP_GRAB_LAB +RAW flags ONLY own Fcitx child, dev/inodemapping
+before driver.7 focusedtestsPASS, noGUIrun yet. Rootcaught/fixedmarkerabbreviation
+andrequestedcancellationhashadmission. Native selected frontend rejects nested
+smoke; CLOSED headless Sway only, nohostpermission new. AgentdidnotrunFcitx.
+
+NEXT: finish immutable pairedpeerreports on finalserver/runner/controlmodule;
+then run CLOSED Sway/Chromium baseline+keep with --focus-stress --space-telemetry
+--frontend-variant baseline|keep-grab --input-root /home/mvn/Work/rasklad.
+Nohostdisplay/GPU/network. Module/privateconfigchangedonlyownprocess. Review
+results; don'tclaimHyprland/Slack until exact separatelyauthorized trial. Preserve
+negativecontrol1/2 as counterexample notsuccess. Data fcixtkeep001 currentlyearly
+phaseandneedsupdate; logs/results ignored build/wayland-ime/*.json contain final
+rawreports; publiconlyaggregates. No installedsystemchanges. Userasleephasauthorized
+sequentialwork; statusquestionwasanswered, originaltaskstillactive.
+
 ## 2026-11-15 — ACTUAL Fcitx controls now run (runtime blocker resolved)
 
 Important correction: restricted sandbox maps system root to nobody; ordinary

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "c9130b87b93e48c7d39e93bf86e604d003affbc4f8ab5d4721e78b932e016c78",
+  "curatedSha256": "9cecd5f5bfc2e568dfa9ed165d8fa5cfe2619d028b369c18830c97275d4f3cee",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -40,7 +40,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "7c2aafc75485e92cbd54fdc76ce30e83ee560996a35225eeb5121026f4c4954b",
+    "docs/CONTINUATION-PLAN.md": "d9c311093a9d9a9eed917e151ef4c1995f3a71c0ec1fb1295364b5992e8bc2e7",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -63,6 +63,7 @@
     "docs/EXPERIMENT-006-PREREG.md": "7b8b63d34c154ed8f87d632d3ffb7dff13032d8460bd3f9baa1f72e628aad45b",
     "docs/EXPERIMENT-006.md": "9e6a067346f0bb9d482ebef9d62247422baf14868cc56f0d711c3d720ae32f1b",
     "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md": "5dffcd11d89121a3c8e5c65789f1237378ff926cc25973254996000a83340d92",
+    "docs/FCITX-KEEP-GRAB-001.md": "24c25d919c75475cd9e49254a08ab49d319333d13b8cb94e014a5dd08285bf1d",
     "docs/FCITX-RETIREMENT-REVIEW-001.md": "ea1b405b6034eadd8736d603ab2c5b19adfe2cbf42047e85d0e20e541d515dac",
     "docs/FCITX-TRANSPORT-001.md": "6ea5b3f33cd342d5484fbdae8ccd8c267a9aa501993da77ad49d3afafc91a2cf",
     "docs/FOCUS-STRESS-PLAN.md": "ea3702e1c6421716eb4625931911daec6938d78fda7b63b59e4cf8a1b9f1ba77",
@@ -146,7 +147,7 @@
     "tests/browser/spell.test.mjs": "1a9572b8c18f20208c194c6b8b2132ba1702b2da933af658a29b1aea93d3c496",
     "tests/chromium_ime/addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9",
     "tests/chromium_ime/adversarial-focus.mjs": "1c36e6a1a2d5e75079e43273fa451b6adc8a32f516667c63e795b5671d241543",
-    "tests/chromium_ime/driver.mjs": "2c0ee4ca625e1ba1a9e286d7394993d48096f1fcad379e8e43c10fcc02e1a889",
+    "tests/chromium_ime/driver.mjs": "a8630a2551d753c47980db30951c76d443c8c035d7de875d44f856c149f818de",
     "tests/chromium_ime/focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "tests/chromium_ime/keys.py": "93693dd61cb687266cd613c648d1248b7d3291061fa26aacd01aa8fde6f6a42f",
     "tests/chromium_ime/server-route-witness.mjs": "1ec0bfa5ab927cba1cdc31eb328f0786585dcbf002327dd07476a2eff6064d6a",
@@ -164,10 +165,10 @@
     "tests/domain/domain_tests.pro": "947393ae0be0b22d8200d4e0075a532ee005707ef3606a47b6a869db486f1109",
     "tests/fcitx_drain_server/README.md": "356982ba9f318a68b135e8c3321ad034986a2da6288c687843cbc4eb3dae1772",
     "tests/fcitx_drain_server/check_wrapper.py": "3e48124ecf2c544213063c9904631d974f45867402da5b9cadee1c10b8eaeeb1",
-    "tests/fcitx_drain_server/run.py": "b027e087d09d0376021cb38535708b4a67f97b768eb87caba8a42ab91e302f08",
-    "tests/fcitx_drain_server/server.cpp": "efe99d55231fa57c77b1cf1ce1d03e5abbdaa806ae57090ba8dccb674f0ee7f3",
+    "tests/fcitx_drain_server/run.py": "7affdc1eb12d2bc9db487fb71dcf0eae937344566575e769d97225deb20a4643",
+    "tests/fcitx_drain_server/server.cpp": "d3ba27332cd511341367f8f8ba19441a2e8c109c5eb69a170dc86451f62a794d",
     "tests/fcitx_drain_server/server.pro": "bf8e35924c1cdcf414444a8473a8c52844ac51856d12913e024b6cb909497900",
-    "tests/fcitx_drain_server/test_runner.py": "dc8434a377f7f28240b90db7eedfebec8e2f7750ce5eeacbfe60bed2b5752a45",
+    "tests/fcitx_drain_server/test_runner.py": "faf7672651eeba971698eb22dbf71e3767de79021aadc94959a21631737061a6",
     "tests/fcitx_drain_server/wrapper_ownership.cpp": "5704899ad569a6aa0f50c46203b8b70fd37edc29de0204fdd8e4487b4b0f9cfd",
     "tests/fcitx_transport/client.cpp": "7b6e282ef76cf4b80d7f8a4ffc4801857f01f9eecc3fc3f6d268833fcbda4595",
     "tests/fcitx_transport/client.pro": "9d87f3304b07350e156a05587fcc74e3ba62fb384477721439a4618533cee4e5",
@@ -234,7 +235,7 @@
     "tests/wayland_ime/keys.pro": "458e3410f8e67fdf735d1bcdb63070170fddcdd0f7ebdcd9ba510a50873e1faf",
     "tests/wayland_ime/server_route_witness_tests.mjs": "cc2ac97af439e9be23f57b94a95581eddef3229e6ead83c5ba01ad9fa34f4bfb",
     "tests/wayland_ime/space_telemetry_tests.mjs": "587c5792186f69c379646a49d65634fbbb8f6cc0e9bcbc6facd9bc17d254f170",
-    "tests/wayland_ime/test_addon_witness_guards.py": "601c6a8e1b888a9c1745d6ddf254c063b7b623a11f6571710f3555e1e60a3788",
+    "tests/wayland_ime/test_addon_witness_guards.py": "1194e1fdb97ad909663cdf302407d3a3ad05fd70c24681075e5c00f5362133cf",
     "tests/wayland_ime/test_core_entry_witness_guards.py": "89124219b7d4fb7f7f1d91ba6ee705191a838a173cfc201016d7ebc5e89a4d47",
     "tests/wayland_ime/test_drm_discovery.py": "964c693539f0f09c0b80598073743b2408b3d42f59e080e8a6f4cc8b79cc6046",
     "tests/wayland_ime/test_drm_metadata_snapshot.py": "08cf4b51269a2a7d6d62db7247e998d0de2fa886980cec0dbbe6e7b5b63984b9",
@@ -243,6 +244,8 @@
     "tests/wayland_ime/test_guards.py": "1d25f6d3277ac0b576a531a2d65e78be5d535323f42292776762e26c0e211aa2",
     "tests/wayland_ime/test_hypr_probe.py": "588c0a1026a360de4e4d532969bdeabc937edfc2ae41d42ab2113c3888970a15",
     "tests/wayland_ime/test_hyprland_ime.py": "542916e0c6eb340271acb4b4d3d0e3e387c98474e8810da4a98c8016c9d63fe3",
+    "tests/wayland_ime/test_hyprland_private_frontend.py": "cb48b225673b785348127f3ce413424c0e6164b1dd7b83dd28a99d7a0fd61ef9",
+    "tests/wayland_ime/test_private_frontend.py": "73b089d9f94b674554fc3e6b99c20dfb25b24b85e1f10d4e897fa76da12237fa",
     "tests/wayland_ime/test_server_route_witness_guards.py": "90929a1d6db228011466fda350e6316757c856e1a96f21346ed1ee003dbefad5",
     "tests/wayland_lifecycle/run.py": "53144c47e769ae018221cdb839c12d801051a3a2ee2fb160f872da100d740eb1",
     "tests/wayland_lifecycle/wire_client.cpp": "f4cfce91a4e682145a9469fd0f22de2249f984407e83711dbad8f6428d01ed0a",
@@ -295,7 +298,7 @@
     "tools/evaluationdata.h": "a3a990572af8efd332f26887b98f4875311d5deec3488cc413d5faf1bf52b2df",
     "tools/fcitx_chromium_lab.pro": "e8bddb23e6e66e101b1d2c31ded48e9a09a49f59c78055e49fd6b961195bee3a",
     "tools/fcitx_core_entry_lab.pro": "dfc3b9c622cfae8a16a4efa236f8ef113fb2bf8cf1d08081f8a08f44070eaaeb",
-    "tools/fcitx_frontend_build.py": "3070e9a5cfea0ccfa10aa8ead77c34142674215af7036e561b7558009a8e2495",
+    "tools/fcitx_frontend_build.py": "dda6bf2ae7d72c7e45ff2196ef4cecb4bbef59a20c01c8ae1de4684340ca4822",
     "tools/fcitx_frontend_lab.pro": "82c35bd61f5b03f26262b87f632f29dec0e6738035add20b02879600d5a71304",
     "tools/fcitx_grab_entry_lab.pro": "34f8b6834864a60eb5290952a0535070fc5e9434a6150544731b17025d93eea4",
     "tools/fcitx_lab.pro": "ee158abdaa566c08ea6391d53c299d4f65b134f0da7e60a9067ff937db19b9f0",
@@ -311,7 +314,7 @@
     "tools/hunspellengine.cpp": "a1030ac485865252f2354d0d7898f0b9ae7b9f7344a207403d3eb9b0756da051",
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
-    "tools/hyprland_ime_lab.py": "85a8b4623aabf5c06e5342f520ec1987884979a309a27259e28800b657092f87",
+    "tools/hyprland_ime_lab.py": "fac3c253bfb7e0bd42a4cce559bc709244bae40865639814beb20dbe1a04aa5e",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
     "tools/measure_probe_resources.py": "1f6e0390d0f1b315e3d1e9e9b253ffe73115c92a0c9c7d93ba7caf2e05edc2f8",
@@ -321,7 +324,7 @@
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
-    "tools/native_ime_clients.py": "f1a34e0e5522677dca6baa8960ebc2667594e98dc72d6c9e45a4a57c819c5e28",
+    "tools/native_ime_clients.py": "aa627ddc959363ebf453c3e306c35c9ffe0bf025322f8ff98cfff358447477fb",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
     "tools/prepare_cc0_evaluation.py": "47146bc4f7d70290eb4313771c8a9e894bd92ac71aedf0b6226dd750fac7e99e",
@@ -341,7 +344,7 @@
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
-    "tools/wayland_ime_lab.py": "a479a60a86667e2be16505bf52632fe27d0676d331773649355414daa92eef60"
+    "tools/wayland_ime_lab.py": "4775392e69f73d6dd46ca3821043ffc3fce5476e4c7b53065b020ceb408c316a"
   },
   "files": [
     {
@@ -582,6 +585,10 @@
     },
     {
       "path": "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/FCITX-KEEP-GRAB-001.md",
       "symbols": []
     },
     {
@@ -1122,22 +1129,22 @@
         },
         {
           "name": "inside",
-          "line": 63,
+          "line": 80,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 110,
+          "line": 138,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 164,
+          "line": 194,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 138,
+          "line": 168,
           "kind": "FunctionDef"
         }
       ]
@@ -1189,13 +1196,28 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_diagnostic_candidate_cannot_run_as_delivery_fix",
+          "name": "test_inactive_rejection_is_not_generic_failure",
           "line": 51,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_ab_lifecycle_and_release_evidence_required",
+          "line": 60,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_raw_inactive_requires_pair_and_reactivation_evidence",
+          "line": 70,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_diagnostic_candidate_cannot_run_as_delivery_fix",
+          "line": 78,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_forged_environment_cannot_enter_private_mode",
-          "line": 57,
+          "line": 84,
           "kind": "FunctionDef"
         }
       ]
@@ -2341,53 +2363,53 @@
           "kind": "ClassDef"
         },
         {
-          "name": "test_optional_signature_is_trailing_and_defaults_false",
+          "name": "test_legacy_optional_signature_preserved_with_inert_selector",
           "line": 56,
           "kind": "FunctionDef"
         },
         {
           "name": "test_invalid_combinations_refuse_before_endpoint_files_or_process",
-          "line": 67,
+          "line": 70,
           "kind": "FunctionDef"
         },
         {
           "name": "test_invalid_sandbox_combinations_refuse_before_base_plan",
-          "line": 84,
+          "line": 87,
           "kind": "FunctionDef"
         },
         {
           "name": "test_witness_selects_fixed_binary_config_and_module_without_new_rights",
-          "line": 94,
+          "line": 97,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_adds_only_one_environment_marker",
-          "line": 121,
+          "line": 124,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_requires_witness_before_files_endpoint_or_base_plan",
-          "line": 133,
+          "line": 136,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_cli_is_inert_and_dependency_checked",
-          "line": 152,
+          "line": 155,
           "kind": "FunctionDef"
         },
         {
           "name": "test_selected_module_must_pass_regular_file_guard",
-          "line": 171,
+          "line": 174,
           "kind": "FunctionDef"
         },
         {
           "name": "test_default_and_valid_witness_plans_are_inert",
-          "line": 177,
+          "line": 180,
           "kind": "FunctionDef"
         },
         {
           "name": "test_cli_invalid_selection_does_not_start_run",
-          "line": 190,
+          "line": 193,
           "kind": "FunctionDef"
         }
       ]
@@ -2893,6 +2915,116 @@
         {
           "name": "test_dbus_transport_failure_is_not_frontend_absence",
           "line": 97,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/wayland_ime/test_hyprland_private_frontend.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "ExactPrivateFrontend",
+          "line": 16,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "arguments",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_selected_sealed_mount_and_child_marker_only",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_no_unsealed_fallback_and_invalid_variant_before_probe",
+          "line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_failed_shared_admission_precedes_any_host_access",
+          "line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_plans_remain_inert_and_explicitly_require_permission",
+          "line": 43,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/wayland_ime/test_private_frontend.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "PrivateFrontend",
+          "line": 21,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_selected_requires_snapshot_and_sway",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_selected_mount_is_sealed_and_controls_are_child_only",
+          "line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_build_record_and_binary_must_match",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_keep_requires_current_cancellation_patch_metadata",
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_child_env_composes_preload_without_mutating_parent",
+          "line": 73,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_both_selected_variants_get_own_config_system_is_untouched",
+          "line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_private_diagnostics_are_extracted_and_reject_links",
+          "line": 96,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_seed_keyboard_only_selected_and_never_sends_input",
+          "line": 115,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_seed_readiness_is_exact_and_partial_or_eof_is_bounded",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_mapping_checks_device_and_inode",
+          "line": 140,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "private_path",
+          "line": 87,
           "kind": "FunctionDef"
         }
       ]
@@ -3514,27 +3646,32 @@
       "symbols": [
         {
           "name": "load",
-          "line": 10,
+          "line": 11,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 13,
+          "line": 14,
           "kind": "FunctionDef"
         },
         {
           "name": "build",
-          "line": 42,
+          "line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build_checked",
+          "line": 47,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 107,
+          "line": 129,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 90,
+          "line": 112,
           "kind": "FunctionDef"
         }
       ]
@@ -3702,28 +3839,38 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "frontend_selection",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "validate_frontend",
+          "line": 46,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "sandbox_args",
-          "line": 38,
+          "line": 53,
           "kind": "FunctionDef"
         },
         {
           "name": "start_bus",
-          "line": 117,
+          "line": 138,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 144,
+          "line": 165,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 217,
+          "line": 238,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 337,
+          "line": 366,
           "kind": "FunctionDef"
         }
       ]
@@ -4016,17 +4163,42 @@
       "symbols": [
         {
           "name": "input_frontend_absent",
-          "line": 11,
+          "line": 13,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "private_frontend_variant",
+          "line": 21,
           "kind": "FunctionDef"
         },
         {
           "name": "fcitx_child_env",
-          "line": 19,
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "prepare_frontend",
+          "line": 44,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "verify_frontend_mapping",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wait_seed_keyboard",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "seed_keyboard",
+          "line": 92,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 31,
+          "line": 102,
           "kind": "FunctionDef"
         }
       ]
@@ -4527,23 +4699,38 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "frontend_selection",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "validate_frontend",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "extract_private_browser_diagnostic",
+          "line": 55,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "sandbox_args",
-          "line": 22,
+          "line": 77,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 74,
+          "line": 132,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 140,
+          "line": 202,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 179,
+          "line": 241,
           "kind": "FunctionDef"
         }
       ]
@@ -5772,7 +5959,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "aa37a8d7c64fb3041031411819741d704f1a40b016fa8c93ac0c261ba2d16a06",
+    "docs/knowledge/fcitx-drain-fixture.md": "628a5c28cce9e737958d4d531bad8d03b767a7234a8366ee3c44803b847d8ef6",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",
