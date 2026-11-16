@@ -118,3 +118,36 @@ input-method behavior. No current Slack restart, native launch-flag change,
 profile read, draft read/write or message send was performed. A next actual-app
 trial needs a specifically bounded launch/unsent-test-draft scope rather than
 reusing the old temporary-launch or trial011 approval.
+
+## Read-only status diagnosis — 2026-11-16
+
+One newly scoped metadata run additionally read only org.a11y.Status.IsEnabled
+and ScreenReaderEnabled through fixed system Properties.Get calls, NO_AUTO_START
+and the existing deadline. Slack's four node methods remain unchanged; Attributes,
+Text/Value/Name/GetAll/actions and arbitrary application Get remain forbidden.
+Thirteen guards pass; one independent privacy diff review approved this scope.
+
+Observed existing bus, IsEnabled=false, ScreenReaderEnabled unknown (one sanitized
+property error), 8 Slack processes and zero matching a11y connections/nodes.
+No restart/configuration/profile/text/write/signal operation. Aggregate:
+data/slack-native-003-result.json. This is a snapshot, not proof of the cause.
+Static ELF metadata confirms the installed Slack links ATK/AT-SPI libraries; that
+does not prove initialization. Current launch context has no NO_AT_BRIDGE setting;
+Slack's own process environment was not inspected.
+
+Public upstream Chromium currently enables extended accessibility on certain
+ATK attribute/relation requests:
+https://raw.githubusercontent.com/chromium/chromium/main/ui/accessibility/platform/ax_platform_node_auralinux.cc
+Electron documents automatic accessibility activation and its in-app API:
+https://www.electronjs.org/docs/latest/tutorial/accessibility
+ATK bridge checks NO_AT_BRIDGE:
+https://raw.githubusercontent.com/GNOME/at-spi2-core/main/atk-adaptor/bridge.c
+These floating upstream sources are research, not matched Slack-build proof.
+No source code copied and no new dependency introduced.
+
+Do not add an automatic tree-wake request to the Slack probe: no matching peer
+exists, and current text/attribute restrictions still apply. Next controlled
+experiment should compare bridge/tree readiness on a PRIVATE accessibility bus
+with owned Chromium and fixed fixture, changing private status only. Host global
+accessibility status must not be enabled as a shortcut: it can expose other apps.
+A positive closed control would justify a separately scoped Slack trial later.

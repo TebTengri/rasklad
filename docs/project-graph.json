@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "fd7feb63b312ea384ca4b71c59a994aa0a9ec48ecf4efb320facfbe14fe7ce43",
+  "curatedSha256": "a4d3c62de102da3fe4a4bd4be75df1a8e220483149f05ef8f978956b8725e49b",
   "sourceSha256": {
     "AGENTS.md": "5314c9ef288f5bf793435a8c44384d09403616d94e6c8bf9f943a419c8933ade",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -83,7 +83,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "034152568916c3a4fb9850910f18234de3f78dd167259383ff654ce56bd9239b",
+    "docs/NEXT.md": "c5024d37182408dacd687551e4eed434239f923456d621bcbd324084adbb3260",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -91,7 +91,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-DESKTOP-001.md": "9f45dd0d5cdb9bd5c77e38196ca31f2fe4888f22b154ca4909ce3e452035da3d",
+    "docs/SLACK-DESKTOP-001.md": "a956189cdd03f00fb36697a3f4967c09524cc591d28c3a37cff431c4a66cb03a",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
@@ -242,7 +242,7 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
-    "tests/slack_probe/test_metadata_probe.py": "ba9c0c678aca2a19e013e31d84c159a6128de889fffc7c35a72728f2e1171bf3",
+    "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
@@ -365,7 +365,7 @@
     "tools/server_route_witness.cpp": "b13baa7f20f3831d9b62d8bcf6cc70af9b30637305e8d6e41bd39e57c468782e",
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
-    "tools/slack_accessibility_probe.py": "66b764f311197d43490735b8470c253b9f0efde3a426595d66e05266a963fdd1",
+    "tools/slack_accessibility_probe.py": "921be7f01cfe35cfd7f1c356aac114079a370fec55355f65383c7e15f23b9395",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
   },
@@ -2256,6 +2256,16 @@
         {
           "name": "test_broker_cannot_activate_enable_change_or_inject",
           "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_status_is_restricted_to_two_system_booleans",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_status_cannot_read_app_properties_or_mutate",
+          "line": 30,
           "kind": "FunctionDef"
         }
       ]
@@ -4751,22 +4761,22 @@
         },
         {
           "name": "slack_pids",
-          "line": 29,
+          "line": 33,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 41,
+          "line": 45,
           "kind": "FunctionDef"
         },
         {
           "name": "_probe",
-          "line": 51,
+          "line": 55,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 114,
+          "line": 129,
           "kind": "FunctionDef"
         },
         {
@@ -4785,23 +4795,28 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "node",
+          "name": "status",
           "line": 24,
           "kind": "FunctionDef"
         },
         {
+          "name": "node",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "transport",
-          "line": 53,
+          "line": 57,
           "kind": "FunctionDef"
         },
         {
           "name": "flag",
-          "line": 81,
+          "line": 96,
           "kind": "FunctionDef"
         },
         {
           "name": "call",
-          "line": 54,
+          "line": 58,
           "kind": "FunctionDef"
         }
       ]
@@ -6207,7 +6222,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "490cc364c16d6cb63e49fc5ce499f9cc813548901a177c7718a6ff87c6ef09ad",
+    "docs/knowledge/fcitx-drain-fixture.md": "c2054b2177e5a5304b19fc460f8621de013f420c114bc116391cbf17031c3350",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

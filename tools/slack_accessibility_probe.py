@@ -21,6 +21,10 @@ class Reader:
         if method not in BROKER_METHODS:raise ProbeError('forbidden-method')
         return self.transport('org.freedesktop.DBus','/org/freedesktop/DBus','org.freedesktop.DBus',method,argument)
     def address(self):return self.transport('org.a11y.Bus','/org/a11y/bus','org.a11y.Bus','GetAddress',None)
+    def status(self,name):
+        # Fixed service properties only; never app/UI Properties.Get/GetAll.
+        if name not in ('IsEnabled','ScreenReaderEnabled'):raise ProbeError('forbidden-status')
+        return self.transport('org.a11y.Bus','/org/a11y/bus','org.freedesktop.DBus.Properties','Get',('org.a11y.Status',name))
     def node(self,bus,path,method):
         if bus not in self.owned or method not in NODE_METHODS or type(path) is not str or len(path)>256 or not re.fullmatch(r'/org/a11y/atspi/accessible/[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*',path):raise ProbeError('forbidden-method')
         return self.transport(bus,path,ACCESSIBLE,method,None)
@@ -54,7 +58,8 @@ def _probe(Gio,GLib,Atspi,cancellable):
         def call(bus,path,interface,method,argument):
             remaining=deadline-time.monotonic()
             if remaining<=0:raise BudgetEnd()
-            parameters=None if argument is None else GLib.Variant('(s)',(argument,))
+            parameters=(None if argument is None else GLib.Variant('(ss)',argument)
+                        if isinstance(argument,tuple) else GLib.Variant('(s)',(argument,)))
             value=connection.call_sync(bus,path,interface,method,parameters,None,
                 Gio.DBusCallFlags.NO_AUTO_START,max(1,min(200,int(remaining*1000))),cancellable)
             return value.unpack()
@@ -64,6 +69,16 @@ def _probe(Gio,GLib,Atspi,cancellable):
             'focusedEditableObjects':[],'targetProcesses':None,'pidLookups':0,'pidLookupErrors':0,'truncated':False,'textRead':False,'writes':False,'safeAutoCorrection':False}
     if control.broker('NameHasOwner','org.a11y.Bus')!=(True,):return report
     report['a11yBusAvailable']=True
+    report['a11yStatus']={'isEnabled':None,'screenReaderEnabled':None,'errors':0}
+    for name,key in (('IsEnabled','isEnabled'),('ScreenReaderEnabled','screenReaderEnabled')):
+        try:
+            value=control.status(name)
+            if type(value) is not tuple or len(value)!=1 or type(value[0]) is not bool:
+                raise ProbeError('status-type')
+            report['a11yStatus'][key]=value[0]
+        except BudgetEnd:
+            report['truncated']=True;return report
+        except Exception:report['a11yStatus']['errors']+=1
     address=control.address()[0]
     if type(address) is not str or len(address)>1024 or not address.startswith('unix:'):raise ProbeError('unsupported-transport')
     connection=Gio.DBusConnection.new_for_address_sync(address,Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT|Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,None,cancellable)
@@ -115,6 +130,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');args=parser.parse_args()
     if not args.run:
         print(json.dumps({'mode':'plan','target':'native slack only','methods':sorted(NODE_METHODS),
+                          'systemStatusProperties':['IsEnabled','ScreenReaderEnabled'],
                           'maxNodes':128,'seconds':10,'textRead':False,'writes':False}));return 0
     try:print(json.dumps(run(),sort_keys=True));return 0
     except Exception:print(json.dumps({'error':'slack-metadata-probe-unavailable','textRead':False,'writes':False}),file=sys.stderr);return 1

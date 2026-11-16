@@ -19,9 +19,11 @@
 
 ## Следующий блок
 
-1. Выбрать минимальный способ подключения к реальному приложению с проверяемым полем.
-2. Начать с адресного чтения docs/SLACK-DESKTOP-001.md: прошлый a11y запуск дал 0 узлов; не повторять без нового основания.
-3. Разделить готовность LAB и production; UI/установка/реальные приложения пока не включены.
+- Slack snapshot003: existing a11y bus, IsEnabled=false, ScreenReaderEnabled unknown/error1, 0 Slack peers/nodes.
+- Metadata reader now reads only 2 fixed system booleans; 13 guards + privacy review pass. No settings changed.
+- Подготовить PRIVATE AT-SPI bus + owned Chromium control: compare disabled/enabled bridge readiness without host bus.
+- Не повторять Slack restart/Attributes/tree-wake без matching peer и нового основания.
+- Сначала docs/SLACK-DESKTOP-001.md, последний раздел; production UI/установка ещё не включены.
 
 ## Разрешения и границы
 

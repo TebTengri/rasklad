@@ -309,7 +309,8 @@
         "data/fcitx-keep-grab-modifier-001-result.json",
         "data/hyprland-keep-grab-011-result.json",
         "docs/SLACK-DESKTOP-001.md",
-        "data/slack-native-002-result.json"
+        "data/slack-native-002-result.json",
+        "data/slack-native-003-result.json"
       ],
       "tests": [
         "python3 tests/fcitx_drain_server/test_runner.py",

@@ -23,4 +23,14 @@ class MetadataGuardTests(unittest.TestCase):
   for method in ['StartServiceByName','Set','RegisterEvent','SendMessage','GetText']:
    with self.assertRaises(probe.ProbeError):self.reader.broker(method)
   self.assertEqual(self.calls,[])
+ def test_status_is_restricted_to_two_system_booleans(self):
+  for name in ('IsEnabled','ScreenReaderEnabled'):
+   self.reader.status(name)
+  self.assertEqual(self.calls,[('org.a11y.Bus','/org/a11y/bus','org.freedesktop.DBus.Properties','Get',('org.a11y.Status',name)) for name in ('IsEnabled','ScreenReaderEnabled')])
+ def test_status_cannot_read_app_properties_or_mutate(self):
+  for name in ('Name','Text','Attributes','GetAll','Set','org.a11y.Status','IsEnabled;Set'):
+   with self.assertRaises(probe.ProbeError):self.reader.status(name)
+  with self.assertRaises(probe.ProbeError):self.reader.node(':1.10',probe.ROOT_PATH,'Get')
+  with self.assertRaises(probe.ProbeError):self.reader.broker('Get')
+  self.assertEqual(self.calls,[])
 if __name__=='__main__':unittest.main()
