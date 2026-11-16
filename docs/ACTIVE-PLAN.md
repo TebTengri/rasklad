@@ -16,7 +16,7 @@ new required permission. Preserve all boundaries in NEXT.md.
    necessary; no new ECH permission inferred. Existing broker results lack
    per-domain rejection evidence, so they cannot prove complete Slack connectivity.
    Owner now permits the normal authenticated Slack with a designated test
-   channel. Exact channel is pending. No unrelated conversations, bulk text
+   channel. Exact channel is confirmed and stored only locally. No unrelated conversations, bulk text
    traversal, real-profile copying, or messages sent by automation.
    One metadata-only live preflight: 8 processes, 0 accessibility peers,
    IsEnabled false; no text read or writes. A channel alone does not resolve
@@ -30,3 +30,18 @@ new required permission. Preserve all boundaries in NEXT.md.
 
 Acceptance remains end-to-end synthetic correction in the target adapter, with
 no interference in excluded applications and no expansion of desktop privileges.
+
+## Current execution roles and next authorized work
+
+Codex coordinates on behalf of the owner and accepts changes. Claude implements;
+Gemini/Grok provide scoped criticism where available. Do not claim a model ran
+if authentication/network/limits prevented it.
+
+- Temporary live IsEnabled trial remains pending EXPLICIT permission. Generic
+  continuation does not consume that decision.
+- Completed: Claude implemented pre-mutation main-thread refusal and tests.
+  Codex applied and verified. Gemini found the finally-entry signal race;
+  Claude follow-up timed out, so Codex implemented the whole-trial signal
+  wrapper with a regression test. Grok timed out; no review credited.
+- Review the accepted boundary with available helpers using public source only.
+- No additional empty-profile Slack startup repeats.

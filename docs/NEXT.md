@@ -41,3 +41,6 @@
 - Не читать архив CONTINUATION-PLAN/всю переписку; bin/project-map find <topic>.
 
 - Prepared tools/slack_status_trial.py, NOT run: temporary session-wide IsEnabled trial requires explicit permission; channel authorization is insufficient.
+
+- Execution roles updated in AGENTS: Codex represents owner/accepts changes; Claude implements; Gemini/Grok assist.
+- Claude main-thread guard applied; Gemini signal-race finding fixed by Codex after Claude timeout. 10 status tests pass. No live mutation executed; explicit approval still pending.

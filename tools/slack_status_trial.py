@@ -1,12 +1,29 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 """One temporary live IsEnabled trial. Plan only unless explicitly approved."""
-import argparse,importlib.util,json,os,signal,time
+import argparse,importlib.util,json,os,signal,threading,time
 from pathlib import Path
 
 class Refused(Exception):pass
 
 def trial(control,probe):
+    # signal.signal() works only in the main thread; refuse before any bus access so restore can't fail after mutation.
+    if threading.current_thread() is not threading.main_thread():raise Refused('not-main-thread')
+    # Ignore handled termination before any mutation, including finally entry.
+    # The whole trial is bounded; SIGKILL/crashes remain outside this guarantee.
+    signals=(signal.SIGINT,signal.SIGTERM)
+    old_mask=signal.pthread_sigmask(signal.SIG_BLOCK,signals)
+    saved={sig:signal.signal(sig,signal.SIG_IGN) for sig in signals}
+    try:
+        signal.pthread_sigmask(signal.SIG_SETMASK,old_mask)
+        return _trial(control,probe)
+    finally:
+        signal.pthread_sigmask(signal.SIG_BLOCK,signals)
+        # Discard pending handled requests while still ignored, after rollback.
+        signal.pthread_sigmask(signal.SIG_SETMASK,old_mask)
+        for sig,handler in saved.items():signal.signal(sig,handler)
+
+def _trial(control,probe):
     report={'schema':1,'textRead':False,'writesToApps':False,'restart':False,'statusChanged':False,'restored':False}
     owner=control.owner()
     if not owner:raise Refused('service-not-running')
@@ -28,25 +45,17 @@ def trial(control,probe):
     finally:
         # Restore even after an uncertain Set reply. Never mutate a replacement owner.
         if attempted:
-            # Defer repeat termination requests during bounded restoration.
-            signals=(signal.SIGINT,signal.SIGTERM)
-            old_mask=signal.pthread_sigmask(signal.SIG_BLOCK,signals)
-            saved={sig:signal.signal(sig,signal.SIG_IGN) for sig in signals}
-            try:
-                for attempt in range(3):
-                    report['restoreAttempts']=attempt+1
-                    try:
-                        if control.owner()!=owner:raise Refused('owner-changed-before-restore')
-                        control.set(owner,baseline)
-                        if control.get(owner) is not baseline:raise Refused('restore-readback-mismatch')
-                        report['restored']=True;report.pop('restoreError',None);break
-                    except BaseException as exc:
-                        report['restoreError']=str(exc) if isinstance(exc,Refused) else type(exc).__name__
-                        if report['restoreError']=='owner-changed-before-restore':break
-                        if attempt<2:time.sleep(.05)
-            finally:
-                signal.pthread_sigmask(signal.SIG_SETMASK,old_mask)
-                for sig,handler in saved.items():signal.signal(sig,handler)
+            for attempt in range(3):
+                report['restoreAttempts']=attempt+1
+                try:
+                    if control.owner()!=owner:raise Refused('owner-changed-before-restore')
+                    control.set(owner,baseline)
+                    if control.get(owner) is not baseline:raise Refused('restore-readback-mismatch')
+                    report['restored']=True;report.pop('restoreError',None);break
+                except BaseException as exc:
+                    report['restoreError']=str(exc) if isinstance(exc,Refused) else type(exc).__name__
+                    if report['restoreError']=='owner-changed-before-restore':break
+                    if attempt<2:time.sleep(.05)
     result=report.get('probe')
     report['measurementCompleted']=(isinstance(result,dict) and result.get('schema')==1
         and result.get('textRead') is False and result.get('writes') is False

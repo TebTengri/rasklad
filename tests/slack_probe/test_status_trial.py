@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-import importlib.util,os,signal,unittest
+import importlib.util,os,signal,threading,unittest
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('status_trial',Path(__file__).resolve().parents[2]/'tools/slack_status_trial.py')
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
@@ -60,6 +60,19 @@ class StatusTrialTests(unittest.TestCase):
    r=m.trial(c,lambda:{})
    self.assertTrue(r['restored'])
   finally:signal.signal(signal.SIGTERM,old)
+ def test_probe_signals_do_not_bypass_restore_and_handlers_return(self):
+  c=Fake();seen=[]
+  def handler(*args):seen.append(1)
+  previous={sig:signal.signal(sig,handler) for sig in (signal.SIGINT,signal.SIGTERM)}
+  try:
+   def probe():
+    os.kill(os.getpid(),signal.SIGTERM);os.kill(os.getpid(),signal.SIGINT)
+    return {'schema':1,'textRead':False,'writes':False,'truncated':False}
+   r=m.trial(c,probe)
+   self.assertTrue(r['passed']);self.assertIs(c.value,False);self.assertEqual(seen,[])
+   for sig in previous:self.assertIs(signal.getsignal(sig),handler)
+  finally:
+   for sig,old in previous.items():signal.signal(sig,old)
  def test_refuses_existing_enabled_status_and_wrong_uid(self):
   c=Fake();c.value=True
   with self.assertRaises(m.Refused):m.trial(c,lambda:{})
@@ -67,4 +80,39 @@ class StatusTrialTests(unittest.TestCase):
   c=Fake();c.uid=lambda owner:os.getuid()+1
   with self.assertRaises(m.Refused):m.trial(c,lambda:{})
   self.assertEqual(c.writes,[])
+ def test_refuses_worker_thread_before_any_control_call(self):
+  calls=[]
+  class Recording(Fake):
+   def owner(self):calls.append('owner');return super().owner()
+   def uid(self,owner):calls.append('uid');return super().uid(owner)
+   def get(self,owner):calls.append('get');return super().get(owner)
+   def set(self,owner,value):calls.append('set');super().set(owner,value)
+  c=Recording();probed=[];outcome={}
+  def worker():
+   try:outcome['report']=m.trial(c,lambda:probed.append(1) or {})
+   except BaseException as exc:outcome['exc']=exc
+  t=threading.Thread(target=worker);t.start();t.join(5)
+  self.assertFalse(t.is_alive());self.assertNotIn('report',outcome)
+  self.assertIsInstance(outcome.get('exc'),m.Refused)
+  self.assertEqual(str(outcome['exc']),'not-main-thread')
+  self.assertEqual(calls,[]);self.assertEqual(c.writes,[]);self.assertEqual(probed,[])
+  self.assertIs(c.value,False)
+  # The guard is not overbroad: the same control works from the main thread.
+  r=m.trial(c,lambda:{'schema':1,'textRead':False,'writes':False,'truncated':False})
+  self.assertTrue(r['passed']);self.assertEqual(c.writes,[True,False])
+ def test_unconfirmed_enable_is_restored_without_probe(self):
+  for stored in (False,1):
+   with self.subTest(stored=stored):
+    c=Fake();original=c.set;probed=[]
+    def bad_enable(owner,value,c=c,original=original,stored=stored):
+     if value:c.writes.append(value);c.value=stored
+     else:original(owner,value)
+    c.set=bad_enable
+    r=m.trial(c,lambda:probed.append(1) or {})
+    self.assertEqual(r['error'],'enable-not-confirmed');self.assertTrue(r['enableAttempted'])
+    self.assertEqual(r['enableOutcome'],'unknown');self.assertFalse(r['statusChanged'])
+    self.assertEqual(probed,[]);self.assertNotIn('probe',r)
+    self.assertEqual(c.writes,[True,False]);self.assertIs(c.value,False)
+    self.assertTrue(r['restored']);self.assertEqual(r['restoreAttempts'],1);self.assertNotIn('restoreError',r)
+    self.assertFalse(r['measurementCompleted']);self.assertFalse(r['passed'])
 if __name__=='__main__':unittest.main()
