@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "64da5d3c3d990a5d04c06588bbecd8a2891463be23595b828b4e6d3503cdccd9",
+  "curatedSha256": "6870423295a3c69a454fe6e4ab9d0cda7cacf23f5b474820cf43546f6f67a8bc",
   "sourceSha256": {
-    "AGENTS.md": "5314c9ef288f5bf793435a8c44384d09403616d94e6c8bf9f943a419c8933ade",
+    "AGENTS.md": "2ccd2eaa478cd91fd6e6542f4075c1c6c6012ffe653f13dbc1cb19ea74a783a7",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
     "LICENSE": "cbcea74632d9225584ae7b24a788eb50144ebe1a75d58a1f78138ec1f44f3726",
     "README.md": "4678a10a9cd3efb5623fb61fe631c3f613a663158784e3688befe1a67d59716e",
@@ -84,7 +84,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "cd088f28cc860d2ef6cb5f009b3a495fc36dc3d7783b99871571e9450c372d14",
+    "docs/NEXT.md": "f743fb672e63b049b1ec6912a1bcdbeefb54a8b1ca6aebbc8f31a31c049b95be",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -93,6 +93,7 @@
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
+    "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
@@ -243,8 +244,9 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
+    "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
-    "tests/slack_probe/test_private_bridge_lab.py": "a6ef5c08163cb2a2a0db809996ec713d3aa4fe65ec123dd9a785408cae7336ae",
+    "tests/slack_probe/test_private_bridge_lab.py": "e34dc1fb1a6314f646c546e6fc512e11035c6fc458ecca3d0c158219f56a734e",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
@@ -276,7 +278,7 @@
     "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
     "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
     "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
-    "tools/a11y_bridge_lab.py": "bbab79cb6178743ff083ce0078bfaa7943040796abdf01a2c683e69017fb4191",
+    "tools/a11y_bridge_lab.py": "a01ead836bf69505df6d98c3504e78f702878131ac70f4ae5d32333b57b93910",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
     "tools/audit_natural_router_metrics.py": "50d345858a638529f0ca3880dacaf618351432a8e9a106af13a9ffcdd86f0d16",
@@ -369,6 +371,7 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "921be7f01cfe35cfd7f1c356aac114079a370fec55355f65383c7e15f23b9395",
+    "tools/slack_https_bridge.py": "cb05d41ff9e4e3694e8b550581cde77d336e08e7748263ed2a749b02361d4043",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
   },
@@ -731,6 +734,10 @@
     },
     {
       "path": "docs/SLACK-DESKTOP-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/SLACK-ISOLATED-001.md",
       "symbols": []
     },
     {
@@ -2233,6 +2240,76 @@
       "symbols": []
     },
     {
+      "path": "tests/slack_probe/test_https_bridge.py",
+      "symbols": [
+        {
+          "name": "hello",
+          "line": 6,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "HttpsBridgePolicy",
+          "line": 13,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_only_slack_https_connect",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_dns_rebinding_and_private_addresses_denied",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_real_client_hello_names_and_malformed_frames",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_wrong_sni_blocks_before_dns_or_connect",
+          "line": 37,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_encrypted_or_missing_server_name_rejected",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_offline_broker_denies_without_dns",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "answer",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Stream",
+          "line": 28,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "packet",
+          "line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "recv",
+          "line": 30,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/slack_probe/test_metadata_probe.py",
       "symbols": [
         {
@@ -2296,8 +2373,23 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_builder_keeps_isolation_and_drops_disabled_bridge",
+          "name": "test_diagnostics_return_only_fixed_categories",
           "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_window_metadata_cannot_touch_host_display",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_builder_keeps_isolation_and_drops_disabled_bridge",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_bridge_never_shares_host_network",
+          "line": 47,
           "kind": "FunctionDef"
         }
       ]
@@ -3379,37 +3471,72 @@
       "symbols": [
         {
           "name": "private_context",
-          "line": 10,
+          "line": 11,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 18,
+          "line": 19,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 29,
+          "line": 37,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "load_bridge",
+          "line": 95,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "stderr_categories",
+          "line": 106,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_kind",
+          "line": 114,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_counts",
+          "line": 123,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "visible_windows",
+          "line": 135,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 74,
+          "line": 168,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 150,
+          "line": 271,
           "kind": "FunctionDef"
         },
         {
+          "name": "Attr",
+          "line": 140,
+          "kind": "ClassDef"
+        },
+        {
           "name": "call",
-          "line": 82,
+          "line": 188,
           "kind": "FunctionDef"
         },
         {
           "name": "owner_pid",
-          "line": 84,
+          "line": 190,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "consume_stderr",
+          "line": 225,
           "kind": "FunctionDef"
         }
       ]
@@ -4894,6 +5021,106 @@
       ]
     },
     {
+      "path": "tools/slack_https_bridge.py",
+      "symbols": [
+        {
+          "name": "destination",
+          "line": 7,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "public_addresses",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "client_name",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tls_hello",
+          "line": 57,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "resolve_ipv4",
+          "line": 75,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pump",
+          "line": 83,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Broker",
+          "line": 91,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Relay",
+          "line": 182,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "vector",
+          "line": 35,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "take",
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 92,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_serve",
+          "line": 101,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_allow",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_client",
+          "line": 116,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close",
+          "line": 171,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__init__",
+          "line": 184,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_serve",
+          "line": 190,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_client",
+          "line": 198,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "close",
+          "line": 210,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tools/summarize_technical_evaluation.py",
       "symbols": [
         {
@@ -6294,7 +6521,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "2e708510237ec9334811d9760d3fd7983c5e961b245ebc597074d910b39ee935",
+    "docs/knowledge/fcitx-drain-fixture.md": "dfbad37f880a434a9a3e394077edc9c9792756eaeab226ad858bb6b6b8e52c4f",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

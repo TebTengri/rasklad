@@ -43,6 +43,10 @@ Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus
 - `tests/slack_probe/test_private_bridge_lab.py`
 - `docs/A11Y-BRIDGE-CONTROL-001.md`
 - `data/a11y-bridge-control-001-result.json`
+- `tools/slack_https_bridge.py`
+- `tests/slack_probe/test_https_bridge.py`
+- `docs/SLACK-ISOLATED-001.md`
+- `data/slack-isolated-001-result.json`
 
 ## Связи
 

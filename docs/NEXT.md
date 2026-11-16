@@ -19,13 +19,15 @@
 
 ## Следующий блок
 
-- Private bridge control complete: IsEnabled=false→0Chromium peers; true→1peer +webdocs; both force-renderer flag.
-- 15guards + one safety review pass; own X11 namespaces only. docs/A11Y-BRIDGE-CONTROL-001.md. Not Slack-cause proof.
-- Подготовить reviewable per-process Slack/private-bus trial; launcher HOME/XDG тоже private, без host-global status.
-- Реальный Slack launch/restart с normal profile требует нового согласия; пока только подготовка кода/плана.
+- Installed Slack tested only with empty profile/private Xvfb+buses: no visiblewindow/a11ypeer in eitherstatus.
+- Strict Unix HTTPS broker built; no --share-net;24guardsPASS. docs/SLACK-ISOLATED-001.md has exact limits/results.
+- ONE owner-approved ECH A/B trial opened2connections percase, stillno UI; permission CONSUMED. Defaultdenyremains.
+- Offline fixedstderr flags: busUnavailable, no fatal/display-init match; causeunknown. Process roles previouslyunreliable, nowunknown unlessknown.
+- Next diagnose minimal private Slack desktop/bootstrap offline; verify primary runtime/API sources before moreflags. No realprofilecopy/globala11y workaround.
 
 ## Разрешения и границы
 
+- ECH exception CONSUMED: --allow-ech-outer requires fresh explicit permission.
 - Exact Hyprland011 approval CONSUMED: новый host Wayland/GPU запуск запрещён без свежего согласия.
 - Закрытые no-host/no-GPU/no-network собственные фикстуры разрешены.
 - Slack draft/text/write/restart, установленный IME, конфиги, автозапуск не трогать.
