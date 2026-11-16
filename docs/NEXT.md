@@ -19,11 +19,10 @@
 
 ## Следующий блок
 
-- Slack snapshot003: existing a11y bus, IsEnabled=false, ScreenReaderEnabled unknown/error1, 0 Slack peers/nodes.
-- Metadata reader now reads only 2 fixed system booleans; 13 guards + privacy review pass. No settings changed.
-- Подготовить PRIVATE AT-SPI bus + owned Chromium control: compare disabled/enabled bridge readiness without host bus.
-- Не повторять Slack restart/Attributes/tree-wake без matching peer и нового основания.
-- Сначала docs/SLACK-DESKTOP-001.md, последний раздел; production UI/установка ещё не включены.
+- Private bridge control complete: IsEnabled=false→0Chromium peers; true→1peer +webdocs; both force-renderer flag.
+- 15guards + one safety review pass; own X11 namespaces only. docs/A11Y-BRIDGE-CONTROL-001.md. Not Slack-cause proof.
+- Подготовить reviewable per-process Slack/private-bus trial; launcher HOME/XDG тоже private, без host-global status.
+- Реальный Slack launch/restart с normal profile требует нового согласия; пока только подготовка кода/плана.
 
 ## Разрешения и границы
 

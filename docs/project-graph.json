@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "a4d3c62de102da3fe4a4bd4be75df1a8e220483149f05ef8f978956b8725e49b",
+  "curatedSha256": "64da5d3c3d990a5d04c06588bbecd8a2891463be23595b828b4e6d3503cdccd9",
   "sourceSha256": {
     "AGENTS.md": "5314c9ef288f5bf793435a8c44384d09403616d94e6c8bf9f943a419c8933ade",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -28,6 +28,7 @@
     "bin/test-input-lab": "b9f0accbba63fa706230753e2dd0f9c95451064f8188a1ca9f9d8dce17caa596",
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
+    "docs/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
     "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
@@ -83,7 +84,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "c5024d37182408dacd687551e4eed434239f923456d621bcbd324084adbb3260",
+    "docs/NEXT.md": "cd088f28cc860d2ef6cb5f009b3a495fc36dc3d7783b99871571e9450c372d14",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -91,7 +92,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-DESKTOP-001.md": "a956189cdd03f00fb36697a3f4967c09524cc591d28c3a37cff431c4a66cb03a",
+    "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
@@ -243,6 +244,7 @@
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
     "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
+    "tests/slack_probe/test_private_bridge_lab.py": "a6ef5c08163cb2a2a0db809996ec713d3aa4fe65ec123dd9a785408cae7336ae",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
@@ -274,6 +276,7 @@
     "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
     "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
     "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
+    "tools/a11y_bridge_lab.py": "bbab79cb6178743ff083ce0078bfaa7943040796abdf01a2c683e69017fb4191",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
     "tools/audit_natural_router_metrics.py": "50d345858a638529f0ca3880dacaf618351432a8e9a106af13a9ffcdd86f0d16",
@@ -468,6 +471,10 @@
     },
     {
       "path": "bin/test-wayland-ime",
+      "symbols": []
+    },
+    {
+      "path": "docs/A11Y-BRIDGE-CONTROL-001.md",
       "symbols": []
     },
     {
@@ -2271,6 +2278,31 @@
       ]
     },
     {
+      "path": "tests/slack_probe/test_private_bridge_lab.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 6,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "BridgeControlGuards",
+          "line": 10,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_only_explicit_private_context_may_mutate_status",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_builder_keeps_isolation_and_drops_disabled_bridge",
+          "line": 19,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/slack_probe/test_quit_request.py",
       "symbols": [
         {
@@ -3341,6 +3373,46 @@
     {
       "path": "tests/wayland_lifecycle/wire_lifecycle.pro",
       "symbols": []
+    },
+    {
+      "path": "tools/a11y_bridge_lab.py",
+      "symbols": [
+        {
+          "name": "private_context",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sandbox_args",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inside",
+          "line": 74,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 150,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "call",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "owner_pid",
+          "line": 84,
+          "kind": "FunctionDef"
+        }
+      ]
     },
     {
       "path": "tools/audit_context_aggregates.py",
@@ -6222,7 +6294,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "c2054b2177e5a5304b19fc460f8621de013f420c114bc116391cbf17031c3350",
+    "docs/knowledge/fcitx-drain-fixture.md": "2e708510237ec9334811d9760d3fd7983c5e961b245ebc597074d910b39ee935",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

@@ -151,3 +151,12 @@ experiment should compare bridge/tree readiness on a PRIVATE accessibility bus
 with owned Chromium and fixed fixture, changing private status only. Host global
 accessibility status must not be enabled as a shortcut: it can expose other apps.
 A positive closed control would justify a separately scoped Slack trial later.
+
+## Private bridge control result
+
+A new owned Chromium/X11 experiment changed IsEnabled only on its PRIVATE bus:
+false→0 Chromium peers; true→1 peer and web documents observed, with the same
+force-renderer flag. See A11Y-BRIDGE-CONTROL-001.md. This supports a transport
+readiness hypothesis without proving the installed Slack cause. No real app or
+global accessibility flag changed. Next real-app trial must be per-process,
+private-bus scoped and separately consented; no host-wide workaround.

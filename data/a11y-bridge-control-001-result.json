@@ -1,0 +1,47 @@
+{
+  "comparisonOutcome": "enabled-only-peers",
+  "hostBusConnected": false,
+  "hostConfigurationChanged": false,
+  "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+  "passed": true,
+  "sandboxed": true,
+  "schema": 1,
+  "slackAccessed": false,
+  "supportsStatusHypothesis": true,
+  "textRead": false,
+  "trials": [
+    {
+      "chromiumPeers": 0,
+      "documentNodes": 0,
+      "exitCode": 0,
+      "inspectedNodes": 0,
+      "isEnabled": false,
+      "mode": "disabled",
+      "passed": true,
+      "textRead": false
+    },
+    {
+      "chromiumPeers": 1,
+      "documentNodes": 2,
+      "exitCode": 0,
+      "inspectedNodes": 64,
+      "isEnabled": true,
+      "mode": "enabled",
+      "passed": true,
+      "textRead": false
+    }
+  ],
+  "writesToApps": false,
+  "displayBackend": "private Xvfb/X11",
+  "chromiumPackage": "chromium 155.0.8059.84-1",
+  "atspiPackage": "at-spi2-core 2.62.1-1",
+  "forceRendererAccessibilityInBothModes": true,
+  "nodeBudgetPerTrial": 64,
+  "fullTreeTraversalClaimed": false,
+  "slackCauseProven": false,
+  "guardTests": 15,
+  "outsideSandboxInsideCommandRefused": true,
+  "independentSafetyReview": "approved closed run; passed distinguishes measurement completion from hypothesis outcome",
+  "sourceSha256": "bbab79cb6178743ff083ce0078bfaa7943040796abdf01a2c683e69017fb4191",
+  "boundaryBasis": "namespace/env configuration and review, not a global system-change audit"
+}

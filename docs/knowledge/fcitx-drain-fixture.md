@@ -39,6 +39,10 @@ Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus
 - `docs/SLACK-DESKTOP-001.md`
 - `data/slack-native-002-result.json`
 - `data/slack-native-003-result.json`
+- `tools/a11y_bridge_lab.py`
+- `tests/slack_probe/test_private_bridge_lab.py`
+- `docs/A11Y-BRIDGE-CONTROL-001.md`
+- `data/a11y-bridge-control-001-result.json`
 
 ## Связи
 
