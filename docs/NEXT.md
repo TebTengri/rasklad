@@ -25,7 +25,9 @@
 - Offline fixedstderr flags: busUnavailable, no fatal/display-init match; causeunknown. Process roles previouslyunreliable, nowunknown unlessknown.
 - Native private Sway A/B: compositor ready; Slack0peers both, Chromium enabled1peer/64nodes. Window visibility unmeasured. docs/SLACK-WAYLAND-BOOTSTRAP-001.md.
 - busUnavailable also occurs in successful Chromium control; not a proven Slack cause.
-- Next diagnose minimal private Slack desktop/bootstrap offline; verify primary runtime/API sources before moreflags. No realprofilecopy/globala11y workaround.
+- 15s offline protocol control: Slack registry/surface yes, toplevel not observed; Chromium all3 yes. docs/SLACK-STARTUP-STAGE-001.md.
+- Execute docs/ACTIVE-PLAN.md autonomously; no identical offline A/B repeats.
+- Next inspect bootstrap/network fixture boundary; verify primary runtime/API sources before moreflags. No realprofilecopy/globala11y workaround.
 
 ## Разрешения и границы
 

@@ -44,11 +44,12 @@ def sandbox_args(chrome,paths,identity,mode,target='chromium',bridge=None,allow_
     return clean[:at]+network+['--setenv','RASKLAD_A11Y_BACKEND',backend]+['--setenv','NO_AT_BRIDGE','0','--setenv','GTK_IM_MODULE','gtk-im-context-simple',
         '--setenv','RASKLAD_A11Y_CONTROL','1','--setenv','RASKLAD_A11Y_MODE',mode,'--setenv','RASKLAD_A11Y_TARGET',target]+clean[at:]
 
-def run(target='chromium',bridge=None,allow_ech=False,backend='x11'):
+def run(target='chromium',bridge=None,allow_ech=False,backend='x11',startup_probe=False):
     if allow_ech and bridge!='online':raise ValueError('ech-policy')
     if bridge not in (None,'check','online') or (bridge and target!='slack'):raise ValueError('bridge-target')
     if target not in TARGETS:raise ValueError('target')
     if backend not in ('x11','wayland') or (backend=='wayland' and bridge):raise ValueError('backend-policy')
+    if startup_probe and bridge:raise ValueError('startup-offline-only')
     if os.geteuid()==0:raise RuntimeError('root-not-admitted')
     spec=importlib.util.spec_from_file_location('chrome',ROOT/'tools/chromium_ime_lab.py')
     chrome=importlib.util.module_from_spec(spec);spec.loader.exec_module(chrome)
@@ -80,7 +81,10 @@ def run(target='chromium',bridge=None,allow_ech=False,backend='x11'):
             identity['group'].write_text(f'lab:x:{os.getgid()}:\n')
             identity['machine-id'].write_text('00000000000000000000000000000006\n')
             with (directory/'report').open('w+b') as out:
-                child=subprocess.Popen(sandbox_args(chrome,paths,identity,mode,target,bridge,allow_ech,backend,snapshots),pass_fds=tuple(snapshots.values()),stdin=subprocess.DEVNULL,
+                command=sandbox_args(chrome,paths,identity,mode,target,bridge,allow_ech,backend,snapshots)
+                if startup_probe:
+                    at=command.index('--');command[at:at]=['--setenv','RASKLAD_STARTUP_PROBE','1']
+                child=subprocess.Popen(command,pass_fds=tuple(snapshots.values()),stdin=subprocess.DEVNULL,
                     stdout=out,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin'},start_new_session=True,preexec_fn=chrome.limits)
                 rc=child.wait(timeout=30)
                 out.seek(0);raw=out.read(16385)
@@ -119,6 +123,13 @@ ERROR_MARKERS={
     'certificate':(b'cert_authority_invalid',b'certificate verify failed'),
     'busUnavailable':(b'failed to connect to the bus',b'serviceunknown'),
     'fatal':(b'fatal:',b'check failed:'),
+    'permissionDenied':(b'permission denied',b'eacces'),
+    'connectionFailure':(b'err_connection',b'err_name_not_resolved',b'enetunreach'),
+    'missingResource':(b'enoent',b'cannot find module'),
+    'waylandRegistry':(b'.get_registry(',),
+    'waylandSurface':(b'.create_surface(',),
+    'waylandToplevel':(b'.get_toplevel(',),
+    'singletonFailure':(b'processsingleton',b'singletonlock'),
 }
 def stderr_categories(chunks):
     flags={name:False for name in ERROR_MARKERS};tail=b''
@@ -255,14 +266,17 @@ def inside():
             proxy_args=['--proxy-server='+proxy]
             if os.environ.get('RASKLAD_ECH_OUTER_ALLOWED')!='1':proxy_args+=['--disable-features=EncryptedClientHello']
         diagnostics={}
+        startup_probe=os.environ.get('RASKLAD_STARTUP_PROBE')=='1'
+        if startup_probe and bridge_mode:raise RuntimeError('not-private-control')
+        if startup_probe and backend=='wayland':browser_env['WAYLAND_DEBUG']='client'
         def consume_stderr(stream):
             diagnostics.update(stderr_categories(iter(lambda:stream.read(1024),b'')))
         browser=subprocess.Popen([TARGETS[target],'--ozone-platform='+backend,'--force-renderer-accessibility',
             '--disable-gpu','--disable-dev-shm-usage','--disable-background-networking','--disable-component-update',
             '--disable-sync','--no-first-run','--no-default-browser-check','--password-store=basic',
-            '--user-data-dir=/tmp/control-profile']+(['file:///lab/fixture.html'] if target=='chromium' else [])+proxy_args,env=browser_env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE);children.append(browser)
-        collector=threading.Thread(target=consume_stderr,args=(browser.stderr,),daemon=True);collector.start()
-        end=time.monotonic()+5;peers=set();seen=set()
+            '--user-data-dir=/tmp/control-profile']+(['file:///lab/fixture.html'] if target=='chromium' else [])+proxy_args,env=browser_env,stdout=subprocess.PIPE if startup_probe else subprocess.DEVNULL,stderr=subprocess.STDOUT if startup_probe else subprocess.PIPE);children.append(browser)
+        collector=threading.Thread(target=consume_stderr,args=(browser.stdout if startup_probe else browser.stderr,),daemon=True);collector.start()
+        started=time.monotonic();end=started+(15 if startup_probe else 5);peers=set();seen=set();stages=[]
         while time.monotonic()<end:
             if browser.poll() is not None:raise RuntimeError('owned-browser-exited')
             names=call(bus,'org.freedesktop.DBus','/org/freedesktop/DBus','org.freedesktop.DBus','ListNames')[0]
@@ -272,8 +286,11 @@ def inside():
                     pid=call(bus,'org.freedesktop.DBus','/org/freedesktop/DBus','org.freedesktop.DBus','GetConnectionUnixProcessID',GLib.Variant('(s)',(name,)))[0]
                     if Path(f'/proc/{pid}/exe').resolve()==Path(TARGETS[target]):peers.add(name)
                 except Exception:continue
+            if startup_probe and not stages and time.monotonic()-started>=5:
+                stages.append({'afterSeconds':5,'targetPeers':len(peers),'processKinds':process_counts(target,browser.pid)})
             if peers:break
             time.sleep(.1)
+        if startup_probe:report.update(startupStages=stages,observationSeconds=round(time.monotonic()-started,2),outputStreams='merged-fixed-categories')
         queue=[(name,'/org/a11y/atspi/accessible/root') for name in peers]
         while queue and len(seen)<64:
             name,path=queue.pop(0)
@@ -302,13 +319,14 @@ def inside():
             report['stderrCategories']=dict(diagnostics) if not collector.is_alive() else {'collectionIncomplete':True}
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--backend',choices=('x11','wayland'),default='x11');parser.add_argument('--target',choices=tuple(TARGETS),default='chromium');parser.add_argument('--allow-ech-outer',action='store_true');action=parser.add_mutually_exclusive_group();action.add_argument('--run',action='store_true');action.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);action.add_argument('--plan-bridge',action='store_true');action.add_argument('--check-bridge',action='store_true');action.add_argument('--run-via-bridge',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--startup-probe',action='store_true');parser.add_argument('--backend',choices=('x11','wayland'),default='x11');parser.add_argument('--target',choices=tuple(TARGETS),default='chromium');parser.add_argument('--allow-ech-outer',action='store_true');action=parser.add_mutually_exclusive_group();action.add_argument('--run',action='store_true');action.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);action.add_argument('--plan-bridge',action='store_true');action.add_argument('--check-bridge',action='store_true');action.add_argument('--run-via-bridge',action='store_true');args=parser.parse_args()
     try:
         bridge='check' if args.check_bridge else 'online' if (args.plan_bridge or args.run_via_bridge) else None
+        if args.startup_probe and bridge:raise ValueError('startup-offline-only')
         if args.backend=='wayland' and bridge:raise ValueError('backend-policy')
         if bridge and args.target!='slack':raise ValueError('bridge-target')
         if args.allow_ech_outer and bridge!='online':raise ValueError('ech-policy')
-        report=inside() if args.inside else run(args.target,bridge,args.allow_ech_outer,args.backend) if (args.run or args.check_bridge or args.run_via_bridge) else {'schema':1,'mode':'plan','backend':args.backend,'target':args.target,'emptyProfileOnly':True,'hostNetworkShared':False,'outboundNetworkEnabled':bridge=='online','bridgeMode':bridge,'connectAndSniAllowlisted':bool(bridge),'echPolicy':'outer-sni-only' if args.allow_ech_outer else 'deny','innerRoutingVerified':False,'privateStatusModes':list(MODES),'hostBusConnected':False,'hostConfigurationChanged':False,'slackAccessed':False}
+        report=inside() if args.inside else run(args.target,bridge,args.allow_ech_outer,args.backend,args.startup_probe) if (args.run or args.check_bridge or args.run_via_bridge) else {'schema':1,'mode':'plan','backend':args.backend,'startupProbe':args.startup_probe,'target':args.target,'emptyProfileOnly':True,'hostNetworkShared':False,'outboundNetworkEnabled':bridge=='online','bridgeMode':bridge,'connectAndSniAllowlisted':bool(bridge),'echPolicy':'outer-sni-only' if args.allow_ech_outer else 'deny','innerRoutingVerified':False,'privateStatusModes':list(MODES),'hostBusConnected':False,'hostConfigurationChanged':False,'slackAccessed':False}
         print(json.dumps(report,sort_keys=True));return 0 if report.get('passed',True) else 1
     except Exception as exc:
         codes={'root-not-admitted','xvfb-pin','output-bound','report-shape','not-private-control','wrong-private-owner','private-service-unavailable','private-status-mismatch','private-address','private-display','owned-browser-exited'}

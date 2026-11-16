@@ -31,6 +31,12 @@ class BridgeControlGuards(unittest.TestCase):
   values={args[i+1]:args[i+2] for i,x in enumerate(args) if x=='--setenv'}
   self.assertNotIn('DISPLAY',values);self.assertNotIn('WAYLAND_DISPLAY',values)
   self.assertEqual(values['WLR_RENDERER'],'pixman');self.assertEqual(values['WLR_BACKENDS'],'headless')
+ def test_extended_startup_cannot_reuse_network_bridge(self):
+  with self.assertRaisesRegex(ValueError,'startup-offline-only'):
+   lab.run('slack','online',False,'x11',True)
+  flags=lab.stderr_categories([b'ENOENT EACC',b'ES ERR_CONNECTION_REFUSED ProcessSingleton'])
+  for key in ('missingResource','permissionDenied','connectionFailure','singletonFailure'):
+   self.assertTrue(flags[key])
  def test_diagnostics_return_only_fixed_categories(self):
   flags=lab.stderr_categories([b'private-token example org.freedesktop.sec',b'rets failed to connect to the bus'])
   self.assertTrue(flags['secretService']);self.assertTrue(flags['busUnavailable'])
