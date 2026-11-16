@@ -34,8 +34,10 @@
 - ECH exception CONSUMED: --allow-ech-outer requires fresh explicit permission.
 - Exact Hyprland011 approval CONSUMED: новый host Wayland/GPU запуск запрещён без свежего согласия.
 - Закрытые no-host/no-GPU/no-network собственные фикстуры разрешены.
-- Owner permits normal Slack tests in one designated test channel (name/link pending). No automated sending, unrelated text/history, profile copying.
+- Owner permits normal Slack tests in one designated test channel (confirmed; identity only in ignored build/slack-live-test-scope.json). No automated sending, unrelated text/history, profile copying.
 - Latest live metadata preflight:8processes/0a11ypeers/IsEnabledfalse;0text/writes.
 - Slack restart/global settings/IME/config/autostart remain outside that channel authorization.
 - Семь стабильных hooks и общий profile cache остаются; таймеров/polling не добавлено.
 - Не читать архив CONTINUATION-PLAN/всю переписку; bin/project-map find <topic>.
+
+- Prepared tools/slack_status_trial.py, NOT run: temporary session-wide IsEnabled trial requires explicit permission; channel authorization is insufficient.

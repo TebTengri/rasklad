@@ -21,7 +21,7 @@ new required permission. Preserve all boundaries in NEXT.md.
    One metadata-only live preflight: 8 processes, 0 accessibility peers,
    IsEnabled false; no text read or writes. A channel alone does not resolve
    the accessibility gate. Restart/settings changes remain separately scoped.
-5. [ ] Confirm owner-designated test channel, then establish a bounded live
+5. [ ] Owner-designated test channel confirmed (local ignored scope file). Establish a bounded live
    accessibility connection before editing. Verify field identity and adapter
    capability only for that channel; fail closed if identity is uncertain. Then synthetic correction/undo,
    focus changes, application Off/On and failure behavior.
