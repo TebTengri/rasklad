@@ -16,6 +16,21 @@ class BridgeControlGuards(unittest.TestCase):
     ('DBUS_SESSION_BUS_ADDRESS','unix:path=/run/user/1000/bus'),('DBUS_SESSION_BUS_ADDRESS','unix:path=/run/lab/bus;unix:path=/host'),
     ('WAYLAND_DISPLAY','wayland-1'),('WAYLAND_SOCKET','9'),('RASKLAD_PARENT_FD','8')]:
    with self.subTest(key=key):self.assertFalse(lab.private_context(dict(env,**{key:value}),True))
+ def test_wayland_is_offline_and_owns_display(self):
+  env={'HOME':'/home/lab','XDG_RUNTIME_DIR':'/run/lab','RASKLAD_A11Y_CONTROL':'1',
+   'RASKLAD_A11Y_MODE':'enabled','RASKLAD_A11Y_TARGET':'slack','DBUS_SESSION_BUS_ADDRESS':'unix:path=/run/lab/bus',
+   'RASKLAD_A11Y_BACKEND':'wayland','WAYLAND_DISPLAY':'wayland-lab'}
+  self.assertTrue(lab.private_context(env,True))
+  for key,value in [('WAYLAND_DISPLAY','wayland-1'),('DISPLAY',':0'),('RASKLAD_A11Y_BRIDGE','online')]:
+   self.assertFalse(lab.private_context(dict(env,**{key:value}),True))
+  paths={'runner':ROOT/'tools/a11y_bridge_lab.py'}
+  with self.assertRaises(ValueError):lab.sandbox_args(chrome,paths,{},'enabled','slack','online',backend='wayland')
+  with self.assertRaises(ValueError):lab.sandbox_args(chrome,paths,{},'enabled',backend='wayland')
+  args=lab.sandbox_args(chrome,paths,{},'enabled',backend='wayland',snapshots={'sway':12})
+  self.assertIn('--unshare-all',args);self.assertNotIn('--share-net',args)
+  values={args[i+1]:args[i+2] for i,x in enumerate(args) if x=='--setenv'}
+  self.assertNotIn('DISPLAY',values);self.assertNotIn('WAYLAND_DISPLAY',values)
+  self.assertEqual(values['WLR_RENDERER'],'pixman');self.assertEqual(values['WLR_BACKENDS'],'headless')
  def test_diagnostics_return_only_fixed_categories(self):
   flags=lab.stderr_categories([b'private-token example org.freedesktop.sec',b'rets failed to connect to the bus'])
   self.assertTrue(flags['secretService']);self.assertTrue(flags['busUnavailable'])

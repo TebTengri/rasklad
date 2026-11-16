@@ -23,6 +23,8 @@
 - Strict Unix HTTPS broker built; no --share-net;24guardsPASS. docs/SLACK-ISOLATED-001.md has exact limits/results.
 - ONE owner-approved ECH A/B trial opened2connections percase, stillno UI; permission CONSUMED. Defaultdenyremains.
 - Offline fixedstderr flags: busUnavailable, no fatal/display-init match; causeunknown. Process roles previouslyunreliable, nowunknown unlessknown.
+- Native private Sway A/B: compositor ready; Slack0peers both, Chromium enabled1peer/64nodes. Window visibility unmeasured. docs/SLACK-WAYLAND-BOOTSTRAP-001.md.
+- busUnavailable also occurs in successful Chromium control; not a proven Slack cause.
 - Next diagnose minimal private Slack desktop/bootstrap offline; verify primary runtime/API sources before moreflags. No realprofilecopy/globala11y workaround.
 
 ## Разрешения и границы

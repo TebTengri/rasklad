@@ -84,7 +84,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "f743fb672e63b049b1ec6912a1bcdbeefb54a8b1ca6aebbc8f31a31c049b95be",
+    "docs/NEXT.md": "6196a7871467030d5b2206dd06bb24d18dac2226a74841cd9c019245686274aa",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -94,6 +94,7 @@
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
+    "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
@@ -246,7 +247,7 @@
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
-    "tests/slack_probe/test_private_bridge_lab.py": "e34dc1fb1a6314f646c546e6fc512e11035c6fc458ecca3d0c158219f56a734e",
+    "tests/slack_probe/test_private_bridge_lab.py": "a0b275ea31ca6ff3a02a76e07efc75478b54ffc69109c907e64f53b9faf16bd0",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
@@ -278,7 +279,7 @@
     "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
     "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
     "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
-    "tools/a11y_bridge_lab.py": "a01ead836bf69505df6d98c3504e78f702878131ac70f4ae5d32333b57b93910",
+    "tools/a11y_bridge_lab.py": "585700a4cabb66d28fde83980db8b4dc9760431f31fe60b9d7112ddb5f9a8ea9",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
     "tools/audit_natural_router_metrics.py": "50d345858a638529f0ca3880dacaf618351432a8e9a106af13a9ffcdd86f0d16",
@@ -738,6 +739,10 @@
     },
     {
       "path": "docs/SLACK-ISOLATED-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/SLACK-WAYLAND-BOOTSTRAP-001.md",
       "symbols": []
     },
     {
@@ -2373,23 +2378,28 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_diagnostics_return_only_fixed_categories",
+          "name": "test_wayland_is_offline_and_owns_display",
           "line": 19,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_diagnostics_return_only_fixed_categories",
+          "line": 34,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_window_metadata_cannot_touch_host_display",
-          "line": 27,
+          "line": 42,
           "kind": "FunctionDef"
         },
         {
           "name": "test_builder_keeps_isolation_and_drops_disabled_bridge",
-          "line": 29,
+          "line": 44,
           "kind": "FunctionDef"
         },
         {
           "name": "test_bridge_never_shares_host_network",
-          "line": 47,
+          "line": 62,
           "kind": "FunctionDef"
         }
       ]
@@ -3476,67 +3486,67 @@
         },
         {
           "name": "sandbox_args",
-          "line": 19,
+          "line": 22,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 37,
+          "line": 47,
           "kind": "FunctionDef"
         },
         {
           "name": "load_bridge",
-          "line": 95,
+          "line": 112,
           "kind": "FunctionDef"
         },
         {
           "name": "stderr_categories",
-          "line": 106,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "process_kind",
-          "line": 114,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "process_counts",
           "line": 123,
           "kind": "FunctionDef"
         },
         {
+          "name": "process_kind",
+          "line": 131,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_counts",
+          "line": 140,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "visible_windows",
-          "line": 135,
+          "line": 152,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 168,
+          "line": 185,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 271,
+          "line": 304,
           "kind": "FunctionDef"
         },
         {
           "name": "Attr",
-          "line": 140,
+          "line": 157,
           "kind": "ClassDef"
         },
         {
           "name": "call",
-          "line": 188,
+          "line": 205,
           "kind": "FunctionDef"
         },
         {
           "name": "owner_pid",
-          "line": 190,
+          "line": 207,
           "kind": "FunctionDef"
         },
         {
           "name": "consume_stderr",
-          "line": 225,
+          "line": 258,
           "kind": "FunctionDef"
         }
       ]
