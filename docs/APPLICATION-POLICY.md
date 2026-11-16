@@ -97,3 +97,39 @@ NotWritten и Unknown без отдельного native completion сохран
 Нужен отдельный adapter integration с тестами реентерабельного finish-original.
 На ревью приняты два замечания: убрать cached Decision из bind и отложить
 teardown после reentrant nativeIdle до окончания внешней операции.
+
+## LAB adapter bridge: отключение во время composition
+
+В LabState подключён CompositionDisable: новая composition связывается свежим
+bind; validate использует controller correction; Off останавливает новые
+нажатия до изменения буфера. Старые поглощённые releases продолжают дренироваться.
+Локальный clearBuffer завершает только обычную Active composition, но никогда
+не выдаёт nativeIdle для Pending/InFlight/Deferred/Disabled.
+
+requestLabOff пока не имеет UI/IPC/горячей клавиши: это закрытая plumbing-основа.
+Перед отправкой исходного слова проверяются текущие metadata gates и binding;
+отказ оставляет deferred без повторной отправки. Внешний void commitString
+всегда даёт Unknown. Shared operation переживает уничтожение context/property;
+после callback сырые указатели не используются. Копия исходного слова очищается
+best-effort. Исходный bounded buffer и preedit не очищаются после Unknown.
+Lifecycle discard при pending Off инвалидирует epoch, но сохраняет original;
+уничтожение контекста всё ещё стирает buffer и НЕ доказывает сохранение текста.
+
+Проверки actual production helpers через SDK InputContext::commitString,
+подменяя только frontend виртуальный метод: шесть сценариев (обычный Unknown,
+потеря фокуса, другой epoch, reentrant discard, уничтожение context/property,
+отказ eligibility). Проверены repeated Off, no retry, retained original и
+запрет teardown. ASan+LSan passed. Прежние шесть preedit callback сценариев и
+outside-fixture guard также passed. Сети/daemon/display в memory tests нет.
+
+Закрытый Sway/Chromium regression: 18 checks + 4 focus cases passed. Он проверяет
+обычный ввод с подключённым controller, НЕ доставку при Off: runtime trigger
+отсутствует. Сборка regression предшествовала извлечению void commit в именованный
+helper без изменения обычного key path; финальный helper проверен memory tests.
+Новой host Hyprland пробы не было. Попытки делегированной реализации и ревью
+оборвались из-за лимита; завершение и проверка выполнены ведущим Codex, свежего
+независимого ревью этого bridge пока нет. Перед deployment оно обязательно.
+
+Открытая граница: доказать контракт завершения composition на стороне адаптера
+и безопасное освобождение preedit/resources, включая context destruction.
+Нельзя публиковать Off как готовый пользовательский режим по этим тестам.

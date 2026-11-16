@@ -87,6 +87,7 @@
 //    preedit if we set it ourselves (preeditShown flag).
 
 #include "applicationpolicy.h"
+#include "compositiondisable.h"
 
 #ifdef RASKLAD_PROFILE_LAB
 #include "fcitxlabprofile.h"
@@ -183,14 +184,22 @@ void wipeString(std::string &s) {
 // release bookkeeping, never history.
 class LabState final : public fcitx::InputContextProperty {
 public:
-    LabState() : id(nextId_++) {}
+    LabState() : id(nextId_++) { disable->enable(); }
     ~LabState() override { invalidate(); clearBuffer(); }
     void invalidate() { ++epoch; lease = {}; }
     const std::uint64_t id;
     std::uint64_t epoch = 1;
     policy::Lease lease;
+    std::shared_ptr<policy::CompositionDisable> disable =
+        std::make_shared<policy::CompositionDisable>();
+    policy::CompositionDisable::Token generation = 0;
 
 
+    bool stopping() const {
+        const auto phase = disable->state();
+        return phase != policy::CompositionDisable::State::Idle &&
+               phase != policy::CompositionDisable::State::Active;
+    }
     bool empty() const { return len_ == 0; }
     bool full() const { return len_ >= kMaxWord; }
     bool preeditShown() const { return preeditShown_; }
@@ -217,6 +226,12 @@ public:
         }
         len_ = 0;
         lease = {};
+        // Normal local-buffer completion only. NEVER acknowledge a disabled
+        // composition from buffer reset/destruction: that is not native delivery.
+        if (disable->state() == policy::CompositionDisable::State::Active) {
+            disable->nativeIdle(generation);
+            generation = 0;
+        }
     }
 
     void clearPending() { pendingCount_ = 0; }
@@ -334,6 +349,9 @@ private:
 #ifdef RASKLAD_PREEDIT_REENTRY_TEST
     friend struct PreeditReentryTest;
 #endif
+#ifdef RASKLAD_DISABLE_REENTRY_TEST
+    friend struct DisableReentryTest;
+#endif
 #ifdef RASKLAD_WITNESS_LAB
     static void witnessLifecycle(fcitx::EventType type) {
         switch (type) {
@@ -419,8 +437,46 @@ private:
     bool validate(fcitx::InputContext *ic, LabState &s) const {
         if (!eligible(ic)) return false;
         const auto context = fixtureContext(ic, s);
-        return policy::revalidateCorrection(kFixtureRegistry,
-            fixturePermission(context), context, s.lease).allowed();
+        return s.disable->correction(kFixtureRegistry,
+            fixturePermission(context), context).allowed();
+    }
+
+    // LAB-only plumbing, deliberately without a runtime preference trigger.
+    // The caller must freshly evaluate every existing metadata gate, without an
+    // intervening callback. A void Fcitx commit can only report Unknown. Completed
+    // is reserved for a future trusted adapter native-completion contract.
+    template <typename FinishOriginal>
+    static void disableLab(fcitx::InputContext *ic, LabState &s,
+                           bool currentlyEligible, FinishOriginal finish) {
+        auto operation = s.disable; // Survives destruction of property/context.
+        operation->requestOff(); // Stops capture/correction before external code.
+        if (!currentlyEligible || !ic || !ic->hasFocus()) {
+            operation->takeOriginal(kFixtureRegistry, {}); // Defer, never retry later.
+            return;
+        }
+        const auto ticket = operation->takeOriginal(kFixtureRegistry,
+                                                    fixtureContext(ic, s));
+        if (!ticket) return;
+        struct Original {
+            std::string text;
+            ~Original() { wipeString(text); }
+        } original{s.word()};
+        // Do not clear the original or preedit before an uncertain external
+        // write. This callback may reset or destroy both ic and s. No raw state
+        // or context access is permitted after it, even for Completed.
+        const auto result = finish(ic, original.text);
+        operation->complete(ticket, result);
+    }
+
+    static policy::CompositionDisable::Result commitOriginalUnknown(
+        fcitx::InputContext *context, const std::string &original) {
+        context->commitString(original);
+        return policy::CompositionDisable::Result::Unknown;
+    }
+
+    void requestLabOff(fcitx::InputContext *ic, LabState &s) {
+        const bool current = eligible(ic);
+        disableLab(ic, s, current, commitOriginalUnknown);
     }
 
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
@@ -456,7 +512,7 @@ private:
                                 fcitx::KeyEvent &event) {
         s.pop();
         const bool empty = s.empty();
-        if (empty) s.lease = {};
+        if (empty) s.clearBuffer();
         s.addPending(event.key());
         event.filterAndAccept();
         if (empty) clearPreedit(ic, s);
@@ -466,6 +522,9 @@ private:
     // Drop everything for this context, never commit.
     static void discard(fcitx::InputContext *ic, LabState &s) {
         s.invalidate();
+        // An Off request with an uncertain write retains the bounded original.
+        // Context destruction still wipes it; no delivery guarantee is claimed.
+        if (s.stopping()) return;
         s.clearBuffer();
         s.clearPending();
         s.setBypass(false);
@@ -580,6 +639,7 @@ private:
 #endif
             return;
         }
+        if (s->stopping()) return; // Off: no new capture, correction or buffer clear.
         if (!s->empty() && !validate(ic, *s)) {
             discard(ic, *s);
             return; // In particular, a denied Space remains unconsumed.
@@ -613,10 +673,12 @@ private:
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
             if (s->empty()) {
                 const auto context = fixtureContext(ic, *s);
-                const auto decision = policy::authorizeCapture(kFixtureRegistry,
+                const auto generation = s->disable->bind(kFixtureRegistry,
                     fixturePermission(context), context);
-                if (!decision.allowed()) return;
-                s->lease = decision.lease;
+                if (!generation) return;
+                s->generation = generation;
+                s->lease = policy::authorizeCapture(kFixtureRegistry,
+                    fixturePermission(context), context).lease;
             }
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
             return;

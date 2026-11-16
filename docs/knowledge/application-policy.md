@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Default-deny evidence kernel and pure one-shot disable controller; runtime integration and real-app authentication remain open.
+Default-deny kernel, one-shot controller and private LAB disable bridge; native completion, context destruction preservation, user trigger and independent bridge review remain open.
 
 Статус: source_contract_or_implementation
 
@@ -16,6 +16,8 @@ Default-deny evidence kernel and pure one-shot disable controller; runtime integ
 - `src/compositiondisable.cpp`
 - `tests/application_policy/disable_tests.cpp`
 - `data/composition-disable-001-result.json`
+- `tests/fcitx_transport/disable_reentry_tests.cpp`
+- `data/disable-adapter-001-result.json`
 
 ## Связи
 

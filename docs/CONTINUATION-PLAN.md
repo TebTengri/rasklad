@@ -1,3 +1,18 @@
+## 2026-11-16 — LAB disable adapter bridge (not user-enabled)
+
+Current branch SYS-242/message-adapter /tmp/rasklad-message-adapter. Controller
+bound at first capture, revalidated on correction. Private requestLabOff has no
+UI/IPC trigger. Actual void commitString => Unknown; no retry or original clear.
+Stopping discard retains bounded original, but destruction still wipes it and
+is NOT delivery proof. Local buffer clear cannot acknowledge pending native idle.
+Six actual SDK commit helper scenarios pass ASan+LSan; previous six preedit cases
+and inert fixture guard pass. Closed normal Sway regression 18+focus4 PASS;
+not an Off delivery test. See APPLICATION-POLICY.md + data/disable-adapter-001-result.json.
+Delegates hit limit; no fresh independent bridge review. Root completed changes.
+NEXT: independent bridge review, then adapter-native completion/teardown contract
+and unsent owned fixture test before user Off trigger. No real app enabled.
+No active host approval; exact011 consumed. No Slack/profile/system changes.
+
 ## 2026-11-16 — pure composition disable controller
 
 SYS-246: compositiondisable.h/.cpp added, not wired into Fcitx runtime/UI.
