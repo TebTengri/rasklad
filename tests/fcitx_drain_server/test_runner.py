@@ -75,6 +75,28 @@ class RunnerTests(unittest.TestCase):
             broken=dict(report);broken[key]=False
             self.assertFalse(fixture.delivery_passed(broken,'keep-grab','inactive-raw',True,0))
 
+    def test_modifier_retained_requires_exact_admission_and_every_proof(self):
+        proofs=('releaseAfterAck','ackMatched','oneLiveGrabInvariant','modifierDownObserved',
+                'modifierUpObserved','shiftAtBothKeys','modifierReturnedToZero','modifierWaitedForAck')
+        report=dict.fromkeys(proofs,True)
+        report.update(completed=True,vkPress=1,vkRelease=1,grabs=1,releasedGrabs=0)
+        self.assertTrue(fixture.delivery_passed(report,'keep-grab','modifier-retained',True,0))
+        for key in proofs:
+            for value in (False,None):
+                broken=dict(report);broken[key]=value
+                self.assertFalse(fixture.delivery_passed(broken,'keep-grab','modifier-retained',True,0),key)
+        for key,value in (('grabs',2),('releasedGrabs',1),('vkPress',0),('vkRelease',0),('completed',False)):
+            broken=dict(report);broken[key]=value
+            self.assertFalse(fixture.delivery_passed(broken,'keep-grab','modifier-retained',True,0),key)
+        self.assertFalse(fixture.delivery_passed(report,'keep-grab','modifier-retained',False,0))
+        self.assertFalse(fixture.delivery_passed(report,'keep-grab','modifier-retained',True,2))
+        for variant in ('baseline','drain','keep-grab-control'):
+            self.assertFalse(fixture.delivery_passed(report,variant,'modifier-retained',True,0))
+            with patch.object(fixture,'base') as base,patch.object(fixture.subprocess,'Popen') as start:
+                with self.assertRaisesRegex(RuntimeError,'modifier_peer_requires_keep_grab'):
+                    fixture.run(variant,'modifier-retained')
+                base.assert_not_called();start.assert_not_called()
+
     def test_diagnostic_candidate_cannot_run_as_delivery_fix(self):
         with patch.object(fixture.subprocess,'Popen') as start:
             with self.assertRaisesRegex(RuntimeError,'diagnostic_candidate_not_delivery_fix'):

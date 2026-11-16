@@ -70,6 +70,11 @@ def delivery_passed(report,variant,handoff_mode,loaded,server_returncode):
         gate_ok=report.get('releaseAfterAck') is True and report.get('ackMatched') is True
         expected_lifecycle=(1,0) if variant.startswith('keep-grab') else (2,1)
         gate_ok=gate_ok and (report.get('grabs'),report.get('releasedGrabs'))==expected_lifecycle
+    if handoff_mode=='modifier-retained':
+        gate_ok=(variant=='keep-grab' and report.get('grabs')==1 and report.get('releasedGrabs')==0
+                 and report.get('oneLiveGrabInvariant') is True
+                 and all(report.get(k) is True for k in ('releaseAfterAck','ackMatched','modifierDownObserved',
+                     'modifierUpObserved','shiftAtBothKeys','modifierReturnedToZero','modifierWaitedForAck')))
     expected=0 if variant=='baseline' and handoff_mode in ('original','grab-ab') else 1
     if handoff_mode=='unknown-release':expected=0
     if handoff_mode=='fresh-after-cancel':expected=2
@@ -136,7 +141,8 @@ def inside(variant,handoff_mode='original'):
         fcitx_log.close()
 
 def run(variant,handoff_mode='original'):
-    if variant.startswith('keep-grab') and handoff_mode not in ('retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release'):raise RuntimeError('keep_grab_requires_retained_peer')
+    if handoff_mode=='modifier-retained' and variant!='keep-grab':raise RuntimeError('modifier_peer_requires_keep_grab')
+    if variant.startswith('keep-grab') and handoff_mode not in ('retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release','modifier-retained'):raise RuntimeError('keep_grab_requires_retained_peer')
     if handoff_mode in ('retained','inactive','inactive-raw') and not variant.startswith('keep-grab'):raise RuntimeError('retained_peer_requires_keep_grab')
     if variant=='drain':raise RuntimeError('diagnostic_candidate_not_delivery_fix')
     b=base()
@@ -192,7 +198,7 @@ def run(variant,handoff_mode='original'):
         for fd in fds:os.close(fd)
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',choices=['baseline','drain','keep-grab','keep-grab-control'],help=argparse.SUPPRESS);p.add_argument('--variant',choices=['baseline','drain','keep-grab','keep-grab-control'],default='baseline');p.add_argument('--handoff-mode',choices=['original','ack-gated','retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release'],default='original');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',choices=['baseline','drain','keep-grab','keep-grab-control'],help=argparse.SUPPRESS);p.add_argument('--variant',choices=['baseline','drain','keep-grab','keep-grab-control'],default='baseline');p.add_argument('--handoff-mode',choices=['original','ack-gated','retained','grab-ab','inactive','inactive-raw','cross-deactivate','cross-active-release','fresh-after-cancel','unknown-release','modifier-retained'],default='original');a=p.parse_args()
     try:r=inside(a.inside,a.handoff_mode) if a.inside else build() if a.build else run(a.variant,a.handoff_mode) if a.run else {'schema':1,'status':'plan_only','fcitxStarted':False,'variant':a.variant}
     except Exception as e:print(json.dumps({'schema':1,'passed':False,'reason':str(e) if type(e).__name__ in ('Refused','RuntimeError') else type(e).__name__}));return 2
     print(json.dumps(r,sort_keys=True));return 0 if r.get('passed',True) else 2

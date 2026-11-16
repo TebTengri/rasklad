@@ -1,3 +1,25 @@
+## 2026-11-16 — modifier preflight PASS; exact host probe still NOT RUN
+
+Checkpoint3445ed0 published keep-grab/cancellation and closedSway18+focus4.
+New modifier-retained closed actualFcitx control alsoPASS: keymap-derivedShift
+notification beforehandoff, maskpresent atbothSpaceevents, latermask0 observed,
+1/1,onegrab/zero releases, explicitmatchingcommitwait. No physicalShiftkeypair /
+keyboardreplacement/shortcut claim. Data/fcitx-keep-grab-modifier-001-result.json.
+Peerlaunchercontrols11 PASS; broadprivateboundaryguards105 PASS.
+
+ExactHyprlandselector is alreadypreparedandindependentlyreviewed/dry-only:
+python3 tools/hyprland_ime_lab.py --run-approved --focus-stress --space-telemetry
+ --frontend-variant keep-grab --input-root /home/mvn/Work/rasklad.
+This woulduseoneparentWaylandFD+renderD128+fiveboundedGPUmetadata/NODEVcardstat,
+max75s,ownprivateChrome/Fcitx; NOTauthorizedyet. Oldhostapprovalsconsumed; don't
+run withoutfreshuserconsent. No host permission is conveyed by this handoff.
+Userrequestedongoingworkwhileasleep; statusquestionansweredandworkcontinued.
+
+NEXT: persistmodifiercheckpoint, requestoneconcretefreshhostprobeapproval only
+nowthatclosedpreflightready; continueindependentstaticchecks/docwhilepending.
+No installedIME,Slack,systemconfig,otherprojects changed. CurrentdraftPR17
+updatedaroundactualretainedgrabandnegativecontrol; no merge/release.
+
 ## 2026-11-16 — KEEP-GRAB closed native preflight PASS
 
 Authoritative report docs/FCITX-KEEP-GRAB-001.md. Checkpoint contains: firstkeep patch+separateknown-cancellationpatch (LGPL), verifiedbwrap

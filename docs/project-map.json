@@ -302,7 +302,8 @@
         "data/fcitx-keep-grab-001-result.json",
         "data/native-private-frontend-001-result.json",
         "tests/wayland_ime/test_private_frontend.py",
-        "tests/wayland_ime/test_hyprland_private_frontend.py"
+        "tests/wayland_ime/test_hyprland_private_frontend.py",
+        "data/fcitx-keep-grab-modifier-001-result.json"
       ],
       "tests": [
         "python3 tests/fcitx_drain_server/test_runner.py",
@@ -311,7 +312,7 @@
         "python3 tools/fcitx_retirement_candidate.py --syntax"
       ],
       "status": "keep_grab_peer_and_closed_native_pass_not_host_verified",
-      "notes": "Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof."
+      "notes": "Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof. Closedmodifier notification preservesShiftatkeysandreturnszero; no physicalmodifier/shortcutproof."
     },
     {
       "id": "handoff-screen",

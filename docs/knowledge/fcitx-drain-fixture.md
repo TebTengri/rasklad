@@ -1,6 +1,6 @@
 # Actual Fcitx drain fixture draft
 
-Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof.
+Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof. Closedmodifier notification preservesShiftatkeysandreturnszero; no physicalmodifier/shortcutproof.
 
 Статус: keep_grab_peer_and_closed_native_pass_not_host_verified
 
@@ -34,6 +34,7 @@ Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellatio
 - `data/native-private-frontend-001-result.json`
 - `tests/wayland_ime/test_private_frontend.py`
 - `tests/wayland_ime/test_hyprland_private_frontend.py`
+- `data/fcitx-keep-grab-modifier-001-result.json`
 
 ## Связи
 

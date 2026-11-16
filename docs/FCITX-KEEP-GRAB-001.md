@@ -108,3 +108,14 @@ implemented/hardened the source patches, raw path, cancellation and peer/build
 controls. A fresh helper implemented selected frontend admission/native fixture
 plumbing and tests, reviewed by Codex. Independent agents criticized architecture,
 reviewed patch and exact-runner boundaries; they did not execute runtime tests.
+
+## Modifier notification control
+
+A subsequent closed retained-grab probe preserves Shift's keymap-derived mask
+across deactivate/reactivate: both Space events reached VK while Shift was set;
+the later physical modifier notification returned VK state to zero. Exactly1/1,
+onegrab/zero releases, matching commit and explicit wait are required. Eleven
+peer-launcher controls pass. This tests modifier notifications, not a physical
+Shift key pair, arbitrary keyboard/keymap replacement or native shortcut behavior.
+Evidence: `data/fcitx-keep-grab-modifier-001-result.json`. Implemented by a fresh
+helper, independently inspected and executed by Codex; helper ran no Fcitx.
