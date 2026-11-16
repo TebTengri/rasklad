@@ -1,4 +1,4 @@
-# Actual Fcitx drain fixture draft
+# Fcitx handoff and retained-grab validation
 
 Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus4 and one owner-approved exactnestedHyprland01118+focus4 PASS. Approvalconsumed; noSlack/regular-session/releaseproof.
 
@@ -36,6 +36,8 @@ Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus
 - `tests/wayland_ime/test_hyprland_private_frontend.py`
 - `data/fcitx-keep-grab-modifier-001-result.json`
 - `data/hyprland-keep-grab-011-result.json`
+- `docs/SLACK-DESKTOP-001.md`
+- `data/slack-native-002-result.json`
 
 ## Связи
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "e13dc338c38e60fadecd26965ef265039cf229a66cd12868441dbbe38c278e88",
+  "curatedSha256": "aa73851e66846655141a27dd9825be3537a4551300a7a72d0a3b58a9e259ac2e",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -40,7 +40,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "a783c509fdf102e61ecaff1762e5e5066680a5a092109832da9802a728f58a92",
+    "docs/CONTINUATION-PLAN.md": "d4440c159b7a694996c9ac626b80993d140999f0f08f1f985e9a16eec394f287",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -88,7 +88,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-DESKTOP-001.md": "6bc032d7bb3d2c064b02ed936614f790bc0e556ec940e2ef72a68e5d2da781a7",
+    "docs/SLACK-DESKTOP-001.md": "9f45dd0d5cdb9bd5c77e38196ca31f2fe4888f22b154ca4909ce3e452035da3d",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
@@ -5956,7 +5956,7 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "c3f847d23ec246148b21e49f47eae073be24ac950758795dbf5b7239e8bc02b8",
+    "docs/knowledge/Start.md": "0fbdb7556051970739c07d1bc8083f659a0f9d195ead3c912ea9cb7442590787",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
@@ -5964,7 +5964,7 @@
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "3de9e03684fb50545e22cb9981fba8f2cce603f6317947f6489e6c63aba0e87d",
+    "docs/knowledge/fcitx-drain-fixture.md": "490cc364c16d6cb63e49fc5ce499f9cc813548901a177c7718a6ff87c6ef09ad",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

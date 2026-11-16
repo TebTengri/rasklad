@@ -1,0 +1,17 @@
+{
+  "a11yBusAvailable": true,
+  "focusedEditableObjects": [],
+  "inspectedNodes": 0,
+  "pidLookupErrors": 0,
+  "pidLookups": 8,
+  "safeAutoCorrection": false,
+  "schema": 1,
+  "slackA11yConnections": 0,
+  "targetProcesses": 8,
+  "textRead": false,
+  "truncated": false,
+  "writes": false,
+  "scope": "metadata-only existing native Slack accessibility transport; no restart or text access",
+  "slackRestarted": false,
+  "nativeImeSupportTested": false
+}

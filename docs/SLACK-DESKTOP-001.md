@@ -101,3 +101,20 @@ refuses remaining processes. Four fake-kernel tests cover root selection, pidfd
 identity races, exact signal/cleanup and missing targets; no signal was sent by tests.
 The owner confirmed this is the same Linux/Omarchy machine; SIGTERM was explicitly authorized and executed once, followed by the approved
 temporary launch. All original text/write restrictions remain.
+
+
+## Metadata follow-up after Hyprland trial011
+
+The existing metadata-only probe was repeated without changing Slack's launch or
+configuration. It found the accessibility bus and8 target Slack processes, but
+zero matching a11y connections and zero inspected UI nodes. No text, value,
+channel/window name, action, subscription or write was requested. Source guards11
+pass. Aggregate: `data/slack-native-002-result.json`.
+
+The keep-grab candidate now passes its own Chromium-field exact nested Hyprland
+preflight. That does not establish Slack support. The metadata snapshot reports
+no current accessibility route; it neither proves nor disproves Slack's native
+input-method behavior. No current Slack restart, native launch-flag change,
+profile read, draft read/write or message send was performed. A next actual-app
+trial needs a specifically bounded launch/unsent-test-draft scope rather than
+reusing the old temporary-launch or trial011 approval.

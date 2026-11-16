@@ -1,3 +1,22 @@
+## 2026-11-16 — handoff after exact011 and Slack metadata follow-up
+
+Currentpublishedcode/evidencecc13262 (earlierf558581modifier,3445ed0keep/native).
+EXACT01118+focus4PASS, permissionCONSUMED. No anotherhostprobe consent. Usertold
+maytype. Moduleexperimentnotdailydeployment; readyForLiveUse remainsfalse.
+
+ExistingSlackmetadata-onlyprobe rerun(no restart/text/names/actions); a11ybusavailable,
+8knownSlackprocesses,0Slacka11yconnections,0UInodes.11probeunitguardsPASS. New
+aggregate data/slack-native-002-result.json. No nativeIME support conclusion.
+CurrentrealSlackdraft read/write/restart/launchflags/message send NOTdone.
+If continuingappinterop, firstprepareexactscopedunsent-test-draft/nativebackend
+plan. OldSlacklaunchpermissionand011hardwareapprovalcannotbereusedaswritegrant.
+
+Own-source licensenoticeinventoryupdated, verbatimLGPLfilehashedandindependently
+checked againstupstream. Source/patch license scope separatefromownMIT. No binary
+redistributionapproval, dictionary/datareleasegatesunchanged. Mainworkingtreeclean
+before thismetadata/docsupdate; branchSYS-242/message-adapter,draftPR17muststaydraft.
+No otherprojects,installedIME,Slacksettings,globalkeybinds/autostart changed.
+
 ## 2026-11-16 — EXACT HYPRLAND011 PASS; approval CONSUMED
 
 UserexplicitlyapprovedONE75s keep-grab nestedHyprlandprobe andwasready nottotype.
@@ -17,7 +36,7 @@ module is project-localLGPLexperiment withstrictlabguard.9samepeercontrols inclu
 knownbad1/2;fixedcancellation1/1,unknownupsforwarded. ClosedSwaybaseline+keep18+4.
 ModifiernotificationShiftcontrolPASS notphysicalShift/shortcut/replacementproof.
 105boundaryunitguards+11peerlaunchercontrolsPASS. Codecheckpoint f558581;
-011 report/noticeinventory nowstagedforpublication; modifierfiles committedf558581.
+011 report/noticeinventory publishedcc13262; modifierfiles committedf558581.
 
 Noticeauditdone: verbatimLGPLcopy+hash+THIRD_PARTY derivativeentry,independent
 readonlytechnicalreviewfoundnomismatch (notlegalclearance). Manual-useboundary

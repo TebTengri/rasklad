@@ -276,7 +276,7 @@
     {
       "id": "fcitx-drain-fixture",
       "kind": "component",
-      "title": "Actual Fcitx drain fixture draft",
+      "title": "Fcitx handoff and retained-grab validation",
       "paths": [
         "tests/fcitx_drain_server/README.md",
         "tests/fcitx_drain_server/run.py",
@@ -307,7 +307,9 @@
         "tests/wayland_ime/test_private_frontend.py",
         "tests/wayland_ime/test_hyprland_private_frontend.py",
         "data/fcitx-keep-grab-modifier-001-result.json",
-        "data/hyprland-keep-grab-011-result.json"
+        "data/hyprland-keep-grab-011-result.json",
+        "docs/SLACK-DESKTOP-001.md",
+        "data/slack-native-002-result.json"
       ],
       "tests": [
         "python3 tests/fcitx_drain_server/test_runner.py",
