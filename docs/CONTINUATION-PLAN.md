@@ -1,3 +1,25 @@
+## 2026-11-16 — shared family Off integrated and verified
+
+Current branch SYS-242/message-adapter /tmp/rasklad-message-adapter. Shared
+ApplicationPermissions now used fresh at bind/validate. Off revokes every
+explicit owned Chromium alias before callback-free controller staging, then
+uses lifetime watches + fresh re-resolve/gates per submission. New contexts deny
+capture, reentrant Off cannot duplicate. Fast path skips profile/caps/property
+lookup on presses; old releases still drain. No polling, watcher retirement
+not done. No user UI/On/production authentication.
+
+Evidence data/application-off-001-result.json. Five actual SDK memory scenarios
+(reentry/create/destroy/reset/focus/sensitive) PASS ASan+LSan; reset direct epoch
+invalidation not daemon dispatch. Existing16Off/receipt/submission+6preedit and
+inertguardPASS. Closed final Off5/5, normal18+focus4PASS. Independent batch/review
+found no blockers in private scope. Normal artifact lacks test flag marker.
+NEXT: resource ownership/retirement policy and controlled re-enable (never old
+leases), then preferences/UI only for proven adapters; no ordinary app enablement.
+Do not replay old host approval (exact011 CONSUMED). No Slack/userprofile/system
+config/autostart changes authorized by generic continue. PR17 stays draft, SYS246
+staysInProgress. User explicitly asks autonomous sequential work without asking
+for 'continue' at every checkpoint; delegate architecture critique periodically.
+
 ## 2026-11-16 — multi-app permission store foundation
 
 ApplicationPermissions pure owned-id store added, defaultsOff, perapp revisions,

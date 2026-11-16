@@ -209,3 +209,33 @@ store; это гарантирует только память строки, н�
 snapshot. Assertions без NDEBUG. Store пока не подключён к LAB/production
 registry и не меняет разрешения пользователя. Независимое ревью не выявило
 блокеров в этом scope; его замечание о stale snapshots принято.
+
+## Общий Off owned fixture family
+
+LAB теперь использует общий ApplicationPermissions на каждом bind/validate.
+Оба явно заданных Chromium alias относятся к одному owned client family; это
+не production-аутентификация. Off сначала публикует отзыв всех alias, затем
+без внешних вызовов ставит requestOff всем совпадающим существующим контекстам.
+После этого перебирает lifetime watches, заново получает state и свежие gates
+каждого выжившего контекста перед однократной отправкой original. Новые контексты
+не получают capture при общем Off. Raw pointers через предыдущий callback
+не сохраняются. Reentrant Off не повторяет отправку.
+
+После общего Off новый press возвращается до profile/capability/property lookup;
+release ветка остаётся выше, чтобы дренировать старые поглощённые клавиши.
+Только test build пропускает повторный synthetic F12 к прежним fixture gates.
+Нет polling или timers. Watchers пока остаются зарегистрированы: это не
+реализация полного retirement подписок и не измерение idle/long-run нагрузки.
+
+Пять actual SDK memory сценариев: reentrant Off/попытка capture в другом
+контексте; уничтожение будущего target; сброс epoch; потеря фокуса; Sensitive
+capability. Callback создаёт новый alias context; press не поглощается,
+разрешение уже Off. Проверяются отсутствие повторных commits и release drain.
+ASan+LSan pass. Reset проверяет invalidation напрямую, не event dispatch.
+Прежние 16 Off/receipt/submission и 6 preedit сценариев с inert guard также pass.
+Независимый review реализации и fast path не нашёл блокеров в этом LAB scope.
+
+Финальные закрытые прогоны: общий Off 5/5 и normal addon 18+focus4 pass.
+Обычный binary не содержит test flag marker, отдельный test addon содержит.
+Доступы и лицензии не расширены; UI/production app registry/On/preferences
+и снятие watchers не реализованы. Пользовательский режим не включён.

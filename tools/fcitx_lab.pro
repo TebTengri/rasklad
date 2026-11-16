@@ -14,6 +14,7 @@ DESTDIR = $$OUT_PWD
 
 SOURCES += $$PWD/../src/fcitxlab.cpp \
     $$PWD/../src/applicationpolicy.cpp \
+    $$PWD/../src/applicationpermissions.cpp \
     $$PWD/../src/compositiondisable.cpp
 
 # Only the factory symbol (FCITXCORE_EXPORT) is exported; catch missing links.

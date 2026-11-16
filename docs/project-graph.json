@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "55dae73d31caedbf16d585d05f70cad7595350f75baffc9601bf19bdedd1b94a",
+  "curatedSha256": "27717ac135b5df12c8663a7ff749639b8dd01efcc13c4cdc3de5f52b11073960",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -34,14 +34,14 @@
     "docs/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
     "docs/ADR-003-OFF-SUBMISSION.md": "1789d0fcfa84bf3d3d73f2d6ed0bd1e5e04d86518fdbf82d834c31cdfe3aa426",
     "docs/AGENT_SETUP.md": "b116aedf56d60ce15b6b0e1870421d844ebbf65019c6523ebb7b29198b0a37cc",
-    "docs/APPLICATION-POLICY.md": "6fbc4121a33909647896aaeb425f625d98658fb0c5fadb7a740007e8aa0e4859",
+    "docs/APPLICATION-POLICY.md": "1439173dc9c879688dadd4f449fc0c8f7366718fbb7f5a7c778301e460ff3ae3",
     "docs/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
     "docs/BROWSER-ADAPTER-001.md": "e64c845884b50ecd956b21bf41d2faf1984f71f1caea86fc60b0e82518628af1",
     "docs/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "cc14608db1779d79e46547d0351245d2689d1b5f7dbfea1da3ab6eff4b627acc",
+    "docs/CONTINUATION-PLAN.md": "fc9270ea6d96b44cc25c7407db3250ecf11098fd84b56ee59b719a179231454a",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -112,7 +112,7 @@
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
     "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
-    "src/fcitxlab.cpp": "3a4988bee6c1f474b0fa78abe560d6ce3a0cff306bd162eb4c9e94600b761330",
+    "src/fcitxlab.cpp": "bea1a82175719fa5ba469c1b5c47ad78a5519a5985ae1370d783aa4106fd4c6d",
     "src/fcitxlabprofile.cpp": "4d2b737290d4cff7be8299685069d5e0dc97b990a03bb491bfb551e76fd36920",
     "src/fcitxlabprofile.h": "09dfd43ee22daefb63c4fe38efbe42c8b9228913e5fcc44bb6febd3d7866574e",
     "src/jsontranslator.cpp": "9f1cc9fa03bf736748c3b7dd56bfd2472ebaf100539fadacf3ec1eaf17f002ed",
@@ -183,13 +183,15 @@
     "tests/fcitx_drain_server/server.pro": "bf8e35924c1cdcf414444a8473a8c52844ac51856d12913e024b6cb909497900",
     "tests/fcitx_drain_server/test_runner.py": "0e11d2fea9b73c44df6c800a13afc57244a37725c1bf6df671c1563f2515e1cb",
     "tests/fcitx_drain_server/wrapper_ownership.cpp": "5704899ad569a6aa0f50c46203b8b70fd37edc29de0204fdd8e4487b4b0f9cfd",
+    "tests/fcitx_transport/application_off_tests.cpp": "7b1d6d48c5b3f93234b2dad7d27ed3682c955933be392ec8cbf8c9b0281d853e",
+    "tests/fcitx_transport/application_off_tests.pro": "f2a5548d5535e0156ce9ecff72754451bf6e52aee06224b5bf8609d6c6e4eb24",
     "tests/fcitx_transport/client.cpp": "7b6e282ef76cf4b80d7f8a4ffc4801857f01f9eecc3fc3f6d268833fcbda4595",
     "tests/fcitx_transport/client.pro": "9d87f3304b07350e156a05587fcc74e3ba62fb384477721439a4618533cee4e5",
     "tests/fcitx_transport/core_entry_fake.cpp": "68fe2905fcaf6f795fe2c2a88f96c2697fbfff167ee60cd845d377833198b82a",
     "tests/fcitx_transport/core_entry_probe.cpp": "cc3883051d58b5b00306be0ea8265494a7570a2fff826e4837df21fc06a1061c",
     "tests/fcitx_transport/core_entry_unit.py": "dd06803811472b799b1c9fc10f9ad4a10c15b69b32b491d1f6812ab013fc6fe9",
     "tests/fcitx_transport/disable_reentry_tests.cpp": "5f13f102e7c1b32448b471afca6b530dc6d28c33d9e4111c44426d27b6aa955c",
-    "tests/fcitx_transport/disable_reentry_tests.pro": "7fb2377f53cd50ae78896c129157cc357e90dc691fad43dfcedf603b49964a44",
+    "tests/fcitx_transport/disable_reentry_tests.pro": "51a8b8b0883d433ca53a8012634869c1284c2b298a365ac495f15d587fd062a1",
     "tests/fcitx_transport/grab_entry_fake.cpp": "f0f53690a12ef733d60fef83cfdf698683d3711f30b1972b346df6ab161cfbc4",
     "tests/fcitx_transport/grab_entry_fake.pro": "7ceeb443004bfe3d3a4dac3a998dc47e73aaa81a48a56ebe82c1ec8bf1478b15",
     "tests/fcitx_transport/grab_entry_probe.cpp": "4b5662be92bef8e7e87ce853b6b8b303595120eda57e269d0b4c04d7b5ee39dc",
@@ -197,7 +199,7 @@
     "tests/fcitx_transport/grab_entry_unit.py": "d48ae066d492fda73671b290cf8ab4de5d01fb28eef2f523556500cb6c0fe7ac",
     "tests/fcitx_transport/grab_test_api.h": "73fc67bb8d687c4cc9695313575817004caf3588561a0fff94430783a6a542c2",
     "tests/fcitx_transport/preedit_reentry_tests.cpp": "3aa962a9552bcc70dcc6b6c872231f0dc5e11f49e9303ccffb6299c48128df69",
-    "tests/fcitx_transport/preedit_reentry_tests.pro": "2bcba0ddc1fbceaa6dcf8fca9ab621f6764e411ff9b32f4e85593518576caedb",
+    "tests/fcitx_transport/preedit_reentry_tests.pro": "ea94158049d7415dda5108ea3aa39eb31cb12aa400bcc02831ba28749c7c1e3b",
     "tests/fcitx_transport/server_grab_epoch_probe.cpp": "7dc8945dc291b41b5010001dfaa2b7d163aaf8a9975c807129280861261591da",
     "tests/fcitx_transport/server_grab_epoch_probe.pro": "5d27a6cfb8923520702f30d909b4934134de0e2deb79b468fc36d0e094c22306",
     "tests/fcitx_transport/server_grab_epoch_unit.py": "b9c124111036ce76211e36ac5f37b6bcee99105e67147f45f1965b3a31d12347",
@@ -320,7 +322,7 @@
     "tools/fcitx_frontend_build.py": "dda6bf2ae7d72c7e45ff2196ef4cecb4bbef59a20c01c8ae1de4684340ca4822",
     "tools/fcitx_frontend_lab.pro": "82c35bd61f5b03f26262b87f632f29dec0e6738035add20b02879600d5a71304",
     "tools/fcitx_grab_entry_lab.pro": "34f8b6834864a60eb5290952a0535070fc5e9434a6150544731b17025d93eea4",
-    "tools/fcitx_lab.pro": "11826f32fe9d27475502f43f802ad82736b4d4635027ef9f816634f0644a7732",
+    "tools/fcitx_lab.pro": "cfc668b271655a55d966ca4591f8ff50b0dc7a61776ed08dda44c8eed84c76c5",
     "tools/fcitx_lab_runner.py": "a55f3c8c4d7eb157f998257e8534df658b9b9f98572286fee583aa69196912b5",
     "tools/fcitx_profile_lab.pro": "3edd53c82551969b5284bd68ed8f87874c3cc6a3b98f3da85e063beb7bb466ae",
     "tools/fcitx_retirement_candidate.py": "71354dbb33198c4fc82039375b94219f5fc39759c6ab595fd53af58e0abff007",
@@ -1300,6 +1302,14 @@
     },
     {
       "path": "tests/fcitx_drain_server/wrapper_ownership.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/fcitx_transport/application_off_tests.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/fcitx_transport/application_off_tests.pro",
       "symbols": []
     },
     {
@@ -4977,15 +4987,21 @@
     },
     {
       "from": "src/fcitxlab.cpp",
-      "to": "src/compositiondisable.h",
+      "to": "src/applicationpermissions.h",
       "kind": "literal_include_or_import",
       "line": 90
     },
     {
       "from": "src/fcitxlab.cpp",
+      "to": "src/compositiondisable.h",
+      "kind": "literal_include_or_import",
+      "line": 91
+    },
+    {
+      "from": "src/fcitxlab.cpp",
       "to": "src/fcitxlabprofile.h",
       "kind": "literal_include_or_import",
-      "line": 93
+      "line": 94
     },
     {
       "from": "src/fcitxlabprofile.cpp",
@@ -5328,6 +5344,12 @@
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
       "line": 11
+    },
+    {
+      "from": "tests/fcitx_transport/application_off_tests.cpp",
+      "to": "src/fcitxlab.cpp",
+      "kind": "literal_include_or_import",
+      "line": 3
     },
     {
       "from": "tests/fcitx_transport/disable_reentry_tests.cpp",
@@ -6167,7 +6189,7 @@
   "vaultSha256": {
     "docs/knowledge/Start.md": "b617f0bceea3ad33dabc2d88fd956207565d4f553ec17af2d73bb1affad875c0",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
-    "docs/knowledge/application-policy.md": "d047bca763b7435beb14c61fa66b057c8eb06ef816cc2e3eb9b8dafc1b808389",
+    "docs/knowledge/application-policy.md": "fb5d537389cb8e71140f118fab4134495612697a700a56c3268ee9177905ebb7",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",

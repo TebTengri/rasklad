@@ -87,6 +87,7 @@
 //    preedit if we set it ourselves (preeditShown flag).
 
 #include "applicationpolicy.h"
+#include "applicationpermissions.h"
 #include "compositiondisable.h"
 
 #ifdef RASKLAD_PROFILE_LAB
@@ -289,8 +290,10 @@ private:
 
 class RaskladLab final : public fcitx::AddonInstance {
 public:
-    explicit RaskladLab(fcitx::Instance *instance) : instance_(instance) {
-        if (!fixtureScope()) return; // Default off outside the owned fixture contract.
+    explicit RaskladLab(fcitx::Instance *instance) : instance_(instance),
+        manager_(instance ? &instance->inputContextManager() : nullptr) {
+        if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
+        enableFixturePermissions();
 #ifdef RASKLAD_PROFILE_LAB
         profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>();
         if (!profile_->ready()) return; // Invalid/missing profile: no interception.
@@ -350,7 +353,26 @@ public:
     ~RaskladLab() override = default;
 #endif
 
+#ifdef RASKLAD_APPLICATION_OFF_TEST
+    explicit RaskladLab(fcitx::InputContextManager &manager)
+        : instance_(nullptr), manager_(&manager) {
+        enableFixturePermissions();
+        registered_ = manager_->registerProperty(kPropertyName, &factory_);
+    }
+#endif
 private:
+#ifdef RASKLAD_APPLICATION_OFF_TEST
+    friend struct ApplicationOffTest;
+#endif
+    void enableFixturePermissions() {
+        // Compile-time owned fixture contract only, never registry-as-authority
+        // for a regular application or an inferred alias.
+        for (const auto &adapter : kFixtureAdapters)
+            permissions_.enable(adapter.applicationId);
+    }
+    policy::Permission currentPermission(const policy::Context &context) const {
+        return permissions_.snapshot(context.verifiedApplicationId);
+    }
 #ifdef RASKLAD_PREEDIT_REENTRY_TEST
     friend struct PreeditReentryTest;
 #endif
@@ -405,6 +427,15 @@ private:
             return false;
         }
 #endif
+        #ifdef RASKLAD_APPLICATION_OFF_TEST
+        // In-memory owned fixture seam; no Instance/daemon/engine is created.
+        if (!instance_) return ic->capabilityFlags().test(fcitx::CapabilityFlag::Preedit) &&
+            !ic->capabilityFlags().test(fcitx::CapabilityFlag::Password) &&
+            !ic->capabilityFlags().test(fcitx::CapabilityFlag::Sensitive) &&
+            !ic->capabilityFlags().test(fcitx::CapabilityFlag::NoSpellCheck) &&
+            !ic->capabilityFlags().test(fcitx::CapabilityFlag::Terminal) &&
+            !ic->capabilityFlags().test(fcitx::CapabilityFlag::Disable);
+#endif
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
         if (!entry || entry->uniqueName() != kLabEntry) {
             return false;
@@ -443,7 +474,7 @@ private:
         if (!eligible(ic)) return false;
         const auto context = fixtureContext(ic, s);
         return s.disable->correction(kFixtureRegistry,
-            fixturePermission(context), context).allowed();
+            currentPermission(context), context).allowed();
     }
 
     // LAB-only plumbing, deliberately without a runtime preference trigger.
@@ -466,9 +497,9 @@ private:
             std::string text;
             ~Original() { wipeString(text); }
         } original{s.word()};
-        // Do not clear the original or preedit before an uncertain external
-        // write. This callback may reset or destroy both ic and s. No raw state
-        // or context access is permitted after it, even for Completed.
+        // Unknown callbacks retain the original; the Submitted callback stages
+        // local ownership release before its ordinary IME write. Either callback
+        // may reset or destroy ic and s: never access them after it returns.
         const auto result = finish(ic, original.text);
         operation->complete(ticket, result);
     }
@@ -508,8 +539,40 @@ private:
             });
     }
 
-    void requestLabOff(fcitx::InputContext *ic, LabState &s) {
-        submitLabOff(ic, s, eligible(ic));
+    void requestLabOff(fcitx::InputContext *ic, LabState &) {
+        if (!ic || !manager_) return;
+        // Explicit family: both compile-time Chromium fixture aliases belong to
+        // this one owned client. Program strings are not process authentication.
+        bool target = false;
+        for (const auto &adapter : kFixtureAdapters)
+            if (ic->program() == adapter.id) target = true;
+        if (!target) return;
+        // Publish EVERY alias before any callback can capture in another context.
+        familyOff_ = true;
+        for (const auto &adapter : kFixtureAdapters)
+            permissions_.revoke(adapter.applicationId);
+        using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
+        std::vector<Watch> targets;
+        manager_->foreach([&](fcitx::InputContext *candidate) {
+            bool matches = false;
+            for (const auto &adapter : kFixtureAdapters)
+                if (candidate->program() == adapter.id) matches = true;
+            if (matches) {
+                if (auto *s = state(candidate)) {
+                    s->disable->requestOff(); // Callback-free staging for all.
+                    targets.push_back(candidate->watch());
+                }
+            }
+            return true;
+        });
+        // Never carry a raw context/state across a prior target's callback.
+        for (auto &watch : targets) {
+            auto *current = watch.get();
+            if (!current) continue;
+            auto *s = state(current);
+            if (!s) continue;
+            submitLabOff(current, *s, eligible(current));
+        }
     }
 
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
@@ -640,6 +703,19 @@ private:
             return;
         }
 
+        // Once the entire owned family is Off, presses need no profile,
+        // capability or property lookup. Releases above still drain old presses.
+        if (familyOff_) {
+#ifdef RASKLAD_DISABLE_TEST_LAB
+            const char *testFlag = std::getenv("RASKLAD_DISABLE_TEST_LAB");
+            const bool repeatTestOff = testFlag && std::strcmp(testFlag, "1") == 0 &&
+                !key.hasModifier() && key.sym() == FcitxKey_F12;
+            if (!repeatTestOff) return;
+#else
+            return;
+#endif
+        }
+
 #ifdef RASKLAD_WITNESS_LAB
         // Read-only focus observation; not a gate, creates no state.
         if (wSpacePress && ic && ic->hasFocus()) {
@@ -724,11 +800,11 @@ private:
             if (s->empty()) {
                 const auto context = fixtureContext(ic, *s);
                 const auto generation = s->disable->bind(kFixtureRegistry,
-                    fixturePermission(context), context);
+                    currentPermission(context), context);
                 if (!generation) return;
                 s->generation = generation;
                 s->lease = policy::authorizeCapture(kFixtureRegistry,
-                    fixturePermission(context), context).lease;
+                    currentPermission(context), context).lease;
             }
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
             return;
@@ -787,6 +863,9 @@ private:
     }
 
     fcitx::Instance *instance_;
+    fcitx::InputContextManager *manager_;
+    policy::ApplicationPermissions permissions_{kFixtureRegistry};
+    bool familyOff_ = false;
 #ifdef RASKLAD_PROFILE_LAB
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
 #endif

@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Default-deny kernel and tested context-local Off submission; local completion differs from delivery. Per-app controller/UI and real-app authentication remain open.
+Shared owned-family Off integrated and tested, fresh per-app permission revisions; watcher retirement/re-enable/UI and real-app identity remain open.
 
 Статус: source_contract_or_implementation
 
@@ -27,6 +27,8 @@ Default-deny kernel and tested context-local Off submission; local completion di
 - `src/applicationpermissions.cpp`
 - `tests/application_policy/permissions_tests.cpp`
 - `data/application-permissions-001-result.json`
+- `tests/fcitx_transport/application_off_tests.cpp`
+- `data/application-off-001-result.json`
 
 ## Связи
 

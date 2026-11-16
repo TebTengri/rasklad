@@ -10,3 +10,5 @@ SOURCES += $$PWD/preedit_reentry_tests.cpp $$PWD/../../src/applicationpolicy.cpp
     $$PWD/../../src/compositiondisable.cpp
 QMAKE_CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer -g
 QMAKE_LFLAGS += -fsanitize=address
+
+SOURCES += $$PWD/../../src/applicationpermissions.cpp

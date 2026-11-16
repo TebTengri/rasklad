@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "scope": "shared permissions for explicit owned Chromium fixture family; no product UI",
+  "sdkBatchOffScenarios": 5,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "previousOffMemoryScenarios": 16,
+  "previousPreeditScenarios": 6,
+  "outsideFixtureGuardPassed": true,
+  "closedOff": {
+    "application": "installed Chromium native Wayland IM",
+    "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+    "browserVersion": "Chrome/155.0.8059.84",
+    "cdpTyping": false,
+    "checks": 5,
+    "dbusInputFrontendAbsent": true,
+    "disableCompositionStarted": true,
+    "disableEventClasses": [
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "compositionupdate"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "beforeinput"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "input"
+      },
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": false,
+        "type": "compositionend"
+      }
+    ],
+    "disableNoDuplicateOriginal": true,
+    "disableOriginalSettled": true,
+    "disableOriginalUndo": true,
+    "disableRawPassthrough": true,
+    "driverExitCode": 0,
+    "exitCode": 0,
+    "frontendVariant": "keep-grab",
+    "hostConfigurationChanged": false,
+    "hostInput": false,
+    "hyprlandSupport": false,
+    "nativeDeliveryGuarantee": false,
+    "passed": true,
+    "privateFrontendArtifactSha256": "ec05519adddcff42f31d0af09f8634a62896cb7a3a7a3c3c70b556e3efdc8de7",
+    "privateFrontendMapped": true,
+    "privateSeedKeyboard": true,
+    "referenceCompositor": "Sway/wlroots software only",
+    "sandboxed": true,
+    "schema": 1,
+    "slackSupport": false,
+    "submissionOnly": true,
+    "syntheticInputOnly": true,
+    "syntheticOffTrigger": true
+  },
+  "normalRegression": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "privateFrontendMapped": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "independentReview": "batch staging, lifetime watches, gate freshness and press fast path reviewed; no private-scope blockers",
+  "watcherRetirementImplemented": false,
+  "normalArtifactHasTestTriggerMarker": false,
+  "testArtifactHasTestTriggerMarker": true,
+  "newHostTrial": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "bea1a82175719fa5ba469c1b5c47ad78a5519a5985ae1370d783aa4106fd4c6d",
+    "tools/fcitx_lab.pro": "cfc668b271655a55d966ca4591f8ff50b0dc7a61776ed08dda44c8eed84c76c5",
+    "tests/fcitx_transport/application_off_tests.cpp": "7b1d6d48c5b3f93234b2dad7d27ed3682c955933be392ec8cbf8c9b0281d853e",
+    "tests/fcitx_transport/application_off_tests.pro": "f2a5548d5535e0156ce9ecff72754451bf6e52aee06224b5bf8609d6c6e4eb24"
+  }
+}

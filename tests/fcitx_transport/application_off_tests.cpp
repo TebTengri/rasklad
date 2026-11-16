@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: MIT
+// Actual SDK, synthetic owned fixture memory; no daemon or runtime transport.
+#include "../../src/fcitxlab.cpp"
+#include <functional>
+#include <iostream>
+namespace {
+#define require(x) do { if (!(x)) { std::cerr << "application Off line " << __LINE__ << '\n'; std::abort(); } } while (false)
+struct ApplicationOffTest {
+    static LabState &state(RaskladLab &lab, fcitx::InputContext *ic) { return *lab.state(ic); }
+    static bool key(RaskladLab &lab, fcitx::InputContext *ic, bool release = false) {
+        fcitx::KeyEvent event(ic, fcitx::Key(FcitxKey_a), release);
+        lab.handleKey(event);
+        if (release) require(event.filtered());
+        return event.filtered();
+    }
+    static void off(RaskladLab &lab, fcitx::InputContext *ic) { lab.requestLabOff(ic, state(lab, ic)); }
+    static auto permission(RaskladLab &lab, const char *id) { return lab.permissions_.snapshot(id); }
+};
+class Context final : public fcitx::InputContext {
+public:
+    Context(fcitx::InputContextManager &m, const char *program) : InputContext(m, program) {
+        created(); setCapabilityFlags(fcitx::CapabilityFlag::Preedit); focusIn();
+    }
+    ~Context() override { destroy(); }
+    const char *frontend() const override { return "application-off-test"; }
+    std::function<void()> callback;
+    unsigned writes = 0;
+protected:
+    void commitStringImpl(const std::string &text) override {
+        require(text == "a"); ++writes;
+        auto copy = callback;
+        if (copy) copy();
+    }
+    void updatePreeditImpl() override {}
+    void forwardKeyImpl(const fcitx::ForwardKeyEvent &) override { require(false); }
+    void deleteSurroundingTextImpl(int, unsigned) override { require(false); }
+};
+void scenario(int mode) {
+    fcitx::InputContextManager manager;
+    RaskladLab lab(manager);
+    auto first = std::make_unique<Context>(manager, kLabProgram);
+    auto second = std::make_unique<Context>(manager, "chromium-browser");
+    auto other = std::make_unique<Context>(manager, "unregistered-fixture");
+    require(ApplicationOffTest::key(lab, first.get()));
+    require(ApplicationOffTest::key(lab, second.get()));
+    require(ApplicationOffTest::state(lab, first.get()).word() == "a");
+    require(ApplicationOffTest::state(lab, second.get()).word() == "a");
+    auto operation1 = ApplicationOffTest::state(lab, first.get()).disable;
+    auto operation2 = ApplicationOffTest::state(lab, second.get()).disable;
+    unsigned callbacks = 0;
+    std::unique_ptr<Context> fresh;
+    auto callback = [&] {
+        ++callbacks;
+        require(ApplicationOffTest::permission(lab, kLabProgram).mode == policy::Mode::Off);
+        require(ApplicationOffTest::permission(lab, "chromium-browser").mode == policy::Mode::Off);
+        // Both controllers must already be stopped before the first write.
+        require(operation1->state() != policy::CompositionDisable::State::Active);
+        require(operation2->state() != policy::CompositionDisable::State::Active);
+        fresh = std::make_unique<Context>(manager, "chromium-browser");
+        require(!ApplicationOffTest::key(lab, fresh.get()));
+        require(ApplicationOffTest::state(lab, fresh.get()).empty());
+        if (mode == 1) {
+            // Destroy whichever other context has not yet submitted.
+            if (!first->writes) first.reset();
+            else if (!second->writes) second.reset();
+        } else if (mode == 2) {
+            auto *target = first->writes ? second.get() : first.get();
+            // A lifecycle reset after staging invalidates the original lease.
+            ApplicationOffTest::state(lab, target).invalidate();
+        } else if (mode == 3) {
+            auto *target = first->writes ? second.get() : first.get();
+            target->focusOut();
+        } else if (mode == 4) {
+            auto *target = first->writes ? second.get() : first.get();
+            target->setCapabilityFlags(fcitx::CapabilityFlags(fcitx::CapabilityFlag::Preedit) | fcitx::CapabilityFlag::Sensitive);
+        } else {
+            auto *target = first->writes ? second.get() : first.get();
+            const auto before = ApplicationOffTest::state(lab, target).word();
+            require(!ApplicationOffTest::key(lab, target));
+            require(ApplicationOffTest::state(lab, target).word() == before);
+            ApplicationOffTest::off(lab, target); // Reentrant Off cannot duplicate.
+        }
+    };
+    first->callback = callback; second->callback = callback;
+    ApplicationOffTest::off(lab, first.get());
+    require(callbacks == (mode != 0 ? 1U : 2U));
+    require(other->writes == 0);
+    require(!ApplicationOffTest::state(lab, other.get()).stopping());
+    if (first) ApplicationOffTest::key(lab, first.get(), true);
+    if (second) ApplicationOffTest::key(lab, second.get(), true);
+    auto *remaining = first ? first.get() : second.get();
+    ApplicationOffTest::off(lab, remaining);
+    require(callbacks == (mode != 0 ? 1U : 2U));
+    require(!ApplicationOffTest::key(lab, fresh.get()));
+    require(ApplicationOffTest::state(lab, fresh.get()).empty());
+}
+}
+int main() { for (int i=0; i<5; ++i) scenario(i); std::cout << "PASS: shared fixture family Off, callback creation/destruction/reentry, release drain\n"; }
