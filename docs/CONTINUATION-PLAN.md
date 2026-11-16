@@ -1,3 +1,18 @@
+## 2026-11-16 — multi-app permission store foundation
+
+ApplicationPermissions pure owned-id store added, defaultsOff, perapp revisions,
+atomic callback-free revokeAll. Not integrated into addon/UI yet. Header and
+test explicitly show old Permission value copies stay enabled: fetch current
+snapshot immediately before operations and after callbacks. Independent store
+review accepted; no blockers, overflow branch reviewed but not runtime exercised.
+NEXT implement two-phase LAB app Off: publish shared revision first, stage
+requestOff on all matching existing states WITHOUT callbacks, snapshot lifetime
+watches/UUIDs, then freshly re-resolve + validate each before submission. New
+contexts must consult shared Off; alias grouping explicit. Keep consumed releases
+drainable, no polling. Test callbacks destroying/creating other contexts.
+Previous concrete Off E2E passed at6ff449a; no new runtime/hardware authorization.
+No live apps/settings/Slack access, draftPR17 andSYS246 stillinprogress.
+
 ## 2026-11-16 — Off SUBMISSION end-to-end PASS; contract simplified
 
 Current authoritative ADR-003-OFF-SUBMISSION.md replaces generic native receipt

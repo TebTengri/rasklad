@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "scope": "pure permission store; not wired to adapter",
+  "permissionAssertions": 48,
+  "failures": 0,
+  "fullSuite": {
+    "passed": 602,
+    "failed": 0,
+    "skipped": 1
+  },
+  "independentStaticReview": "no scoped blockers; stale snapshots warning adopted",
+  "overflowRuntimeTested": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/applicationpermissions.h": "f1a9589e4491f2c5fbd5327191fd37cbffb37d604fdd8d22a0fcd019249fc00c",
+    "src/applicationpermissions.cpp": "c6254d88e524d861548ef476e5406e632a631f3303e833181d28b7f81c8c124b",
+    "tests/application_policy/permissions_tests.cpp": "b6e015e7bfc3fcc8347bd91910913a704d08275f783d3214d8ee396ba17bfb7c"
+  }
+}

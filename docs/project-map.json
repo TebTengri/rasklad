@@ -359,7 +359,11 @@
         "docs/ADR-003-OFF-SUBMISSION.md",
         "data/disable-submission-001-result.json",
         "tools/fcitx_disable_lab.pro",
-        "tests/wayland_ime/test_disable_suite_guards.py"
+        "tests/wayland_ime/test_disable_suite_guards.py",
+        "src/applicationpermissions.h",
+        "src/applicationpermissions.cpp",
+        "tests/application_policy/permissions_tests.cpp",
+        "data/application-permissions-001-result.json"
       ],
       "title": "Default-deny application policy",
       "notes": "Default-deny kernel and tested context-local Off submission; local completion differs from delivery. Per-app controller/UI and real-app authentication remain open.",

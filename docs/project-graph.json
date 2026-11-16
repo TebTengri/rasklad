@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "8dfd731f50e8fdd92050c409e58fff52ad5326db152d499668077cef84cb1f04",
+  "curatedSha256": "55dae73d31caedbf16d585d05f70cad7595350f75baffc9601bf19bdedd1b94a",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -20,7 +20,7 @@
     "bin/run": "1b74c8f349a75730bbd6f7cfaa235661445deeea71665efb6f48cd4e6ccb9b5a",
     "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0",
     "bin/slack-request-quit": "10f9d292760d3f024cb215cbbf92e021dfa550756d865818d3dfab6ee6c9af87",
-    "bin/test": "31339ea1b27b56e91544bb5f281910a73373253d5e3b1d3e230bd63f1e6bff6a",
+    "bin/test": "a4efe2f1c308042ed2f4aac6ce9669afa8f43f3ab0586a9ee9df4a75222f5a89",
     "bin/test-chromium-ime": "d29bf2433c6138643e6f708aa3989d86ca25ba055a15c6318a13034ec86907a0",
     "bin/test-fcitx-transport": "97fffb53ca36c1c7382a2ffbaeb9d2bc0999a05bb15406098fafbfd71e1f7515",
     "bin/test-hyprland-ime": "2810801e6c4439542ea2fba67b4fa327a3f3389ef89dbc1db9c465b71ac0e5b6",
@@ -34,14 +34,14 @@
     "docs/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
     "docs/ADR-003-OFF-SUBMISSION.md": "1789d0fcfa84bf3d3d73f2d6ed0bd1e5e04d86518fdbf82d834c31cdfe3aa426",
     "docs/AGENT_SETUP.md": "b116aedf56d60ce15b6b0e1870421d844ebbf65019c6523ebb7b29198b0a37cc",
-    "docs/APPLICATION-POLICY.md": "fb0b3bd47bc65ea4c098f6a42d495380a5982ca2946323b57be6e5e3b3ea014a",
+    "docs/APPLICATION-POLICY.md": "6fbc4121a33909647896aaeb425f625d98658fb0c5fadb7a740007e8aa0e4859",
     "docs/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
     "docs/BROWSER-ADAPTER-001.md": "e64c845884b50ecd956b21bf41d2faf1984f71f1caea86fc60b0e82518628af1",
     "docs/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "47093ba74a5a7055f35f49433e8249a34d742d30e182378ac3aa23e7afe5e42d",
+    "docs/CONTINUATION-PLAN.md": "cc14608db1779d79e46547d0351245d2689d1b5f7dbfea1da3ab6eff4b627acc",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -94,10 +94,12 @@
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
     "docs/WAYLAND-IME-001.md": "37e61bb4ae84110956bf85a88d6347a1cdd3bea291937505ff82a8c85e723de4",
-    "rasklad.pro": "900809568ec1d33a18474bb3a0451f12da8de9cf387c63cc9e32f7352893b57c",
+    "rasklad.pro": "cc746f9acb89186e1dd905c1638211f8b43af246adf5c93e3cfb98084a4ad4e3",
     "src/Main.qml": "bd61a1cef9b41d373abcf3424793b48bd73fab4bf3a3b45c2a5f83f4c4d2bc5a",
     "src/analysisservice.cpp": "9979c961d2b7f940dd8b22889657ead75735aab0d5107ea1b1159bfe808074a6",
     "src/analysisservice.h": "21cdc104c9628e3cb3c1d4cbca1e7174d0f298fe801e541a99a1d206d7e3156b",
+    "src/applicationpermissions.cpp": "c6254d88e524d861548ef476e5406e632a631f3303e833181d28b7f81c8c124b",
+    "src/applicationpermissions.h": "f1a9589e4491f2c5fbd5327191fd37cbffb37d604fdd8d22a0fcd019249fc00c",
     "src/applicationpolicy.cpp": "b256cb8c709af1c4bc39e676bdd8e07a7c52034296a1928509b8bdbcada5b57e",
     "src/applicationpolicy.h": "06424bb9661211b3846eb20ea3bee9acfd87b9430ebbe212a7549078c82dae48",
     "src/appoptions.cpp": "2ff1fd2f12a033c32c16fd59bd398e49871c606fbd500bee92247101e9d4d680",
@@ -125,7 +127,7 @@
     "src/profileverify.cpp": "3821d0c3c27d2a22cc89b32e011e5dd238df563b43c6d8df3946188ea2bf0c64",
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
-    "src/rasklad_core.pro": "bb483fd8ccc7f6b71e6473782536c77468822a08322e38888a73ecaf50d8922b",
+    "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
     "src/spellengine.cpp": "23ae1018dd5ade6030ce33276d644d7fbfef43cbebc9eef8dd262ed20285f2d3",
     "src/spellengine.h": "9c433a0709efe9d3298353bd6ab7ee7ca35d7bfb2bc63d8f5ceeea648fb07a38",
     "src/themewatcher.cpp": "d5d9197c384cf992170d6bf2132867ad22095c5371e234d72c873f3eb8ab5a93",
@@ -134,9 +136,11 @@
     "src/uisetup.h": "5adddcdaa70a4f0f6beb53432f074a93e57a6e85644407e26058def0aa28f4b7",
     "tests/app/app_tests.cpp": "11585f51ce8856315c5926f830aaf3562ad2b85e676e5bcf0c147811e06f196d",
     "tests/app/app_tests.pro": "24bb5f23899ce60770c1ef2a2cf38e9b7a4b7b38607b6d28ce80e24612d9a75f",
+    "tests/application_permissions/application_permissions.pro": "e51da8321a4759f616d8b8251b271ea081aad62ba4b20f475fcd87ca0f1d059a",
     "tests/application_policy/application_policy.pro": "fd43486f3cb10c3439691003f439ef3428a7c5c3996c31f3dfa9e3ada486733d",
     "tests/application_policy/application_policy_tests.cpp": "454165b9f23f0d266d6020751d58ad1e2ca5f35edb69e3b3dd2727683c28d0dc",
     "tests/application_policy/disable_tests.cpp": "eae8c4df6477dd8bafdb3edab812d6b1f4cb615b3c177ebe7f0bca85ad022394",
+    "tests/application_policy/permissions_tests.cpp": "b6e015e7bfc3fcc8347bd91910913a704d08275f783d3214d8ee396ba17bfb7c",
     "tests/benchmark/benchmark_tests.cpp": "35fb56f4e942392776471840c0fff985930ee80af78885daef853c59a3e71a6e",
     "tests/benchmark/benchmark_tests.pro": "1c4cfb91c50484511ff765c39ae604a96eb2e6fb3c99692a00036d32d6f16566",
     "tests/browser/adapter.test.mjs": "519c5d777e22f43cf825c0a9c92e1c09bf9d4cee4751219b4ea9f98d278a90d1",
@@ -743,6 +747,14 @@
       "symbols": []
     },
     {
+      "path": "src/applicationpermissions.cpp",
+      "symbols": []
+    },
+    {
+      "path": "src/applicationpermissions.h",
+      "symbols": []
+    },
+    {
       "path": "src/applicationpolicy.cpp",
       "symbols": []
     },
@@ -887,6 +899,10 @@
       "symbols": []
     },
     {
+      "path": "tests/application_permissions/application_permissions.pro",
+      "symbols": []
+    },
+    {
       "path": "tests/application_policy/application_policy.pro",
       "symbols": []
     },
@@ -896,6 +912,10 @@
     },
     {
       "path": "tests/application_policy/disable_tests.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/application_policy/permissions_tests.cpp",
       "symbols": []
     },
     {
@@ -4872,6 +4892,18 @@
       "line": 18
     },
     {
+      "from": "src/applicationpermissions.cpp",
+      "to": "src/applicationpermissions.h",
+      "kind": "literal_include_or_import",
+      "line": 2
+    },
+    {
+      "from": "src/applicationpermissions.h",
+      "to": "src/applicationpolicy.h",
+      "kind": "literal_include_or_import",
+      "line": 3
+    },
+    {
       "from": "src/applicationpolicy.cpp",
       "to": "src/applicationpolicy.h",
       "kind": "literal_include_or_import",
@@ -5192,6 +5224,12 @@
     {
       "from": "tests/application_policy/disable_tests.cpp",
       "to": "src/compositiondisable.h",
+      "kind": "literal_include_or_import",
+      "line": 2
+    },
+    {
+      "from": "tests/application_policy/permissions_tests.cpp",
+      "to": "src/applicationpermissions.h",
       "kind": "literal_include_or_import",
       "line": 2
     },
@@ -6129,7 +6167,7 @@
   "vaultSha256": {
     "docs/knowledge/Start.md": "b617f0bceea3ad33dabc2d88fd956207565d4f553ec17af2d73bb1affad875c0",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
-    "docs/knowledge/application-policy.md": "801f38b492d034f53f05336869cc97c89ea9930e301e36b7dda7ae8661f85922",
+    "docs/knowledge/application-policy.md": "d047bca763b7435beb14c61fa66b057c8eb06ef816cc2e3eb9b8dafc1b808389",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",

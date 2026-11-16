@@ -23,6 +23,10 @@ Default-deny kernel and tested context-local Off submission; local completion di
 - `data/disable-submission-001-result.json`
 - `tools/fcitx_disable_lab.pro`
 - `tests/wayland_ime/test_disable_suite_guards.py`
+- `src/applicationpermissions.h`
+- `src/applicationpermissions.cpp`
+- `tests/application_policy/permissions_tests.cpp`
+- `data/application-permissions-001-result.json`
 
 ## Связи
 

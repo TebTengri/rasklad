@@ -88,3 +88,7 @@ application_policy_tests.depends = core
 SUBDIRS += composition_disable_tests
 composition_disable_tests.file = tests/composition_disable/composition_disable.pro
 composition_disable_tests.depends = core
+
+SUBDIRS += application_permissions_tests
+application_permissions_tests.file = tests/application_permissions/application_permissions.pro
+application_permissions_tests.depends = core

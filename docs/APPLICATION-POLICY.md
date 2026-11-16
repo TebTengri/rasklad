@@ -187,3 +187,25 @@ Shared alive/epoch binding подавляет пустой preedit update пос
 локальное владение после возврата вызова, не называя результат доставленным.
 Новая отдельная --disable-suite проверяет только собственный Sway/Chromium;
 обычный addon не содержит F12 trigger. Общий per-app Off/UI по-прежнему не готов.
+
+## Реестр разрешений нескольких приложений
+
+ApplicationPermissions — чистый event-thread store, до 64 trusted adapter
+записей. Идентификаторы копируются; один canonical applicationId у нескольких
+адаптеров разделяет разрешение. Alias canonicalization — явный контракт
+платформенного адаптера, не угадывание по имени окна. По умолчанию все Off.
+Enable/revoke имеют независимые application revisions; повторный Off идемпотентен.
+RevokeAll сначала проверяет возможность изменения всех записей, затем отзывает
+их без внешних callbacks. Переполнение revision навсегда блокирует store;
+его достижение не проверялось runtime-тестом.
+
+Permission — копия значений, а не живая capability. Старая enabled-копия
+не меняется после revoke. Поэтому на каждой capture/correction boundary и
+после callbacks нужно получать новый snapshot. string_view жив до уничтожения
+store; это гарантирует только память строки, не свежесть разрешения.
+
+Проверены A/B isolation, общий revoke, старые lease после повторного enable,
+неизвестные ids, владение строками, invalid registry и необходимость свежего
+snapshot. Assertions без NDEBUG. Store пока не подключён к LAB/production
+registry и не меняет разрешения пользователя. Независимое ревью не выявило
+блокеров в этом scope; его замечание о stale snapshots принято.
