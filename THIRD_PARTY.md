@@ -55,8 +55,9 @@ real artifact distribution. See docs/PROSEMIRROR-ADAPTER-005.md.
 ## Fcitx transport developer lab (SYS-244)
 
 The optional project-authored addon and fixture link to installed Fcitx5 libraries
-and use the installed Qt Fcitx platform input module. No upstream implementation
-is copied/vendored. Installed package metadata: Fcitx5 5.1.23-1
+and use the installed Qt Fcitx platform input module. That original addon does
+not copy upstream implementation into its own sources. The later private frontend
+source/patch experiment is separately inventoried below. Installed package metadata: Fcitx5 5.1.23-1
 (LGPL-2.1-or-later, Unicode-DFS-2016), fcitx5-qt 5.1.16-2
 (LGPL-2.1-or-later, BSD-3-Clause, GPL-2.0-or-later: component-specific), Qt 6.12.0
 with the existing Qt licensing conditions. Installed Fcitx Core/Utils headers
@@ -80,3 +81,29 @@ Only Xvfb and its unmodified full COPYING are extracted into ignored build/.
 No system installation or redistribution. Scripts/package/runtime dependencies
 are not relicensed by own MIT code; shipping requires a separate component audit.
 Pins/source: data/xvfb-lab-lock.json, docs/CHROMIUM-IME-001.md.
+
+
+## Private Fcitx frontend source and patch experiment (SYS-245)
+
+The pinned Fcitx5.1.23 archive is downloaded/extracted only into ignored build/,
+verified before the narrow private build, and never installed. Provenance, archive
+hash, annotated tag/commit and license-copy hash are in
+`data/fcitx-frontend-source-lock.json`. The original target frontend files carry
+LGPL-2.1-or-later and upstream CSSlayer copyright notices. The verbatim upstream
+license text is preserved in `data/notices/Fcitx5-LGPL-2.1-or-later.txt`.
+
+Source modifications published under `patches/fcitx5/` remain derivatives under
+the target upstream license; the repository's own MIT LICENSE does not relicense
+them. Keep-grab and cancellation patches apply to the pinned original files;
+the separate older retirement patches are diagnostic branches. Upstream notices
+remain in the complete source tree and target headers. See
+`patches/fcitx5/README.md` and the source/patch SHA manifests for exact boundaries.
+
+The qmake/Python recipe and synthetic peer are project-authored MIT scaffolding.
+The resulting private module links installed Fcitx/Wayland/xkbcommon SDK/runtime
+libraries and uses generated protocol code from its existing licensed XMLs.
+Those components keep their own notices/licenses; this is not a complete binary
+SBOM or authorization to redistribute a compiled module, SDK or protocol package.
+No binary/source archive is published by this experiment. Product packaging still
+requires the component/source/notice review already listed above; dictionary/data
+release gates are unchanged. No change to ownership of another project's work.

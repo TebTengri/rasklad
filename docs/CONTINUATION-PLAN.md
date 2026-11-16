@@ -1,3 +1,33 @@
+## 2026-11-16 — EXACT HYPRLAND011 PASS; approval CONSUMED
+
+UserexplicitlyapprovedONE75s keep-grab nestedHyprlandprobe andwasready nottotype.
+Ran ONCE: python3 tools/hyprland_ime_lab.py --run-approved --focus-stress
+ --space-telemetry --frontend-variant keep-grab --input-root /home/mvn/Work/rasklad.
+Exit0,18checksPASS,all4focuscasesPASS (inclpreviousmissingSpacecase2), cleanupPASS,
+selectedmoduledev/inodemapped,compositorStayedAlive=true. Source/data artifacthash
+matchesnormalisedkeepbuild. Usertoldprobecompleteandmaytype. Rawreportexcludedprivate
+stderr; publicdata/hyprland-keep-grab-011-result.json. OneparentFD+renderD128+bounded
+metadata/NODEV,nomountwhole/sys,nohostconfigwrites,Slacknotconnected,installedIME
+unchanged. This approvalisnowCONSUMED; NEVERrepeatwithoutfreshscopepermission.
+
+Scope: owned Chromium DOM fields in nested exactinstalledHyprland only,notreal
+Slack/terminal/arbitrarywindow/prolongedtyping proof. readyForLiveUse remainsfalse.
+No compositorfork/systeminstallation needed forsuccessfulcandidate; retainedFcitx
+module is project-localLGPLexperiment withstrictlabguard.9samepeercontrols include
+knownbad1/2;fixedcancellation1/1,unknownupsforwarded. ClosedSwaybaseline+keep18+4.
+ModifiernotificationShiftcontrolPASS notphysicalShift/shortcut/replacementproof.
+105boundaryunitguards+11peerlaunchercontrolsPASS. Codecheckpoint f558581;
+011 report/noticeinventory nowstagedforpublication; modifierfiles committedf558581.
+
+Noticeauditdone: verbatimLGPLcopy+hash+THIRD_PARTY derivativeentry,independent
+readonlytechnicalreviewfoundnomismatch (notlegalclearance). Manual-useboundary
+recordedinFCITX-KEEP-GRAB-001: laboratoryguardsnotdeployment; currentlyrejecting
+keymap/unavailable/reentrantconditions needgracefulpolicyandtestsbeforeordinaryuse.
+NEXT: save011report/PR/Linear, thenread-ownprojectapp/adapterstate andprepare
+a narrowlyscoped unsent-draft plan; noautomaticliveappaccess orinstallation. No liveSlackaccess/textedits/install/autostart
+withoutexplicit newscope; do not equatetestpasswithfinishedproduct. Existinguser
+askedautonomousworkandstatus, permissiononlyforaboveprobe. No activehostconsent.
+
 ## 2026-11-16 — modifier preflight PASS; exact host probe still NOT RUN
 
 Checkpoint3445ed0 published keep-grab/cancellation and closedSway18+focus4.

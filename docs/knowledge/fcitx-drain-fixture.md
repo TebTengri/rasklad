@@ -1,8 +1,8 @@
 # Actual Fcitx drain fixture draft
 
-Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof. Closedmodifier notification preservesShiftatkeysandreturnszero; no physicalmodifier/shortcutproof.
+Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus4 and one owner-approved exactnestedHyprland01118+focus4 PASS. Approvalconsumed; noSlack/regular-session/releaseproof.
 
-Статус: keep_grab_peer_and_closed_native_pass_not_host_verified
+Статус: one_exact_nested_hyprland_preflight_pass_not_live_release
 
 ## Файлы
 
@@ -35,6 +35,7 @@ Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellatio
 - `tests/wayland_ime/test_private_frontend.py`
 - `tests/wayland_ime/test_hyprland_private_frontend.py`
 - `data/fcitx-keep-grab-modifier-001-result.json`
+- `data/hyprland-keep-grab-011-result.json`
 
 ## Связи
 

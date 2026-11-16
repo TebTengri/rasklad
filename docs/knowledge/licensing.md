@@ -9,6 +9,9 @@ Own code MIT; dependency/data licenses and provenance remain separate.
 - `LICENSE`
 - `THIRD_PARTY.md`
 - `docs/DATA_POLICY.md`
+- `data/fcitx-frontend-source-lock.json`
+- `data/notices/Fcitx5-LGPL-2.1-or-later.txt`
+- `patches/fcitx5/README.md`
 
 ## Связи
 

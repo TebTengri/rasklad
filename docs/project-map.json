@@ -220,7 +220,10 @@
       "paths": [
         "LICENSE",
         "THIRD_PARTY.md",
-        "docs/DATA_POLICY.md"
+        "docs/DATA_POLICY.md",
+        "data/fcitx-frontend-source-lock.json",
+        "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
+        "patches/fcitx5/README.md"
       ],
       "title": "Licensing",
       "notes": "Own code MIT; dependency/data licenses and provenance remain separate.",
@@ -303,7 +306,8 @@
         "data/native-private-frontend-001-result.json",
         "tests/wayland_ime/test_private_frontend.py",
         "tests/wayland_ime/test_hyprland_private_frontend.py",
-        "data/fcitx-keep-grab-modifier-001-result.json"
+        "data/fcitx-keep-grab-modifier-001-result.json",
+        "data/hyprland-keep-grab-011-result.json"
       ],
       "tests": [
         "python3 tests/fcitx_drain_server/test_runner.py",
@@ -311,8 +315,8 @@
         "python3 tests/fcitx_drain_server/check_wrapper.py --run --depth",
         "python3 tools/fcitx_retirement_candidate.py --syntax"
       ],
-      "status": "keep_grab_peer_and_closed_native_pass_not_host_verified",
-      "notes": "Retained-grab client actual samepeerstock0/1 vskeep1/1; knowncleanup cancellation normalised. ClosedSwaybaseline+keepPASS18+focus4. Exact selector preparedonly; freshhostpermission required. No universalfield/modifier/long-run proof. Closedmodifier notification preservesShiftatkeysandreturnszero; no physicalmodifier/shortcutproof."
+      "status": "one_exact_nested_hyprland_preflight_pass_not_live_release",
+      "notes": "Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus4 and one owner-approved exactnestedHyprland01118+focus4 PASS. Approvalconsumed; noSlack/regular-session/releaseproof."
     },
     {
       "id": "handoff-screen",

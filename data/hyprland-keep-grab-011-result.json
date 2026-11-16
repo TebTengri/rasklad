@@ -1,0 +1,187 @@
+{
+  "application": "installed Chromium native Wayland IM",
+  "backspaceEditsComposition": true,
+  "beforeSpaceDomLength": 6,
+  "browserVersion": "Chrome/155.0.8059.84",
+  "cdpTyping": false,
+  "checks": 18,
+  "compositionActiveBeforeSpace": true,
+  "compositionEnded": true,
+  "compositorStayedAlive": true,
+  "correctedOnce": true,
+  "crashDocumentLength": 12,
+  "daemonCpuSeconds": 0.19,
+  "daemonHighWaterKiB": 57840,
+  "daemonRssKiB": 57840,
+  "daemonStayedStopped": true,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 0,
+  "escapePreservesOriginal": true,
+  "exactCompositor": "installed nested Hyprland",
+  "focusDoesNotLeak": true,
+  "focusEventControl": {
+    "sourceEnds": 1,
+    "totalEnds": 1,
+    "totalStarts": 1,
+    "trustedSourceEnds": 0,
+    "trustedSourceStarts": 1,
+    "untrustedSourceEnds": 1
+  },
+  "focusOriginalWordPreserved": true,
+  "focusSourceReviewPassed": true,
+  "focusStress": {
+    "addonWitnessQueriesEnabled": false,
+    "cases": [
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_other_back_prose_space",
+        "iteration": 1,
+        "passed": true,
+        "precondition": true,
+        "spaceTelemetry": {
+          "armed": true,
+          "complete": true,
+          "dropped": 0,
+          "records": [
+            {
+              "codeClassIndex": 0,
+              "defaultPrevented": false,
+              "inputTypeIndex": -1,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 0,
+              "valueClassIndex": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": -1,
+              "defaultPrevented": false,
+              "inputTypeIndex": 0,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 2,
+              "valueClassIndex": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": -1,
+              "defaultPrevented": false,
+              "inputTypeIndex": 0,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 3,
+              "valueClassIndex": [
+                3,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": 0,
+              "defaultPrevented": false,
+              "inputTypeIndex": -1,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 1,
+              "valueClassIndex": [
+                3,
+                0,
+                0
+              ]
+            }
+          ],
+          "valid": true
+        }
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 1,
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true
+      }
+    ],
+    "checks": 4,
+    "diagnostics": [],
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "executedCases": 4,
+    "instrumentedAddonTrial": false,
+    "instrumentedCoreEntryTrial": false,
+    "instrumentedGrabEntryTrial": false,
+    "instrumentedGrabEpochTrial": false,
+    "instrumentedServerRouteTrial": false,
+    "instrumentedSpaceTrial": true,
+    "passed": true,
+    "provenance": "test_fixture_only_not_authentication",
+    "scope": "DOM_intra_surface_only"
+  },
+  "focusStressPassed": true,
+  "frontendVariant": "keep-grab",
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "knownEnglishPreserved": true,
+  "longTokenPreserved": true,
+  "maxTrialSeconds": 75,
+  "mixedTokenPreserved": true,
+  "nativeUndoChangesDocument": true,
+  "nativeUndoRestoresPreviousCommit": true,
+  "nextWordPreserved": true,
+  "parentDisplayConnection": true,
+  "passed": true,
+  "passwordPassthrough": true,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "preeditObserved": true,
+  "primaryStatOnly": true,
+  "privateFrontendArtifactSha256": "ec05519adddcff42f31d0af09f8634a62896cb7a3a7a3c3c70b556e3efdc8de7",
+  "privateFrontendMapped": true,
+  "privateSeedKeyboard": true,
+  "profileVariant": true,
+  "readyForLiveUse": false,
+  "renderNodeGranted": true,
+  "schema": 1,
+  "secondWordCorrected": true,
+  "slackConnected": false,
+  "slackSupport": false,
+  "syntheticInputOnly": true,
+  "ownerApprovedSingleTrial": true,
+  "approvalConsumed": true,
+  "scope": "one exact nested Hyprland run with own native Chromium/Fcitx fields; not live Slack or arbitrary app proof"
+}

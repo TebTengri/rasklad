@@ -119,3 +119,33 @@ peer-launcher controls pass. This tests modifier notifications, not a physical
 Shift key pair, arbitrary keyboard/keymap replacement or native shortcut behavior.
 Evidence: `data/fcitx-keep-grab-modifier-001-result.json`. Implemented by a fresh
 helper, independently inspected and executed by Codex; helper ran no Fcitx.
+
+## Exact nested Hyprland trial011
+
+After a fresh permission for one bounded run, the prepared keep-grab selector
+passed18 checks and all4 focus cases on the installed nested Hyprland. This
+includes the previously failing word → other field → prose → Space case. The
+candidate module mapping/hash was confirmed, the compositor stayed alive, and
+post-private-daemon-crash input continued. Evidence:
+`data/hyprland-keep-grab-011-result.json`.
+
+The trial used the approved single parent Wayland connection, renderD128 and
+bounded GPU metadata/NODEV primary-card stat. No host config was written; Slack
+was not connected. Permission is now consumed; another run is not authorized.
+The test's `readyForLiveUse` stays false: this is one owned Chromium-field run,
+not sustained regular desktop use, every application or live Slack validation.
+
+## Next reviewable use boundary
+
+Keep the current module's laboratory admission guards. Ordinary deployment must
+first define safe behavior for currently rejecting conditions (keymap changes
+with pending cancellation, unavailable and reentrant handoff), and account for
+an existing input-method owner. Do not turn off those guards as an installer.
+A first real-application check should use one explicitly chosen unsent test draft,
+without sending messages or inspecting unrelated conversations, with a separate
+scope for that application's launch/profile. No autostart/global IME replacement
+is included here. Installed service/config changes remain outside this milestone.
+
+The source/notice inventory now includes the pinned verbatim LGPL text and
+explicit LGPL derivative scope for these patches. This does not approve binary
+packaging or alter the independent dictionary/data release gates.

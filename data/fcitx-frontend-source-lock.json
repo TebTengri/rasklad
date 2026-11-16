@@ -8,5 +8,7 @@
   "archiveBytes": 7837170,
   "upstreamLicense": "LGPL-2.1-or-later",
   "tagSignatureVerifiedLocally": false,
-  "skippedSymlinks": "seven icon aliases under data/icon; no source-code symlinks"
+  "skippedSymlinks": "seven icon aliases under data/icon; no source-code symlinks",
+  "licenseNoticePath": "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
+  "licenseNoticeSha256": "1ccf09bf2f598308df4bed9cd8e9657dc5cd0973d2800318f2e241486e2edf3f"
 }
