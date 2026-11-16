@@ -15,6 +15,9 @@ struct DisableReentryTest {
                             policy::CompositionDisable::Token generation, bool eligible = true) {
         return RaskladLab::acknowledgeLabOriginal(ic, s, generation, eligible);
     }
+    static void submit(fcitx::InputContext *ic, LabState &s) {
+        RaskladLab::submitLabOff(ic, s, true);
+    }
     static auto commit(fcitx::InputContext *ic, const std::string &text) {
         return RaskladLab::commitOriginalUnknown(ic, text);
     }
@@ -89,6 +92,36 @@ void scenario(int mode) {
         require(s->word() == "ab");
     }
 }
+void submissionScenario(int mode) {
+    fcitx::InputContextManager manager;
+    auto ic = std::make_unique<FakeContext>(manager);
+    auto s = std::make_unique<LabState>();
+    ic->setCapabilityFlags(fcitx::CapabilityFlag::Preedit);
+    ic->focusIn();
+    DisableReentryTest::start(ic.get(), *s);
+    auto operation = s->disable;
+    s->setPreeditShown(true);
+    fcitx::Text preedit; preedit.append(s->word());
+    ic->inputPanel().setClientPreedit(preedit); ic->updatePreedit();
+    unsigned writes = 0, notifications = 0;
+    ic->onPreedit = [&] { ++notifications; };
+    ic->onCommit = [&](const std::string &text) {
+        ++writes; require(text == "ab");
+        require(s->empty() && !s->preeditShown());
+        require(!operation->mayTeardown());
+        DisableReentryTest::submit(ic.get(), *s); // Cannot submit reentrantly.
+        if (mode == 1) {
+            DisableReentryTest::discard(ic.get(), *s);
+        } else if (mode == 2) { s.reset(); ic.reset(); }
+        else if (mode == 3) ic->focusOut();
+    };
+    DisableReentryTest::submit(ic.get(), *s);
+    require(writes == 1);
+    require(operation->mayTeardown());
+    // No delayed clear to changed lifecycle/focus or destroyed context.
+    require(notifications == (mode == 0 ? 1U : 0U));
+    if (s) { DisableReentryTest::submit(ic.get(), *s); require(writes == 1); }
+}
 void receiptScenario(int mode) {
     fcitx::InputContextManager manager;
     auto ic = std::make_unique<FakeContext>(manager);
@@ -139,5 +172,6 @@ void receiptScenario(int mode) {
 int main() {
     for (int i=0; i<6; ++i) scenario(i);
     for (int i=0; i<6; ++i) receiptScenario(i);
-    std::cout << "PASS: six disable and six trusted-receipt helper scenarios; no native delivery claim\n";
+    for (int i=0; i<4; ++i) submissionScenario(i);
+    std::cout << "PASS: 16 Off/receipt/submission scenarios; no native delivery guarantee\n";
 }

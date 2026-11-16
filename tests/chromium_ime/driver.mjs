@@ -45,6 +45,31 @@ try{
  await ev(`new Promise((resolve,reject)=>{const end=Date.now()+4000;function ready(){if(document.getElementById('prose'))return resolve(true);if(Date.now()>end)return reject(Error('load'));setTimeout(ready,20);}ready();})`);
  async function reset(id='prose'){await ev(`document.querySelectorAll('textarea,input').forEach(x=>x.value='');document.getElementById(${JSON.stringify(id)}).focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,150));}
  async function type(name){if(nativeWayland){const ack=nextVkLine(5000);vk.stdin.write(name+'\n');if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');}else execFileSync('/usr/bin/python3',['-I','/lab/keys.py',name,String(child.pid)],{stdio:['ignore','ignore','pipe'],timeout:5000});await new Promise(r=>setTimeout(r,200));}
+ if(process.env.RASKLAD_DISABLE_TEST_LAB==='1'){
+  if(!nativeWayland||process.env.RASKLAD_FOCUS_STRESS_LAB==='1')throw Error('exclusive native disable suite required');
+  await reset();
+  // No DOM mutation or scripted events after measurement starts.
+  phase='disable_composition';await type('word');
+  report.disableCompositionStarted=await ev(`prose.value==='ghbdtn'&&imeEvents.some(x=>x.type==='compositionstart'&&x.trusted)`);
+  const offset=await ev('imeEvents.length');
+  phase='disable_original';await type('lab-off');
+  // Owned fixture behavioral evidence only; Chromium's compositionend may be
+  // untrusted even for native delivery. Never turn this into a production ack.
+  async function waitObservation(expression){const end=Date.now()+2500;while(Date.now()<end){if(await ev(expression))return true;await new Promise(r=>setTimeout(r,25));}return false;}
+  report.disableOriginalSettled=await waitObservation(`(()=>{const a=imeEvents.slice(${offset});return document.activeElement===prose&&prose.value==='ghbdtn'&&a.some(x=>x.type==='compositionend'&&x.targetIndex===0)&&a.some(x=>x.trusted&&x.type==='input'&&x.targetIndex===0&&x.length===6);})()`);
+  report.disableEventClasses=await ev(`imeEvents.slice(${offset}).map(x=>({type:x.type,inputType:x.inputType,length:x.length,trusted:x.trusted,targetIndex:x.targetIndex})).slice(0,16)`);
+  if(!report.disableOriginalSettled)throw Error('original not settled in owned field');
+  phase='disable_no_retry';await type('lab-off');
+  report.disableNoDuplicateOriginal=await ev(`prose.value==='ghbdtn'`);
+  phase='disable_original_undo';await type('undo');
+  report.disableOriginalUndo=await ev(`prose.value===''`);
+  const rawOffset=await ev('imeEvents.length');
+  phase='disable_passthrough';await type('word');await type('space');
+  report.disableRawPassthrough=await ev(`prose.value==='ghbdtn '&&!imeEvents.slice(${rawOffset}).some(x=>x.type==='compositionstart')`);
+  report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
+  const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else{
  await reset();phase='word';await type('word');
  report.preeditObserved=await ev(`imeEvents.some(x=>x.type==='compositionstart')&&imeEvents.some(x=>x.type==='compositionupdate')`);
  report.beforeSpaceDomLength=await ev(`prose.value.length`);
@@ -162,6 +187,7 @@ try{
  report.daemonStayedStopped=owner==='(false,)\n';
  required.push('postCrashInputContinues','daemonStayedStopped');
  report.passed=required.every(k=>report[k]===true);report.checks=required.length;
+ }
  }
 }catch(e){report.passed=false;report.failedPhase=phase;report.browserExit=lastExit;report.failure=String(e.message).startsWith('Command failed:')?'private_key_driver_failed':String(e.message).slice(0,80);}
 finally{

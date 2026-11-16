@@ -26,6 +26,8 @@ static_assert(KEY_Z == 44, "unexpected KEY_Z");
 static_assert(KEY_SPACE == 57, "unexpected KEY_SPACE");
 static_assert(KEY_BACKSPACE == 14, "unexpected KEY_BACKSPACE");
 static_assert(KEY_ESC == 1, "unexpected KEY_ESC");
+static_assert(KEY_F12 == 88, "unexpected KEY_F12");
+static_assert(KEY_F11 == 87, "unexpected KEY_F11");
 
 namespace {
 
@@ -224,7 +226,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -238,6 +240,9 @@ Cmd parse(std::string_view line)
     if (line == "undo") return Cmd::Undo;
     if (line == "backspace") return Cmd::Backspace;
     if (line == "escape") return Cmd::Escape;
+    if (envIs("RASKLAD_DISABLE_TEST_LAB", "1")) {
+        if (line == "lab-off") return Cmd::LabOff;
+    }
     return Cmd::Unknown;
 }
 
@@ -257,6 +262,7 @@ bool run(Session &s, Cmd cmd)
     case Cmd::Undo: return s.chord(KEY_LEFTCTRL, KEY_Z);
     case Cmd::Backspace: return s.tap(KEY_BACKSPACE);
     case Cmd::Escape: return s.tap(KEY_ESC);
+    case Cmd::LabOff: return s.tap(KEY_F12);
     case Cmd::Unknown: break;
     }
     return false;

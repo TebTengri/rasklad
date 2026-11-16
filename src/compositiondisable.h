@@ -8,7 +8,9 @@ namespace rasklad::policy {
 class CompositionDisable final {
 public:
     enum class State { Disabled, Idle, Active, Pending, InFlight, Deferred };
-    enum class Result { Completed, NotWritten, Unknown };
+    enum class Result { Completed, NotWritten, Unknown, Submitted };
+    // Submitted releases LOCAL ownership after one native submission attempt;
+    // it never asserts delivery. Caller stages buffer/preedit release first.
     using Token = std::uint64_t;
     CompositionDisable() = default;
     CompositionDisable(const CompositionDisable &) = delete;

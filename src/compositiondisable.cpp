@@ -67,7 +67,7 @@ bool CompositionDisable::complete(Token ticket, Result result) noexcept
 {
     if (state_ != State::InFlight || !ticket || ticket != ticket_) return false;
     ticket_ = 0;
-    if (result == Result::Completed || nativeCompleted_) clear(State::Disabled);
+    if (result == Result::Completed || result == Result::Submitted || nativeCompleted_) clear(State::Disabled);
     else state_ = State::Deferred;
     return true;
 }

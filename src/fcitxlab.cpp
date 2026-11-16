@@ -184,15 +184,20 @@ void wipeString(std::string &s) {
 // release bookkeeping, never history.
 class LabState final : public fcitx::InputContextProperty {
 public:
+    struct CallbackBinding { bool alive = true; std::uint64_t epoch = 1; };
+    std::shared_ptr<CallbackBinding> callbackBinding = std::make_shared<CallbackBinding>();
     LabState() : id(nextId_++) { disable->enable(); }
-    ~LabState() override { invalidate(); clearBuffer(); }
-    void invalidate() { ++epoch; lease = {}; }
+    ~LabState() override { callbackBinding->alive = false; invalidate(); clearBuffer(); }
+    void invalidate() { ++epoch; callbackBinding->epoch = epoch; lease = {}; }
     const std::uint64_t id;
     std::uint64_t epoch = 1;
     policy::Lease lease;
     std::shared_ptr<policy::CompositionDisable> disable =
         std::make_shared<policy::CompositionDisable>();
     policy::CompositionDisable::Token generation = 0;
+#ifdef RASKLAD_DISABLE_TEST_LAB
+    bool testOffSent = false;
+#endif
 
 
     bool stopping() const {
@@ -442,9 +447,9 @@ private:
     }
 
     // LAB-only plumbing, deliberately without a runtime preference trigger.
-    // The caller must freshly evaluate every existing metadata gate, without an
-    // intervening callback. A void Fcitx commit can only report Unknown. Completed
-    // is reserved for a future trusted adapter native-completion contract.
+    // The caller freshly evaluates every metadata gate without a callback.
+    // Unknown retains original; Submitted releases local composition using
+    // ordinary IME semantics. Neither result proves application acceptance.
     template <typename FinishOriginal>
     static void disableLab(fcitx::InputContext *ic, LabState &s,
                            bool currentlyEligible, FinishOriginal finish) {
@@ -495,9 +500,16 @@ private:
         return policy::CompositionDisable::Result::Unknown;
     }
 
+    static void submitLabOff(fcitx::InputContext *ic, LabState &s, bool current) {
+        disableLab(ic, s, current,
+            [&s](fcitx::InputContext *context, const std::string &original) {
+                commitAndClear(context, s, original);
+                return policy::CompositionDisable::Result::Submitted;
+            });
+    }
+
     void requestLabOff(fcitx::InputContext *ic, LabState &s) {
-        const bool current = eligible(ic);
-        disableLab(ic, s, current, commitOriginalUnknown);
+        submitLabOff(ic, s, eligible(ic));
     }
 
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
@@ -563,6 +575,8 @@ private:
     static void commitAndClear(fcitx::InputContext *ic, LabState &s,
                                std::string text) {
         auto ref = ic->watch();
+        auto binding = s.callbackBinding;
+        const auto epoch = s.epoch;
         const bool hadPreedit = s.preeditShown();
         s.clearBuffer();
         if (hadPreedit) {
@@ -573,7 +587,7 @@ private:
         lw::inc(lw::Counter::commitStringCalls); // any key, immediately before
 #endif
         ic->commitString(text);
-        if (hadPreedit) {
+        if (hadPreedit && binding->alive && binding->epoch == epoch) {
             if (auto *current = ref.get(); current && current->hasFocus()) {
                 current->updatePreedit();
             }
@@ -660,6 +674,21 @@ private:
 #endif
             return;
         }
+#ifdef RASKLAD_DISABLE_TEST_LAB
+        // Separate owned test artifact only. These are synthetic test controls,
+        // not user shortcuts. No default artifact contains this branch.
+        if (std::getenv("RASKLAD_DISABLE_TEST_LAB") &&
+            std::strcmp(std::getenv("RASKLAD_DISABLE_TEST_LAB"), "1") == 0 &&
+            !key.hasModifier() && key.sym() == FcitxKey_F12) {
+            s->addPending(key);
+            event.filterAndAccept();
+            if (!s->testOffSent) {
+                s->testOffSent = true;
+                requestLabOff(ic, *s);
+            }
+            return;
+        }
+#endif
         if (s->stopping()) return; // Off: no new capture, correction or buffer clear.
         if (!s->empty() && !validate(ic, *s)) {
             discard(ic, *s);

@@ -67,7 +67,8 @@ int main()
     }
     for (auto result : {CompositionDisable::Result::Completed,
                         CompositionDisable::Result::NotWritten,
-                        CompositionDisable::Result::Unknown}) {
+                        CompositionDisable::Result::Unknown,
+                        CompositionDisable::Result::Submitted}) {
         Fixture f;
         auto generation = f.start();
         assert(f.controller.correction(f.registry, f.permission, f.context).allowed());
@@ -82,7 +83,8 @@ int main()
         assert(!f.controller.mayTeardown());
         assert(f.controller.complete(ticket, result));
         assert(!f.controller.complete(ticket, CompositionDisable::Result::Completed));
-        if (result != CompositionDisable::Result::Completed) {
+        if (result != CompositionDisable::Result::Completed &&
+            result != CompositionDisable::Result::Submitted) {
             assert(!f.controller.mayTeardown());
             assert(!f.controller.takeOriginal(f.registry, f.context));
             assert(f.controller.nativeIdle(generation));

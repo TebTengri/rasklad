@@ -1,3 +1,29 @@
+## 2026-11-16 — Off SUBMISSION end-to-end PASS; contract simplified
+
+Current authoritative ADR-003-OFF-SUBMISSION.md replaces generic native receipt
+requirement: Submitted means local ownership relinquished after one ordinary
+IME submission attempt, never confirmed delivery. Unknown/real receipt helpers
+remain private alternatives, no fabricated production ack. First actual receipt
+experiment correctly FAILed (native Chromium end untrusted); counterexample kept
+in data/disable-submission-001-result.json. Independent critique supported change.
+
+Separate tools/fcitx_disable_lab.pro, explicit --disable-suite keep-grab closed
+Sway only; F12 synthetic trigger only compiled into this addon+private flag.
+F11 removed, no new DBus endpoint. Default addon unaffected. E2E003 5/5 PASS:
+original settles, repeated Off no duplicate, original-specific Undo, raw typing
+without new composition. Normal addon regression18+focus4 PASS. Full core602/0/1
+optionalprofile skip +66policy+220disable assertions; 60 runner guards PASS;
+16 actual SDK Off/receipt/submission cases ASan+LSan PASS. Shared alive/epoch
+binding prevents stale postcommit empty-preedit notification after reset/destroy.
+Final independent architecture/lifetime/driver source review approved.
+
+NEXT: per-application Off across contexts with revision revocation and resource
+ownership; context-only test is not global preference. Do not expose UI until
+all-app teardown/pending release drain behavior tested. No app authentication
+or arbitrary real-app enablement proven. No live Slack or config changes.
+Host exact011 permission CONSUMED, no host probe authorized. Draft PR17/SYS246
+stay in progress. Read map, not whole history; continue steps autonomously.
+
 ## 2026-11-16 — private trusted receipt contract verified
 
 acknowledgeLabOriginal validates Deferred+generation+current context lease before

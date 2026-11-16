@@ -58,6 +58,10 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
+                    if module is REFERENCE:
+                        self.assertEqual(parameters[-1].name,'disable_suite')
+                        self.assertIs(parameters[-1].default,False)
+                        parameters=parameters[:-1]
                     self.assertEqual(parameters[-1].name,'frontend_variant')
                     self.assertEqual(parameters[-1].default,'system')
                     parameters=parameters[:-1]

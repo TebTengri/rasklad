@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Default-deny kernel and private disable/receipt consumer; receipt source, native completion end-to-end and context destruction remain open.
+Default-deny kernel and tested context-local Off submission; local completion differs from delivery. Per-app controller/UI and real-app authentication remain open.
 
 Статус: source_contract_or_implementation
 
@@ -19,6 +19,10 @@ Default-deny kernel and private disable/receipt consumer; receipt source, native
 - `tests/fcitx_transport/disable_reentry_tests.cpp`
 - `data/disable-adapter-001-result.json`
 - `data/disable-receipt-001-result.json`
+- `docs/ADR-003-OFF-SUBMISSION.md`
+- `data/disable-submission-001-result.json`
+- `tools/fcitx_disable_lab.pro`
+- `tests/wayland_ime/test_disable_suite_guards.py`
 
 ## Связи
 
