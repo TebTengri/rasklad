@@ -15,10 +15,15 @@ new required permission. Preserve all boundaries in NEXT.md.
    restrictions/evidence before deciding whether an account/network fixture is
    necessary; no new ECH permission inferred. Existing broker results lack
    per-domain rejection evidence, so they cannot prove complete Slack connectivity.
-   An authenticated end-to-end editor test will require a dedicated test workspace;
-   owner choice requested asynchronously, without authorizing a network launch.
-5. [ ] Once a usable owned Slack editor exists, verify field identity and adapter
-   capability without touching real accounts. Then synthetic correction/undo,
+   Owner now permits the normal authenticated Slack with a designated test
+   channel. Exact channel is pending. No unrelated conversations, bulk text
+   traversal, real-profile copying, or messages sent by automation.
+   One metadata-only live preflight: 8 processes, 0 accessibility peers,
+   IsEnabled false; no text read or writes. A channel alone does not resolve
+   the accessibility gate. Restart/settings changes remain separately scoped.
+5. [ ] Confirm owner-designated test channel, then establish a bounded live
+   accessibility connection before editing. Verify field identity and adapter
+   capability only for that channel; fail closed if identity is uncertain. Then synthetic correction/undo,
    focus changes, application Off/On and failure behavior.
 6. [ ] Batch independent review at a meaningful boundary, save evidence and
    update GitHub/Linear. Continue next authorized item automatically.

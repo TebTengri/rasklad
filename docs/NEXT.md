@@ -34,6 +34,8 @@
 - ECH exception CONSUMED: --allow-ech-outer requires fresh explicit permission.
 - Exact Hyprland011 approval CONSUMED: новый host Wayland/GPU запуск запрещён без свежего согласия.
 - Закрытые no-host/no-GPU/no-network собственные фикстуры разрешены.
-- Slack draft/text/write/restart, установленный IME, конфиги, автозапуск не трогать.
+- Owner permits normal Slack tests in one designated test channel (name/link pending). No automated sending, unrelated text/history, profile copying.
+- Latest live metadata preflight:8processes/0a11ypeers/IsEnabledfalse;0text/writes.
+- Slack restart/global settings/IME/config/autostart remain outside that channel authorization.
 - Семь стабильных hooks и общий profile cache остаются; таймеров/polling не добавлено.
 - Не читать архив CONTINUATION-PLAN/всю переписку; bin/project-map find <topic>.
