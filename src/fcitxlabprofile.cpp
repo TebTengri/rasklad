@@ -53,14 +53,13 @@ bool ProfileDecision::ready() const noexcept
     return m_impl && m_impl->provider;
 }
 
-std::optional<std::string> ProfileDecision::correct(std::string_view word) noexcept
+std::optional<std::string> ProfileDecision::correct(std::string_view word, policy::Field field) noexcept
 {
-    if (!ready() || !isLowerAsciiWord(word))
+    if (field != policy::Field::Prose || !ready() || !isLowerAsciiWord(word))
         return std::nullopt;
     try {
         const QString token = QString::fromLatin1(word.data(), static_cast<qsizetype>(word.size()));
-        // Prose is an explicit contract of the isolated fixture, never inferred
-        // for arbitrary application fields from program() or a window title.
+        // The caller must supply its explicitly validated fixture field.
         const routing::RouteRequest request{routing::FieldContext::Prose, routing::InputLayout::KnownUs,
                                             QStringView(token)};
         const routing::RouteDecision decision =

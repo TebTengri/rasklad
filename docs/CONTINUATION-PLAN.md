@@ -1,3 +1,21 @@
+## 2026-11-16 — SYS-246 policy foundation and preedit lifetime fix
+
+Branch SYS-242/message-adapter, worktree /tmp/rasklad-message-adapter.
+See docs/APPLICATION-POLICY.md and data/application-policy-001-result.json.
+Default-deny C++ kernel integrated only into owned LAB; no production records.
+66 policy assertions, full bin/test 602 passed / 0 failed / 1 skipped; six actual
+helper reentry cases plus outside-fixture inertness pass ASan+LSan. Closed Sway
+new addon passes 18 checks + 4 focus cases. Final independent static review: no
+blockers; original preservation/runtime Off and real-app authentication unproved.
+Claude attempt timed out, not counted.
+
+NEXT: design/test safe disable controller preserving original composition, then
+platform identity/field evidence before any ordinary app enablement or UI claim.
+SYS-246 remains In Progress; PR17 draft. Trial011 host consent CONSUMED: no new
+parent-Wayland/GPU run authorized. No Slack reads/writes/restart, installation,
+system config or adjacent projects. Prior exact011 is transport evidence only,
+not validation of this changed addon on the host compositor.
+
 ## 2026-11-16 — handoff after exact011 and Slack metadata follow-up
 
 Currentpublishedcode/evidencecc13262 (earlierf558581modifier,3445ed0keep/native).

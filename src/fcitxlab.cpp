@@ -23,9 +23,10 @@
 //    (e.g. under shared input state policies).
 //  * Buffer: at most 32 lowercase ASCII letters. Zeroed best effort on clear;
 //    std::string temporaries for preedit/commit may leave allocator copies.
-//  * No logging, stdout/stderr, env, clipboard, deleteSurroundingText,
+//  * No logging, stdout/stderr, clipboard, deleteSurroundingText,
 //    forwardKey, network, IPC of our own, child processes or evaluation.
-//    Only PROFILE_LAB initialization reads fixed verified /lab/profile files;
+//    Initialization reads fixed fixture environment labels; only PROFILE_LAB
+//    initialization reads fixed verified /lab/profile files;
 //    key handling performs no file I/O.
 //  * Every commit goes to the SAME context whose key event is being handled,
 //    synchronously, while it is focused and gated. Focus-out, focus-in, reset,
@@ -42,7 +43,8 @@
 //    path) and stays fully inert if any marker differs.
 //  * every witness line is under #ifdef; it never changes gates, filtering,
 //    return paths, ordering or state creation. Default builds contain none of
-//    it: no endpoint, counters, D-Bus dependency or environment reads.
+//    it: no endpoint, counters or D-Bus dependency. All builds read the
+//    fixture-scope labels above once during initialization.
 //
 // Key policy for a gated key PRESS:
 //  * a..z without modifiers (CapsLock/NumLock lock bits are tolerated because
@@ -84,6 +86,8 @@
 //  * The keyboard engine also owns the client preedit slot; we only clear the
 //    preedit if we set it ourselves (preeditShown flag).
 
+#include "applicationpolicy.h"
+
 #ifdef RASKLAD_PROFILE_LAB
 #include "fcitxlabprofile.h"
 #endif
@@ -114,6 +118,9 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -132,6 +139,28 @@ constexpr const char kLabProgram[] = "chromium";
 #else
 constexpr const char kLabProgram[] = "rasklad-ime-lab";
 #endif
+namespace policy = rasklad::policy;
+// Fixed fixture labels only: these do not authenticate a process or namespace.
+bool fixtureScope() {
+    const auto equal = [](const char *key, const char *value) {
+        const char *actual = std::getenv(key);
+        return actual && std::strcmp(actual, value) == 0;
+    };
+    return equal("HOME", "/home/lab") && equal("XDG_RUNTIME_DIR", "/run/lab") &&
+#ifdef RASKLAD_CHROMIUM_LAB
+           equal("RASKLAD_CHROMIUM_IME_LAB", "1");
+#else
+           equal("RASKLAD_PRIVATE_LAB", "1");
+#endif
+}
+constexpr policy::Adapter kFixtureAdapters[] = {
+    {kLabProgram, kLabProgram, policy::Domain::OwnedFixture, true, true},
+#ifdef RASKLAD_CHROMIUM_LAB
+    {"chromium-browser", "chromium-browser", policy::Domain::OwnedFixture, true, true},
+#endif
+};
+constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
+    sizeof(kFixtureAdapters) / sizeof(kFixtureAdapters[0]), 1};
 constexpr const char kLabEntry[] = "keyboard-us";
 constexpr const char kPropertyName[] = "raskladlabState";
 
@@ -154,7 +183,13 @@ void wipeString(std::string &s) {
 // release bookkeeping, never history.
 class LabState final : public fcitx::InputContextProperty {
 public:
-    ~LabState() override { clearBuffer(); }
+    LabState() : id(nextId_++) {}
+    ~LabState() override { invalidate(); clearBuffer(); }
+    void invalidate() { ++epoch; lease = {}; }
+    const std::uint64_t id;
+    std::uint64_t epoch = 1;
+    policy::Lease lease;
+
 
     bool empty() const { return len_ == 0; }
     bool full() const { return len_ >= kMaxWord; }
@@ -181,6 +216,7 @@ public:
             p[i] = '\0';
         }
         len_ = 0;
+        lease = {};
     }
 
     void clearPending() { pendingCount_ = 0; }
@@ -217,6 +253,7 @@ public:
     bool active() const { return len_ > 0 || preeditShown_ || pendingCount_ > 0 || bypass_; }
 
 private:
+    inline static std::uint64_t nextId_ = 1;
     struct Pending {
         int code = 0;
         fcitx::KeySym sym = FcitxKey_None;
@@ -233,8 +270,10 @@ private:
 class RaskladLab final : public fcitx::AddonInstance {
 public:
     explicit RaskladLab(fcitx::Instance *instance) : instance_(instance) {
+        if (!fixtureScope()) return; // Default off outside the owned fixture contract.
 #ifdef RASKLAD_PROFILE_LAB
-        if (!profile_.ready()) return; // Invalid/missing profile: no interception.
+        profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>();
+        if (!profile_->ready()) return; // Invalid/missing profile: no interception.
 #endif
         // If the name is taken we stay inert: no property, no watchers.
         registered_ = instance_->inputContextManager().registerProperty(
@@ -267,8 +306,8 @@ public:
 #endif
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
-                    if (auto *s = state(ic); s && s->active()) {
-                        discard(ic, *s);
+                    if (auto *s = state(ic)) {
+                        discard(ic, *s); // Invalidates even an idle context first.
                     }
                 }));
         }
@@ -292,6 +331,9 @@ public:
 #endif
 
 private:
+#ifdef RASKLAD_PREEDIT_REENTRY_TEST
+    friend struct PreeditReentryTest;
+#endif
 #ifdef RASKLAD_WITNESS_LAB
     static void witnessLifecycle(fcitx::EventType type) {
         switch (type) {
@@ -324,7 +366,7 @@ private:
     // Metadata gates. Must pass before anything is buffered.
     bool eligible(fcitx::InputContext *ic) const {
 #ifdef RASKLAD_PROFILE_LAB
-        if (!profile_.ready()) return false;
+        if (!profile_ || !profile_->ready()) return false;
 #endif
         if (!ic || !ic->hasFocus()) {
             return false;
@@ -359,6 +401,28 @@ private:
         return true;
     }
 
+    // Called only after the existing profile, program, focus and caps gates.
+    // Prose belongs to the explicit owned fixture contract, never real apps.
+    static policy::Context fixtureContext(fcitx::InputContext *ic, const LabState &s) {
+        const char *label = kLabProgram;
+#ifdef RASKLAD_CHROMIUM_LAB
+        if (ic->program() == "chromium-browser") label = "chromium-browser";
+#endif
+        return {label, label, label, policy::Domain::OwnedFixture,
+                policy::Identity::OwnedFixtureContract, policy::Field::Prose,
+                ic->hasFocus(), s.id, s.epoch, s.id};
+    }
+    static policy::Permission fixturePermission(const policy::Context &context) {
+        // Fixed lab permission only; no production preference or runtime mode UI.
+        return {true, context.verifiedApplicationId, policy::Mode::Automatic, 1};
+    }
+    bool validate(fcitx::InputContext *ic, LabState &s) const {
+        if (!eligible(ic)) return false;
+        const auto context = fixtureContext(ic, s);
+        return policy::revalidateCorrection(kFixtureRegistry,
+            fixturePermission(context), context, s.lease).allowed();
+    }
+
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
         std::string w = s.word();
         fcitx::Text text;
@@ -379,8 +443,29 @@ private:
         ic->updatePreedit();
     }
 
+    // Stage every local mutation and consumption before notifying the client.
+    // A notification may destroy both the context and its LabState.
+    static void acceptLetter(fcitx::InputContext *ic, LabState &s,
+                             fcitx::KeyEvent &event, char letter) {
+        s.push(letter);
+        s.addPending(event.key());
+        event.filterAndAccept();
+        showPreedit(ic, s); // No state/event access after this callback.
+    }
+    static void acceptBackspace(fcitx::InputContext *ic, LabState &s,
+                                fcitx::KeyEvent &event) {
+        s.pop();
+        const bool empty = s.empty();
+        if (empty) s.lease = {};
+        s.addPending(event.key());
+        event.filterAndAccept();
+        if (empty) clearPreedit(ic, s);
+        else showPreedit(ic, s);
+    }
+
     // Drop everything for this context, never commit.
     static void discard(fcitx::InputContext *ic, LabState &s) {
+        s.invalidate();
         s.clearBuffer();
         s.clearPending();
         s.setBypass(false);
@@ -495,6 +580,10 @@ private:
 #endif
             return;
         }
+        if (!s->empty() && !validate(ic, *s)) {
+            discard(ic, *s);
+            return; // In particular, a denied Space remains unconsumed.
+        }
         // A new press of a tracked key means its old release was lost.
         s->takePending(key);
 
@@ -522,10 +611,14 @@ private:
 #endif
 
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
-            s->push(static_cast<char>('a' + (sym - FcitxKey_a)));
-            showPreedit(ic, *s);
-            s->addPending(key);
-            event.filterAndAccept();
+            if (s->empty()) {
+                const auto context = fixtureContext(ic, *s);
+                const auto decision = policy::authorizeCapture(kFixtureRegistry,
+                    fixturePermission(context), context);
+                if (!decision.allowed()) return;
+                s->lease = decision.lease;
+            }
+            acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
             return;
         }
 
@@ -538,27 +631,27 @@ private:
 #endif
                 std::string w = s->word();
 #ifdef RASKLAD_PROFILE_LAB
-                auto corrected = profile_.correct(w);
+                const auto context = fixtureContext(ic, *s);
+                auto corrected = profile_->correct(w, context.field);
                 std::string out = corrected ? std::move(*corrected) : w;
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
 #endif
                 wipeString(w);
                 out.push_back(' ');
+                if (!validate(ic, *s)) {
+                    wipeString(out);
+                    discard(ic, *s);
+                    return;
+                }
+                // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
                 commitAndClear(ic, *s, std::move(out));
                 return;
             }
             if (sym == FcitxKey_BackSpace) {
-                s->pop();
-                if (s->empty()) {
-                    clearPreedit(ic, *s);
-                } else {
-                    showPreedit(ic, *s);
-                }
-                s->addPending(key);
-                event.filterAndAccept();
+                acceptBackspace(ic, *s, event);
                 return;
             }
         }
@@ -573,13 +666,17 @@ private:
         }
 #endif
         if (!s->empty()) {
+            if (!validate(ic, *s)) {
+                discard(ic, *s);
+                return;
+            }
             commitAndClear(ic, *s, s->word());
         }
     }
 
     fcitx::Instance *instance_;
 #ifdef RASKLAD_PROFILE_LAB
-    rasklad::fcitxlab::ProfileDecision profile_;
+    std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
 #endif
     fcitx::LambdaInputContextPropertyFactory<LabState> factory_{
         [](fcitx::InputContext &) { return new LabState; }};

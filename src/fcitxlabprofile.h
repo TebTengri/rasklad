@@ -7,6 +7,8 @@
 // profile does not load. Single-threaded: create, use and destroy on the
 // Fcitx main thread. No Qt types are exposed.
 
+#include "applicationpolicy.h"
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -24,7 +26,7 @@ public:
 
     [[nodiscard]] bool ready() const noexcept;
     // Candidate only for RouteAction::Correct; nullopt keeps the original.
-    [[nodiscard]] std::optional<std::string> correct(std::string_view word) noexcept;
+    [[nodiscard]] std::optional<std::string> correct(std::string_view word, policy::Field field) noexcept;
 
 private:
     struct Impl;

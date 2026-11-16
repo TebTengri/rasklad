@@ -84,10 +84,10 @@
       "aliases": [
         "dictionary",
         "dictionaries",
-        "словарь",
-        "словари",
+        "\u0441\u043b\u043e\u0432\u0430\u0440\u044c",
+        "\u0441\u043b\u043e\u0432\u0430\u0440\u0438",
         "model",
-        "модель"
+        "\u043c\u043e\u0434\u0435\u043b\u044c"
       ]
     },
     {
@@ -338,6 +338,24 @@
       ],
       "status": "symbolic_contract_only_not_transport_fix",
       "notes": "Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases plus1 pending case;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof."
+    },
+    {
+      "id": "application-policy",
+      "kind": "component",
+      "paths": [
+        "src/applicationpolicy.h",
+        "src/applicationpolicy.cpp",
+        "tests/application_policy/application_policy_tests.cpp",
+        "tests/fcitx_transport/preedit_reentry_tests.cpp",
+        "docs/APPLICATION-POLICY.md",
+        "data/application-policy-001-result.json"
+      ],
+      "title": "Default-deny application policy",
+      "notes": "Trusted evidence kernel and owned LAB integration only; no real-app authentication or runtime Off controller.",
+      "tests": [
+        "bin/test"
+      ],
+      "status": "source_contract_or_implementation"
     }
   ],
   "edges": [

@@ -12,7 +12,8 @@ PKGCONFIG += Fcitx5Core Fcitx5Utils
 
 DESTDIR = $$OUT_PWD
 
-SOURCES += $$PWD/../src/fcitxlab.cpp
+SOURCES += $$PWD/../src/fcitxlab.cpp \
+    $$PWD/../src/applicationpolicy.cpp
 
 # Only the factory symbol (FCITXCORE_EXPORT) is exported; catch missing links.
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
