@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Shared owned-family Off and controlled On tested; resume boundary prevents suffix correction. Resource retirement/UI and real-app identity remain open.
+Shared Off/On, safe resume, lazy holders and terminal Off cleanup verified in owned LAB; production identity/installation not enabled.
 
 Статус: source_contract_or_implementation
 
@@ -30,6 +30,8 @@ Shared owned-family Off and controlled On tested; resume boundary prevents suffi
 - `tests/fcitx_transport/application_off_tests.cpp`
 - `data/application-off-001-result.json`
 - `data/application-on-001-result.json`
+- `docs/ADR-004-CONTEXT-RESOURCES.md`
+- `data/context-resources-001-result.json`
 
 ## Связи
 

@@ -26,6 +26,7 @@
 - [Fcitx handoff and retained-grab validation](fcitx-drain-fixture.md)
 - [Cooperative IME handoff symbolic screen](handoff-screen.md)
 - [Default-deny application policy](application-policy.md)
+- [Current compact handoff](current-handoff.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.

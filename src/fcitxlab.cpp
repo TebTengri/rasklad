@@ -243,6 +243,7 @@ public:
     }
 
     void clearPending() { pendingCount_ = 0; }
+    bool hasPending() const { return pendingCount_ != 0; }
 
     // Remember a consumed press so its release can be swallowed.
     void addPending(const fcitx::Key &key) {
@@ -290,6 +291,14 @@ private:
     std::size_t pendingCount_ = 0;
 };
 
+// Fcitx eagerly creates one property per context. Keep that holder cheap;
+// allocate bounded composition/controller resources only for an owned fixture
+// when an eligible press actually reaches the adapter.
+class LabProperty final : public fcitx::InputContextProperty {
+public:
+    std::unique_ptr<LabState> state;
+};
+
 class RaskladLab final : public fcitx::AddonInstance {
 public:
     explicit RaskladLab(fcitx::Instance *instance) : instance_(instance),
@@ -331,7 +340,7 @@ public:
 #endif
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
-                    if (auto *s = state(ic)) {
+                    if (auto *s = state(ic, false)) {
                         discard(ic, *s); // Invalidates even an idle context first.
                     }
                 }));
@@ -403,11 +412,27 @@ private:
     }
 #endif
 
-    LabState *state(fcitx::InputContext *ic) {
-        if (!registered_ || !ic) {
-            return nullptr;
-        }
-        return static_cast<LabState *>(ic->propertyFor(&factory_));
+    LabState *state(fcitx::InputContext *ic, bool create = true) {
+        if (!registered_ || !ic) return nullptr;
+        bool matches = false;
+        for (const auto &adapter : kFixtureAdapters)
+            if (ic->program() == adapter.id) matches = true;
+        if (!matches) return nullptr;
+        auto *holder = static_cast<LabProperty *>(ic->propertyFor(&factory_));
+        if (!holder) return nullptr;
+        if (!holder->state && create) holder->state = std::make_unique<LabState>();
+        return holder->state.get();
+    }
+
+    // Retain the SDK holder and stable hooks. Only terminal Off payloads may
+    // retire; pending releases and uncertain originals still own their state.
+    void reclaimOffState(fcitx::InputContext *ic) {
+        if (!familyOff_) return;
+        auto *s = state(ic, false);
+        if (!s || s->disable->state() != policy::CompositionDisable::State::Disabled ||
+            !s->empty() || s->preeditShown() || s->hasPending()) return;
+        auto *holder = static_cast<LabProperty *>(ic->propertyFor(&factory_));
+        holder->state.reset();
     }
 
     // Metadata gates. Must pass before anything is buffered.
@@ -541,7 +566,7 @@ private:
             });
     }
 
-    void requestLabOff(fcitx::InputContext *ic, LabState &) {
+    void requestLabOff(fcitx::InputContext *ic) {
         if (!ic || !manager_) return;
         // Explicit family: both compile-time Chromium fixture aliases belong to
         // this one owned client. Program strings are not process authentication.
@@ -560,7 +585,7 @@ private:
             for (const auto &adapter : kFixtureAdapters)
                 if (candidate->program() == adapter.id) matches = true;
             if (matches) {
-                if (auto *s = state(candidate)) {
+                if (auto *s = state(candidate, false)) {
                     s->disable->requestOff(); // Callback-free staging for all.
                     targets.push_back(candidate->watch());
                 }
@@ -571,9 +596,11 @@ private:
         for (auto &watch : targets) {
             auto *current = watch.get();
             if (!current) continue;
-            auto *s = state(current);
+            auto *s = state(current, false);
             if (!s) continue;
             submitLabOff(current, *s, eligible(current));
+            // Submission can destroy/reset any context; never reuse current/s.
+            if (auto *survivor = watch.get()) reclaimOffState(survivor);
         }
     }
 
@@ -590,8 +617,8 @@ private:
             for (const auto &adapter : kFixtureAdapters)
                 if (candidate->program() == adapter.id) matches = true;
             if (matches) {
-                auto *s = state(candidate);
-                if (!s) { safe = false; return true; }
+                auto *s = state(candidate, false);
+                if (!s) return true; // An unallocated holder retains no original.
                 const auto phase = s->disable->state();
                 if ((phase != policy::CompositionDisable::State::Disabled &&
                      phase != policy::CompositionDisable::State::Idle) ||
@@ -742,20 +769,24 @@ private:
         if (event.isRelease()) {
             // Never mutates the buffer; only swallows the release of a press
             // we consumed in this same context.
-            if (auto *s = state(ic); s && s->takePending(key)) {
+            if (auto *s = state(ic, false); s && s->takePending(key)) {
 #ifdef RASKLAD_WITNESS_LAB
                 if (wSpaceCode) {
                     lw::inc(lw::Counter::releaseFiltered);
                 }
 #endif
                 event.filterAndAccept();
+                reclaimOffState(ic); // No later state/event access after retirement.
             }
             return;
         }
 
-        // Once the entire owned family is Off, presses need no profile,
-        // capability or property lookup. Releases above still drain old presses.
+        // Off presses do no profile/capability work and allocate no state.
+        // A new raw press supersedes only its own missing old release, just
+        // like the enabled path. Its later raw release must not be swallowed.
         if (familyOff_) {
+            if (auto *s = state(ic, false)) s->takePending(key);
+            reclaimOffState(ic); // No old-state access after this point.
 #ifdef RASKLAD_DISABLE_TEST_LAB
             const char *testFlag = std::getenv("RASKLAD_DISABLE_TEST_LAB");
             const bool testControl = testFlag && std::strcmp(testFlag, "1") == 0 &&
@@ -779,7 +810,7 @@ private:
             }
 #endif
             // Gates no longer hold: discard without commit, pass the key.
-            if (auto *s = state(ic); s && s->active()) {
+            if (auto *s = state(ic, false); s && s->active()) {
                 discard(ic, *s);
             }
             return;
@@ -808,7 +839,7 @@ private:
             !key.hasModifier() && (key.sym() == FcitxKey_F12 || key.sym() == FcitxKey_F10)) {
             s->addPending(key);
             event.filterAndAccept();
-            if (key.sym() == FcitxKey_F12) requestLabOff(ic, *s);
+            if (key.sym() == FcitxKey_F12) requestLabOff(ic);
             else requestLabOn();
             return;
         }
@@ -926,8 +957,8 @@ private:
 #ifdef RASKLAD_PROFILE_LAB
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
 #endif
-    fcitx::LambdaInputContextPropertyFactory<LabState> factory_{
-        [](fcitx::InputContext &) { return new LabState; }};
+    fcitx::LambdaInputContextPropertyFactory<LabProperty> factory_{
+        [](fcitx::InputContext &) { return new LabProperty; }};
     bool registered_ = false;
     std::vector<std::unique_ptr<fcitx::HandlerTableEntry<fcitx::EventHandler>>>
         watchers_;

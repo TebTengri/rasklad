@@ -269,3 +269,18 @@ Owned Sway/Chromium full cycle прошёл 8/8: Off сохраняет original
 записей/скриптовых events/CDP typing; source provenance reviewed. Normal input
 после добавления On gate также прошёл 18+focus4. Watcher retirement/UI/production
 identity и гарантия доставки остаются отдельными границами.
+
+## Ресурсы контекста после Off
+
+Актуально ADR-004-CONTEXT-RESOURCES.md: stable hooks сохраняются; полный payload
+создаётся лениво и удаляется только после terminal Off с пустым original/preedit
+и отсутствием pending releases. Unsupported и never-used contexts имеют только
+малый holder. Unknown/Deferred/InFlight не удаляются. Release и lifecycle lookup
+не создают payload. Profile cache не выгружается; total RSS не измерен этим
+тестом. Потерянный release не удаляется таймером.
+
+Off fast path теперь делает noncreating bookkeeping lookup: raw press той же
+клавиши отменяет её старое pending release, чтобы его новый raw key-up прошёл.
+Profile/capability/evidence queries и allocation при обычном Off press отсутствуют.
+Другой key не меняет ожидание старого. Новые тесты проверяют именно пары и
+реальное двустороннее callback reentry, без ложного определения отправителя.

@@ -1,3 +1,5 @@
+> Для продолжения читать docs/NEXT.md. Ниже — архив; не загружать целиком.
+
 ## 2026-11-16 — controlled On + full Off/On/Off E2E PASS
 
 Internal requestLabOn rejects any Pending/InFlight/Deferred/nonempty/preedit
