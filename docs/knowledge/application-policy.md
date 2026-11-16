@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Default-deny kernel, one-shot controller and private LAB disable bridge; native completion, context destruction preservation, user trigger and independent bridge review remain open.
+Default-deny kernel and private disable/receipt consumer; receipt source, native completion end-to-end and context destruction remain open.
 
 Статус: source_contract_or_implementation
 
@@ -18,6 +18,7 @@ Default-deny kernel, one-shot controller and private LAB disable bridge; native 
 - `data/composition-disable-001-result.json`
 - `tests/fcitx_transport/disable_reentry_tests.cpp`
 - `data/disable-adapter-001-result.json`
+- `data/disable-receipt-001-result.json`
 
 ## Связи
 

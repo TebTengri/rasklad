@@ -354,10 +354,11 @@
         "tests/application_policy/disable_tests.cpp",
         "data/composition-disable-001-result.json",
         "tests/fcitx_transport/disable_reentry_tests.cpp",
-        "data/disable-adapter-001-result.json"
+        "data/disable-adapter-001-result.json",
+        "data/disable-receipt-001-result.json"
       ],
       "title": "Default-deny application policy",
-      "notes": "Default-deny kernel, one-shot controller and private LAB disable bridge; native completion, context destruction preservation, user trigger and independent bridge review remain open.",
+      "notes": "Default-deny kernel and private disable/receipt consumer; receipt source, native completion end-to-end and context destruction remain open.",
       "tests": [
         "bin/test"
       ],

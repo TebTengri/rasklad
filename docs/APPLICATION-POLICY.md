@@ -133,3 +133,41 @@ helper без изменения обычного key path; финальный h
 Открытая граница: доказать контракт завершения composition на стороне адаптера
 и безопасное освобождение preedit/resources, включая context destruction.
 Нельзя публиковать Off как готовый пользовательский режим по этим тестам.
+
+## Подтверждение завершения: приватный receipt contract
+
+Независимое ревью bridge 9e811f1 завершено: блокеров для закрытого, не вызываемого
+из UI пути не найдено. Нативная доставка и context destruction остаются открыты.
+По закреплённым Fcitx 5.1.23 исходникам (waylandimserverv2.h,
+commitStringDelegate) отправляются commitString + commit(serial), без callback
+подтверждения вставки. Input-method-v2 commit и text-input-v3 done применяют
+пакет состояния; сами по себе они не являются receipt конкретного слова.
+Официальный XML локально: /usr/share/wayland-protocols/unstable/text-input/
+text-input-unstable-v3.xml; upstream URL:
+https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/text-input/text-input-unstable-v3.xml
+(онлайн доступ закрыт Anubis; анализ основан на локальном XML и pinned source).
+
+Добавлен private acknowledgeLabOriginal, пока без runtime receipt source. Только
+доверенный адаптер, наблюдавший вставку исходного слова в точную composition,
+может вызвать его после возврата внешней операции. Требуются Deferred, та же
+generation, актуальные eligibility/focus/context epoch/binding и старая lease.
+Сначала controller подтверждает nativeIdle, затем стирается original и
+подготавливается пустой preedit; внешний callback вызывается последним.
+После него сырые указатели не используются. Старые tracked releases сохраняются.
+Unknown без receipt по-прежнему не разрешает очистку/retry/teardown. Receipt
+в InFlight отклоняется; интеграция должна отложить его обработку до завершения
+операции, а не потерять событие.
+
+Шесть новых actual-helper сценариев: matching receipt; stale epoch; focus loss;
+wrong generation; failed eligibility; уничтожение context/property из preedit
+callback. В каждом commit callback проверяется отказ преждевременного receipt.
+Прежние шесть Off сценариев сохранены. Все 12 проходят ASan+LeakSanitizer.
+Тестовая фикстура воспроизводит production lease и непустой preedit через SDK,
+чтобы проверить действительный callback очистки (SDK подавляет пустой→пустой).
+Первоначальные ошибки setup исправлены без ослабления assertions.
+
+Это тест контракта получения receipt, а не готовый способ его получения из
+Chromium/Slack. Нужен отдельный тестовый наблюдатель собственного поля и
+ограниченный канал подтверждения; он не должен читать пользовательские поля.
+Пользовательский Off по-прежнему не включён. Новый host/runtime прогон не нужен
+для невызываемого private helper и не выполнялся.

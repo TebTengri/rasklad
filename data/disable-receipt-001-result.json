@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "scope": "private receipt consumer only; no production receipt source",
+  "offScenarios": 6,
+  "receiptScenarios": 6,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "nativeDeliveryProven": false,
+  "runtimeReceiptSource": false,
+  "userOffEnabled": false,
+  "newHostTrial": false,
+  "independentStaticReview": "bridge and receipt helper: no private-scope blocker; fixture lease issue corrected",
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "f09aa7bb0ed09c7e6cec682355712a812770d8601ecf85f70df01d65451f28ba",
+    "tests/fcitx_transport/disable_reentry_tests.cpp": "7b92c5faec67d3550a28018a9f570f8f6c0eb0a9adef1555ca8e5c3bb5276fb4"
+  }
+}

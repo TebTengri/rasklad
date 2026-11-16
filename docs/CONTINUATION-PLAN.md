@@ -1,3 +1,16 @@
+## 2026-11-16 — private trusted receipt contract verified
+
+acknowledgeLabOriginal validates Deferred+generation+current context lease before
+wiping original/preedit; no raw-state access after external callback. No runtime
+receipt source or user Off trigger. Void Fcitx commit and protocol done are not
+word-delivery receipts. Source review bridge completed; no private-scope blockers.
+12 actual SDK helper scenarios ASan+LSan PASS (6 Off + 6 receipt). Test setup
+now includes real lease and nonempty preedit transition.
+NEXT: owned field observation + bounded receipt channel, freshness/reentrancy
+and end-to-end Off test. Do not feed arbitrary protocol notifications as ack.
+Context destruction original preservation still unproved. No host approval
+active (exact011 consumed); no Slack, system or adjacent-project changes.
+
 ## 2026-11-16 — LAB disable adapter bridge (not user-enabled)
 
 Current branch SYS-242/message-adapter /tmp/rasklad-message-adapter. Controller

@@ -468,6 +468,27 @@ private:
         operation->complete(ticket, result);
     }
 
+    // PRIVATE: only a trusted adapter that observed the original inserted in
+    // this exact owned composition may call this. Protocol done/roundtrip and
+    // callback return are NOT evidence. No runtime receipt source exists yet.
+    static bool acknowledgeLabOriginal(fcitx::InputContext *ic, LabState &s,
+                                       policy::CompositionDisable::Token generation,
+                                       bool currentlyEligible) {
+        if (!currentlyEligible || !ic || !ic->hasFocus() ||
+            !generation || generation != s.generation ||
+            s.disable->state() != policy::CompositionDisable::State::Deferred)
+            return false;
+        if (policy::disableDisposition(kFixtureRegistry, fixtureContext(ic, s),
+                s.lease, true) != policy::DisableAction::FinishOriginalThenDisable)
+            return false;
+        if (!s.disable->nativeIdle(generation)) return false;
+        s.clearBuffer();
+        // Stage all state before external preedit callback. Tracked releases
+        // remain drainable; do not re-enable or create a new composition here.
+        clearPreedit(ic, s);
+        return true;
+    }
+
     static policy::CompositionDisable::Result commitOriginalUnknown(
         fcitx::InputContext *context, const std::string &original) {
         context->commitString(original);
