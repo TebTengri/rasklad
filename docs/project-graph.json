@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "5ef1f97c31d414c6c2ebab6b23cf14a085e8a08f2ef4cbc0d5a26514b333d57c",
+  "curatedSha256": "7a90f3929fc3beb5bf90f8b3772da8fbf3a61a3e391c1539f2189334ba714387",
   "sourceSha256": {
     "AGENTS.md": "4502828db391d2071669bb9d701c4f08c8ec969c86aeb28f1098948200caa192",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -20,7 +20,7 @@
     "bin/run": "1b74c8f349a75730bbd6f7cfaa235661445deeea71665efb6f48cd4e6ccb9b5a",
     "bin/slack-accessibility-trial": "47f700042aaf279f62d5d519be0d115e11b80e0a4260f141c54c6de12168a3d0",
     "bin/slack-request-quit": "10f9d292760d3f024cb215cbbf92e021dfa550756d865818d3dfab6ee6c9af87",
-    "bin/test": "4dc79e317e40e3a56faded81055f4fe62e090e64aeeb4350a16cdbac369f565e",
+    "bin/test": "31339ea1b27b56e91544bb5f281910a73373253d5e3b1d3e230bd63f1e6bff6a",
     "bin/test-chromium-ime": "d29bf2433c6138643e6f708aa3989d86ca25ba055a15c6318a13034ec86907a0",
     "bin/test-fcitx-transport": "97fffb53ca36c1c7382a2ffbaeb9d2bc0999a05bb15406098fafbfd71e1f7515",
     "bin/test-hyprland-ime": "2810801e6c4439542ea2fba67b4fa327a3f3389ef89dbc1db9c465b71ac0e5b6",
@@ -33,14 +33,14 @@
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
     "docs/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
     "docs/AGENT_SETUP.md": "b116aedf56d60ce15b6b0e1870421d844ebbf65019c6523ebb7b29198b0a37cc",
-    "docs/APPLICATION-POLICY.md": "9d6864001a8273cbc85602ab4e22d379ef583676b49417b5e65e7670bfa51f8c",
+    "docs/APPLICATION-POLICY.md": "e4b074eaaaa9b2ea3f4b8ccc2044ba802a00aca198c49ffeb20981565c9b4731",
     "docs/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
     "docs/BROWSER-ADAPTER-001.md": "e64c845884b50ecd956b21bf41d2faf1984f71f1caea86fc60b0e82518628af1",
     "docs/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CONTINUATION-PLAN.md": "1f9fad5a3d5032a12b1d84bc75801842f4a208958f0144dddc02956325780ff3",
+    "docs/CONTINUATION-PLAN.md": "28894dca7f5d0e34ecdca837e0e1edabc6c535e46030b964d30e7c1d0726173b",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
@@ -93,7 +93,7 @@
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
     "docs/WAYLAND-IME-001.md": "37e61bb4ae84110956bf85a88d6347a1cdd3bea291937505ff82a8c85e723de4",
-    "rasklad.pro": "393703d21fc72da6f8abdd53eb79748ebe9866f98114014310c6a391e2601dc8",
+    "rasklad.pro": "900809568ec1d33a18474bb3a0451f12da8de9cf387c63cc9e32f7352893b57c",
     "src/Main.qml": "bd61a1cef9b41d373abcf3424793b48bd73fab4bf3a3b45c2a5f83f4c4d2bc5a",
     "src/analysisservice.cpp": "9979c961d2b7f940dd8b22889657ead75735aab0d5107ea1b1159bfe808074a6",
     "src/analysisservice.h": "21cdc104c9628e3cb3c1d4cbca1e7174d0f298fe801e541a99a1d206d7e3156b",
@@ -103,6 +103,8 @@
     "src/appoptions.h": "011373c337684d0a13c3e72d9abcdbd452ac1c2eda1b0b598a483e7107f29ee0",
     "src/clipboardwriter.cpp": "43865e802caef9360a427ce507146d8718fe99a92161148c4cbe51181748261f",
     "src/clipboardwriter.h": "714700d4846b8234e1cbdedc8235b3e810e6df3ef3af4d915dd0475b7235221b",
+    "src/compositiondisable.cpp": "315a92023d044b15d669ca95e322e9b20fa76356e6586aa39c5136dd0c4de323",
+    "src/compositiondisable.h": "e7b893004dc349e597586b980557ef5850a82bc2344a2f9f70255a16c9519079",
     "src/decisionrouter.cpp": "aa73ff592fd3ad6c4cf194ca35111dad09ec0fe051889361aadd66263cba176b",
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
@@ -122,7 +124,7 @@
     "src/profileverify.cpp": "3821d0c3c27d2a22cc89b32e011e5dd238df563b43c6d8df3946188ea2bf0c64",
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
-    "src/rasklad_core.pro": "25c5bdc06c85f8d103ec6fdd9a8909a39c94be93fd4a278655014b54fd7b1db2",
+    "src/rasklad_core.pro": "bb483fd8ccc7f6b71e6473782536c77468822a08322e38888a73ecaf50d8922b",
     "src/spellengine.cpp": "23ae1018dd5ade6030ce33276d644d7fbfef43cbebc9eef8dd262ed20285f2d3",
     "src/spellengine.h": "9c433a0709efe9d3298353bd6ab7ee7ca35d7bfb2bc63d8f5ceeea648fb07a38",
     "src/themewatcher.cpp": "d5d9197c384cf992170d6bf2132867ad22095c5371e234d72c873f3eb8ab5a93",
@@ -133,6 +135,7 @@
     "tests/app/app_tests.pro": "24bb5f23899ce60770c1ef2a2cf38e9b7a4b7b38607b6d28ce80e24612d9a75f",
     "tests/application_policy/application_policy.pro": "fd43486f3cb10c3439691003f439ef3428a7c5c3996c31f3dfa9e3ada486733d",
     "tests/application_policy/application_policy_tests.cpp": "454165b9f23f0d266d6020751d58ad1e2ca5f35edb69e3b3dd2727683c28d0dc",
+    "tests/application_policy/disable_tests.cpp": "fe82ee4af3bdc5ed162f78421a5ee0be80cc71855bd2332e75bd7e18852f4772",
     "tests/benchmark/benchmark_tests.cpp": "35fb56f4e942392776471840c0fff985930ee80af78885daef853c59a3e71a6e",
     "tests/benchmark/benchmark_tests.pro": "1c4cfb91c50484511ff765c39ae604a96eb2e6fb3c99692a00036d32d6f16566",
     "tests/browser/adapter.test.mjs": "519c5d777e22f43cf825c0a9c92e1c09bf9d4cee4751219b4ea9f98d278a90d1",
@@ -158,6 +161,7 @@
     "tests/chromium_ime/space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
     "tests/chromium_ime/test_guards.py": "cd9df2295a3858ab0b5e9e42106164b404d56b5b3310061932dc394a10a1db41",
     "tests/common/profilefixture.h": "08f9ca5e3c1e1d73140c7df37e79885f86021dd3de7054b7bc23061e2fb6d097",
+    "tests/composition_disable/composition_disable.pro": "d0779322ff2fd391505a5c198a374327e8e14f42c6b734dbda1c57ea19b7e9c4",
     "tests/context/context_tests.cpp": "edc9eb755fcaf3f085a452290e463d4c15237e45a1a8e1831f98cb75aa1ddf12",
     "tests/context/context_tests.pro": "79c7d95eb555269222c52389d112b0107ee64f9c080befee72572c081ab659f9",
     "tests/context_reviewer/test_metrics.py": "dd655b99c506a488487a987e9b9858e5bd1a49cd5c80e61cd062229e167be460",
@@ -754,6 +758,14 @@
       "symbols": []
     },
     {
+      "path": "src/compositiondisable.cpp",
+      "symbols": []
+    },
+    {
+      "path": "src/compositiondisable.h",
+      "symbols": []
+    },
+    {
       "path": "src/decisionrouter.cpp",
       "symbols": []
     },
@@ -871,6 +883,10 @@
     },
     {
       "path": "tests/application_policy/application_policy_tests.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/application_policy/disable_tests.cpp",
       "symbols": []
     },
     {
@@ -1028,6 +1044,10 @@
     },
     {
       "path": "tests/common/profilefixture.h",
+      "symbols": []
+    },
+    {
+      "path": "tests/composition_disable/composition_disable.pro",
       "symbols": []
     },
     {
@@ -4809,6 +4829,18 @@
       "line": 1
     },
     {
+      "from": "src/compositiondisable.cpp",
+      "to": "src/compositiondisable.h",
+      "kind": "literal_include_or_import",
+      "line": 2
+    },
+    {
+      "from": "src/compositiondisable.h",
+      "to": "src/applicationpolicy.h",
+      "kind": "literal_include_or_import",
+      "line": 3
+    },
+    {
       "from": "src/decisionrouter.cpp",
       "to": "src/decisionrouter.h",
       "kind": "literal_include_or_import",
@@ -5087,6 +5119,12 @@
     {
       "from": "tests/application_policy/application_policy_tests.cpp",
       "to": "src/applicationpolicy.h",
+      "kind": "literal_include_or_import",
+      "line": 2
+    },
+    {
+      "from": "tests/application_policy/disable_tests.cpp",
+      "to": "src/compositiondisable.h",
       "kind": "literal_include_or_import",
       "line": 2
     },
@@ -6018,7 +6056,7 @@
   "vaultSha256": {
     "docs/knowledge/Start.md": "b617f0bceea3ad33dabc2d88fd956207565d4f553ec17af2d73bb1affad875c0",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
-    "docs/knowledge/application-policy.md": "f03da1420b1ad2e23b0193e83489fc95d8ed01c28291bdf5eebed5d881ef242a",
+    "docs/knowledge/application-policy.md": "894838ed6f1d736255b46e2d01b801e242eb0b504ba438b2f36c2e8b35abde85",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",

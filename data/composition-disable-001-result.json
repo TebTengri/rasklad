@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "scope": "pure single-thread controller; no adapter runtime integration",
+  "contractAssertions": 200,
+  "failures": 0,
+  "strictCpp17Build": true,
+  "textOperations": false,
+  "hostTrial": false,
+  "readyForLiveUse": false,
+  "reviewFixes": [
+    "fresh authorization in bind instead of cached decision",
+    "defer teardown on nativeIdle during in-flight external call"
+  ],
+  "sourceSha256": {
+    "src/compositiondisable.h": "e7b893004dc349e597586b980557ef5850a82bc2344a2f9f70255a16c9519079",
+    "src/compositiondisable.cpp": "315a92023d044b15d669ca95e322e9b20fa76356e6586aa39c5136dd0c4de323",
+    "tests/application_policy/disable_tests.cpp": "fe82ee4af3bdc5ed162f78421a5ee0be80cc71855bd2332e75bd7e18852f4772"
+  },
+  "fullSuite": {
+    "passed": 602,
+    "failed": 0,
+    "skipped": 1
+  },
+  "independentFinalStaticReview": "prior two blockers fixed; no new blockers in scoped review"
+}

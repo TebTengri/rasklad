@@ -1,3 +1,15 @@
+## 2026-11-16 — pure composition disable controller
+
+SYS-246: compositiondisable.h/.cpp added, not wired into Fcitx runtime/UI.
+Fresh bind authorization; immediate Off gate; one-shot original ticket;
+generation-specific native completion. InFlight nativeIdle cannot release
+resources before matching complete. Unknown result has no retry.
+Tests: 200 strict contract assertions. See APPLICATION-POLICY.md for caller
+obligations and data/composition-disable-001-result.json for aggregate evidence.
+NEXT: adapter-level integration preserving original and resources, with actual
+callback reentry tests. No claim of delivered text based on this pure controller.
+No active host probe consent; trial011 consumed. No live Slack/system changes.
+
 ## 2026-11-16 — SYS-246 policy foundation and preedit lifetime fix
 
 Branch SYS-242/message-adapter, worktree /tmp/rasklad-message-adapter.

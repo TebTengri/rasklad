@@ -84,3 +84,7 @@ packagesExist(hunspell) {
 SUBDIRS += application_policy_tests
 application_policy_tests.file = tests/application_policy/application_policy.pro
 application_policy_tests.depends = core
+
+SUBDIRS += composition_disable_tests
+composition_disable_tests.file = tests/composition_disable/composition_disable.pro
+composition_disable_tests.depends = core

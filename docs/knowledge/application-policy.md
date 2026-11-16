@@ -1,6 +1,6 @@
 # Default-deny application policy
 
-Trusted evidence kernel and owned LAB integration only; no real-app authentication or runtime Off controller.
+Default-deny evidence kernel and pure one-shot disable controller; runtime integration and real-app authentication remain open.
 
 Статус: source_contract_or_implementation
 
@@ -12,6 +12,10 @@ Trusted evidence kernel and owned LAB integration only; no real-app authenticati
 - `tests/fcitx_transport/preedit_reentry_tests.cpp`
 - `docs/APPLICATION-POLICY.md`
 - `data/application-policy-001-result.json`
+- `src/compositiondisable.h`
+- `src/compositiondisable.cpp`
+- `tests/application_policy/disable_tests.cpp`
+- `data/composition-disable-001-result.json`
 
 ## Связи
 

@@ -68,3 +68,32 @@ transport checkpoint. Независимое финальное статичес
 `disableDisposition` сейчас лишь возвращает решение, а не выполняет runtime Off.
 UI, хранение настроек, ручной режим и включение обычных приложений не готовы.
 Лицензии словарей/данных и стороннего frontend не меняются; собственное ядро MIT.
+
+## Контроллер отключения SYS-246
+
+`compositiondisable.{h,cpp}` — отдельный single-thread C++ контроллер без текста,
+I/O и callbacks. По умолчанию Disabled. bind выполняет свежую авторизацию;
+Off немедленно запрещает capture/correction, сохраняя старую lease только
+для завершения оригинала. takeOriginal повторно проверяет context и выдаёт
+единственный ticket, переходя в InFlight до внешнего вызова. Потеря binding
+или неизвестный результат переводят в Deferred без повторной попытки.
+
+Подтверждение nativeIdle связано с generation конкретной composition. Во время
+InFlight оно лишь запоминается: teardown и enable ждут matching complete.
+Запоздалые tickets и generations не закрывают новую composition. Completed
+означает подтверждённое нативное завершение, а не просто возврат callback.
+NotWritten и Unknown без отдельного native completion сохраняют Deferred.
+
+Адаптер обязан хранить original и ресурсы до подтверждения завершения, передавать
+актуальные registry/permission/context, увеличивать permission revision при
+изменении настройки и проверять gate на каждом capture/correction. Методы не
+аутентифицируют эти данные. Один controller обслуживает одну composition;
+копирование запрещено, вызовы сериализованы, tokens не переносятся между
+экземплярами. Между takeOriginal и вызовом adapter I/O нельзя обрабатывать
+новые события без повторной проверки контекста.
+
+Это проверяемая основа, пока не подключённая к Fcitx/UI: гарантирует максимум
+одну разрешённую попытку, но сама не гарантирует доставку/сохранность текста.
+Нужен отдельный adapter integration с тестами реентерабельного finish-original.
+На ревью приняты два замечания: убрать cached Decision из bind и отложить
+teardown после reentrant nativeIdle до окончания внешней операции.

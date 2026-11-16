@@ -12,5 +12,5 @@ DEFINES += \
     QT_NO_CAST_TO_ASCII \
     QT_NO_KEYWORDS
 
-HEADERS += applicationpolicy.h decisionrouter.h layoutconverter.h ngramdetector.h
-SOURCES += applicationpolicy.cpp decisionrouter.cpp layoutconverter.cpp ngramdetector.cpp
+HEADERS += compositiondisable.h applicationpolicy.h decisionrouter.h layoutconverter.h ngramdetector.h
+SOURCES += compositiondisable.cpp applicationpolicy.cpp decisionrouter.cpp layoutconverter.cpp ngramdetector.cpp
