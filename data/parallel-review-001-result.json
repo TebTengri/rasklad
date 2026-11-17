@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "scope": "targeted public-source review, not whole-project audit",
+  "grok": {
+    "provider": "Cursor",
+    "model": "cursor-grok-4.5-high-fast",
+    "completed": true,
+    "inputSha256": "6156c212b0e326a0c794e22722835f5d6b7a29573bf6db759fd21dea91146689",
+    "findings": 4,
+    "executionClaimed": false,
+    "reviewedApplierBeforeConfinementFix": true
+  },
+  "gemini": {
+    "provider": "Antigravity",
+    "model": "gemini-3.8-flash-medium",
+    "completed": true,
+    "inputSha256": "9fa326525cff32f20f4c9bcec8b184e715050ea79493cec3182f249fde8dcc7e",
+    "findings": 2,
+    "executionClaimed": false
+  },
+  "timeoutsNotCredited": [
+    "Grok4.7 high",
+    "Gemini3.8 flash high larger snapshots"
+  ],
+  "claude": {
+    "role": "implementation and critique resolution",
+    "confinementTestsPassed": 8,
+    "remainingGrokEvaluation": "completed: null/data guard added defensively; raw-this UAF rejected against proxy ownership/destruction"
+  },
+  "productionRouterChanged": false,
+  "newHostOrGpuTrial": false
+}

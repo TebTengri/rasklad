@@ -30,6 +30,7 @@
 - [Wayland object ID scope](wayland-object-id-scope.md)
 - [Native window provenance](window-provenance.md)
 - [Closed Hyprland window mapping](closed-hyprland-mapping.md)
+- [Aquamarine feedback readiness and parallel review](aquamarine-readiness.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.

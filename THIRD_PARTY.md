@@ -111,3 +111,5 @@ release gates are unchanged. No change to ownership of another project's work.
 ## Development protocol XML
 
 Two pinned upstream XML descriptions in [vendor/wayland](vendor/wayland/README.md) retain their complete applicable copyright/permission/disclaimer notices. Hyprland mapping uses BSD3-style terms; wlr foreign-toplevel uses its embedded permission notice. Neither is relicensed by our MIT. Include full notices in supporting documentation if distributing generated bindings/binaries. No compositor implementation copied.
+
+The Aquamarine readiness experiment applier embeds small upstream source anchors with their full BSD-3-Clause notice; its compound SPDX is MIT AND BSD-3-Clause. Upstream patched tree stays ignored under build/, is not installed/distributed, and is separate from our production runtime.

@@ -452,6 +452,25 @@
         "python3 -m unittest discover -s tests/closed_mapping"
       ],
       "status": "trial_failed_diagnostics_fixed_repeat_pending"
+    },
+    {
+      "id": "aquamarine-readiness",
+      "kind": "experiment",
+      "title": "Aquamarine feedback readiness and parallel review",
+      "paths": [
+        "tools/aquamarine_readiness_patch.py",
+        "tools/hyprland_feedback_parent.py",
+        "tests/aquamarine_readiness/test_patch_confinement.py",
+        "docs/AQUAMARINE-READINESS-EXPERIMENT.md",
+        "docs/PARALLEL-REVIEW-001.md",
+        "data/parallel-review-001-result.json",
+        "data/hyprland-feedback-parent-001-result.json"
+      ],
+      "notes": "Actual noGPU baseline distinguishes immediate/deferred feedback; Claude patch prepared,8confinement tests pass. Grok/Gemini targeted review complete; patched build/runtime still pending.",
+      "tests": [
+        "python3 -I -m unittest discover -s tests/aquamarine_readiness -p 'test_*.py'"
+      ],
+      "status": "prepared_patch_unbuilt"
     }
   ],
   "edges": [

@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "8efbc008b6cb1924111f02db069a00ac92579be43d5c0ddd72bcdb780884a27b",
+  "curatedSha256": "e099f949672edfb475ea688bac0b4d669f0f3ca635bd821f88473eab1a914b30",
   "sourceSha256": {
     "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
     "LICENSE": "cbcea74632d9225584ae7b24a788eb50144ebe1a75d58a1f78138ec1f44f3726",
     "README.md": "4678a10a9cd3efb5623fb61fe631c3f613a663158784e3688befe1a67d59716e",
     "SECURITY.md": "c2d039f0712fa7ef87bc355aff4158b637860e7344ec3431e11d7788b728b285",
-    "THIRD_PARTY.md": "8e53798b4c376573b16596e09699b82207b842ea70af059884a1883ef1099bdd",
+    "THIRD_PARTY.md": "f8cac7b41f7509826f06aa3ce5b9ed736bf2829d787b80bf79cbaccd0eb0f129",
     "bin/build": "c83f73f226860f68bc6b301e6830b98f271d27d41a0051a44027b16af9704e31",
     "bin/build-browser-fixture": "4c970d7435a06c9c890ecf79e1c5322622bab5046124185d257fae34f1f35656",
     "bin/build-browser-hunspell": "eee8aee22b3e5393ccd2928b86c6f96aa3b129421a1861b96cc1b490be93e319",
@@ -39,6 +39,7 @@
     "docs/ADR-004-CONTEXT-RESOURCES.md": "4c621e68a69203f9a233b5144a110c6e7740d6ac094f071374192a6f0cf267c9",
     "docs/AGENT_SETUP.md": "b116aedf56d60ce15b6b0e1870421d844ebbf65019c6523ebb7b29198b0a37cc",
     "docs/APPLICATION-POLICY.md": "f94f0b216301d141a563698bdcda10b135acaf63d13453080fcb59705bb5f956",
+    "docs/AQUAMARINE-READINESS-EXPERIMENT.md": "ce042447f172d07151667614b79e516bac33e0fb18bf799e381f55ad761bc43f",
     "docs/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
     "docs/BROWSER-ADAPTER-001.md": "e64c845884b50ecd956b21bf41d2faf1984f71f1caea86fc60b0e82518628af1",
     "docs/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
@@ -88,10 +89,11 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "3b8203884bc5225e0d4b63effee7922e647c613d08c2f348c461c946961cae31",
+    "docs/NEXT.md": "74298f85b8ac0ac59d6c02e305ea0d1c8a7bc9adfbc0299653f95b6ee1d667c8",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
+    "docs/PARALLEL-REVIEW-001.md": "3bc3c6a397efeea3f39a6b27a7b41dd52226f8a6362ef3dd681adff41b276d38",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
     "docs/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
@@ -156,6 +158,7 @@
     "tests/application_policy/application_policy_tests.cpp": "454165b9f23f0d266d6020751d58ad1e2ca5f35edb69e3b3dd2727683c28d0dc",
     "tests/application_policy/disable_tests.cpp": "eae8c4df6477dd8bafdb3edab812d6b1f4cb615b3c177ebe7f0bca85ad022394",
     "tests/application_policy/permissions_tests.cpp": "b6e015e7bfc3fcc8347bd91910913a704d08275f783d3214d8ee396ba17bfb7c",
+    "tests/aquamarine_readiness/test_patch_confinement.py": "0615fb533174e0dae01bde2c02a29bce2224ce560b003a9c57b153508f8ff07f",
     "tests/benchmark/benchmark_tests.cpp": "35fb56f4e942392776471840c0fff985930ee80af78885daef853c59a3e71a6e",
     "tests/benchmark/benchmark_tests.pro": "1c4cfb91c50484511ff765c39ae604a96eb2e6fb3c99692a00036d32d6f16566",
     "tests/browser/adapter.test.mjs": "519c5d777e22f43cf825c0a9c92e1c09bf9d4cee4751219b4ea9f98d278a90d1",
@@ -306,6 +309,7 @@
     "tests/window_provenance/test_host_plan.py": "035d828f07a69cb5b8fbbd3cc84ceabe904bf538d17a010b1767291fa0ee57d7",
     "tests/window_provenance/test_runner.py": "2ab10255aee4691e8dfe8431789cc8b00d9371301d7866d289ac92bf977577e3",
     "tools/a11y_bridge_lab.py": "182043f000f4066cebdae6d4cb239ac7b63c31703f053267dda4791aa9533095",
+    "tools/aquamarine_readiness_patch.py": "c67d88660c2ab5bf910949c23a2680cd707e33b978db1e74250a2da295225d77",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
     "tools/audit_natural_router_metrics.py": "50d345858a638529f0ca3880dacaf618351432a8e9a106af13a9ffcdd86f0d16",
@@ -371,6 +375,7 @@
     "tools/hunspellengine.cpp": "a1030ac485865252f2354d0d7898f0b9ae7b9f7344a207403d3eb9b0756da051",
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
+    "tools/hyprland_feedback_parent.py": "18c72b48fa1455043ea85cb0236e0be251be2192eff0cef90e5113ce6d51dd6c",
     "tools/hyprland_ime_lab.py": "fac3c253bfb7e0bd42a4cce559bc709244bae40865639814beb20dbe1a04aa5e",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
@@ -550,6 +555,10 @@
     },
     {
       "path": "docs/APPLICATION-POLICY.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/AQUAMARINE-READINESS-EXPERIMENT.md",
       "symbols": []
     },
     {
@@ -762,6 +771,10 @@
     },
     {
       "path": "docs/OWNER-ALERTS.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/PARALLEL-REVIEW-001.md",
       "symbols": []
     },
     {
@@ -1019,6 +1032,81 @@
     {
       "path": "tests/application_policy/permissions_tests.cpp",
       "symbols": []
+    },
+    {
+      "path": "tests/aquamarine_readiness/test_patch_confinement.py",
+      "symbols": [
+        {
+          "name": "snapshot",
+          "line": 22,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "PatchConfinement",
+          "line": 27,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "setUp",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tearDown",
+          "line": 36,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "make_checkout",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "assert_no_temp_left",
+          "line": 46,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_valid_fixture_patches_by_replacing_inode",
+          "line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_check_mode_writes_nothing",
+          "line": 61,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_symlinked_ancestor_cannot_touch_outside",
+          "line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_symlinked_checkout_root_refused",
+          "line": 79,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_target_hardlink_cannot_alter_protected_original",
+          "line": 87,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_target_symlink_refused",
+          "line": 100,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_anchor_mismatch_leaves_original_untouched",
+          "line": 111,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_checkout_outside_build_refused",
+          "line": 120,
+          "kind": "FunctionDef"
+        }
+      ]
     },
     {
       "path": "tests/benchmark/benchmark_tests.cpp",
@@ -4303,6 +4391,51 @@
       ]
     },
     {
+      "path": "tools/aquamarine_readiness_patch.py",
+      "symbols": [
+        {
+          "name": "Refused",
+          "line": 184,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "_walk",
+          "line": 188,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_open_abs_dir",
+          "line": 205,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_checkout_parts",
+          "line": 214,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_read_target",
+          "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_replace_target",
+          "line": 256,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "patch_checkout",
+          "line": 282,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 306,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tools/audit_context_aggregates.py",
       "symbols": [
         {
@@ -5077,6 +5210,61 @@
         {
           "name": "fake_parent",
           "line": 27,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tools/hyprland_feedback_parent.py",
+      "symbols": [
+        {
+          "name": "message",
+          "line": 41,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "string",
+          "line": 45,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "wl_array",
+          "line": 50,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "serve",
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inside",
+          "line": 142,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "admitted_aq_lib",
+          "line": 167,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 181,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 219,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "allocate",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "feedback",
+          "line": 60,
           "kind": "FunctionDef"
         }
       ]
@@ -7532,9 +7720,10 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "7a88c9f0f622fc38b71da3c35a382481d9862771dc15a5612b7aa91cc922ddd8",
+    "docs/knowledge/Start.md": "382612d16ba9ffc9da95d181da4d84e20828db0926f05e6516b8370ec1d22530",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
+    "docs/knowledge/aquamarine-readiness.md": "18d5628e82f72985634df4fc98ee8cb0a57b36f00bddecaa72d7072d36f3c321",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/closed-hyprland-mapping.md": "d674dc77ffd6aabd5dac8204f42ffb8dbdbebee342f26598a0c518b01dff8a45",
