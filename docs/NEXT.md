@@ -59,3 +59,5 @@
 - Next Claude planning request did NOT run: CLI returned "Not logged in · Please run /login". No review credited. Reauthenticate Claude before assigning its next implementation block. Codex may continue source audit independently. Public current upstream OpenGL.cpp still initializes EGL via GBM/device paths; this alone does not prove installed-version no-GPU headless support. Do not equate headless output with software renderer or rerun old host/GPU trial.
 
 - Prepared actual mapping client + GPU-only closed Sway→Hyprland wrapper (zero hostWayland). Strict build PASS, softwareSway regression PASS5,8+4guards PASS, exact synthetic scope limits/FD/cleanup PASS. Independent Codex boundary review cleared after fixes; Claude unavailable. GPU trial NOT authorized/run; docs/CLOSED-HYPRLAND-MAPPING-PLAN.md. No new host enumeration or field authority.
+
+- ONE approved closed GPU-only trial executed: mapping-not-verified; phase lost by outer diagnostics (own namespace logs discarded). Approval consumed. Fixed finite-enum diagnostics propagation + regression,5boundary tests PASS. data/closed-mapping-001-result.json. No repeat authorized/run.

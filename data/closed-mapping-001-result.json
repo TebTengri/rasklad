@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "approvedTrials": 1,
+  "attemptedTrials": 1,
+  "passed": false,
+  "reason": "mapping-not-verified",
+  "phase": "unknown",
+  "diagnosticLimitation": "outer verification replaced inner failure; original namespace logs discarded",
+  "scopeCleanupControlFlow": "inactive and empty ControlGroup checked before outer verification refused",
+  "hostWaylandConnections": 0,
+  "fieldBindingVerified": false,
+  "repeatAuthorized": false
+}

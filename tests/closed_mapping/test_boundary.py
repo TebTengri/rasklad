@@ -50,6 +50,19 @@ class Boundary(unittest.TestCase):
         with self.assertRaises(lab.base.Refused):
             lab.wait_socket(server, directory, 1)
 
+    def test_failure_diagnostics_survive_both_wrappers_without_log_text(self):
+        child = dict(ok=False, phase='hyprland-start', reason='private-compositor-unready',
+                     hyprlandStartup='gpu_allocator_unavailable', hyprlandExit=1,
+                     privateTitle='must not leave namespace', text='must not leave namespace')
+        report = lab.failure_report(lab.failure_report(child, 1), 1)
+        self.assertEqual(report['phase'], 'hyprland-start')
+        self.assertEqual(report['reason'], 'private-compositor-unready')
+        self.assertEqual(report['hyprlandStartup'], 'gpu_allocator_unavailable')
+        self.assertEqual(report['hyprlandExit'], 1)
+        self.assertNotIn('privateTitle', report)
+        self.assertNotIn('text', report)
+        self.assertFalse(report['ok'])
+
 
 if __name__ == '__main__':
     unittest.main()

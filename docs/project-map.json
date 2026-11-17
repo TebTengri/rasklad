@@ -442,13 +442,14 @@
         "tests/window_provenance/MAPPING.md",
         "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md",
         "data/closed-mapping-preparation-001-result.json",
-        "vendor/wayland/sources.json"
+        "vendor/wayland/sources.json",
+        "data/closed-mapping-001-result.json"
       ],
-      "notes": "Prepared GPU-only closed Sway→Hyprland mapping; no host Wayland. Actual trial pending separate approval; no field authority.",
+      "notes": "One approved GPU-only trial failed without phase evidence; wrapper diagnostics fixed and tested. No repeat authorized, no field authority.",
       "tests": [
         "python3 -m unittest discover -s tests/closed_mapping"
       ],
-      "status": "prepared_not_executed"
+      "status": "trial_failed_diagnostics_fixed_repeat_pending"
     }
   ],
   "edges": [

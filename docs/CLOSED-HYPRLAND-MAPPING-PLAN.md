@@ -1,6 +1,6 @@
 # Prepared closed Hyprland mapping trial
 
-Status: implementation built and statically reviewed; GPU trial NOT executed.
+Status: ONE approved GPU trial executed and failed; approval consumed.
 Command after a separate explicit permission:
 `python3 -I tools/closed_hyprland_mapping.py --run-approved`
 Default invocation prints a plan only.
@@ -48,3 +48,17 @@ GPU-free execution proof is claimed.
 Success establishes window mapping agreement only, not input-field identity,
 Fcitx context authentication or permission to edit Slack. Failure is recorded
 without automatic expansion to host Wayland or more devices.
+
+## Trial001 and diagnostic correction
+
+Trial001 returned mapping-not-verified. It did not establish mapping or the
+failed startup phase: outer success verification masked the inner diagnostic,
+and private logs were discarded. Inactive/empty-scope cleanup preceded that
+outer refusal. No repeat was executed.
+
+Correction: preserve only fixed phase/failure/startup categories and bounded
+exit codes through both wrappers. Capture own compositor logs solely inside
+private temporary files, classify a bounded tail into fixed enums, then discard
+them. No raw log bytes leave the namespace. A targeted regression proves the
+original masked error survives both layers while arbitrary strings are stripped.
+Five boundary tests pass. A new GPU trial requires fresh explicit permission.

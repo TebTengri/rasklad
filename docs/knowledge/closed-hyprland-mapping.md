@@ -1,8 +1,8 @@
 # Closed Hyprland window mapping
 
-Prepared GPU-only closed Sway→Hyprland mapping; no host Wayland. Actual trial pending separate approval; no field authority.
+One approved GPU-only trial failed without phase evidence; wrapper diagnostics fixed and tested. No repeat authorized, no field authority.
 
-Статус: prepared_not_executed
+Статус: trial_failed_diagnostics_fixed_repeat_pending
 
 ## Файлы
 
@@ -12,6 +12,7 @@ Prepared GPU-only closed Sway→Hyprland mapping; no host Wayland. Actual trial 
 - `docs/CLOSED-HYPRLAND-MAPPING-PLAN.md`
 - `data/closed-mapping-preparation-001-result.json`
 - `vendor/wayland/sources.json`
+- `data/closed-mapping-001-result.json`
 
 ## Связи
 

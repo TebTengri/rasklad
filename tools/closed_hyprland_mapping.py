@@ -97,6 +97,31 @@ def verified_report(report, exit_code):
     return report
 
 
+def failure_report(report, exit_code):
+    """Forward finite technical categories only, never child log text."""
+    result = dict(schema=1, ok=False, reason='mapping-not-verified',
+                  sandboxExit=exit_code if type(exit_code) is int and -128 <= exit_code <= 255 else None)
+    if type(report) is not dict:
+        return result
+    if report.get('phase') in ('parent-start', 'hyprland-start', 'mapping-client'):
+        result['phase'] = report['phase']
+    reasons = ('private-compositor-unready', 'mapping-not-verified', 'client-output-bound',
+               'compositor-exited', 'TimeoutExpired', 'OSError', 'ValueError')
+    if report.get('reason') in reasons:
+        result['reason'] = report['reason']
+    categories = ('unclassified_startup_failure', 'drm_device_discovery_failed', 'parent_wayland_connect_failed',
+                  'parent_protocols_missing', 'dmabuf_node_open_failed', 'allocator_node_reopen_failed',
+                  'gpu_allocator_unavailable', 'egl_initialization_reported', 'backend_creation_failed')
+    for key in ('parentStartup', 'hyprlandStartup'):
+        if report.get(key) in categories:
+            result[key] = report[key]
+    for key in ('parentExit', 'hyprlandExit', 'probeExit'):
+        value = report.get(key)
+        if type(value) is int and -128 <= value <= 255:
+            result[key] = value
+    return result
+
+
 def sandbox_args(fds, paths, metadata):
     primary = metadata['statOnlyPrimary']
     if (not primary.startswith('/dev/dri/card') or
@@ -184,7 +209,11 @@ def run():
             cleanup_scope(unit, launcher_env)
         if len(raw) > 8192:
             raise base.Refused('output-bound')
-        report = verified_report(json.loads(raw), result.returncode)
+        report = json.loads(raw)
+        if result.returncode or type(report) is not dict or report.get('ok') is not True:
+            report = failure_report(report, result.returncode)
+        else:
+            report = verified_report(report, result.returncode)
         report.update(schema=1, hostWaylandConnections=0, network=False, realInput=False,
                       hostConfigurationChanged=False, fieldBindingVerified=False,
                       binarySha256=record['binarySha256'], scopeLimitsVerified=True, scopeInactiveVerified=True)
@@ -236,10 +265,13 @@ def inside():
                WLR_BACKENDS='headless', WLR_RENDERER='gles2', WLR_LIBINPUT_NO_DEVICES='1',
                WLR_RENDER_DRM_DEVICE='/dev/dri/renderD128', LP_NUM_THREADS='2')
     sway = hypr = None
+    parent_log, hypr_log = tempfile.TemporaryFile(), tempfile.TemporaryFile()
+    phase = 'parent-start'
     try:
         sway = subprocess.Popen(['/lab/runtime/sway', '-c', str(config)], env=env,
-                                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                stdin=subprocess.DEVNULL, stdout=parent_log, stderr=subprocess.STDOUT)
         parent = wait_socket(sway, parent_dir, 5)
+        phase = 'hyprland-start'
         hypr_config = Path('/tmp/hypr.conf')
         hypr_config.write_text(previous.CONFIG)
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
@@ -249,8 +281,9 @@ def inside():
             env = dict(os.environ, XDG_RUNTIME_DIR=str(child_dir), WAYLAND_SOCKET=str(connection.fileno()), LP_NUM_THREADS='2')
             hypr = subprocess.Popen(['/usr/bin/Hyprland', '--config', str(hypr_config)], env=env,
                                     pass_fds=(connection.fileno(),), stdin=subprocess.DEVNULL,
-                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                    stdout=hypr_log, stderr=subprocess.STDOUT)
         private = wait_socket(hypr, child_dir, 7)
+        phase = 'mapping-client'
         Path('/run/lab/wayland-lab').symlink_to(private)
         with tempfile.TemporaryFile() as out:
             result = subprocess.run(['/lab/probe', '--mapping'], stdin=subprocess.DEVNULL,
@@ -263,9 +296,22 @@ def inside():
         if sway.poll() is not None or hypr.poll() is not None:
             raise base.Refused('compositor-exited')
         return dict(report, privateParent=True, actualHyprland=True, probeExit=result.returncode)
+    except Exception as exc:
+        report = dict(schema=1, ok=False, phase=phase,
+                      reason=str(exc) if isinstance(exc, base.Refused) else type(exc).__name__)
+        for key, server in (('parentExit', sway), ('hyprlandExit', hypr)):
+            if server is not None:
+                report[key] = server.poll()
+        for key, log in (('parentStartup', parent_log), ('hyprlandStartup', hypr_log)):
+            log.seek(0, os.SEEK_END)
+            log.seek(max(0, log.tell() - 32768))
+            report[key] = previous.classify_startup(log.read(32768))
+        return failure_report(report, 1)
     finally:
         stop(hypr)
         stop(sway)
+        parent_log.close()
+        hypr_log.close()
 
 
 def main():
@@ -277,7 +323,7 @@ def main():
     try:
         report = inside() if args.inside else run() if args.run_approved else plan()
         print(json.dumps(report, sort_keys=True))
-        return 0
+        return 1 if report.get('ok') is False else 0
     except Exception as exc:
         print(json.dumps(dict(schema=1, ok=False, reason=str(exc) if isinstance(exc, base.Refused) else type(exc).__name__)))
         return 1
