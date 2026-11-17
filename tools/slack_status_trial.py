@@ -6,9 +6,10 @@ from pathlib import Path
 
 class Refused(Exception):pass
 
-def trial(control,probe):
+def trial(control,probe,ready=None):
     # signal.signal() works only in the main thread; refuse before any bus access so restore can't fail after mutation.
     if threading.current_thread() is not threading.main_thread():raise Refused('not-main-thread')
+    if ready is not None and not ready():raise Refused('slack-not-running')
     # Ignore handled termination before any mutation, including finally entry.
     # The whole trial is bounded; SIGKILL/crashes remain outside this guarantee.
     signals=(signal.SIGINT,signal.SIGTERM)
@@ -16,14 +17,14 @@ def trial(control,probe):
     saved={sig:signal.signal(sig,signal.SIG_IGN) for sig in signals}
     try:
         signal.pthread_sigmask(signal.SIG_SETMASK,old_mask)
-        return _trial(control,probe)
+        return _trial(control,probe,ready)
     finally:
         signal.pthread_sigmask(signal.SIG_BLOCK,signals)
         # Discard pending handled requests while still ignored, after rollback.
         signal.pthread_sigmask(signal.SIG_SETMASK,old_mask)
         for sig,handler in saved.items():signal.signal(sig,handler)
 
-def _trial(control,probe):
+def _trial(control,probe,ready=None):
     report={'schema':1,'textRead':False,'writesToApps':False,'restart':False,'statusChanged':False,'restored':False}
     owner=control.owner()
     if not owner:raise Refused('service-not-running')
@@ -35,6 +36,7 @@ def _trial(control,probe):
     attempted=False
     try:
         if control.owner()!=owner:raise Refused('owner-changed')
+        if ready is not None and not ready():raise Refused('slack-not-running')
         attempted=True;report['enableAttempted']=True;report['enableOutcome']='unknown'
         control.set(owner,True)
         if control.get(owner) is not True:raise Refused('enable-not-confirmed')
@@ -60,6 +62,8 @@ def _trial(control,probe):
     report['measurementCompleted']=(isinstance(result,dict) and result.get('schema')==1
         and result.get('textRead') is False and result.get('writes') is False
         and result.get('truncated') is False and not result.get('error') and result.get('passed') is not False)
+    report['targetReady']=(isinstance(result,dict) and type(result.get('targetProcesses')) is int and result['targetProcesses']>0)
+    report['passedMeaning']='status procedure and metadata measurement completed, not editor support'
     report['passed']=report['statusChanged'] and report['restored'] and report['measurementCompleted'] and 'error' not in report
     return report
 
@@ -93,7 +97,8 @@ def main():
     try:
         spec=importlib.util.spec_from_file_location('metadata',Path(__file__).with_name('slack_accessibility_probe.py'))
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-        report=trial(Control(),module.run)
+        if not module.slack_pids():raise Refused('slack-not-running')
+        report=trial(Control(),lambda:module.run(observe=True),lambda:bool(module.slack_pids()))
         print(json.dumps(report,sort_keys=True));return 0 if report['passed'] else 1
     except Exception as exc:
         print(json.dumps({'passed':False,'error':str(exc) if isinstance(exc,Refused) else type(exc).__name__}));return 1

@@ -30,8 +30,8 @@ class Reader:
         return self.transport(bus,path,ACCESSIBLE,method,None)
 
 
-def slack_pids():
-    result=subprocess.run(['/usr/bin/pgrep','-i','-x','slack'],capture_output=True,text=True,timeout=2)
+def slack_pids(timeout=2):
+    result=subprocess.run(['/usr/bin/pgrep','-i','-x','slack'],capture_output=True,text=True,timeout=timeout)
     found=set()
     for row in result.stdout.splitlines():
         if not row.isdecimal():continue
@@ -42,17 +42,52 @@ def slack_pids():
     return found
 
 
-def run():
+def discover_peers(reader,report,deadline,observe=False,pid_source=slack_pids,now=time.monotonic,pause=time.sleep):
+    """Bounded discovery; app objects are not queried until PID ownership matches."""
+    started=now();cache={};scans=0
+    while True:
+        remaining=deadline-now()
+        if remaining<=0:break
+        scans+=1
+        try:pids=pid_source(min(2,remaining))
+        except subprocess.TimeoutExpired:
+            report['truncated']=True;break
+        report['targetProcesses']=len(pids)
+        if now()>=deadline:break
+        if not pids:break
+        try:
+            names=reader.broker('ListNames')[0]
+            if len(names)>256:report['truncated']=True
+            for name in names[:256]:
+                if not name.startswith(':'):continue
+                if name not in cache:
+                    if report['pidLookups']+report['pidLookupErrors']>=256:
+                        report['truncated']=True;break
+                    try:
+                        cache[name]=reader.broker('GetConnectionUnixProcessID',name)[0]
+                        report['pidLookups']+=1
+                    except BudgetEnd:raise
+                    except Exception:report['pidLookupErrors']+=1;continue
+                if cache[name] in pids:reader.owned.add(name)
+        except BudgetEnd:
+            report['truncated']=True;break
+        if reader.owned or not observe or report['truncated'] or now()>=deadline:break
+        pause(min(.25,max(0,deadline-now())))
+        if now()>=deadline:break
+    report['discoveryScans']=scans;report['discoverySeconds']=round(now()-started,3)
+
+
+def run(observe=False):
     import gi
     gi.require_version('Atspi','2.0')
     from gi.repository import Gio,GLib,Atspi
     cancellable=Gio.Cancellable()
     timer=threading.Timer(10,cancellable.cancel);timer.daemon=True;timer.start()
-    try:return _probe(Gio,GLib,Atspi,cancellable)
+    try:return _probe(Gio,GLib,Atspi,cancellable,observe)
     finally:timer.cancel()
 
 
-def _probe(Gio,GLib,Atspi,cancellable):
+def _probe(Gio,GLib,Atspi,cancellable,observe=False):
     deadline=time.monotonic()+10
     def transport(connection):
         def call(bus,path,interface,method,argument):
@@ -82,15 +117,8 @@ def _probe(Gio,GLib,Atspi,cancellable):
     address=control.address()[0]
     if type(address) is not str or len(address)>1024 or not address.startswith('unix:'):raise ProbeError('unsupported-transport')
     connection=Gio.DBusConnection.new_for_address_sync(address,Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT|Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,None,cancellable)
-    reader=Reader(transport(connection));pids=slack_pids();report['targetProcesses']=len(pids)
-    names=reader.broker('ListNames')[0]
-    for name in names[:256]:
-        if not name.startswith(':'):continue
-        try:
-            pid=reader.broker('GetConnectionUnixProcessID',name)[0];report['pidLookups']+=1
-            if pid in pids:reader.owned.add(name)
-        except BudgetEnd:report['truncated']=True;break
-        except Exception:report['pidLookupErrors']+=1;continue
+    reader=Reader(transport(connection))
+    discover_peers(reader,report,deadline,observe)
     report['slackA11yConnections']=len(reader.owned)
     queue=deque((bus,ROOT_PATH,False) for bus in reader.owned);seen=set()
     def flag(bits,state):return bool(bits & (1<<int(state)))
@@ -127,11 +155,11 @@ def _probe(Gio,GLib,Atspi,cancellable):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');parser.add_argument('--observe',action='store_true');args=parser.parse_args()
     if not args.run:
         print(json.dumps({'mode':'plan','target':'native slack only','methods':sorted(NODE_METHODS),
                           'systemStatusProperties':['IsEnabled','ScreenReaderEnabled'],
-                          'maxNodes':128,'seconds':10,'textRead':False,'writes':False}));return 0
-    try:print(json.dumps(run(),sort_keys=True));return 0
+                          'maxNodes':128,'seconds':10,'observePeers':args.observe,'textRead':False,'writes':False}));return 0
+    try:print(json.dumps(run(args.observe),sort_keys=True));return 0
     except Exception:print(json.dumps({'error':'slack-metadata-probe-unavailable','textRead':False,'writes':False}),file=sys.stderr);return 1
 if __name__=='__main__':sys.exit(main())

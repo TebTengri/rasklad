@@ -29,7 +29,7 @@
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
     "docs/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
-    "docs/ACTIVE-PLAN.md": "f46f6380f3a21a93bf68172748bf662d5bf9f7c65269dae5bd5946f382dac329",
+    "docs/ACTIVE-PLAN.md": "da5edc346d9e4972ed3a77fe48960c5673c653ef4a8edf5d7daa259e05fdd1a9",
     "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
@@ -85,7 +85,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "a53007b9e5621cde82daabc81f65b84b60f7e3197cc7fa45e002f708623014e5",
+    "docs/NEXT.md": "7549af8f5592ed72eb66e5489f59bc2e0ba6e8c19a8d96a877b2c0ab77a9755b",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -95,7 +95,7 @@
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
-    "docs/SLACK-LIVE-STATUS-PLAN.md": "5a6b8d5f43a8acdc2abb833e3c4e96c1ba4a17af3f3254ee47a08f772c94d7fb",
+    "docs/SLACK-LIVE-STATUS-PLAN.md": "9471be834c307cf7c1210aa2a409af98fb011a77efb18aea87a32b89cc268ecf",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
@@ -250,9 +250,10 @@
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
+    "tests/slack_probe/test_peer_observation.py": "8e35fe2c0bbe7cdb975c1667174d5db256a8bc60d341918afa7bd6b21300ed02",
     "tests/slack_probe/test_private_bridge_lab.py": "60be5ce4719229f45ec6e56f1a8ad71c9462d79de47f91e477f4236ae6c4675e",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
-    "tests/slack_probe/test_status_trial.py": "a0ab53f7fca817fc5ff1fee13d02ba7cb4161f0c38678e98b9ddf8196d1be4e9",
+    "tests/slack_probe/test_status_trial.py": "1fd537ed769d68a66d163dd75ac0d85bfa01a08128d429517d0e44922358952d",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
@@ -375,9 +376,9 @@
     "tools/server_route_witness.cpp": "b13baa7f20f3831d9b62d8bcf6cc70af9b30637305e8d6e41bd39e57c468782e",
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
-    "tools/slack_accessibility_probe.py": "921be7f01cfe35cfd7f1c356aac114079a370fec55355f65383c7e15f23b9395",
+    "tools/slack_accessibility_probe.py": "65c6ca7dc94e02ab66b2d2547e584d5aa2eb660e1b9b0fdbb90b5f09c117e13f",
     "tools/slack_https_bridge.py": "cb05d41ff9e4e3694e8b550581cde77d336e08e7748263ed2a749b02361d4043",
-    "tools/slack_status_trial.py": "538301a9842897828565bec9b742f3d86ce7eb55fa8e67cca0b2e3fba934bcc3",
+    "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
   },
@@ -2377,6 +2378,91 @@
       ]
     },
     {
+      "path": "tests/slack_probe/test_peer_observation.py",
+      "symbols": [
+        {
+          "name": "Clock",
+          "line": 6,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "ObservationTests",
+          "line": 10,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 7,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "now",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pause",
+          "line": 9,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "scan",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_delayed_peer_is_observed_without_app_object_reads",
+          "line": 15,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_absent_peer_waits_bounded_window",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_snapshot_stays_single_scan",
+          "line": 30,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_missing_process_does_not_query_bus",
+          "line": 33,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_slow_pid_source_receives_remaining_budget_and_stops_bus",
+          "line": 37,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_lookup_volume_is_bounded",
+          "line": 43,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "transport",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "forbidden",
+          "line": 34,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "slow",
+          "line": 40,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "transport",
+          "line": 45,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/slack_probe/test_private_bridge_lab.py",
       "symbols": [
         {
@@ -2540,13 +2626,28 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_refuses_worker_thread_before_any_control_call",
+          "name": "test_missing_slack_refuses_before_any_control_call",
           "line": 83,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_slack_exit_before_mutation_does_not_write",
+          "line": 88,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_completed_measurement_does_not_mean_app_ready",
+          "line": 93,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_refuses_worker_thread_before_any_control_call",
+          "line": 96,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_unconfirmed_enable_is_restored_without_probe",
-          "line": 103,
+          "line": 116,
           "kind": "FunctionDef"
         },
         {
@@ -2575,13 +2676,18 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "NoControl",
+          "line": 84,
+          "kind": "ClassDef"
+        },
+        {
           "name": "Recording",
-          "line": 85,
+          "line": 98,
           "kind": "ClassDef"
         },
         {
           "name": "worker",
-          "line": 91,
+          "line": 104,
           "kind": "FunctionDef"
         },
         {
@@ -2596,27 +2702,32 @@
         },
         {
           "name": "owner",
-          "line": 86,
+          "line": 85,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "owner",
+          "line": 99,
           "kind": "FunctionDef"
         },
         {
           "name": "uid",
-          "line": 87,
+          "line": 100,
           "kind": "FunctionDef"
         },
         {
           "name": "get",
-          "line": 88,
+          "line": 101,
           "kind": "FunctionDef"
         },
         {
           "name": "set",
-          "line": 89,
+          "line": 102,
           "kind": "FunctionDef"
         },
         {
           "name": "bad_enable",
-          "line": 107,
+          "line": 120,
           "kind": "FunctionDef"
         }
       ]
@@ -5156,18 +5267,23 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "run",
+          "name": "discover_peers",
           "line": 45,
           "kind": "FunctionDef"
         },
         {
+          "name": "run",
+          "line": 80,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "_probe",
-          "line": 55,
+          "line": 90,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 129,
+          "line": 157,
           "kind": "FunctionDef"
         },
         {
@@ -5197,17 +5313,17 @@
         },
         {
           "name": "transport",
-          "line": 57,
+          "line": 92,
           "kind": "FunctionDef"
         },
         {
           "name": "flag",
-          "line": 96,
+          "line": 124,
           "kind": "FunctionDef"
         },
         {
           "name": "call",
-          "line": 58,
+          "line": 93,
           "kind": "FunctionDef"
         }
       ]
@@ -5327,52 +5443,52 @@
         },
         {
           "name": "_trial",
-          "line": 26,
+          "line": 27,
           "kind": "FunctionDef"
         },
         {
           "name": "Control",
-          "line": 66,
+          "line": 70,
           "kind": "ClassDef"
         },
         {
           "name": "main",
-          "line": 83,
+          "line": 87,
           "kind": "FunctionDef"
         },
         {
           "name": "__init__",
-          "line": 67,
+          "line": 71,
           "kind": "FunctionDef"
         },
         {
           "name": "call",
-          "line": 72,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "owner",
-          "line": 74,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "uid",
           "line": 76,
           "kind": "FunctionDef"
         },
         {
-          "name": "get",
+          "name": "owner",
           "line": 78,
           "kind": "FunctionDef"
         },
         {
-          "name": "set",
+          "name": "uid",
           "line": 80,
           "kind": "FunctionDef"
         },
         {
+          "name": "get",
+          "line": 82,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "set",
+          "line": 84,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "interrupted",
-          "line": 91,
+          "line": 95,
           "kind": "FunctionDef"
         }
       ]

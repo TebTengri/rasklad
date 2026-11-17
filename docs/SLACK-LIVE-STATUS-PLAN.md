@@ -30,3 +30,42 @@ Gemini returned a concrete finally-entry signal race. A second Claude request
 for its implementation timed out after 150 seconds; Codex implemented the
 whole-trial signal wrapper and added a signal-during-probe regression test. Grok timed out after 120 seconds and is NOT counted as review.
 No automatic retries to burn further quota. The live trial has still NOT run.
+
+## Executed owner-approved trial (2026-11-17)
+
+Explicit permission received. Original temporary worktree had disappeared;
+restored committed code into /home/mvn/Work/rasklad-message-adapter. Ten status
+mock tests passed before execution. One actual false→true→false trial completed
+with restoration verified on first attempt, no app text/writes/restart. Slack
+was not running (0 target processes), so this cannot test compatibility.
+Owner then opened Slack: read-only preflight found 8 target processes, 0 peers,
+IsEnabled false. Initial missing-process prerequisite was an experiment flaw;
+add rejection before status mutation. Procedure passed does NOT mean Slack ready.
+One-shot permission consumed; no repeated enable inferred from opening Slack.
+Evidence: data/slack-live-status-001-result.json.
+
+## Approved repeat and instrumentation correction
+
+Owner explicitly approved ONE repeat after opening Slack. External same-process
+PID preflight ran before runner entry. Repeat:8processes/0peers in the immediate
+snapshot; false→true→false confirmed and first-attempt restoration verified.
+Both one-shot permissions are consumed. No text, edits, sending or restart.
+These were snapshots, NOT full 10-second observations; the old ten-second limit
+was a deadline rather than a wait. Do not claim dynamic enable is ineffective.
+
+Claude's readiness patch request timed out75s with no patch. Codex added
+pre-mutation checks and targetReady separate from procedure passed. Added
+optional observe mode under the existing deadline, caching unique-name PIDs,
+<=256lookups and no app getter before ownership. Six fake-clock tests include
+delayed registration, bounded wait, snapshot behavior, missing processes,
+lookup-volume and slow PID discovery. Thirteen status tests pass.
+
+Independent peer_observation_review found no ownership/privacy regressions but
+flagged the separate PID lookup timeout. Accepted: PID discovery now receives
+remaining budget and no late scan can query the bus. No new live observation
+was run after these changes. Future mutation still requires explicit consent.
+
+Context7 /electron/electron app.md documents setAccessibilitySupportEnabled and
+setAccessibilitySupportFeatures for macOS/Windows, not Linux. Do not propose
+patching Slack or its app.asar as a substitute. Source:
+https://github.com/electron/electron/blob/main/docs/api/app.md

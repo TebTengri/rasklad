@@ -37,8 +37,9 @@ Codex coordinates on behalf of the owner and accepts changes. Claude implements;
 Gemini/Grok provide scoped criticism where available. Do not claim a model ran
 if authentication/network/limits prevented it.
 
-- Temporary live IsEnabled trial remains pending EXPLICIT permission. Generic
-  continuation does not consume that decision.
+- Two explicitly approved temporary IsEnabled trials executed/restored. Both
+  approvals consumed. Snapshot evidence is inconclusive for delayed registration.
+  Bounded observer/readiness guards now tested offline; no new live run.
 - Completed: Claude implemented pre-mutation main-thread refusal and tests.
   Codex applied and verified. Gemini found the finally-entry signal race;
   Claude follow-up timed out, so Codex implemented the whole-trial signal

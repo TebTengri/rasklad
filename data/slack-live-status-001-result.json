@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "approvalConsumed": true,
+  "approvedStatusTrial": {
+    "enableAttempted": true,
+    "enableOutcome": "confirmed",
+    "initialIsEnabled": false,
+    "measurementCompleted": true,
+    "passed": true,
+    "probe": {
+      "a11yBusAvailable": true,
+      "a11yStatus": {
+        "errors": 1,
+        "isEnabled": true,
+        "screenReaderEnabled": null
+      },
+      "focusedEditableObjects": [],
+      "inspectedNodes": 0,
+      "pidLookupErrors": 0,
+      "pidLookups": 9,
+      "safeAutoCorrection": false,
+      "schema": 1,
+      "slackA11yConnections": 0,
+      "targetProcesses": 0,
+      "textRead": false,
+      "truncated": false,
+      "writes": false
+    },
+    "restart": false,
+    "restoreAttempts": 1,
+    "restored": true,
+    "schema": 1,
+    "statusChanged": true,
+    "textRead": false,
+    "writesToApps": false
+  },
+  "afterOwnerOpenedSlack": {
+    "a11yBusAvailable": true,
+    "a11yStatus": {
+      "errors": 1,
+      "isEnabled": false,
+      "screenReaderEnabled": null
+    },
+    "focusedEditableObjects": [],
+    "inspectedNodes": 0,
+    "pidLookupErrors": 0,
+    "pidLookups": 9,
+    "safeAutoCorrection": false,
+    "schema": 1,
+    "slackA11yConnections": 0,
+    "targetProcesses": 8,
+    "textRead": false,
+    "truncated": false,
+    "writes": false
+  },
+  "conclusion": "Both temporary trials restored false, first without Slack and repeat with8processes/0peers in immediate snapshot. They do not exclude delayed registration or prove incompatibility.",
+  "approvedRepeat": {
+    "enableAttempted": true,
+    "enableOutcome": "confirmed",
+    "initialIsEnabled": false,
+    "measurementCompleted": true,
+    "passed": true,
+    "probe": {
+      "a11yBusAvailable": true,
+      "a11yStatus": {
+        "errors": 1,
+        "isEnabled": true,
+        "screenReaderEnabled": null
+      },
+      "focusedEditableObjects": [],
+      "inspectedNodes": 0,
+      "pidLookupErrors": 0,
+      "pidLookups": 9,
+      "safeAutoCorrection": false,
+      "schema": 1,
+      "slackA11yConnections": 0,
+      "targetProcesses": 8,
+      "textRead": false,
+      "truncated": false,
+      "writes": false
+    },
+    "restart": false,
+    "restoreAttempts": 1,
+    "restored": true,
+    "schema": 1,
+    "statusChanged": true,
+    "textRead": false,
+    "writesToApps": false
+  },
+  "repeatApprovalConsumed": true
+}

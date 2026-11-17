@@ -80,6 +80,19 @@ class StatusTrialTests(unittest.TestCase):
   c=Fake();c.uid=lambda owner:os.getuid()+1
   with self.assertRaises(m.Refused):m.trial(c,lambda:{})
   self.assertEqual(c.writes,[])
+ def test_missing_slack_refuses_before_any_control_call(self):
+  class NoControl:
+   def owner(self):raise AssertionError('bus must not be accessed')
+  with self.assertRaisesRegex(m.Refused,'slack-not-running'):
+   m.trial(NoControl(),lambda:None,lambda:False)
+ def test_slack_exit_before_mutation_does_not_write(self):
+  ready=iter([True,False]);c=Fake()
+  r=m.trial(c,lambda:None,lambda:next(ready))
+  self.assertEqual(c.writes,[]);self.assertFalse(r['passed'])
+  self.assertEqual(r['error'],'slack-not-running')
+ def test_completed_measurement_does_not_mean_app_ready(self):
+  c=Fake();r=m.trial(c,lambda:{'schema':1,'textRead':False,'writes':False,'truncated':False,'targetProcesses':0})
+  self.assertTrue(r['measurementCompleted']);self.assertFalse(r['targetReady'])
  def test_refuses_worker_thread_before_any_control_call(self):
   calls=[]
   class Recording(Fake):

@@ -1,6 +1,6 @@
 # rasklad — короткая точка входа
 
-- Worktree: /tmp/rasklad-message-adapter; branch SYS-242/message-adapter.
+- Worktree: /home/mvn/Work/rasklad-message-adapter; branch SYS-246/slack-status-observation; publish draft checkpoint to SYS-242/message-adapter.
 - Main /home/mvn/Work/rasklad не переключать; чужие проекты не смотреть.
 - SYS-246 In Progress; PR17 draft; лицензия собственного кода MIT.
 - Один исполнитель, одно итоговое ревью существенной границы; экономный режим AGENTS.md.
@@ -40,7 +40,11 @@
 - Семь стабильных hooks и общий profile cache остаются; таймеров/polling не добавлено.
 - Не читать архив CONTINUATION-PLAN/всю переписку; bin/project-map find <topic>.
 
-- Prepared tools/slack_status_trial.py, NOT run: temporary session-wide IsEnabled trial requires explicit permission; channel authorization is insufficient.
+- Owner-approved one temporary IsEnabled trial EXECUTED: false→true→false verified in1restore attempt. Approval consumed. Slack was absent (0processes), so no compatibility conclusion.
 
 - Execution roles updated in AGENTS: Codex represents owner/accepts changes; Claude implements; Gemini/Grok assist.
-- Claude main-thread guard applied; Gemini signal-race finding fixed by Codex after Claude timeout. 10 status tests pass. No live mutation executed; explicit approval still pending.
+- Claude main-thread guard applied; Gemini signal-race finding fixed by Codex after Claude timeout. 10 status tests pass. One authorized trial completed/restored, then owner opened Slack:8processes/0peers with flagfalse. No new status mutation authorized.
+
+- Owner approved repeat after Slack opened; EXECUTED:8processes/0peers snapshot; flagfalse restored/readback firstattempt. BOTH one-shot status approvals CONSUMED.
+- Snapshot negative is inconclusive for asynchronous registration. Added offline-tested bounded observer + PID preflight (no further live run). See docs/SLACK-LIVE-STATUS-PLAN.md.
+- Old /tmp worktree/builds disappeared. Committed evidence survives; ignored artifacts/runtime must be rebuilt/validated before reuse. No adjacent/private projects inspected.
