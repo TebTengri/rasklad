@@ -53,3 +53,5 @@
 - Found primary Hyprland toplevel mapping protocol for WLR/EXT→common window address. Prepared tools/host_registry_probe.py, NOT run: registry-only, binds0globals, no windows/text/input/GPU. Closed Sway control stable1/WLR3/mapping0. Separate host connection approval needed; see HOST-REGISTRY-PROBE-PLAN.md.
 
 - Host supervisor hardened after Claude review: sealed ELF rejects RPATH/RUNPATH, bounded output whitelist, precise UID/executable claims. 8local guards PASS. Use python3 -I; host query still NOT authorized/run. Trusted repository, not signed-code security.
+
+- ONE freshly approved host registry query completed: stable1/WLR3/Hyprlandmapping1, globalsBound0. Approval consumed. Aggregate data/host-registry-001-result.json. Next closed owned-window mapping implementation; no live enumeration/edits permitted.

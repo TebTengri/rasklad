@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "ok": true,
+  "registryOnly": true,
+  "globalsBound": 0,
+  "hostWaylandConnections": 1,
+  "stableListVersion": 1,
+  "wlrManagerVersion": 3,
+  "hyprlandMappingVersion": 1,
+  "peerExeMatched": true,
+  "kernelPeerUidMatched": true,
+  "binarySha256": "4d719cafda00b42f73e2fee181ed0b071bc0bd0e5f40ad20a27e0334c9737999",
+  "codeScope": {
+    "windowEnumeration": false,
+    "textRead": false,
+    "input": false,
+    "gpu": false,
+    "settingsChanged": false
+  }
+}

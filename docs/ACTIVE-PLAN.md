@@ -60,6 +60,10 @@ if authentication/network/limits prevented it.
 - Claude architecture critique assessed; no new identity enum/geometry authority
   introduced. Pinned Fcitx monitor/installed SDK inspected; no shared PID/field
   authority established through these interfaces.
-- Next: closed two-toplevel same-app-id provenance experiment; source mapping
+- Completed: closed two-toplevel same-app-id provenance experiment. Next: actual
+  Hyprland WLR/EXT mapping in a closed owned fixture; source mapping
   must precede granting a production lease. Existing intra-DOM focus tests are
   insufficient for this. No real Slack edit/IME install/restart authorized.
+
+- Host registry-only query separately approved/executed once: stable1/WLR3/mapping1.
+  No globals bound; permission consumed. Availability is not field authority.

@@ -1,4 +1,4 @@
-# Prepared host registry query — NOT executed / approval pending
+# Host registry query — one approved measurement completed
 
 Purpose: determine whether installed Hyprland advertises the interfaces needed
 for a candidate WLR↔stable-window mapping. Primary Hyprland protocol defines
@@ -30,7 +30,7 @@ stable1,WLR3,Hyprlandmapping0,globalsBound0. Native default mode still passes it
 wrong-peer UID/exe, guessed/path-traversal display values and runtime symlinks.
 This query only proves advertised interface presence at measurement time, never
 mapping correctness or Fcitx/AT-SPI field authority. Future bindings must handle
-missing/removed globals and stale handles. Host test has not run.
+missing/removed globals and stale handles. One explicitly approved host measurement completed; that permission is consumed.
 
 ## Supervisor review and limits
 
@@ -48,3 +48,11 @@ sealed snapshot helper was inspected: it copies verified bytes and applies
 WRITE/GROW/SHRINK/SEAL seals. Child codeScope fields describe reviewed code
 behavior, not an independent system-wide observation. Eight local guards pass;
 no host connection has been made.
+
+## Actual result
+
+One approved connection succeeded: stable list v1, WLR manager v3, Hyprland
+mapping manager v1. No globals bound. Aggregate: data/host-registry-001-result.json.
+This is interface availability only. Next: implement and test the mapping client
+on owned windows in a closed compositor; do not enumerate live desktop windows
+under this consumed registry-only permission.
