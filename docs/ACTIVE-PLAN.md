@@ -40,7 +40,8 @@ if authentication/network/limits prevented it.
 - Three individually approved trials executed/restored; all approvals consumed.
   Third used corrected observer:8processes/36scans/9.999s/0peers.
   Prepare per-process ACCESSIBILITY_ENABLED startup instead of further globals.
-  Launch helper is plan-only; owner must quit Slack and authorize launch.
+  Launch helper now authorized ONCE by owner; approval not consumed.
+  Current8Slack processes must be closed manually by owner first. No automatic termination.
 - Completed: Claude implemented pre-mutation main-thread refusal and tests.
   Codex applied and verified. Gemini found the finally-entry signal race;
   Claude follow-up timed out, so Codex implemented the whole-trial signal

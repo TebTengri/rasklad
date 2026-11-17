@@ -51,3 +51,5 @@
 
 - Third explicitly approved bounded live observation EXECUTED:8processes/36scans/9.999s/0peers. Flagfalse restored and verified firstattempt. ALL three one-shot approvals CONSUMED.
 - New source-backed lower-scope hypothesis: ACCESSIBILITY_ENABLED=1 for ONE Slack process startup; no global status writes. tools/slack_launch_probe.py prepared/plan-only; owner must fully quit Slack and explicitly authorize launch first.
+
+- Owner's «делаем» explicitly accepted the pending one process-scoped Slack launch. Approval AVAILABLE, not consumed. Preflight found8Slack processes still running; waiting for owner to Quit. Do not re-request launch permission. Do not kill/restart running Slack automatically. Once closed, run tools/slack_launch_probe.py --run-approved once.
