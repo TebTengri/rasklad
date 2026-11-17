@@ -46,3 +46,5 @@
 - No repeated empty-profile bootstrap trials. 51 local Slack guard tests passed.
 
 - Next closed boundary: two owned toplevels sharing app-id; establish compositor/window/IC provenance before any new binding lease. Pinned source archive restored to ignored build/fcitx5-5.1.23-pinned.tar.gz (verified); other old runtime artifacts still missing. See SLACK-EDITOR-METADATA-001.md for accepted/rejected Claude proposal.
+
+- Owner selected alternating two private audio cues. tools/owner_alert_audio.py rotates ignored build/owner-alert-sound-{1,2}.mp3 under an owner-only nonblocking lock; state advances only after successful play. No audio/provenance/media copied to Git. Stock fallback, DND respected. 4 local rotation tests pass.

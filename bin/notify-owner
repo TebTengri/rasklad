@@ -28,6 +28,7 @@ fi
 # completion cue separately, only when its own DND state is explicitly off.
 # Per-stream attenuation; never unmute or alter persistent system volume.
 dnd=$(/usr/bin/timeout 2s /usr/share/omarchy/bin/omarchy-shell notifications isDnd 2>/dev/null) || dnd=unknown
-if [[ "$dnd" == off && -x /usr/bin/pw-play && -r /usr/share/sounds/freedesktop/stereo/complete.oga ]]; then
-  /usr/bin/timeout 4s /usr/bin/pw-play --volume=0.5 /usr/share/sounds/freedesktop/stereo/complete.oga || true
+if [[ "$dnd" == off && -x /usr/bin/pw-play ]]; then
+  root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+  /usr/bin/timeout 5s /usr/bin/python3 "$root/tools/owner_alert_audio.py" --play >/dev/null || true
 fi

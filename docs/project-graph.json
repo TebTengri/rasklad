@@ -3,7 +3,7 @@
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
   "curatedSha256": "6870423295a3c69a454fe6e4ab9d0cda7cacf23f5b474820cf43546f6f67a8bc",
   "sourceSha256": {
-    "AGENTS.md": "717d5a99c40941ba570def8be8c37ac70d98be3541002e07cfb62bd8f79f369f",
+    "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
     "LICENSE": "cbcea74632d9225584ae7b24a788eb50144ebe1a75d58a1f78138ec1f44f3726",
     "README.md": "4678a10a9cd3efb5623fb61fe631c3f613a663158784e3688befe1a67d59716e",
@@ -12,7 +12,7 @@
     "bin/build": "c83f73f226860f68bc6b301e6830b98f271d27d41a0051a44027b16af9704e31",
     "bin/build-browser-fixture": "4c970d7435a06c9c890ecf79e1c5322622bab5046124185d257fae34f1f35656",
     "bin/build-browser-hunspell": "eee8aee22b3e5393ccd2928b86c6f96aa3b129421a1861b96cc1b490be93e319",
-    "bin/notify-owner": "fd1fa306f12222db08df618a6322ebd012f788dad633a5feb6ecf1d40c59ad32",
+    "bin/notify-owner": "3351ad6d4c77595872893c3963c01f692aa361204bbfaebf536f8767fadd6852",
     "bin/prepare-browser-spell": "235ddca12fecd21d13147962bf231ed12028820f921f7f39e2db8929ac37059c",
     "bin/prepare-prosemirror": "d125e2610abddcb6981c83a7a2c1ffc7785943b1cb7d8f2fb194ce8fc508d139",
     "bin/prepare-wayland-lab": "b2c765222af5b30fa89675e3deb8ec4a0c98a8e9d522f45c80e9b56c0f1c9124",
@@ -86,9 +86,10 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "f8eff7da9321a32117cc3db9f25d674db37bf69558d5ca70424aad8bad163623",
+    "docs/NEXT.md": "71cc6a3852935d202e3babeacfbd97f0519d03970ed3e62fe6a84cecf7c42269",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
+    "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
     "docs/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
@@ -244,6 +245,7 @@
     "tests/natural_context_reviewer/test_metrics.py": "052dba4939d50855b5b797ae4d1fa47533423316f684b3f5495800709fe1ff42",
     "tests/natural_context_reviewer/test_preparation.py": "25e502e49aa8f8291adf795a0bacf8149dd4d5bde7f50b0429ed8537196204d1",
     "tests/nested_compositor/test_runner.py": "b86c38b01c648d6da5ed799e41a7c9abb23baf7524bc02c4104521471667d4fc",
+    "tests/owner_alert/test_audio.py": "87122b41812e969b04cb6ceb7a79d17edaa9b76c7f3f496e2e05097ce8ae10c9",
     "tests/profile/profile_tests.cpp": "bdaae506dda3ceef9dc28152ed43255415cf28440a94248d611ac2f6e3d2f64b",
     "tests/profile/profile_tests.pro": "f6949743113472abc76b2c063a3d329e7a43641e9e3d1fb9c7a2dea1c37bd2d7",
     "tests/rasklad_tests.cpp": "4dc7de38f04680fbb03a951ca47e316d0e5bba3bfcd8ade75ef1a66591fd4d8e",
@@ -364,6 +366,7 @@
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
     "tools/native_ime_clients.py": "aa627ddc959363ebf453c3e306c35c9ffe0bf025322f8ff98cfff358447477fb",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
+    "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
     "tools/prepare_cc0_evaluation.py": "47146bc4f7d70290eb4313771c8a9e894bd92ac71aedf0b6226dd750fac7e99e",
     "tools/prepare_context_evaluation.py": "2755c59f3ee44aa12d87442c700f3fb3397cefff5f33b1fbb387bbef13769ee0",
@@ -730,6 +733,10 @@
     },
     {
       "path": "docs/OPUS_DETECTOR_REVIEW.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/OWNER-ALERTS.md",
       "symbols": []
     },
     {
@@ -2247,6 +2254,51 @@
         {
           "name": "popen",
           "line": 230,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/owner_alert/test_audio.py",
+      "symbols": [
+        {
+          "name": "RotationTests",
+          "line": 6,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "setUp",
+          "line": 7,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "tearDown",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_alternates_and_persists_without_audio",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_failed_play_does_not_advance",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_state_symlink_never_changes_target",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_concurrent_notification_skips_instead_of_overlapping",
+          "line": 25,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "player",
+          "line": 13,
           "kind": "FunctionDef"
         }
       ]
@@ -5075,6 +5127,31 @@
         {
           "name": "main",
           "line": 286,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tools/owner_alert_audio.py",
+      "symbols": [
+        {
+          "name": "sound_fd",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "invoke",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "play",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 61,
           "kind": "FunctionDef"
         }
       ]
