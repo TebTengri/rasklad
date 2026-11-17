@@ -454,6 +454,22 @@
       "status": "trial_failed_diagnostics_fixed_repeat_pending"
     },
     {
+      "id": "direct-hyprland-mapping",
+      "kind": "experiment",
+      "title": "Route B host-parent nested Hyprland mapping probe",
+      "paths": [
+        "tools/hyprland_mapping_probe.py",
+        "tests/closed_mapping/test_direct_mapping.py",
+        "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
+        "data/direct-mapping-fd-control-001-result.json"
+      ],
+      "notes": "Known-working host-parent nested route preferred; fresh approval pending. No field authority. Claude prepared; Codex acceptance + noGPU FD proof.",
+      "tests": [
+        "python3 -m unittest discover -s tests/closed_mapping"
+      ],
+      "status": "prepared_12guards_and_noGPUfdcontrol_passed"
+    },
+    {
       "id": "aquamarine-readiness",
       "kind": "experiment",
       "title": "Aquamarine feedback readiness and parallel review",

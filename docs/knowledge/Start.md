@@ -30,6 +30,7 @@
 - [Wayland object ID scope](wayland-object-id-scope.md)
 - [Native window provenance](window-provenance.md)
 - [Closed Hyprland window mapping](closed-hyprland-mapping.md)
+- [Route B host-parent nested Hyprland mapping probe](direct-hyprland-mapping.md)
 - [Aquamarine feedback readiness and parallel review](aquamarine-readiness.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;

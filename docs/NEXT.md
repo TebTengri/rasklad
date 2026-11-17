@@ -35,13 +35,20 @@
   simplification review completed. Larger request timeouts not credited.
 - Claude fixed applier symlink/hardlink/atomicity;8tests PASS after finalguard.
   Raw-this UAF claim rejected with ownership evidence; router unchanged.
-- Next: review exact pinned-source/build commands in
-  docs/AQUAMARINE-READINESS-EXPERIMENT.md; build ONLY under ignored build, no
-  install/network during build. Missing deps => stop, no installation. Verify
-  SONAME/symbols before noGPU patched-control matrix. No GPU proof claimed.
+- Next (preferred, route B; Grok+Gemini critiques agree): Claude prepared
+  tools/hyprland_mapping_probe.py + tests/closed_mapping/test_direct_mapping.py,
+  docs/HYPRLAND-DIRECT-MAPPING-PROBE.md. Codex: run guards, one independent
+  boundary review, THEN ask owner for fresh approval of ONE ~40s
+  `python3 -I tools/hyprland_mapping_probe.py --run-approved` (one host FD,
+  renderD128, owner must not type). Success = own-window mapping only.
+- Fallback (route A, only if B cannot start or mapping incoherent): Aquamarine
+  patch per docs/AQUAMARINE-READINESS-EXPERIMENT.md; missing cmake/
+  hyprwayland-scanner => stop, no installation/fetch.
 
 ## Workflow
 
 - Owner alerts: bin/notify-owner --needs-user only for required handoff, --done
   only actual completion. Alternating private ignored audio; DND respected.
 - No checkpoint notification spam. Save compact handoff and targeted evidence.
+
+- RouteB direct helper prepared byClaude;12guards PASS, exact ownFD/noGPU scope control PASS. Grok critique resolved/limited with evidence; physicalinputexposure declared. Claude5hourquota until19:30Almaty, Gemini followupcode timeout notcredited; Codex only acceptancefieldrename+noGPUcontrol. Fresh hostWayland+GPUapproval requested; direct trial NOTrun.

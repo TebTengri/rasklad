@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "e099f949672edfb475ea688bac0b4d669f0f3ca635bd821f88473eab1a914b30",
+  "curatedSha256": "909c873852c34b1a37a1317725a2059e042040ead5b2dd496a33910f0dc19d67",
   "sourceSha256": {
     "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -79,6 +79,7 @@
     "docs/HANDOFF-PROTOCOL-MAPPING-001.md": "457598557041f29fc96a33d8e324f9329cab5c4304cd777d270dedd05a34d9e8",
     "docs/HOST-REGISTRY-PROBE-PLAN.md": "7ee79cc311cd3656677e01ef8d8da3a03b1c858fe8e1f3613509df33f3eaf3f5",
     "docs/HYPRLAND-BACKEND-DIAGNOSIS.md": "9b5a7ca45c17a7a89d87e30e7790c918a8a0541f945f3f6f6335b9152ab8c401",
+    "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md": "cb3d6e90207082dded8160f27803728bcfcbb90bf31ef831710292432fa969c1",
     "docs/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
     "docs/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
     "docs/HYPRLAND-NESTED-PROBE.md": "a80c6a46c9d4445eea2805593b728f523049c294bde161216204e16c0b406459",
@@ -89,7 +90,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "74298f85b8ac0ac59d6c02e305ea0d1c8a7bc9adfbc0299653f95b6ee1d667c8",
+    "docs/NEXT.md": "2b04e0dc8df3419644e3488aa9a907d6aafec849e433622837242d0189e60042",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
@@ -184,6 +185,7 @@
     "tests/chromium_ime/space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
     "tests/chromium_ime/test_guards.py": "cd9df2295a3858ab0b5e9e42106164b404d56b5b3310061932dc394a10a1db41",
     "tests/closed_mapping/test_boundary.py": "c43f36d8cfd1ef99bae664c75b1f792279437035dfaa611ae894141d36050326",
+    "tests/closed_mapping/test_direct_mapping.py": "899658f78f3acc4776653e990d6c05ceedf1b5da43a857f0cf11b3b6bb139e61",
     "tests/common/profilefixture.h": "08f9ca5e3c1e1d73140c7df37e79885f86021dd3de7054b7bc23061e2fb6d097",
     "tests/composition_disable/composition_disable.pro": "d0779322ff2fd391505a5c198a374327e8e14f42c6b734dbda1c57ea19b7e9c4",
     "tests/context/context_tests.cpp": "edc9eb755fcaf3f085a452290e463d4c15237e45a1a8e1831f98cb75aa1ddf12",
@@ -377,6 +379,7 @@
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
     "tools/hyprland_feedback_parent.py": "18c72b48fa1455043ea85cb0236e0be251be2192eff0cef90e5113ce6d51dd6c",
     "tools/hyprland_ime_lab.py": "fac3c253bfb7e0bd42a4cce559bc709244bae40865639814beb20dbe1a04aa5e",
+    "tools/hyprland_mapping_probe.py": "4c3bd3c881683e48eb98d0dbb2b8e7a839f309651a5f88501aa79ec88a8f7b25",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
     "tools/measure_probe_resources.py": "1f6e0390d0f1b315e3d1e9e9b253ffe73115c92a0c9c7d93ba7caf2e05edc2f8",
@@ -715,6 +718,10 @@
     },
     {
       "path": "docs/HYPRLAND-BACKEND-DIAGNOSIS.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
       "symbols": []
     },
     {
@@ -1302,6 +1309,46 @@
         {
           "name": "test_parent_feedback_must_resolve_admitted_render_node",
           "line": 75,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/closed_mapping/test_direct_mapping.py",
+      "symbols": [
+        {
+          "name": "raw",
+          "line": 24,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "DirectMapping",
+          "line": 28,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_sandbox_runs_own_inside_with_only_one_parent_fd",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_socket_readiness_or_partial_report_is_never_success",
+          "line": 47,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_success_is_rebuilt_from_bounded_fields_only",
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_failure_keeps_finite_stage_and_reason_through_both_layers",
+          "line": 67,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_default_invocation_is_inert",
+          "line": 79,
           "kind": "FunctionDef"
         }
       ]
@@ -5315,6 +5362,61 @@
       ]
     },
     {
+      "path": "tools/hyprland_mapping_probe.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "plan",
+          "line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "client_stage",
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "failure",
+          "line": 79,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "final_report",
+          "line": 90,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sandbox_args",
+          "line": 110,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "host_parent",
+          "line": 129,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 153,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inside",
+          "line": 226,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 296,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tools/hyprland_nested_probe.py",
       "symbols": [
         {
@@ -7720,7 +7822,7 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "382612d16ba9ffc9da95d181da4d84e20828db0926f05e6516b8370ec1d22530",
+    "docs/knowledge/Start.md": "2b73accc6b341c6f776e9313696b5aa93d6679050f09d57a61ce8a76d23c2518",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
     "docs/knowledge/aquamarine-readiness.md": "18d5628e82f72985634df4fc98ee8cb0a57b36f00bddecaa72d7072d36f3c321",
@@ -7730,6 +7832,7 @@
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
     "docs/knowledge/current-handoff.md": "f6b2ada0e8982b7b45f86b46c5592537e440c250943d5c1d875b254a6fd39c1a",
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
+    "docs/knowledge/direct-hyprland-mapping.md": "e619f280628ae99bd7e31bf03ccbe5736437d8afacafe6c63244764d76f0a395",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
     "docs/knowledge/fcitx-drain-fixture.md": "dfbad37f880a434a9a3e394077edc9c9792756eaeab226ad858bb6b6b8e52c4f",
