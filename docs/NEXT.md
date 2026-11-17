@@ -55,3 +55,5 @@
 - Host supervisor hardened after Claude review: sealed ELF rejects RPATH/RUNPATH, bounded output whitelist, precise UID/executable claims. 8local guards PASS. Use python3 -I; host query still NOT authorized/run. Trusted repository, not signed-code security.
 
 - ONE freshly approved host registry query completed: stable1/WLR3/Hyprlandmapping1, globalsBound0. Approval consumed. Aggregate data/host-registry-001-result.json. Next closed owned-window mapping implementation; no live enumeration/edits permitted.
+
+- Next Claude planning request did NOT run: CLI returned "Not logged in · Please run /login". No review credited. Reauthenticate Claude before assigning its next implementation block. Codex may continue source audit independently. Public current upstream OpenGL.cpp still initializes EGL via GBM/device paths; this alone does not prove installed-version no-GPU headless support. Do not equate headless output with software renderer or rerun old host/GPU trial.
