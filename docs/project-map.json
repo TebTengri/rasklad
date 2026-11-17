@@ -431,6 +431,24 @@
         "python3 tests/window_provenance/run.py --run"
       ],
       "status": "closed_native_window_identity_only"
+    },
+    {
+      "id": "closed-hyprland-mapping",
+      "kind": "experiment",
+      "title": "Closed Hyprland window mapping",
+      "paths": [
+        "tools/closed_hyprland_mapping.py",
+        "tests/closed_mapping/test_boundary.py",
+        "tests/window_provenance/MAPPING.md",
+        "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md",
+        "data/closed-mapping-preparation-001-result.json",
+        "vendor/wayland/sources.json"
+      ],
+      "notes": "Prepared GPU-only closed Sway→Hyprland mapping; no host Wayland. Actual trial pending separate approval; no field authority.",
+      "tests": [
+        "python3 -m unittest discover -s tests/closed_mapping"
+      ],
+      "status": "prepared_not_executed"
     }
   ],
   "edges": [

@@ -10,6 +10,9 @@
 #include <wayland-client.h>
 #include "xdg-shell-client.h"
 #include "foreign-list-client.h"
+#include "wlr-foreign-client.h"
+#include "hyprland-mapping-client.h"
+#include <map>
 
 #include <signal.h>
 #include <sys/mman.h>
@@ -126,9 +129,38 @@ bool create_win(App& app, Win& w, const char* title) {
   return true;
 }
 
+struct Mapping {
+  hyprland_toplevel_window_mapping_handle_v1* proxy = nullptr;
+  uint64_t address = 0;
+  bool answered = false, failed = false;
+};
+void mapping_address(void* data, hyprland_toplevel_window_mapping_handle_v1*, uint32_t hi, uint32_t lo) {
+  auto* m = static_cast<Mapping*>(data);
+  if (m->answered) m->failed = true;
+  m->answered = true; m->address = (uint64_t(hi) << 32) | lo;
+  if (!m->address) m->failed = true;
+}
+void mapping_failed(void* data, hyprland_toplevel_window_mapping_handle_v1*) {
+  auto* m = static_cast<Mapping*>(data); m->answered = true; m->failed = true;
+}
+const hyprland_toplevel_window_mapping_handle_v1_listener mapping_listener = {mapping_address, mapping_failed};
+void listen_mapping(Mapping& m) {
+  if (!m.proxy || hyprland_toplevel_window_mapping_handle_v1_add_listener(m.proxy, &mapping_listener, &m)) m.failed = true;
+}
+void destroy_mapping(Mapping& m) {
+  if (m.proxy) hyprland_toplevel_window_mapping_handle_v1_destroy(m.proxy);
+  m.proxy = nullptr;
+}
+struct WlrHandle {
+  zwlr_foreign_toplevel_handle_v1* h = nullptr;
+  std::string appId;
+  Mapping mapping;
+  bool done = false, closed = false;
+};
 struct Handle {
   ext_foreign_toplevel_handle_v1* h = nullptr;
   std::string id, appId;
+  Mapping mapping;
   bool done = false, closed = false, badId = false;
 };
 
@@ -138,6 +170,11 @@ struct Obs {
   ext_foreign_toplevel_list_v1* list = nullptr;
   std::vector<std::unique_ptr<Handle>> handles;
   bool finished = false, overflow = false;
+  bool mappingMode = false, wlrFinished = false, removed = false;
+  uint32_t extName = 0, wlrName = 0, mappingName = 0;
+  zwlr_foreign_toplevel_manager_v1* wlr = nullptr;
+  hyprland_toplevel_mapping_manager_v1* mapper = nullptr;
+  std::vector<std::unique_ptr<WlrHandle>> wlrHandles;
 };
 
 void h_closed(void* d, ext_foreign_toplevel_handle_v1* handle) {
@@ -171,14 +208,55 @@ void l_toplevel(void* d, ext_foreign_toplevel_list_v1*, ext_foreign_toplevel_han
 void l_finished(void* d, ext_foreign_toplevel_list_v1*) { static_cast<Obs*>(d)->finished = true; }
 const ext_foreign_toplevel_list_v1_listener l_listener = {l_toplevel, l_finished};
 
-void obs_global(void* data, wl_registry* reg, uint32_t name, const char* iface, uint32_t) {
-  Obs* o = static_cast<Obs*>(data);
-  if (o->list || std::strcmp(iface, ext_foreign_toplevel_list_v1_interface.name) != 0) return;
-  o->list = static_cast<ext_foreign_toplevel_list_v1*>(
-      wl_registry_bind(reg, name, &ext_foreign_toplevel_list_v1_interface, 1));
-  if (o->list) ext_foreign_toplevel_list_v1_add_listener(o->list, &l_listener, o);
+void w_title(void*, zwlr_foreign_toplevel_handle_v1*, const char*) {}
+void w_app(void* d, zwlr_foreign_toplevel_handle_v1*, const char* id) { static_cast<WlrHandle*>(d)->appId = id ? id : ""; }
+void w_output(void*, zwlr_foreign_toplevel_handle_v1*, wl_output*) {}
+void w_state(void*, zwlr_foreign_toplevel_handle_v1*, wl_array*) {}
+void w_done(void* d, zwlr_foreign_toplevel_handle_v1*) { static_cast<WlrHandle*>(d)->done = true; }
+void w_closed(void* d, zwlr_foreign_toplevel_handle_v1* h) {
+  auto* w = static_cast<WlrHandle*>(d); w->closed = true;
+  zwlr_foreign_toplevel_handle_v1_destroy(h); w->h = nullptr;
 }
-const wl_registry_listener obs_reg_listener = {obs_global, global_remove};
+void w_parent(void*, zwlr_foreign_toplevel_handle_v1*, zwlr_foreign_toplevel_handle_v1*) {}
+const zwlr_foreign_toplevel_handle_v1_listener w_listener = {w_title, w_app, w_output, w_output, w_state, w_done, w_closed, w_parent};
+void w_toplevel(void* data, zwlr_foreign_toplevel_manager_v1*, zwlr_foreign_toplevel_handle_v1* h) {
+  auto* o = static_cast<Obs*>(data);
+  if (o->wlrHandles.size() >= kMaxHandles) { o->overflow = true; zwlr_foreign_toplevel_handle_v1_destroy(h); return; }
+  o->wlrHandles.emplace_back(new WlrHandle());
+  auto* w = o->wlrHandles.back().get(); w->h = h;
+  zwlr_foreign_toplevel_handle_v1_add_listener(h, &w_listener, w);
+}
+void w_finished(void* data, zwlr_foreign_toplevel_manager_v1*) { static_cast<Obs*>(data)->wlrFinished = true; }
+const zwlr_foreign_toplevel_manager_v1_listener w_manager_listener = {w_toplevel, w_finished};
+void obs_global(void* data, wl_registry* reg, uint32_t name, const char* iface, uint32_t version) {
+  auto* o = static_cast<Obs*>(data);
+  if (!o->list && !std::strcmp(iface, ext_foreign_toplevel_list_v1_interface.name)) {
+    o->extName = name;
+    o->list = static_cast<ext_foreign_toplevel_list_v1*>(wl_registry_bind(reg, name, &ext_foreign_toplevel_list_v1_interface, 1));
+    if (o->list) ext_foreign_toplevel_list_v1_add_listener(o->list, &l_listener, o);
+  } else if (o->mappingMode && !o->wlr && !std::strcmp(iface, zwlr_foreign_toplevel_manager_v1_interface.name) && version >= 3) {
+    o->wlrName = name;
+    o->wlr = static_cast<zwlr_foreign_toplevel_manager_v1*>(wl_registry_bind(reg, name, &zwlr_foreign_toplevel_manager_v1_interface, 3));
+    if (o->wlr) zwlr_foreign_toplevel_manager_v1_add_listener(o->wlr, &w_manager_listener, o);
+  } else if (o->mappingMode && !o->mapper && !std::strcmp(iface, hyprland_toplevel_mapping_manager_v1_interface.name)) {
+    o->mappingName = name;
+    o->mapper = static_cast<hyprland_toplevel_mapping_manager_v1*>(wl_registry_bind(reg, name, &hyprland_toplevel_mapping_manager_v1_interface, 1));
+  }
+}
+void obs_removed(void* data, wl_registry*, uint32_t name) {
+  auto* o = static_cast<Obs*>(data);
+  if (name == o->extName || name == o->wlrName || name == o->mappingName) o->removed = true;
+}
+const wl_registry_listener obs_reg_listener = {obs_global, obs_removed};
+void request_mappings(Obs& o) {
+  if (!o.mappingMode || !o.mapper) return;
+  for (auto& h : o.handles) if (h->done && !h->closed && h->appId == kAppId && !h->mapping.proxy && !h->mapping.failed) {
+    h->mapping.proxy = hyprland_toplevel_mapping_manager_v1_get_window_for_toplevel(o.mapper, h->h); listen_mapping(h->mapping);
+  }
+  for (auto& h : o.wlrHandles) if (h->done && !h->closed && h->appId == kAppId && !h->mapping.proxy && !h->mapping.failed) {
+    h->mapping.proxy = hyprland_toplevel_mapping_manager_v1_get_window_for_toplevel_wlr(o.mapper, h->h); listen_mapping(h->mapping);
+  }
+}
 
 bool printable_id(const std::string& s) {
   if (s.empty() || s.size() > 32) return false;
@@ -191,18 +269,39 @@ struct Summary {
   int owned = 0;   // live (done, not closed) owned handles
   int closed = 0;  // closed owned handles
   bool valid = true;
+  bool mappingReady = true;
+  int wlrClosed = 0;
+  std::map<std::string, uint64_t> addresses;
   std::set<std::string> ids;  // live owned identifiers
 };
 
 Summary summarize(const Obs& o) {
   Summary s;
-  if (o.overflow) s.valid = false;
+  if (o.overflow || o.removed) s.valid = false;
   for (const auto& h : o.handles) {
     if (!h->done || h->appId != kAppId) continue;
     if (h->badId || !printable_id(h->id)) s.valid = false;
     if (h->closed) { ++s.closed; continue; }
     ++s.owned;
     if (!s.ids.insert(h->id).second) s.valid = false;
+  }
+  if (o.mappingMode) {
+    std::set<uint64_t> extAddresses, wlrAddresses;
+    int liveWlr = 0;
+    for (const auto& h : o.handles) if (h->done && !h->closed && h->appId == kAppId) {
+      if (h->mapping.failed) s.valid = false;
+      if (!h->mapping.answered) { s.mappingReady = false; continue; }
+      if (!extAddresses.insert(h->mapping.address).second) s.valid = false;
+      s.addresses.emplace(h->id, h->mapping.address);
+    }
+    for (const auto& h : o.wlrHandles) if (h->done && h->appId == kAppId) {
+      if (h->closed) { ++s.wlrClosed; continue; }
+      ++liveWlr;
+      if (h->mapping.failed) s.valid = false;
+      if (!h->mapping.answered) { s.mappingReady = false; continue; }
+      if (!wlrAddresses.insert(h->mapping.address).second) s.valid = false;
+    }
+    if (liveWlr != s.owned || extAddresses != wlrAddresses || s.wlrClosed != s.closed) s.mappingReady = false;
   }
   return s;
 }
@@ -240,7 +339,8 @@ int run(int fd) {
 int main(int argc,char** argv) {
   signal(SIGALRM, on_alarm);
   alarm(6);
-  if (argc!=1) {
+  const bool mappingMode = argc == 2 && !std::strcmp(argv[1], "--mapping");
+  if (argc!=1 && !mappingMode) {
     const char* prefix="--registry-fd=";
     if (argc!=2 || std::strncmp(argv[1],prefix,std::strlen(prefix))) return 2;
     char* end=nullptr;errno=0;long fd=std::strtol(argv[1]+std::strlen(prefix),&end,10);
@@ -250,6 +350,7 @@ int main(int argc,char** argv) {
   App app;
   Win wins[2];
   Obs obs[2];
+  for (auto& o : obs) o.mappingMode = mappingMode;
   int memfd = -1;
   void* map = MAP_FAILED;
   bool ok = false, cross = false;
@@ -262,9 +363,13 @@ int main(int argc,char** argv) {
   auto step = [&]() -> bool {
     if (wl_display_roundtrip(app.dpy) < 0 || app.failed) return false;
     for (Obs& o : obs)
-      if (wl_display_roundtrip(o.dpy) < 0 || o.finished) return false;
+      if (wl_display_roundtrip(o.dpy) < 0 || o.finished || o.removed || (mappingMode && o.wlrFinished)) return false;
+    for (Obs& o : obs) request_mappings(o);
     s0 = summarize(obs[0]);
     s1 = summarize(obs[1]);
+    if (mappingMode && (!s0.mappingReady || !s1.mappingReady || s0.addresses != s1.addresses)) {
+      s0.mappingReady = false; s1.mappingReady = false;
+    }
     return true;
   };
   // Steps until pred() holds or the shared budget is exhausted.
@@ -305,13 +410,13 @@ int main(int argc,char** argv) {
       o.dpy = wl_display_connect(kSocket);
       o.reg = o.dpy ? wl_display_get_registry(o.dpy) : nullptr;
       if (!o.reg || wl_registry_add_listener(o.reg, &obs_reg_listener, &o) != 0) { err = true; break; }
-      if (wl_display_roundtrip(o.dpy) < 0 || !o.list) { err = true; break; }
+      if (wl_display_roundtrip(o.dpy) < 0 || !o.list || (mappingMode && (!o.wlr || !o.mapper))) { err = true; break; }
     }
     if (err) break;
 
     // Phase 1: initial two-window match.
     if (!wait_until([&] {
-          return s0.valid && s1.valid && s0.owned == 2 && s1.owned == 2 && s0.closed == 0 &&
+          return s0.valid && s1.valid && s0.mappingReady && s1.mappingReady && s0.owned == 2 && s1.owned == 2 && s0.closed == 0 &&
                  s1.closed == 0;
         }))
       break;
@@ -319,11 +424,12 @@ int main(int argc,char** argv) {
     initialMatch = cross;
     if (!initialMatch) break;
     const std::set<std::string> initialIds = s0.ids;
+    const auto initialAddresses = s0.addresses;
 
     // Phase 2: destroy ONLY native window A.
     destroy_win(wins[0]);
     if (!wait_until([&] {
-          return s0.valid && s1.valid && s0.closed == 1 && s1.closed == 1 && s0.owned == 1 &&
+          return s0.valid && s1.valid && s0.mappingReady && s1.mappingReady && s0.closed == 1 && s1.closed == 1 && s0.owned == 1 &&
                  s1.owned == 1;
         }))
       break;
@@ -334,17 +440,19 @@ int main(int argc,char** argv) {
     for (const std::string& id : initialIds)
       if (id != survivorId) retiredId = id;
     if (retiredId.empty()) break;
+    if (mappingMode && s0.addresses.at(survivorId) != initialAddresses.at(survivorId)) break;
     closedObservedBoth = true;
 
     // Phase 3: recreate native A with the same app_id/title.
     if (!create_win(app, wins[0], kTitles[0])) break;
     if (!wait_until([&] {
-          return wins[0].mapped && wins[1].mapped && s0.valid && s1.valid && s0.owned == 2 &&
+          return wins[0].mapped && wins[1].mapped && s0.valid && s1.valid && s0.mappingReady && s1.mappingReady && s0.owned == 2 &&
                  s1.owned == 2;
         }))
       break;
     if (s0.ids != s1.ids || s0.closed != 1 || s1.closed != 1) break;
     if (!s0.ids.count(survivorId)) break;
+    if (mappingMode && s0.addresses.at(survivorId) != initialAddresses.at(survivorId)) break;
     remapMatch = true;
     retiredIdNotReused = !s0.ids.count(retiredId);
     int newIds = 0;
@@ -362,8 +470,22 @@ int main(int argc,char** argv) {
       }
       if (!o.finished) cleanupOk=false;
     }
-    for (auto& h : o.handles)
+    if (o.wlr && o.dpy && !o.wlrFinished) {
+      zwlr_foreign_toplevel_manager_v1_stop(o.wlr);
+      for (int n=0; n<4 && !o.wlrFinished; ++n) if (wl_display_roundtrip(o.dpy)<0) { cleanupOk=false; break; }
+      if (!o.wlrFinished) cleanupOk=false;
+    }
+    for (auto& h : o.handles) {
+      destroy_mapping(h->mapping);
       if (h->h) ext_foreign_toplevel_handle_v1_destroy(h->h);
+    }
+    for (auto& h : o.wlrHandles) {
+      destroy_mapping(h->mapping);
+      if (h->h) zwlr_foreign_toplevel_handle_v1_destroy(h->h);
+    }
+    o.wlrHandles.clear();
+    if (o.mapper) hyprland_toplevel_mapping_manager_v1_destroy(o.mapper);
+    if (o.wlr) zwlr_foreign_toplevel_manager_v1_destroy(o.wlr);
     o.handles.clear();
     if (o.list) ext_foreign_toplevel_list_v1_destroy(o.list);
     if (o.reg) wl_registry_destroy(o.reg);
@@ -384,12 +506,12 @@ int main(int argc,char** argv) {
   alarm(0);
   auto b = [](bool v) { return v ? "true" : "false"; };
   std::printf("{\"schema\":1,\"ok\":%s,\"nativeToplevels\":true,\"fcitxLoaded\":false,"
-              "\"fieldBindingVerified\":false,\"appWindowsMapped\":%d,\"observers\":2,"
+              "\"fieldBindingVerified\":false,\"mappingMode\":%s,\"mappingVerified\":%s,\"appWindowsMapped\":%d,\"observers\":2,"
               "\"observerOwnedCounts\":[%d,%d],\"observerClosedCounts\":[%d,%d],"
               "\"identifiersValid\":%s,\"crossObserverMatch\":%s,\"initialMatch\":%s,"
               "\"closedObservedBoth\":%s,\"remapMatch\":%s,\"retiredIdNotReused\":%s,"
               "\"observerCleanup\":%s,\"iterations\":%d}\n",
-              b(ok), mappedCount, s0.owned, s1.owned, s0.closed, s1.closed,
+              b(ok), b(mappingMode), b(mappingMode && ok), mappedCount, s0.owned, s1.owned, s0.closed, s1.closed,
               b(s0.valid && s1.valid), b(cross), b(initialMatch), b(closedObservedBoth),
               b(remapMatch), b(retiredIdNotReused), b(cleanupOk), iters);
   return ok ? 0 : 1;

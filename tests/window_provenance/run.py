@@ -10,7 +10,9 @@ def load(name,path):
 base=load('window_base',ROOT/'fcitx_lab_runner.py' if INSIDE else ROOT/'tools/fcitx_lab_runner.py')
 BUILD=ROOT/'build/window-provenance'
 XMLS={'xdg-shell':Path('/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml'),
-      'foreign-list':Path('/usr/share/wayland-protocols/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml')}
+      'foreign-list':Path('/usr/share/wayland-protocols/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml'),
+      'wlr-foreign':ROOT/'vendor/wayland/wlr-foreign-toplevel-management-unstable-v1.xml',
+      'hyprland-mapping':ROOT/'vendor/wayland/hyprland-toplevel-mapping-v1.xml'}
 RUNTIME=('sway','libwlroots-0.20.so','libliftoff.so.0')
 def directory():
     for p in (ROOT/'build',BUILD):
@@ -142,8 +144,9 @@ def inside():
             except subprocess.TimeoutExpired:server.kill();server.wait(timeout=1)
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--registry-only',action='store_true');g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--registry-only',action='store_true');p.add_argument('--mapping',action='store_true');g=p.add_mutually_exclusive_group();g.add_argument('--build',action='store_true');g.add_argument('--run',action='store_true');g.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);args=p.parse_args()
     try:
+        if args.mapping and not args.build:raise base.Refused('mapping-private-hyprland-runner-required')
         report=inside() if args.inside else build() if args.build else run(args.registry_only) if args.run else {'schema':1,'mode':'plan','hostDisplay':False,'fcitxLoaded':False,'fieldBindingVerified':False}
         print(json.dumps(report,sort_keys=True));return 0
     except Exception as exc:

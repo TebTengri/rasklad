@@ -57,3 +57,5 @@
 - ONE freshly approved host registry query completed: stable1/WLR3/Hyprlandmapping1, globalsBound0. Approval consumed. Aggregate data/host-registry-001-result.json. Next closed owned-window mapping implementation; no live enumeration/edits permitted.
 
 - Next Claude planning request did NOT run: CLI returned "Not logged in · Please run /login". No review credited. Reauthenticate Claude before assigning its next implementation block. Codex may continue source audit independently. Public current upstream OpenGL.cpp still initializes EGL via GBM/device paths; this alone does not prove installed-version no-GPU headless support. Do not equate headless output with software renderer or rerun old host/GPU trial.
+
+- Prepared actual mapping client + GPU-only closed Sway→Hyprland wrapper (zero hostWayland). Strict build PASS, softwareSway regression PASS5,8+4guards PASS, exact synthetic scope limits/FD/cleanup PASS. Independent Codex boundary review cleared after fixes; Claude unavailable. GPU trial NOT authorized/run; docs/CLOSED-HYPRLAND-MAPPING-PLAN.md. No new host enumeration or field authority.
