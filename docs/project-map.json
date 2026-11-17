@@ -461,13 +461,14 @@
         "tools/hyprland_mapping_probe.py",
         "tests/closed_mapping/test_direct_mapping.py",
         "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
-        "data/direct-mapping-fd-control-001-result.json"
+        "data/direct-mapping-fd-control-001-result.json",
+        "data/direct-hyprland-mapping-001-result.json"
       ],
-      "notes": "Known-working host-parent nested route preferred; fresh approval pending. No field authority. Claude prepared; Codex acceptance + noGPU FD proof.",
+      "notes": "One separately approved direct installedHyprland trial passed2windows/2observers/lifecycle; approval consumed. Field/Fcitx binding remains next gate.",
       "tests": [
         "python3 -m unittest discover -s tests/closed_mapping"
       ],
-      "status": "prepared_12guards_and_noGPUfdcontrol_passed"
+      "status": "actual_native_mapping_pass_field_binding_unproven"
     },
     {
       "id": "aquamarine-readiness",

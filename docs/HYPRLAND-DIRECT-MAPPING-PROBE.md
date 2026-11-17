@@ -60,3 +60,19 @@ an IME process or service. No extra helper framework introduced.
 
 Twelve closed_mapping guards passed. Fresh host/GPU approval requested; no
 direct mapping trial has yet run. No patched system library or new build tools.
+
+## Actual one-shot trial001 — PASS
+
+Separately approved host-parent nested probe completed on installed Hyprland:
+2owned windows,2independent observers, initial/close/recreate mapping agreement,
+retired stable identifier absent after recreation.7iterations, nativeexit0,
+observercleanuptrue, effective scope limits and inactive/empty cleanup verified.
+One hostconnection, no hostwindow enumeration/network/config change. No retries.
+Owner may type again after completion. Approval consumed. Aggregate:
+data/direct-hyprland-mapping-001-result.json.
+
+This proves native window mapping/lifecycle on the installed implementation in
+an owned nested instance. It does not prove real-session field authority or
+Fcitx context binding. Next inspect the pinned Fcitx frontend/appmonitor seam
+without live app input or new system access. The external-library repair is
+a separate fallback, not prerequisite for this proven mapping path.

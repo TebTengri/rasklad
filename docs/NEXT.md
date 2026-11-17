@@ -52,3 +52,5 @@
 - No checkpoint notification spam. Save compact handoff and targeted evidence.
 
 - RouteB direct helper prepared byClaude;12guards PASS, exact ownFD/noGPU scope control PASS. Grok critique resolved/limited with evidence; physicalinputexposure declared. Claude5hourquota until19:30Almaty, Gemini followupcode timeout notcredited; Codex only acceptancefieldrename+noGPUcontrol. Fresh hostWayland+GPUapproval requested; direct trial NOTrun.
+
+- Direct trial001 separately approved+PASS: actualHyprland2windows/2observers/close-recreate mappingVerifiedtrue,7iterations,scopeinactive. Approval consumed; owner typing safe after teardown. data/direct-hyprland-mapping-001-result.json. NEXT offline pinnedFcitx appmonitor/context join analysis; fieldbinding stillfalse, Slack remainsobserveonly.

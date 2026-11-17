@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "ok": true,
+  "actualHyprland": true,
+  "hostParent": true,
+  "hostWaylandConnections": 1,
+  "mappingMode": true,
+  "mappingVerified": true,
+  "appWindowsMapped": 2,
+  "crossObserverMatch": true,
+  "closedObservedBoth": true,
+  "initialMatch": true,
+  "remapMatch": true,
+  "retiredIdNotReused": true,
+  "identifiersValid": true,
+  "observerCleanup": true,
+  "observerOwnedCounts": [
+    2,
+    2
+  ],
+  "observerClosedCounts": [
+    1,
+    1
+  ],
+  "iterations": 7,
+  "probeExit": 0,
+  "scopeInactiveVerified": true,
+  "scopeLimitsVerified": true,
+  "peerExeMatched": true,
+  "network": false,
+  "hostWindowEnumeration": false,
+  "keyboardInjection": false,
+  "physicalInputMayReachNested": true,
+  "ownerMustNotType": true,
+  "hostConfigurationChanged": false,
+  "fieldBindingVerified": false,
+  "userWindowAuthority": false,
+  "binarySha256": "888869dcdfbecd954460ef57935fcf699404e9a67dc59b9ab1b6eb1713682dbb",
+  "approvalConsumed": true
+}
