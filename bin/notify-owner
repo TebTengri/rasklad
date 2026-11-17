@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Development workflow only: no daemon, configuration edits or message contents.
+set -euo pipefail
+expiry=0
+case "${1:-}" in
+  --test)
+    expiry=15000
+    title='rasklad: уведомления включены'
+    body='Тест: здесь появится уведомление, когда потребуется ваш ответ или задача будет закончена.' ;;
+  --needs-user)
+    title='rasklad: нужен ваш ответ'
+    body='Откройте чат проекта: требуется ваше действие или решение.' ;;
+  --done)
+    title='rasklad: задача завершена'
+    body='Результат и проверки сохранены. Подробности — в чате проекта.' ;;
+  '')
+    printf '%s\n' 'Plan only. Use --test, --needs-user or --done to send one desktop notification.'
+    exit 0 ;;
+  *) printf '%s\n' 'Expected --test, --needs-user or --done.' >&2; exit 2 ;;
+esac
+if [[ $# -ne 1 ]]; then
+  printf '%s\n' 'Exactly one mode is required.' >&2
+  exit 2
+fi
+exec /usr/bin/timeout 5s /usr/bin/notify-send --app-name=rasklad --urgency=normal --expire-time="$expiry" "$title" "$body"
