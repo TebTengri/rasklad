@@ -1,55 +1,44 @@
-# rasklad — короткая точка входа
+# rasklad — current handoff
 
-- Worktree: /home/mvn/Work/rasklad-message-adapter; branch SYS-246/slack-status-observation; publish draft checkpoint to SYS-242/message-adapter.
-- Main /home/mvn/Work/rasklad не переключать; чужие проекты не смотреть.
-- SYS-246 In Progress; PR17 draft; лицензия собственного кода MIT.
-- Один исполнитель, одно итоговое ревью существенной границы; экономный режим AGENTS.md.
-- Работать этапами автономно; не ждать «дальше» после каждого коммита.
+- Worktree /home/mvn/Work/rasklad-message-adapter, branch SYS-246/slack-status-observation.
+- Draft PR17 published through SYS-242/message-adapter; SYS-246 In Progress.
+- Main /home/mvn/Work/rasklad untouched. Earlier /tmp worktrees/builds disappeared.
+- Execute ACTIVE-PLAN.md autonomously. Codex coordinates/accepts; Claude implements;
+  Gemini/Grok assist. No model result credited after timeout. Read only needed code.
 
-## Что готово в закрытом LAB
+## Confirmed core / owned LAB
 
-- Offline detector/profile + default-deny policy, shared family Off/On.
-- После On пропуск raw input до безопасного разделителя, включая новые поля/reset.
-- Полный owned Sway/Chromium Off→On→Off: 8/8; normal18+focus4 PASS.
-- Lazy LabProperty; payload только по требованию, cleanup terminal Off после release drain.
-- Pending/Deferred/InFlight сохраняются; новая raw пара не теряет release из-за старой записи.
-- SDK resource/reentry cases ASan+LSan PASS; старые16Off+6preedit тоже PASS.
-- ADR-003: Submitted означает локальное завершение, не подтверждённую доставку.
-- ADR-004 + data/context-resources-001-result.json: точные ресурсы/ограничения.
+- Offline detector/profile, default-deny app/field policy, numeric context leases.
+- Shared family Off/On; safe boundary after On; lazy state/reclamation.
+- Owned Sway/Chromium Off→On→Off8/8, normal18+focus4; SDK memory checks passed.
+- Submitted means local completion, not application delivery (ADR003).
+- Seven stable hooks and shared profile cache remain (ADR004).
 
-## Следующий блок
+## Current native Slack result
 
-- Installed Slack tested only with empty profile/private Xvfb+buses: no visiblewindow/a11ypeer in eitherstatus.
-- Strict Unix HTTPS broker built; no --share-net;24guardsPASS. docs/SLACK-ISOLATED-001.md has exact limits/results.
-- ONE owner-approved ECH A/B trial opened2connections percase, stillno UI; permission CONSUMED. Defaultdenyremains.
-- Offline fixedstderr flags: busUnavailable, no fatal/display-init match; causeunknown. Process roles previouslyunreliable, nowunknown unlessknown.
-- Native private Sway A/B: compositor ready; Slack0peers both, Chromium enabled1peer/64nodes. Window visibility unmeasured. docs/SLACK-WAYLAND-BOOTSTRAP-001.md.
-- busUnavailable also occurs in successful Chromium control; not a proven Slack cause.
-- 15s offline protocol control: Slack registry/surface yes, toplevel not observed; Chromium all3 yes. docs/SLACK-STARTUP-STAGE-001.md.
-- Execute docs/ACTIVE-PLAN.md autonomously; no identical offline A/B repeats.
-- Next inspect bootstrap/network fixture boundary; verify primary runtime/API sources before moreflags. No realprofilecopy/globala11y workaround.
+- Three separately approved live IsEnabled trials all restored false. Approvals consumed.
+- Corrected third:8processes/36scans/9.999s/0peers. No more global toggles planned.
+- Source-backed process-only launch succeeded: ACCESSIBILITY_ENABLED=1 plus
+  --force-renderer-accessibility, ordinary profile. Global IsEnabled stayed false.
+- Observed1a11ypeer/23nodes after0.571s; no text, edits, sends or profile copies.
+- One separately approved pidfd SIGTERM fully exited previous Slack before launch.
+  Quit and launch permissions both CONSUMED. No SIGKILL/child sweep.
+- Evidence: data/slack-process-launch-001-result.json; docs/SLACK-LIVE-STATUS-PLAN.md.
+- Slack has per-process accessibility until owner exits; ordinary subsequent launch
+  removes those environment/flag choices. No system config file edited by tool.
 
-## Разрешения и границы
+## Immediate next action
 
-- ECH exception CONSUMED: --allow-ech-outer requires fresh explicit permission.
-- Exact Hyprland011 approval CONSUMED: новый host Wayland/GPU запуск запрещён без свежего согласия.
-- Закрытые no-host/no-GPU/no-network собственные фикстуры разрешены.
-- Owner permits normal Slack tests in one designated test channel (confirmed; identity only in ignored build/slack-live-test-scope.json). No automated sending, unrelated text/history, profile copying.
-- Latest live metadata preflight:8processes/0a11ypeers/IsEnabledfalse;0text/writes.
-- Slack restart/global settings/IME/config/autostart remain outside that channel authorization.
-- Семь стабильных hooks и общий profile cache остаются; таймеров/polling не добавлено.
-- Не читать архив CONTINUATION-PLAN/всю переписку; bin/project-map find <topic>.
+- Owner asked to focus EMPTY designated test-channel editor and report ready.
+- Then tools/slack_accessibility_probe.py --run, metadata only. Verify field role,
+  focused/editable/password flags before deciding any further capability scope.
+- Startup sample had no focused editable object; editor/correction safety unproven.
+- Channel identity only in ignored build/slack-live-test-scope.json. Do not publish.
 
-- Owner-approved one temporary IsEnabled trial EXECUTED: false→true→false verified in1restore attempt. Approval consumed. Slack was absent (0processes), so no compatibility conclusion.
+## Remaining boundaries
 
-- Execution roles updated in AGENTS: Codex represents owner/accepts changes; Claude implements; Gemini/Grok assist.
-- Claude main-thread guard applied; Gemini signal-race finding fixed by Codex after Claude timeout. 10 status tests pass. One authorized trial completed/restored, then owner opened Slack:8processes/0peers with flagfalse. No new status mutation authorized.
-
-- Owner approved repeat after Slack opened; EXECUTED:8processes/0peers snapshot; flagfalse restored/readback firstattempt. BOTH one-shot status approvals CONSUMED.
-- Snapshot negative is inconclusive for asynchronous registration. Added offline-tested bounded observer + PID preflight (no further live run). See docs/SLACK-LIVE-STATUS-PLAN.md.
-- Old /tmp worktree/builds disappeared. Committed evidence survives; ignored artifacts/runtime must be rebuilt/validated before reuse. No adjacent/private projects inspected.
-
-- Third explicitly approved bounded live observation EXECUTED:8processes/36scans/9.999s/0peers. Flagfalse restored and verified firstattempt. ALL three one-shot approvals CONSUMED.
-- New source-backed lower-scope hypothesis: ACCESSIBILITY_ENABLED=1 for ONE Slack process startup; no global status writes. tools/slack_launch_probe.py prepared/plan-only; owner must fully quit Slack and explicitly authorize launch first.
-
-- Owner's «делаем» explicitly accepted the pending one process-scoped Slack launch. Approval AVAILABLE, not consumed. Preflight found8Slack processes still running; waiting for owner to Quit. Do not re-request launch permission. Do not kill/restart running Slack automatically. Once closed, run tools/slack_launch_probe.py --run-approved once.
+- No automated sending, unrelated text/history, profile copying or global IME changes.
+- Additional Slack restart/termination/system mutation requires new explicit approval.
+- Old ECH and exact host Hyprland011 permissions consumed. No host GPU/Wayland trial.
+- Closed owned no-host/no-GPU/no-network fixtures allowed; revalidate missing artifacts.
+- No repeated empty-profile bootstrap trials. 48 local Slack guard tests passed.

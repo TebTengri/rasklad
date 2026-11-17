@@ -104,3 +104,17 @@ accepted its reporting fix: toolTerminatedSlack=false expresses the actual
 guarantee, while targetPresentAtProbe reports observed process presence. No
 unconditional claim that Slack remains alive. Startup may sync, notify and write
 its own ordinary profile; disclose this in owner approval.
+
+## Process-scoped launch succeeded
+
+Owner approved launch, then separately approved one checked SIGTERM after manual
+window closure left 8 background processes. First tool escalation timed out
+before process creation; its one permitted retry sent exactly one pidfd-bound
+SIGTERM. Slack fully exited; no SIGKILL or child sweep. Approved launcher then
+started the normal profile with process-only accessibility. 1a11ypeer/23nodes
+observed after0.571s, 7target processes, globalIsEnabledfalse. No app text read,
+writes, sends, profile copy or global status mutation. This confirms access to
+Slack's accessibility bridge in this run, not editable-field safety/correction.
+FocusedEditableObjects was empty during startup. Owner focus of EMPTY test-channel
+editor requested; next probe stays metadata-only. Both permissions consumed.
+Evidence: data/slack-process-launch-001-result.json.
