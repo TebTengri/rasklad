@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "ok": false,
+  "phase": "hyprland-start",
+  "reason": "private-compositor-unready",
+  "hyprlandExit": -6,
+  "hyprlandStartup": "gpu_allocator_unavailable",
+  "feedbackDone": true,
+  "deviceResolved": true,
+  "renderNodeMatched": true,
+  "scopeInactiveVerified": true,
+  "scopeLimitsVerified": true,
+  "hostWaylandConnections": 0,
+  "fieldBindingVerified": false,
+  "binarySha256": "888869dcdfbecd954460ef57935fcf699404e9a67dc59b9ab1b6eb1713682dbb",
+  "approvalConsumed": true,
+  "startupFlags": {
+    "allocatorCreated": false,
+    "dmabufDeviceSeen": false,
+    "dmabufNodeOpened": false,
+    "drmDiscoveryFailed": false,
+    "gbmDeviceFailed": false,
+    "parentConnected": true,
+    "primeExportDenied": false,
+    "scanTruncated": false,
+    "waylandBackendStarted": true
+  }
+}

@@ -89,3 +89,19 @@ must equal the already admitted renderD128. Output is four booleans only.
 If this control fails, do not launch Hyprland; report parent-feedback stage.
 This does not add a host connection or device. Strict build passes; seven
 boundary guards pass. New GPU execution still requires separate approval.
+
+## Trial003
+
+Separately approved control+trial completed. Own parent feedback control:
+feedbackDone/deviceResolved/renderNodeMatched alltrue. Hyprland still aborted
+-6 with no allocator. Full own-log scan saw parentConnected and
+waylandBackendStarted, but neither dmabufDeviceSeen/nodeOpened nor discovery,
+PRIME or GBM failure markers; scanTruncatedfalse. Limits/cleanup verified.
+Approval consumed. data/closed-mapping-003-result.json.
+
+Hypothesis: Aquamarine initDmabuf performs one sync roundtrip without waiting
+feedback done; empty nodeName skips open but returns true. Independent Codex
+source critique agrees this is possible, not proof that own wlroots delayed
+feedback. Next no-GPU actual installed-library control should compare immediate
+and deferred synthetic feedback. Missing callback even for immediate delivery
+would contradict a delay-only explanation. No fourth GPU trial authorized.

@@ -444,9 +444,10 @@
         "data/closed-mapping-preparation-001-result.json",
         "vendor/wayland/sources.json",
         "data/closed-mapping-001-result.json",
-        "data/closed-mapping-002-result.json"
+        "data/closed-mapping-002-result.json",
+        "data/closed-mapping-003-result.json"
       ],
-      "notes": "Two individually approved trials failed; second isolates Hyprland allocator category with live private Sway. No further GPU approval, no field authority.",
+      "notes": "Three individually approved GPU trials consumed. Parent feedback resolves fixed render; Hyprland allocator fails before observed feedback. Timing hypothesis unproven; next noGPU actual-library control.",
       "tests": [
         "python3 -m unittest discover -s tests/closed_mapping"
       ],

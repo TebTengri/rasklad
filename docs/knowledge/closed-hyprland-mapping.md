@@ -1,6 +1,6 @@
 # Closed Hyprland window mapping
 
-Two individually approved trials failed; second isolates Hyprland allocator category with live private Sway. No further GPU approval, no field authority.
+Three individually approved GPU trials consumed. Parent feedback resolves fixed render; Hyprland allocator fails before observed feedback. Timing hypothesis unproven; next noGPU actual-library control.
 
 Статус: trial_failed_diagnostics_fixed_repeat_pending
 
@@ -14,6 +14,7 @@ Two individually approved trials failed; second isolates Hyprland allocator cate
 - `vendor/wayland/sources.json`
 - `data/closed-mapping-001-result.json`
 - `data/closed-mapping-002-result.json`
+- `data/closed-mapping-003-result.json`
 
 ## Связи
 
