@@ -77,17 +77,18 @@ def discover_peers(reader,report,deadline,observe=False,pid_source=slack_pids,no
     report['discoveryScans']=scans;report['discoverySeconds']=round(now()-started,3)
 
 
-def run(observe=False):
+def run(observe=False,node_budget=128):
+    if type(node_budget) is not int or node_budget not in (128,512):raise ProbeError("node-budget")
     import gi
     gi.require_version('Atspi','2.0')
     from gi.repository import Gio,GLib,Atspi
     cancellable=Gio.Cancellable()
     timer=threading.Timer(10,cancellable.cancel);timer.daemon=True;timer.start()
-    try:return _probe(Gio,GLib,Atspi,cancellable,observe)
+    try:return _probe(Gio,GLib,Atspi,cancellable,observe,node_budget)
     finally:timer.cancel()
 
 
-def _probe(Gio,GLib,Atspi,cancellable,observe=False):
+def _probe(Gio,GLib,Atspi,cancellable,observe=False,node_budget=128):
     deadline=time.monotonic()+10
     def transport(connection):
         def call(bus,path,interface,method,argument):
@@ -101,7 +102,7 @@ def _probe(Gio,GLib,Atspi,cancellable,observe=False):
         return call
     session=Gio.bus_get_sync(Gio.BusType.SESSION,cancellable);control=Reader(transport(session))
     report={'schema':1,'a11yBusAvailable':False,'slackA11yConnections':0,'inspectedNodes':0,
-            'focusedEditableObjects':[],'targetProcesses':None,'pidLookups':0,'pidLookupErrors':0,'truncated':False,'textRead':False,'writes':False,'safeAutoCorrection':False}
+            'focusedEditableObjects':[],'editableCandidates':[],'nodeBudget':node_budget,'targetProcesses':None,'pidLookups':0,'pidLookupErrors':0,'truncated':False,'textRead':False,'writes':False,'safeAutoCorrection':False}
     if control.broker('NameHasOwner','org.a11y.Bus')!=(True,):return report
     report['a11yBusAvailable']=True
     report['a11yStatus']={'isEnabled':None,'screenReaderEnabled':None,'errors':0}
@@ -120,9 +121,26 @@ def _probe(Gio,GLib,Atspi,cancellable,observe=False):
     reader=Reader(transport(connection))
     discover_peers(reader,report,deadline,observe)
     report['slackA11yConnections']=len(reader.owned)
+    walk_metadata(reader,Atspi,report,node_budget)
+    try:connection.close_sync(cancellable)
+    except Exception:pass
+    return report
+
+
+def append_candidate(report,candidate):
+    report.setdefault('candidateSummaryTruncated',False)
+    candidates=report['editableCandidates']
+    if len(candidates)<16:candidates.append(candidate);return
+    report['candidateSummaryTruncated']=True
+    if candidate['focused']:
+        for i in range(len(candidates)-1,-1,-1):
+            if not candidates[i]['focused']:candidates[i]=candidate;break
+
+
+def walk_metadata(reader,Atspi,report,node_budget):
     queue=deque((bus,ROOT_PATH,False) for bus in reader.owned);seen=set()
     def flag(bits,state):return bool(bits & (1<<int(state)))
-    while queue and len(seen)<128:
+    while queue and len(seen)<node_budget:
         bus,path,active=queue.popleft()
         if (bus,path) in seen:continue
         seen.add((bus,path))
@@ -133,33 +151,36 @@ def _probe(Gio,GLib,Atspi,cancellable,observe=False):
             interfaces=reader.node(bus,path,'GetInterfaces')[0]
             if len(interfaces)>32:raise ProbeError('interface-size')
             editable='org.a11y.atspi.EditableText' in interfaces
-            if editable and flag(bits,Atspi.StateType.FOCUSED):
+            if editable or flag(bits,Atspi.StateType.EDITABLE):
                 role=reader.node(bus,path,'GetRole')[0]
                 try:role_name=Atspi.Role(role).value_nick
                 except ValueError:role_name='unknown'
-                report['focusedEditableObjects'].append({'role':role_name,'passwordRole':role==int(Atspi.Role.PASSWORD_TEXT),
+                candidate={'role':role_name,'passwordRole':role==int(Atspi.Role.PASSWORD_TEXT),
                     'activeAncestor':active,'editableState':flag(bits,Atspi.StateType.EDITABLE),
-                    'multiline':flag(bits,Atspi.StateType.MULTI_LINE),'editableTextInterface':True})
-                if len(report['focusedEditableObjects'])>=3:break
+                    'multiline':flag(bits,Atspi.StateType.MULTI_LINE),'editableTextInterface':editable,
+                    'focused':flag(bits,Atspi.StateType.FOCUSED)}
+                append_candidate(report,candidate)
+                if editable and candidate['focused']:
+                    report['focusedEditableObjects'].append(candidate)
+                    if len(report['focusedEditableObjects'])>=3:break
             children=reader.node(bus,path,'GetChildren')[0]
-            if len(children)>64:report['truncated']=True;children=children[:64]
+            child_limit=64 if node_budget==128 else 256
+            if len(children)>child_limit:report['truncated']=True;children=children[:child_limit]
             for child_bus,child_path in children:
                 child_bus=child_bus or bus
-                if child_bus in reader.owned and (child_bus,child_path) not in seen and len(queue)<128:queue.append((child_bus,child_path,active))
+                if child_bus in reader.owned and (child_bus,child_path) not in seen:
+                    if len(queue)<node_budget:queue.append((child_bus,child_path,active))
+                    else:report['truncated']=True
         except BudgetEnd:report['truncated']=True;break
         except Exception:continue
     report['inspectedNodes']=len(seen);report['truncated']=report['truncated'] or bool(queue)
-    try:connection.close_sync(cancellable)
-    except Exception:pass
-    return report
-
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');parser.add_argument('--observe',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');parser.add_argument('--observe',action='store_true');parser.add_argument('--node-budget',type=int,choices=(128,512),default=128);args=parser.parse_args()
     if not args.run:
         print(json.dumps({'mode':'plan','target':'native slack only','methods':sorted(NODE_METHODS),
                           'systemStatusProperties':['IsEnabled','ScreenReaderEnabled'],
-                          'maxNodes':128,'seconds':10,'observePeers':args.observe,'textRead':False,'writes':False}));return 0
-    try:print(json.dumps(run(args.observe),sort_keys=True));return 0
+                          'maxNodes':args.node_budget,'seconds':10,'observePeers':args.observe,'textRead':False,'writes':False}));return 0
+    try:print(json.dumps(run(args.observe,args.node_budget),sort_keys=True));return 0
     except Exception:print(json.dumps({'error':'slack-metadata-probe-unavailable','textRead':False,'writes':False}),file=sys.stderr);return 1
 if __name__=='__main__':sys.exit(main())

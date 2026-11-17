@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "initial128": {
+    "a11yBusAvailable": true,
+    "a11yStatus": {
+      "errors": 1,
+      "isEnabled": false,
+      "screenReaderEnabled": null
+    },
+    "discoveryScans": 1,
+    "discoverySeconds": 0.026,
+    "focusedEditableObjects": [],
+    "inspectedNodes": 128,
+    "pidLookupErrors": 0,
+    "pidLookups": 10,
+    "safeAutoCorrection": false,
+    "schema": 1,
+    "slackA11yConnections": 1,
+    "targetProcesses": 8,
+    "textRead": false,
+    "truncated": true,
+    "writes": false
+  },
+  "complete512": {
+    "a11yBusAvailable": true,
+    "a11yStatus": {
+      "errors": 1,
+      "isEnabled": false,
+      "screenReaderEnabled": null
+    },
+    "discoveryScans": 1,
+    "discoverySeconds": 0.025,
+    "editableCandidates": [
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "entry"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": true,
+        "multiline": true,
+        "passwordRole": false,
+        "role": "entry"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "paragraph"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "static"
+      }
+    ],
+    "focusedEditableObjects": [],
+    "inspectedNodes": 268,
+    "nodeBudget": 512,
+    "pidLookupErrors": 0,
+    "pidLookups": 10,
+    "safeAutoCorrection": false,
+    "schema": 1,
+    "slackA11yConnections": 1,
+    "targetProcesses": 8,
+    "textRead": false,
+    "truncated": false,
+    "writes": false
+  },
+  "delayedFocusHandoff": {
+    "a11yBusAvailable": true,
+    "a11yStatus": {
+      "errors": 1,
+      "isEnabled": false,
+      "screenReaderEnabled": null
+    },
+    "discoveryScans": 1,
+    "discoverySeconds": 0.025,
+    "editableCandidates": [
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "entry"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": true,
+        "multiline": true,
+        "passwordRole": false,
+        "role": "entry"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "paragraph"
+      },
+      {
+        "activeAncestor": false,
+        "editableState": true,
+        "editableTextInterface": false,
+        "focused": false,
+        "multiline": false,
+        "passwordRole": false,
+        "role": "static"
+      }
+    ],
+    "focusedEditableObjects": [],
+    "inspectedNodes": 268,
+    "nodeBudget": 512,
+    "pidLookupErrors": 0,
+    "pidLookups": 10,
+    "safeAutoCorrection": false,
+    "schema": 1,
+    "slackA11yConnections": 1,
+    "targetProcesses": 8,
+    "textRead": false,
+    "truncated": false,
+    "writes": false
+  },
+  "interpretation": "Focused multiline editable-state entry found; EditableText absent, ACTIVE ancestor not observed. Active desktop window and channel identity not independently authenticated. No editor writes authorized by these metadata flags."
+}

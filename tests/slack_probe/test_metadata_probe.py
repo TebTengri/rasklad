@@ -7,6 +7,9 @@ spec=importlib.util.spec_from_file_location('slack_metadata',p);probe=importlib.
 class MetadataGuardTests(unittest.TestCase):
  def setUp(self):
   self.calls=[];self.reader=probe.Reader(lambda *args:self.calls.append(args));self.reader.owned={':1.10'}
+ def test_node_budget_refuses_unbounded_or_noninteger_before_transport(self):
+  for budget in (0,129,100000,True,'512'):
+   with self.assertRaises(probe.ProbeError):probe.run(node_budget=budget)
  def test_only_four_metadata_methods_can_reach_slack(self):
   for method in probe.NODE_METHODS:self.reader.node(':1.10',probe.ROOT_PATH,method)
   self.assertEqual({c[3] for c in self.calls},probe.NODE_METHODS)

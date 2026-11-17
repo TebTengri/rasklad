@@ -51,3 +51,15 @@ if authentication/network/limits prevented it.
   wrapper with a regression test. Grok timed out; no review credited.
 - Review the accepted boundary with available helpers using public source only.
 - No additional empty-profile Slack startup repeats.
+
+## Editor discovery completed; next binding boundary
+
+- Focused multiline editable-state entry discovered by explicit512node metadata
+  search (268nodes, untruncated), no text/writes. EditableText absent; ACTIVE
+  ancestor unobserved. Neither observation authenticates active window/channel.
+- Claude architecture critique assessed; no new identity enum/geometry authority
+  introduced. Pinned Fcitx monitor/installed SDK inspected; no shared PID/field
+  authority established through these interfaces.
+- Next: closed two-toplevel same-app-id provenance experiment; source mapping
+  must precede granting a production lease. Existing intra-DOM focus tests are
+  insufficient for this. No real Slack edit/IME install/restart authorized.

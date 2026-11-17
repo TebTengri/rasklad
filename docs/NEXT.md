@@ -29,10 +29,11 @@
 
 ## Immediate next action
 
-- Owner asked to focus EMPTY designated test-channel editor and report ready.
-- Then tools/slack_accessibility_probe.py --run, metadata only. Verify field role,
-  focused/editable/password flags before deciding any further capability scope.
-- Startup sample had no focused editable object; editor/correction safety unproven.
+- Owner confirmed empty test-channel editor ready; metadata search completed.
+- Explicit --node-budget512 completed268nodes; focused multiline entry, editable
+  state true, password role false. EditableText absent, ACTIVE ancestor unobserved.
+- Do not infer active window/channel authority or edit support from those flags.
+  safeAutoCorrection=false. docs/SLACK-EDITOR-METADATA-001.md records next binding seam.
 - Channel identity only in ignored build/slack-live-test-scope.json. Do not publish.
 
 ## Remaining boundaries
@@ -41,4 +42,6 @@
 - Additional Slack restart/termination/system mutation requires new explicit approval.
 - Old ECH and exact host Hyprland011 permissions consumed. No host GPU/Wayland trial.
 - Closed owned no-host/no-GPU/no-network fixtures allowed; revalidate missing artifacts.
-- No repeated empty-profile bootstrap trials. 48 local Slack guard tests passed.
+- No repeated empty-profile bootstrap trials. 51 local Slack guard tests passed.
+
+- Next closed boundary: two owned toplevels sharing app-id; establish compositor/window/IC provenance before any new binding lease. Pinned source archive restored to ignored build/fcitx5-5.1.23-pinned.tar.gz (verified); other old runtime artifacts still missing. See SLACK-EDITOR-METADATA-001.md for accepted/rejected Claude proposal.

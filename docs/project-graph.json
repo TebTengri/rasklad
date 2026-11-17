@@ -29,7 +29,7 @@
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
     "docs/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
-    "docs/ACTIVE-PLAN.md": "e65dab40b3341eda1c6b2ed806d5c5e18c68b5b6162b46695acb93bee5618004",
+    "docs/ACTIVE-PLAN.md": "228420f98cef42653cd5a58a92d0146c19c6dd0f7648a94ed87cde68d2ebe57e",
     "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
@@ -85,7 +85,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "8911ea54cd542c9f6cded438997ceb546be2d5d9985b8434e22cb0f6ac2e0b18",
+    "docs/NEXT.md": "454a2f507c0f696e4461f77b6b64e46e0bf3197852afe98b19677bc1f2a94b53",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -94,6 +94,7 @@
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
+    "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
@@ -248,9 +249,10 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
+    "tests/slack_probe/test_editor_metadata.py": "ac0885d87584a8169f8707f399fe3a558d008607de52b61cddf77c89ba0ae5a9",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_launch_probe.py": "04146e700c784d4584cd398add80cd6c03466dec0c339f4fbc70e6c5589ef774",
-    "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
+    "tests/slack_probe/test_metadata_probe.py": "50593acf9ef4e9b96dd11de9a49a7c6bc8f3fabf03fd22dbd6af2a36fa0b16ee",
     "tests/slack_probe/test_peer_observation.py": "8e35fe2c0bbe7cdb975c1667174d5db256a8bc60d341918afa7bd6b21300ed02",
     "tests/slack_probe/test_private_bridge_lab.py": "60be5ce4719229f45ec6e56f1a8ad71c9462d79de47f91e477f4236ae6c4675e",
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
@@ -377,7 +379,7 @@
     "tools/server_route_witness.cpp": "b13baa7f20f3831d9b62d8bcf6cc70af9b30637305e8d6e41bd39e57c468782e",
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
-    "tools/slack_accessibility_probe.py": "65c6ca7dc94e02ab66b2d2547e584d5aa2eb660e1b9b0fdbb90b5f09c117e13f",
+    "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
     "tools/slack_https_bridge.py": "cb05d41ff9e4e3694e8b550581cde77d336e08e7748263ed2a749b02361d4043",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
@@ -747,6 +749,10 @@
     },
     {
       "path": "docs/SLACK-DESKTOP-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/SLACK-EDITOR-METADATA-001.md",
       "symbols": []
     },
     {
@@ -2265,6 +2271,51 @@
       "symbols": []
     },
     {
+      "path": "tests/slack_probe/test_editor_metadata.py",
+      "symbols": [
+        {
+          "name": "State",
+          "line": 8,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Role",
+          "line": 9,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "EditorMetadataTests",
+          "line": 14,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "value_nick",
+          "line": 12,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "scan",
+          "line": 15,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_focused_seventeenth_candidate_is_retained_and_summary_marked",
+          "line": 31,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_deeper_editor_requires_explicit_larger_budget",
+          "line": 38,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "transport",
+          "line": 17,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/slack_probe/test_https_bridge.py",
       "symbols": [
         {
@@ -2403,33 +2454,38 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_only_four_metadata_methods_can_reach_slack",
+          "name": "test_node_budget_refuses_unbounded_or_noninteger_before_transport",
           "line": 10,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_text_names_attributes_edits_and_focus_actions_are_forbidden",
+          "name": "test_only_four_metadata_methods_can_reach_slack",
           "line": 13,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_text_names_attributes_edits_and_focus_actions_are_forbidden",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_other_app_and_arbitrary_paths_are_never_queried",
-          "line": 18,
+          "line": 21,
           "kind": "FunctionDef"
         },
         {
           "name": "test_broker_cannot_activate_enable_change_or_inject",
-          "line": 22,
+          "line": 25,
           "kind": "FunctionDef"
         },
         {
           "name": "test_status_is_restricted_to_two_system_booleans",
-          "line": 26,
+          "line": 29,
           "kind": "FunctionDef"
         },
         {
           "name": "test_status_cannot_read_app_properties_or_mutate",
-          "line": 30,
+          "line": 33,
           "kind": "FunctionDef"
         }
       ]
@@ -5335,12 +5391,22 @@
         },
         {
           "name": "_probe",
-          "line": 90,
+          "line": 91,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "append_candidate",
+          "line": 130,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "walk_metadata",
+          "line": 140,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 157,
+          "line": 178,
           "kind": "FunctionDef"
         },
         {
@@ -5370,17 +5436,17 @@
         },
         {
           "name": "transport",
-          "line": 92,
+          "line": 93,
           "kind": "FunctionDef"
         },
         {
           "name": "flag",
-          "line": 124,
+          "line": 142,
           "kind": "FunctionDef"
         },
         {
           "name": "call",
-          "line": 93,
+          "line": 94,
           "kind": "FunctionDef"
         }
       ]
