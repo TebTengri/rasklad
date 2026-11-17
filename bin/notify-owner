@@ -5,7 +5,6 @@ set -euo pipefail
 expiry=0
 case "${1:-}" in
   --test)
-    expiry=15000
     title='rasklad: уведомления включены'
     body='Тест: здесь появится уведомление, когда потребуется ваш ответ или задача будет закончена.' ;;
   --needs-user)
@@ -23,4 +22,4 @@ if [[ $# -ne 1 ]]; then
   printf '%s\n' 'Exactly one mode is required.' >&2
   exit 2
 fi
-exec /usr/bin/timeout 5s /usr/bin/notify-send --app-name=rasklad --urgency=normal --expire-time="$expiry" "$title" "$body"
+exec /usr/bin/timeout 5s /usr/bin/notify-send --app-name=rasklad --urgency=critical --expire-time="$expiry" "$title" "$body"

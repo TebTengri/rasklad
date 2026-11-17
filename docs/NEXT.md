@@ -3,7 +3,7 @@
 - Worktree /home/mvn/Work/rasklad-message-adapter, branch SYS-246/slack-status-observation.
 - Draft PR17 published through SYS-242/message-adapter; SYS-246 In Progress.
 - Main /home/mvn/Work/rasklad untouched. Earlier /tmp worktrees/builds disappeared.
-- Owner authorized desktop alerts: bin/notify-owner --needs-user for a required human handoff, --done only for a finished task. Test notification delivered successfully; no system config, sound or daemon added.
+- Owner authorized desktop alerts: bin/notify-owner --needs-user for a required human handoff, --done only for a finished task. Normal test expired before owner saw it; fixed to critical after reading installed Omarchy duration policy. Persistent test accepted(id2), shell reports1mapped/showing toast with DNDoff. No system config, sound or daemon added.
 - Execute ACTIVE-PLAN.md autonomously. Codex coordinates/accepts; Claude implements;
   Gemini/Grok assist. No model result credited after timeout. Read only needed code.
 
