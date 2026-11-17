@@ -1,0 +1,46 @@
+{
+  "appWindowsMapped": 2,
+  "binarySha256": "4d719cafda00b42f73e2fee181ed0b071bc0bd0e5f40ad20a27e0334c9737999",
+  "closedObservedBoth": true,
+  "crossObserverMatch": true,
+  "fcitxLoaded": false,
+  "fieldBindingVerified": false,
+  "gpu": false,
+  "hostConfigurationChanged": false,
+  "hostDisplay": false,
+  "identifiersValid": true,
+  "initialMatch": true,
+  "inputs": {
+    "foreign-list": "6b2ffb3a07d679d1c4170263adfefb9a7c37dd34ed3db5180bf58cb8ff8fbd0b",
+    "source": "d087e3957b4654505156b407f551673123a97f29390b856869f6dc6fea4441e0",
+    "xdg-shell": "7ba7f9c8473deee674cb1f154a18abd0bb0cc072604fc055b0c15e459fc4c7df"
+  },
+  "iterations": 5,
+  "nativeToplevels": true,
+  "network": false,
+  "observerCleanup": true,
+  "observerClosedCounts": [
+    1,
+    1
+  ],
+  "observerOwnedCounts": [
+    2,
+    2
+  ],
+  "observers": 2,
+  "ok": true,
+  "passed": true,
+  "realInput": false,
+  "remapMatch": true,
+  "retiredIdNotReused": true,
+  "sandboxed": true,
+  "schema": 1,
+  "runnerSha256": "00b19516ae304e4020b8c1b76189571ab2fd00448d2c00d6e0fef1861b75a75d",
+  "runtimeRestoration": {
+    "schema": 1,
+    "verified": true,
+    "signedPackages": 3,
+    "systemInstallation": false,
+    "networkUsedOnlyIfExplicit": true
+  }
+}

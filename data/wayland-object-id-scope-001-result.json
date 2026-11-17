@@ -1,0 +1,29 @@
+{
+  "binarySha256": "adbf7a4f1ff665bc8cb58c5962b4bfdd858187d11cfd2ae20d5056b876a5c0e3",
+  "boundExceeded": false,
+  "distinctOwningClients": true,
+  "fcitxLoaded": false,
+  "gpu": false,
+  "hostConfigurationChanged": false,
+  "hostDisplay": false,
+  "idIsConnectionLocal": true,
+  "nativeToplevels": false,
+  "network": false,
+  "ok": true,
+  "passed": true,
+  "realInput": false,
+  "sameIdDifferentOrdinal": 2,
+  "sandboxed": true,
+  "schema": 1,
+  "scope": "core_surface_object_id_namespace_only",
+  "serverIdsMatchClientIds": true,
+  "serverSurfaceRecords": 8,
+  "sharedNumericIds": 2,
+  "sourceSha256": "1b514e3d0b69e33842ba1f97d6c5062fcebda2ddcd3a5aed4e515bf8ddae5421",
+  "surfacesPerClient": 4,
+  "waylandPkgVersions": [
+    "1.26.0",
+    "1.26.0"
+  ],
+  "runnerSha256": "44e99e4a8b87df9dad2d1b4dd21ee574a4c78cb0a1ee29292535dfa219c91a56"
+}

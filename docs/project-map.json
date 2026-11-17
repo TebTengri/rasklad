@@ -84,10 +84,10 @@
       "aliases": [
         "dictionary",
         "dictionaries",
-        "\u0441\u043b\u043e\u0432\u0430\u0440\u044c",
-        "\u0441\u043b\u043e\u0432\u0430\u0440\u0438",
+        "словарь",
+        "словари",
         "model",
-        "\u043c\u043e\u0434\u0435\u043b\u044c"
+        "модель"
       ]
     },
     {
@@ -396,6 +396,41 @@
       "notes": "Start here; archive is not normal entry context.",
       "tests": [],
       "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "wayland-object-id-scope",
+      "kind": "experiment",
+      "title": "Wayland object ID scope",
+      "paths": [
+        "tests/wayland_identity/README.md",
+        "tests/wayland_identity/run.py",
+        "tests/wayland_identity/object_id_scope.cpp",
+        "data/wayland-object-id-scope-001-result.json"
+      ],
+      "notes": "Real private-socket core surface object IDs collide across connections; no native window/Fcitx proof.",
+      "tests": [
+        "python3 -m unittest discover -s tests/wayland_identity",
+        "python3 tests/wayland_identity/run.py --run"
+      ],
+      "status": "closed_wire_namespace_counterexample"
+    },
+    {
+      "id": "window-provenance",
+      "kind": "experiment",
+      "title": "Native window provenance",
+      "paths": [
+        "docs/WINDOW-PROVENANCE-001.md",
+        "tests/window_provenance/README.md",
+        "tests/window_provenance/run.py",
+        "tests/window_provenance/native_windows.cpp",
+        "data/window-provenance-001-result.json"
+      ],
+      "notes": "Two same-appid native windows on owned Sway; stable IDs agree across observer connections and change on recreation. No Fcitx/field binding.",
+      "tests": [
+        "python3 -m unittest discover -s tests/window_provenance",
+        "python3 tests/window_provenance/run.py --run"
+      ],
+      "status": "closed_native_window_identity_only"
     }
   ],
   "edges": [
@@ -593,6 +628,16 @@
       ],
       "confidence": "explicit",
       "evidence_kind": "planned"
+    },
+    {
+      "from": "window-provenance",
+      "to": "application-policy",
+      "relation": "candidate lifecycle seam, production join unimplemented",
+      "evidence": [
+        "docs/WINDOW-PROVENANCE-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "design_requirement"
     }
   ]
 }

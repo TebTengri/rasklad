@@ -35,6 +35,7 @@ Shared Off/On, safe resume, lazy holders and terminal Off cleanup verified in ow
 
 ## Связи
 
+- [window-provenance](window-provenance.md): incoming candidate lifecycle seam, production join unimplemented
 
 ## Проверки
 

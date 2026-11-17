@@ -45,6 +45,11 @@
 - Closed owned no-host/no-GPU/no-network fixtures allowed; revalidate missing artifacts.
 - No repeated empty-profile bootstrap trials. 51 local Slack guard tests passed.
 
-- Next closed boundary: two owned toplevels sharing app-id; establish compositor/window/IC provenance before any new binding lease. Pinned source archive restored to ignored build/fcitx5-5.1.23-pinned.tar.gz (verified); other old runtime artifacts still missing. See SLACK-EDITOR-METADATA-001.md for accepted/rejected Claude proposal.
+- Closed window provenance completed: core-ID alias counterexample + actual2same-appid native windows/2observers/close-recreate stable IDs PASS. No Fcitx/field binding. docs/WINDOW-PROVENANCE-001.md. Signed reference runtime restored/verified, not installed. Next audit authoritative Fcitx/window/field join; no guessed geometry or production Slack opt-in.
 
 - Owner selected alternating two private audio cues. tools/owner_alert_audio.py rotates ignored build/owner-alert-sound-{1,2}.mp3 under an owner-only nonblocking lock; state advances only after successful play. No audio/provenance/media copied to Git. Stock fallback, DND respected. 4 local rotation tests pass.
+
+- Native stable-ID lifecycle + orderly observer cleanup PASS5iterations; 3core-ID +6native/host-plan guards PASS. Gemini critique resolved against protocol, wrapper external review unavailable at agent quota (not credited).
+- Found primary Hyprland toplevel mapping protocol for WLR/EXT→common window address. Prepared tools/host_registry_probe.py, NOT run: registry-only, binds0globals, no windows/text/input/GPU. Closed Sway control stable1/WLR3/mapping0. Separate host connection approval needed; see HOST-REGISTRY-PROBE-PLAN.md.
+
+- Host supervisor hardened after Claude review: sealed ELF rejects RPATH/RUNPATH, bounded output whitelist, precise UID/executable claims. 8local guards PASS. Use python3 -I; host query still NOT authorized/run. Trusted repository, not signed-code security.

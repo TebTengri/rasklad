@@ -27,6 +27,8 @@
 - [Cooperative IME handoff symbolic screen](handoff-screen.md)
 - [Default-deny application policy](application-policy.md)
 - [Current compact handoff](current-handoff.md)
+- [Wayland object ID scope](wayland-object-id-scope.md)
+- [Native window provenance](window-provenance.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.

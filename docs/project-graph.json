@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "6870423295a3c69a454fe6e4ab9d0cda7cacf23f5b474820cf43546f6f67a8bc",
+  "curatedSha256": "5fd243ed4cd4692a77b766d8f7e67e7473e935cc6bd21a1f8f4a607185736128",
   "sourceSha256": {
     "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -75,6 +75,7 @@
     "docs/GITHUB_SECURITY.md": "d734268c2c3faf7a67c7ebb2eece700fb4b0e002453a60961c2f3ec018dc3e6f",
     "docs/GRAB-ENTRY-WITNESS-001.md": "4d74cdc97ff913475bf5a57bfbd5bb46337e48668bf1095948a7810d6ceccca7",
     "docs/HANDOFF-PROTOCOL-MAPPING-001.md": "457598557041f29fc96a33d8e324f9329cab5c4304cd777d270dedd05a34d9e8",
+    "docs/HOST-REGISTRY-PROBE-PLAN.md": "7c4f8b9443c31b9b21e286c58da7ef0c3f898dc582da24d7e9df72a7b7923ff5",
     "docs/HYPRLAND-BACKEND-DIAGNOSIS.md": "9b5a7ca45c17a7a89d87e30e7790c918a8a0541f945f3f6f6335b9152ab8c401",
     "docs/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
     "docs/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
@@ -86,7 +87,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "71cc6a3852935d202e3babeacfbd97f0519d03970ed3e62fe6a84cecf7c42269",
+    "docs/NEXT.md": "27c6013691b01f363ff71c099d68e3e62147ca544f969d8d6026f237a67ef767",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
@@ -105,6 +106,7 @@
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
     "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
     "docs/WAYLAND-IME-001.md": "37e61bb4ae84110956bf85a88d6347a1cdd3bea291937505ff82a8c85e723de4",
+    "docs/WINDOW-PROVENANCE-001.md": "cb929db6030b1379f3613a094609aa918662d165dff5ac86424d9a19b3677a07",
     "rasklad.pro": "cc746f9acb89186e1dd905c1638211f8b43af246adf5c93e3cfb98084a4ad4e3",
     "src/Main.qml": "bd61a1cef9b41d373abcf3424793b48bd73fab4bf3a3b45c2a5f83f4c4d2bc5a",
     "src/analysisservice.cpp": "9979c961d2b7f940dd8b22889657ead75735aab0d5107ea1b1159bfe808074a6",
@@ -265,6 +267,10 @@
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
     "tests/ui/ui_tests.cpp": "8723d2068d453708f44a13fe88d23acb01c08e516e840c7e07397a817f5d54df",
     "tests/ui/ui_tests.pro": "dfb1494f551cd6de820653d56e82d64d3a7ae7e9f9e1f3a9968df725e4f449ec",
+    "tests/wayland_identity/README.md": "029951b2b03db159990c8804fa349498361258b0f81f05fbbb0f4d02675d6f90",
+    "tests/wayland_identity/object_id_scope.cpp": "1b514e3d0b69e33842ba1f97d6c5062fcebda2ddcd3a5aed4e515bf8ddae5421",
+    "tests/wayland_identity/run.py": "44e99e4a8b87df9dad2d1b4dd21ee574a4c78cb0a1ee29292535dfa219c91a56",
+    "tests/wayland_identity/test_runner.py": "d310c55ea988574526d6c3d2e097dccf8d88d15552797f5ed67c0066896a32b7",
     "tests/wayland_ime/addon_witness_tests.mjs": "508da7e982820189ff24336ffc72c6684f2506b39491c4a61c15ac4297a2d3fb",
     "tests/wayland_ime/focus_fixture.mjs": "eb31f9eee5a3d555bc853e107d2af63e6fabb222b564672e8722c54f4bf7be3f",
     "tests/wayland_ime/focus_oracle_tests.mjs": "d1d2ab4f211c425a1650be49f44224fa06e33971e2d05e1089910615c8247e5e",
@@ -290,6 +296,11 @@
     "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
     "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
     "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
+    "tests/window_provenance/README.md": "a9bd5963aa7c9adb6861ce56e363f954606ff81e3aa64f81690ebc9aaa0518bc",
+    "tests/window_provenance/native_windows.cpp": "d087e3957b4654505156b407f551673123a97f29390b856869f6dc6fea4441e0",
+    "tests/window_provenance/run.py": "36ff01e96e9d559b4fea7f58c29c6ba3c535e2320fceeea26a7483bce068f0ec",
+    "tests/window_provenance/test_host_plan.py": "035d828f07a69cb5b8fbbd3cc84ceabe904bf538d17a010b1767291fa0ee57d7",
+    "tests/window_provenance/test_runner.py": "2ab10255aee4691e8dfe8431789cc8b00d9371301d7866d289ac92bf977577e3",
     "tools/a11y_bridge_lab.py": "182043f000f4066cebdae6d4cb239ac7b63c31703f053267dda4791aa9533095",
     "tools/audit_context_aggregates.py": "6c4e6b52d14e1da9e433153b62a336a91873cec48c2ff9bdb96a309711973705",
     "tools/audit_domain_decisions.py": "5f34b1253d8e02e08819a6c30c096b93ff474fad54d712c803c3e3ede106e801",
@@ -351,6 +362,7 @@
     "tools/frontcodedlexicon.h": "c0ff7ef3d1ff4282644fda4c17833d253c388ba2f14fad43e19724fdb76962ef",
     "tools/generate_grab_header.py": "2b9622bac54d29f652a0d3dcc9522a7a0c7408c485c4f4b5b314855f8315902e",
     "tools/grab_entry_witness.pro": "a0d7dcfeaa74566027c7c00b021af3ce7e402e66ce34bbad5d27d2e7d2fa7849",
+    "tools/host_registry_probe.py": "7fea3f07e58e1c52dfabc893b04363fb726df1d74254f6bf6327d9e7b03e2ec4",
     "tools/hunspellengine.cpp": "a1030ac485865252f2354d0d7898f0b9ae7b9f7344a207403d3eb9b0756da051",
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
@@ -680,6 +692,10 @@
       "symbols": []
     },
     {
+      "path": "docs/HOST-REGISTRY-PROBE-PLAN.md",
+      "symbols": []
+    },
+    {
       "path": "docs/HYPRLAND-BACKEND-DIAGNOSIS.md",
       "symbols": []
     },
@@ -797,6 +813,10 @@
     },
     {
       "path": "docs/WAYLAND-IME-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/WINDOW-PROVENANCE-001.md",
       "symbols": []
     },
     {
@@ -3021,6 +3041,89 @@
       "symbols": []
     },
     {
+      "path": "tests/wayland_identity/README.md",
+      "symbols": []
+    },
+    {
+      "path": "tests/wayland_identity/object_id_scope.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/wayland_identity/run.py",
+      "symbols": [
+        {
+          "name": "directory",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "limits",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "compile_logged",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build",
+          "line": 35,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "validate_record",
+          "line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sandbox_args",
+          "line": 65,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 96,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/wayland_identity/test_runner.py",
+      "symbols": [
+        {
+          "name": "BoundaryTests",
+          "line": 7,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_no_host_mount_display_or_network_share",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_compile_log_does_not_follow_existing_symlink",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_stale_or_forged_provenance_refused",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "compiler",
+          "line": 21,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/wayland_ime/addon_witness_tests.mjs",
       "symbols": []
     },
@@ -3940,6 +4043,129 @@
       "symbols": []
     },
     {
+      "path": "tests/window_provenance/README.md",
+      "symbols": []
+    },
+    {
+      "path": "tests/window_provenance/native_windows.cpp",
+      "symbols": []
+    },
+    {
+      "path": "tests/window_provenance/run.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "directory",
+          "line": 15,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inputs",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "build",
+          "line": 26,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sandbox_args",
+          "line": 61,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "native_limits",
+          "line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 80,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inside",
+          "line": 114,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 144,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/window_provenance/test_host_plan.py",
+      "symbols": [
+        {
+          "name": "HostPlanGuards",
+          "line": 7,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_peer_requires_correct_uid_and_exact_binary",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_no_default_display_guess_or_path_escape",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_child_report_never_forwards_extra_text_and_rejects_invalid_versions",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_binary_local_rpath_is_refused_without_execution",
+          "line": 23,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_runtime_symlink_is_refused",
+          "line": 29,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "inspector",
+          "line": 25,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/window_provenance/test_runner.py",
+      "symbols": [
+        {
+          "name": "NativeBoundaryTests",
+          "line": 7,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_display_is_private_with_no_host_environment",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_inside_guard_does_not_spawn_on_host",
+          "line": 17,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_file_limit_permits_pinned_library_materialization",
+          "line": 20,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tools/a11y_bridge_lab.py",
       "symbols": [
         {
@@ -4639,6 +4865,56 @@
     {
       "path": "tools/grab_entry_witness.pro",
       "symbols": []
+    },
+    {
+      "path": "tools/host_registry_probe.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 7,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "display_path",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "reject_local_search_paths",
+          "line": 21,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sanitized_report",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "validated_binary",
+          "line": 39,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "peer_is_hyprland",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "limits",
+          "line": 56,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 60,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 87,
+          "kind": "FunctionDef"
+        }
+      ]
     },
     {
       "path": "tools/hunspellengine.cpp",
@@ -7114,9 +7390,9 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "470b3d080efea6816b31c44be3a9e91d129a623560751ccdb818e244c8f33c63",
+    "docs/knowledge/Start.md": "6bbd9fa9e330ff8011ff990b6393c7627540ad63480bcb52142e881792fa3099",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
-    "docs/knowledge/application-policy.md": "c348795690379e928ba8b4667d43d09fab3bc48beb6181360bfa285671361c03",
+    "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
@@ -7135,6 +7411,8 @@
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
     "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
+    "docs/knowledge/wayland-object-id-scope.md": "3d3cfae2dabc50e352f30c49ccde20ac739d5785ae6023b9256eba57e31d3955",
+    "docs/knowledge/window-provenance.md": "030755dc724a501d5d5da7fccfbe6518eebae1cc064601795dd57b1b691b5a30",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }
