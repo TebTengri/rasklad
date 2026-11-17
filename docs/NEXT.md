@@ -61,3 +61,7 @@
 - Prepared actual mapping client + GPU-only closed Sway→Hyprland wrapper (zero hostWayland). Strict build PASS, softwareSway regression PASS5,8+4guards PASS, exact synthetic scope limits/FD/cleanup PASS. Independent Codex boundary review cleared after fixes; Claude unavailable. GPU trial NOT authorized/run; docs/CLOSED-HYPRLAND-MAPPING-PLAN.md. No new host enumeration or field authority.
 
 - ONE approved closed GPU-only trial executed: mapping-not-verified; phase lost by outer diagnostics (own namespace logs discarded). Approval consumed. Fixed finite-enum diagnostics propagation + regression,5boundary tests PASS. data/closed-mapping-001-result.json. No repeat authorized/run.
+
+- Trial002 separately approved/executed: ownSway live; Hyprland-start SIGABRT(-6),gpu_allocator_unavailable. Limits+inactivecleanup verified. Approval consumed. Source audit: missing DRM FD vs PRIME/GBM failure unresolved. Added bounded whole-own-log boolean marker scan (early markers survive formatdump),6guards PASS; no third trial run.
+
+- Prepared discriminating ownSway DMA-BUF feedback control (--feedback-fd): resolves main_device via metadata to fixed admittedrender node; fail beforeHyprland on mismatch. Strict build PASS(hash888869dc...),7boundaryguards PASS. No additional GPU run. Controls/whole-log boolean diagnostics now ready for separately approved repeat.

@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
+import io
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('closed_mapping', ROOT / 'tools/closed_hyprland_mapping.py')
@@ -62,6 +63,24 @@ class Boundary(unittest.TestCase):
         self.assertNotIn('privateTitle', report)
         self.assertNotIn('text', report)
         self.assertFalse(report['ok'])
+
+    def test_early_cause_survives_large_format_dump(self):
+        log = io.BytesIO(b'PRIME export is not supported' + b'x' * 100000 + b'no allocator available')
+        flags = lab.startup_flags(log)
+        self.assertTrue(flags['primeExportDenied'])
+        self.assertFalse(flags['scanTruncated'])
+        report = lab.failure_report({'startupFlags': dict(flags, title='private')}, 1)
+        self.assertEqual(report['startupFlags'], flags)
+
+    def test_parent_feedback_must_resolve_admitted_render_node(self):
+        good = dict(ok=True, feedbackDone=True, deviceResolved=True, renderNodeMatched=True)
+        self.assertTrue(lab.feedback_verified(good, 0))
+        self.assertFalse(lab.feedback_verified(good, 1))
+        for key in good:
+            self.assertFalse(lab.feedback_verified(dict(good, **{key: 1}), 0))
+        report = lab.failure_report(dict(good, phase='parent-feedback', reason='parent-feedback-not-verified'), 1)
+        self.assertEqual(report['phase'], 'parent-feedback')
+        self.assertTrue(report['renderNodeMatched'])
 
 
 if __name__ == '__main__':

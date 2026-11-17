@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "941892b0429f1ee29aa582073b6ed79d8faf423a1c53e668dbf6afbe6a26ee1d",
+  "curatedSha256": "0ee245a5f521d240e31a376f7495ac525bb31b0ee0a46ac35955c124b3de8316",
   "sourceSha256": {
     "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -45,7 +45,7 @@
     "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
     "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
     "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md": "5c4a70bbf30bbda21660f752574e156d660910597b5a8299b24af4db45346c74",
+    "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md": "6165f1e08dddc2a0fea006c145b3ea8dd64494112a82a6a3b635ab43ecbf0d00",
     "docs/CONTINUATION-PLAN.md": "665b4bc54234d005165c2e0e693b943bf494efd8210cc5a56d4cadd57b6375fa",
     "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
@@ -88,7 +88,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "e85d6d5652353c1963fbb72085badd1f22f5d529f85140d9f7bde2247df3b68d",
+    "docs/NEXT.md": "d09d94b708394e41419e71d6f382fa85eba9b95f44d18df1a4875763abc6ce47",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
@@ -180,7 +180,7 @@
     "tests/chromium_ime/server-route-witness.mjs": "1ec0bfa5ab927cba1cdc31eb328f0786585dcbf002327dd07476a2eff6064d6a",
     "tests/chromium_ime/space-telemetry.mjs": "b4c3a91dcc4148e1fd2745631a241b04bb3ef5d43f0ee62d6dd0b6d7154ed4aa",
     "tests/chromium_ime/test_guards.py": "cd9df2295a3858ab0b5e9e42106164b404d56b5b3310061932dc394a10a1db41",
-    "tests/closed_mapping/test_boundary.py": "6fdd19ed0a8d23f753b7e010aa01b988699cf951cc3f3f7f0775ad298eb07661",
+    "tests/closed_mapping/test_boundary.py": "c43f36d8cfd1ef99bae664c75b1f792279437035dfaa611ae894141d36050326",
     "tests/common/profilefixture.h": "08f9ca5e3c1e1d73140c7df37e79885f86021dd3de7054b7bc23061e2fb6d097",
     "tests/composition_disable/composition_disable.pro": "d0779322ff2fd391505a5c198a374327e8e14f42c6b734dbda1c57ea19b7e9c4",
     "tests/context/context_tests.cpp": "edc9eb755fcaf3f085a452290e463d4c15237e45a1a8e1831f98cb75aa1ddf12",
@@ -299,10 +299,10 @@
     "tests/wayland_lifecycle/wire_common.h": "08ba7468d1137ef187f9850e260cd3f0ee6d7d528d23b821defdd4773f038fcd",
     "tests/wayland_lifecycle/wire_lifecycle.cpp": "2fad7847982ee964b5cac039ed561f2bfd0a4386bedc01d8a5a53dc7067fb34c",
     "tests/wayland_lifecycle/wire_lifecycle.pro": "67704f2c96919b16c1bd80e14a6dc946c912ec2bb4639b883a3e5492fc973a27",
-    "tests/window_provenance/MAPPING.md": "1b714911f24a0593e6bf9ba9aca079d4b436c77efbf9b92d5c2dec67afba8ddf",
+    "tests/window_provenance/MAPPING.md": "b9fda6650379a286d8ba4db22d251ad896b48b65c3fd1226360cf34e38d20b11",
     "tests/window_provenance/README.md": "a9bd5963aa7c9adb6861ce56e363f954606ff81e3aa64f81690ebc9aaa0518bc",
-    "tests/window_provenance/native_windows.cpp": "2a650366f50a151d2a974f6783a979d43abba6fa5dbd3bc25b413b43142fe87b",
-    "tests/window_provenance/run.py": "8c09f2463fe22c157837c672f6b55c53291cfbb9942734f1e3d8a74d92a57ff8",
+    "tests/window_provenance/native_windows.cpp": "b667b34ed5dd507fddf96dd49559d95768cb3a9aa6fa4fbcc67f50efcb0e0813",
+    "tests/window_provenance/run.py": "9db788b8ecddee6cb360b29caa4b388328c7330689b16dbe6d36e102b26ec489",
     "tests/window_provenance/test_host_plan.py": "035d828f07a69cb5b8fbbd3cc84ceabe904bf538d17a010b1767291fa0ee57d7",
     "tests/window_provenance/test_runner.py": "2ab10255aee4691e8dfe8431789cc8b00d9371301d7866d289ac92bf977577e3",
     "tools/a11y_bridge_lab.py": "182043f000f4066cebdae6d4cb239ac7b63c31703f053267dda4791aa9533095",
@@ -323,7 +323,7 @@
     "tools/browser_spell/native.cpp": "7ee8169b50025a04e2aedd27279f71c102fef148034e77d83cc7aea032f2cfd4",
     "tools/browser_spell/native.pro": "f11bae353059570c9a29ae266e1d2cec8d0f16447a1d5d0cd9f628e3e1c57607",
     "tools/chromium_ime_lab.py": "aaaae70947bb13446190de2a4c24c16e01fe6fed9d9cf98cae40a73b22a957c7",
-    "tools/closed_hyprland_mapping.py": "394213ba167bfa830631182f39df2ab2120b1187ef9328619cf21a585cdbc33a",
+    "tools/closed_hyprland_mapping.py": "86661cc8ad7882bb55e7ef424154d2aebdbd7834c1f543ede1ffb7ce39f7479a",
     "tools/context_decisions.cpp": "c7f645c92177874e8e5e5999571d3101e0db1a62303cc932dc6736c2ea8fd17e",
     "tools/context_decisions.pro": "034c194ebdbf9eb2579e5557d24ceb018727018b6dc93bbed3ea1eab8f022236",
     "tools/contextpolicy.cpp": "a886b65ea826a3fcb948100b2e41c07a125e04f80a0c834a16ec4bdadb7ef1eb",
@@ -1178,32 +1178,42 @@
       "symbols": [
         {
           "name": "Boundary",
-          "line": 13,
+          "line": 14,
           "kind": "ClassDef"
         },
         {
           "name": "test_only_one_device_and_private_namespace",
-          "line": 14,
+          "line": 15,
           "kind": "FunctionDef"
         },
         {
           "name": "test_scope_has_aggregate_limits",
-          "line": 29,
+          "line": 30,
           "kind": "FunctionDef"
         },
         {
           "name": "test_failure_cannot_become_verified",
-          "line": 37,
+          "line": 38,
           "kind": "FunctionDef"
         },
         {
           "name": "test_dead_server_socket_is_not_ready",
-          "line": 47,
+          "line": 48,
           "kind": "FunctionDef"
         },
         {
           "name": "test_failure_diagnostics_survive_both_wrappers_without_log_text",
-          "line": 53,
+          "line": 54,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_early_cause_survives_large_format_dump",
+          "line": 67,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_parent_feedback_must_resolve_admitted_render_node",
+          "line": 75,
           "kind": "FunctionDef"
         }
       ]
@@ -4112,42 +4122,42 @@
         },
         {
           "name": "directory",
-          "line": 17,
+          "line": 18,
           "kind": "FunctionDef"
         },
         {
           "name": "inputs",
-          "line": 22,
+          "line": 23,
           "kind": "FunctionDef"
         },
         {
           "name": "build",
-          "line": 28,
+          "line": 29,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 63,
+          "line": 64,
           "kind": "FunctionDef"
         },
         {
           "name": "native_limits",
-          "line": 74,
+          "line": 75,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 82,
+          "line": 83,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 116,
+          "line": 117,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 146,
+          "line": 147,
           "kind": "FunctionDef"
         }
       ]
@@ -4489,33 +4499,43 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "startup_flags",
+          "line": 145,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "feedback_verified",
+          "line": 163,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "sandbox_args",
-          "line": 125,
+          "line": 168,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 156,
+          "line": 199,
           "kind": "FunctionDef"
         },
         {
           "name": "wait_socket",
-          "line": 227,
+          "line": 270,
           "kind": "FunctionDef"
         },
         {
           "name": "stop",
-          "line": 241,
+          "line": 284,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 251,
+          "line": 294,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 317,
+          "line": 382,
           "kind": "FunctionDef"
         }
       ]
@@ -7517,7 +7537,7 @@
     "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
     "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
-    "docs/knowledge/closed-hyprland-mapping.md": "7c43464ea44e10a4b8ded3ca3734acd423b5ffa05d174e990f5b2d573967860b",
+    "docs/knowledge/closed-hyprland-mapping.md": "aea3ae9bbdbeca1825ca62413de2f4b042a9f6b6503f4d1cc7eab178083868d8",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
     "docs/knowledge/current-handoff.md": "f6b2ada0e8982b7b45f86b46c5592537e440c250943d5c1d875b254a6fd39c1a",
     "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",

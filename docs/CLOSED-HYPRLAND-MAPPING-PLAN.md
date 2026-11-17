@@ -62,3 +62,30 @@ private temporary files, classify a bounded tail into fixed enums, then discard
 them. No raw log bytes leave the namespace. A targeted regression proves the
 original masked error survives both layers while arbitrary strings are stripped.
 Five boundary tests pass. A new GPU trial requires fresh explicit permission.
+
+## Trial002
+
+One separately approved repeat completed: own Sway parent live, Hyprland
+SIGABRT(-6) before private child socket. Classifier: gpu_allocator_unavailable;
+phase hyprland-start. Actual cgroup limits and inactive/empty-scope cleanup
+verified. No host Wayland, network or real input. Approval consumed. Aggregate:
+data/closed-mapping-002-result.json.
+
+This category does not distinguish missing backend DRM FD, PRIME capability
+refusal, or GBM creation failure. Aquamarine v0.15.1 Backend.cpp148-163 can emit
+no-allocator after any of these paths; GBM.cpp299-309 documents the latter two.
+Early markers can disappear from a bounded log tail after a format dump. Added a
+bounded streaming scan from the start of OWN log into8fixed booleans, without
+forwarding strings; targeted regression proves an early marker survives100KB of
+synthetic output. Six boundary tests now pass. No additional trial performed.
+
+## Prepared discriminating control
+
+Before child Hyprland, own native client --feedback-fd consumes one preopened
+connection to own Sway, binds DMA-BUFv4 and waits default-feedback done. It closes
+the format-table FD immediately; main_device must be exactly one dev_t. libdrm
+resolves metadata without opening a GPU, and the resolved render-node pathname
+must equal the already admitted renderD128. Output is four booleans only.
+If this control fails, do not launch Hyprland; report parent-feedback stage.
+This does not add a host connection or device. Strict build passes; seven
+boundary guards pass. New GPU execution still requires separate approval.

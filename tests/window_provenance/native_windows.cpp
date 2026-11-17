@@ -13,6 +13,8 @@
 #include "wlr-foreign-client.h"
 #include "hyprland-mapping-client.h"
 #include <map>
+#include "linux-dmabuf-client.h"
+#include <xf86drm.h>
 
 #include <signal.h>
 #include <sys/mman.h>
@@ -336,16 +338,83 @@ int run(int fd) {
 }
 }
 
+namespace feedback_only {
+struct State {
+  zwp_linux_dmabuf_v1* dmabuf = nullptr;
+  zwp_linux_dmabuf_feedback_v1* feedback = nullptr;
+  uint32_t globalName = 0;
+  bool done = false, seen = false, valid = true, resolved = false, matched = false;
+};
+void done(void* data, zwp_linux_dmabuf_feedback_v1*) { static_cast<State*>(data)->done = true; }
+void table(void*, zwp_linux_dmabuf_feedback_v1*, int32_t fd, uint32_t) { close(fd); }
+void main_device(void* data, zwp_linux_dmabuf_feedback_v1*, wl_array* array) {
+  auto* s = static_cast<State*>(data);
+  if (s->seen || !array || array->size != sizeof(dev_t) || !array->data) { s->valid = false; return; }
+  s->seen = true;
+  dev_t device; std::memcpy(&device, array->data, sizeof(device));
+  drmDevice* metadata = nullptr;
+  if (drmGetDeviceFromDevId(device, 0, &metadata) != 0 || !metadata) return;
+  s->resolved = true;
+  s->matched = (metadata->available_nodes & (1 << DRM_NODE_RENDER)) && metadata->nodes &&
+      metadata->nodes[DRM_NODE_RENDER] && !std::strcmp(metadata->nodes[DRM_NODE_RENDER], "/dev/dri/renderD128");
+  drmFreeDevice(&metadata);
+}
+void tranche_done(void*, zwp_linux_dmabuf_feedback_v1*) {}
+void tranche_device(void*, zwp_linux_dmabuf_feedback_v1*, wl_array*) {}
+void tranche_formats(void*, zwp_linux_dmabuf_feedback_v1*, wl_array*) {}
+void tranche_flags(void*, zwp_linux_dmabuf_feedback_v1*, uint32_t) {}
+const zwp_linux_dmabuf_feedback_v1_listener listener = {
+  done, table, main_device, tranche_done, tranche_device, tranche_formats, tranche_flags
+};
+void global(void* data, wl_registry* registry, uint32_t name, const char* interface, uint32_t version) {
+  auto* s = static_cast<State*>(data);
+  if (!s->dmabuf && version >= 4 && !std::strcmp(interface, zwp_linux_dmabuf_v1_interface.name)) {
+    s->globalName = name;
+    s->dmabuf = static_cast<zwp_linux_dmabuf_v1*>(wl_registry_bind(registry, name, &zwp_linux_dmabuf_v1_interface, 4));
+  }
+}
+void removed(void* data, wl_registry*, uint32_t name) {
+  auto* s = static_cast<State*>(data); if (name == s->globalName) s->valid = false;
+}
+const wl_registry_listener registry_listener = {global, removed};
+int run(int fd) {
+  int type = 0; socklen_t length = sizeof(type);
+  if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &type, &length) || type != SOCK_STREAM) return 2;
+  wl_display* display = wl_display_connect_to_fd(fd);
+  if (!display) return 2;
+  State state;
+  wl_registry* registry = wl_display_get_registry(display);
+  bool ok = registry && wl_registry_add_listener(registry, &registry_listener, &state) == 0;
+  if (ok) ok = wl_display_roundtrip(display) >= 0 && state.dmabuf;
+  if (ok) {
+    state.feedback = zwp_linux_dmabuf_v1_get_default_feedback(state.dmabuf);
+    ok = state.feedback && zwp_linux_dmabuf_feedback_v1_add_listener(state.feedback, &listener, &state) == 0;
+  }
+  for (int n = 0; ok && !state.done && n < kMaxIter; ++n) ok = wl_display_roundtrip(display) >= 0;
+  ok = ok && state.valid && state.done && state.seen && state.resolved && state.matched;
+  if (state.feedback) zwp_linux_dmabuf_feedback_v1_destroy(state.feedback);
+  if (state.dmabuf) zwp_linux_dmabuf_v1_destroy(state.dmabuf);
+  if (registry) wl_registry_destroy(registry);
+  wl_display_flush(display); wl_display_disconnect(display);
+  alarm(0);
+  auto b = [](bool value) { return value ? "true" : "false"; };
+  std::printf("{\"schema\":1,\"ok\":%s,\"feedbackDone\":%s,\"deviceResolved\":%s,\"renderNodeMatched\":%s}\n",
+      b(ok), b(state.done), b(state.resolved), b(state.matched));
+  return ok ? 0 : 1;
+}
+}
+
 int main(int argc,char** argv) {
   signal(SIGALRM, on_alarm);
   alarm(6);
   const bool mappingMode = argc == 2 && !std::strcmp(argv[1], "--mapping");
   if (argc!=1 && !mappingMode) {
-    const char* prefix="--registry-fd=";
+    const bool feedbackMode = argc == 2 && !std::strncmp(argv[1], "--feedback-fd=", 14);
+    const char* prefix=feedbackMode ? "--feedback-fd=" : "--registry-fd=";
     if (argc!=2 || std::strncmp(argv[1],prefix,std::strlen(prefix))) return 2;
     char* end=nullptr;errno=0;long fd=std::strtol(argv[1]+std::strlen(prefix),&end,10);
     if (errno || !end || *end || fd<3 || fd>1023) return 2;
-    return registry_only::run(static_cast<int>(fd));
+    return feedbackMode ? feedback_only::run(static_cast<int>(fd)) : registry_only::run(static_cast<int>(fd));
   }
   App app;
   Win wins[2];

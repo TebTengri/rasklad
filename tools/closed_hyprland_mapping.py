@@ -103,10 +103,10 @@ def failure_report(report, exit_code):
                   sandboxExit=exit_code if type(exit_code) is int and -128 <= exit_code <= 255 else None)
     if type(report) is not dict:
         return result
-    if report.get('phase') in ('parent-start', 'hyprland-start', 'mapping-client'):
+    if report.get('phase') in ('parent-start', 'parent-feedback', 'hyprland-start', 'mapping-client'):
         result['phase'] = report['phase']
     reasons = ('private-compositor-unready', 'mapping-not-verified', 'client-output-bound',
-               'compositor-exited', 'TimeoutExpired', 'OSError', 'ValueError')
+               'compositor-exited', 'parent-feedback-not-verified', 'TimeoutExpired', 'OSError', 'ValueError')
     if report.get('reason') in reasons:
         result['reason'] = report['reason']
     categories = ('unclassified_startup_failure', 'drm_device_discovery_failed', 'parent_wayland_connect_failed',
@@ -119,7 +119,50 @@ def failure_report(report, exit_code):
         value = report.get(key)
         if type(value) is int and -128 <= value <= 255:
             result[key] = value
+    for key in ('feedbackDone', 'deviceResolved', 'renderNodeMatched'):
+        if type(report.get(key)) is bool:
+            result[key] = report[key]
+    if type(report.get('startupFlags')) is dict:
+        result['startupFlags'] = {key: report['startupFlags'][key] for key in STARTUP_MARKERS
+                                  if type(report['startupFlags'].get(key)) is bool}
+        if type(report['startupFlags'].get('scanTruncated')) is bool:
+            result['startupFlags']['scanTruncated'] = report['startupFlags']['scanTruncated']
     return result
+
+
+STARTUP_MARKERS = {
+    'waylandBackendStarted': b'Starting the Wayland backend!',
+    'parentConnected': b'Connected to a wayland compositor:',
+    'dmabufDeviceSeen': b'zwp_linux_dmabuf_v1: Got main device',
+    'dmabufNodeOpened': b'zwp_linux_dmabuf_v1: opened node',
+    'drmDiscoveryFailed': b'drmGetDeviceFromDevId failed',
+    'primeExportDenied': b'PRIME export is not supported',
+    'gbmDeviceFailed': b'gbm failed to create a device',
+    'allocatorCreated': b'Created a GBM allocator with drm fd',
+}
+
+
+def startup_flags(log):
+    """Scan bounded OWN log from its start so format dumps cannot hide causes."""
+    flags = {key: False for key in STARTUP_MARKERS}
+    log.seek(0)
+    remaining, carry = 16 << 20, b''
+    while remaining:
+        chunk = log.read(min(4096, remaining))
+        if not chunk:
+            break
+        remaining -= len(chunk)
+        window = carry + chunk
+        for key, marker in STARTUP_MARKERS.items():
+            flags[key] = flags[key] or marker in window
+        carry = window[-128:]
+    flags['scanTruncated'] = bool(log.read(1))
+    return flags
+
+
+def feedback_verified(report, code):
+    keys = ('ok', 'feedbackDone', 'deviceResolved', 'renderNodeMatched')
+    return code == 0 and type(report) is dict and all(report.get(key) is True for key in keys)
 
 
 def sandbox_args(fds, paths, metadata):
@@ -267,10 +310,26 @@ def inside():
     sway = hypr = None
     parent_log, hypr_log = tempfile.TemporaryFile(), tempfile.TemporaryFile()
     phase = 'parent-start'
+    feedback = {}
     try:
         sway = subprocess.Popen(['/lab/runtime/sway', '-c', str(config)], env=env,
                                 stdin=subprocess.DEVNULL, stdout=parent_log, stderr=subprocess.STDOUT)
         parent = wait_socket(sway, parent_dir, 5)
+        phase = 'parent-feedback'
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection, tempfile.TemporaryFile() as out:
+            connection.settimeout(2)
+            connection.connect(str(parent))
+            connection.settimeout(None)
+            control = subprocess.run(['/lab/probe', '--feedback-fd=' + str(connection.fileno())],
+                                     pass_fds=(connection.fileno(),), stdin=subprocess.DEVNULL,
+                                     stdout=out, stderr=subprocess.DEVNULL, timeout=4)
+            out.seek(0)
+            raw = out.read(4097)
+        if len(raw) > 4096:
+            raise base.Refused('client-output-bound')
+        feedback = json.loads(raw)
+        if not feedback_verified(feedback, control.returncode):
+            raise base.Refused('parent-feedback-not-verified')
         phase = 'hyprland-start'
         hypr_config = Path('/tmp/hypr.conf')
         hypr_config.write_text(previous.CONFIG)
@@ -295,10 +354,15 @@ def inside():
         report = verified_report(json.loads(raw), result.returncode)
         if sway.poll() is not None or hypr.poll() is not None:
             raise base.Refused('compositor-exited')
-        return dict(report, privateParent=True, actualHyprland=True, probeExit=result.returncode)
+        return dict(report, privateParent=True, actualHyprland=True, probeExit=result.returncode,
+                    parentFeedbackVerified=True)
     except Exception as exc:
         report = dict(schema=1, ok=False, phase=phase,
                       reason=str(exc) if isinstance(exc, base.Refused) else type(exc).__name__)
+        if type(feedback) is dict:
+            for key in ('feedbackDone', 'deviceResolved', 'renderNodeMatched'):
+                if type(feedback.get(key)) is bool:
+                    report[key] = feedback[key]
         for key, server in (('parentExit', sway), ('hyprlandExit', hypr)):
             if server is not None:
                 report[key] = server.poll()
@@ -306,6 +370,7 @@ def inside():
             log.seek(0, os.SEEK_END)
             log.seek(max(0, log.tell() - 32768))
             report[key] = previous.classify_startup(log.read(32768))
+        report['startupFlags'] = startup_flags(hypr_log)
         return failure_report(report, 1)
     finally:
         stop(hypr)

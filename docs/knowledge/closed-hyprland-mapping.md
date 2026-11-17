@@ -1,6 +1,6 @@
 # Closed Hyprland window mapping
 
-One approved GPU-only trial failed without phase evidence; wrapper diagnostics fixed and tested. No repeat authorized, no field authority.
+Two individually approved trials failed; second isolates Hyprland allocator category with live private Sway. No further GPU approval, no field authority.
 
 Статус: trial_failed_diagnostics_fixed_repeat_pending
 
@@ -13,6 +13,7 @@ One approved GPU-only trial failed without phase evidence; wrapper diagnostics f
 - `data/closed-mapping-preparation-001-result.json`
 - `vendor/wayland/sources.json`
 - `data/closed-mapping-001-result.json`
+- `data/closed-mapping-002-result.json`
 
 ## Связи
 

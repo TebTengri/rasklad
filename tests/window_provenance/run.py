@@ -9,7 +9,8 @@ def load(name,path):
     spec=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 base=load('window_base',ROOT/'fcitx_lab_runner.py' if INSIDE else ROOT/'tools/fcitx_lab_runner.py')
 BUILD=ROOT/'build/window-provenance'
-XMLS={'xdg-shell':Path('/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml'),
+XMLS={'linux-dmabuf':Path('/usr/share/wayland-protocols/stable/linux-dmabuf/linux-dmabuf-v1.xml'),
+      'xdg-shell':Path('/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml'),
       'foreign-list':Path('/usr/share/wayland-protocols/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml'),
       'wlr-foreign':ROOT/'vendor/wayland/wlr-foreign-toplevel-management-unstable-v1.xml',
       'hyprland-mapping':ROOT/'vendor/wayland/hyprland-toplevel-mapping-v1.xml'}
@@ -46,7 +47,7 @@ def build():
                 if result.returncode:raise base.Refused('protocol-compile-failed')
                 obj=Path(source).with_suffix('.o');os.replace(temporary,obj);objects.append(str(obj))
             finally:Path(temporary).unlink(missing_ok=True)
-        flags=subprocess.check_output(['/usr/bin/pkg-config','--cflags','--libs','wayland-client'],text=True,timeout=5,env={'PATH':'/usr/bin'}).split()
+        flags=subprocess.check_output(['/usr/bin/pkg-config','--cflags','--libs','wayland-client','libdrm'],text=True,timeout=5,env={'PATH':'/usr/bin'}).split()
         result=helpers.compile_logged(['/usr/bin/c++','-std=c++17','-O2','-Wall','-Wextra','-Werror','-I',str(BUILD),str(ROOT/'tests/window_provenance/native_windows.cpp')]+objects+['-o',name]+flags,BUILD)
         if result.returncode:raise base.Refused('compile-failed')
         if inputs()!=before:raise base.Refused('inputs-changed')

@@ -23,3 +23,5 @@ cannot prove Hyprland mapping support. The private Hyprland launcher must invoke
 A strict compile is only build evidence. Mapping correctness requires an actual
 private Hyprland run completing every phase. This experiment does not load
 Fcitx or establish input-field identity or authority.
+
+Optional --feedback-fd=N uses only an already opened own-parent connection. It checks default DMA-BUFv4 feedback and resolves main_device metadata to the fixed admitted render node, without GPU open or raw output. This is a diagnostic control, not mapping proof.
