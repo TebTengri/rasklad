@@ -69,3 +69,38 @@ Context7 /electron/electron app.md documents setAccessibilitySupportEnabled and
 setAccessibilitySupportFeatures for macOS/Windows, not Linux. Do not propose
 patching Slack or its app.asar as a substitute. Source:
 https://github.com/electron/electron/blob/main/docs/api/app.md
+
+## Approved bounded observation
+
+Owner separately approved ONE corrected observation. Result:8Slack processes,
+36discovery scans over9.999seconds,0owned accessibility peers, no truncation.
+False→true→false restoration verified firstattempt. This third one-shot approval
+is consumed. It tests absence of registration in the observed running instance
+during that window, not all Slack builds or cold-start accessibility.
+
+## Next prepared boundary — per-process launch, NOT executed
+
+Chromium primary source, blob59a94cf148d8d0ae2c44bbfb65b899bf31c7d6b0:
+https://chromium.googlesource.com/chromium/src/+/refs/heads/main/ui/accessibility/platform/atk_util_auralinux.cc
+ShouldEnableAccessibility first checks ACCESSIBILITY_ENABLED, GNOME_ACCESSIBILITY,
+QT_ACCESSIBILITY (1→enable,0→disable), before D-Bus IsEnabled/GSettings.
+InitializeAsync gates platform initialization with that decision. This supports
+a per-process startup hypothesis, not a guarantee for the installed Slack build.
+An ASCII NUL-terminated ACCESSIBILITY_ENABLED token exists in the installed
+Slack executable; static presence alone is not behavior proof.
+
+Prepared tools/slack_launch_probe.py: plan by default; explicit-approved action
+refuses if any current-user fixed-executable Slack is running. Owner must quit
+Slack manually, protecting unsaved work rather than automated termination.
+Fixed executable, force-renderer flag, process-local ACCESSIBILITY_ENABLED=1 and
+NO_AT_BRIDGE=0; normal profile, no copies. Does NOT set global IsEnabled. Normal
+Slack startup can update its own profile and connect to services, as usual.
+Only metadata is read; no messages/text/edits. Slack remains running with those
+process settings until the owner exits; subsequent ordinary startup reverts the
+environment. No launch or further status mutation authorized yet.
+
+Independent launch review found no additional privacy/read-boundary issues;
+accepted its reporting fix: toolTerminatedSlack=false expresses the actual
+guarantee, while targetPresentAtProbe reports observed process presence. No
+unconditional claim that Slack remains alive. Startup may sync, notify and write
+its own ordinary profile; disclose this in owner approval.

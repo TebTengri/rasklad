@@ -53,7 +53,7 @@
     "truncated": false,
     "writes": false
   },
-  "conclusion": "Both temporary trials restored false, first without Slack and repeat with8processes/0peers in immediate snapshot. They do not exclude delayed registration or prove incompatibility.",
+  "conclusion": "Bounded approved observation:8Slack processes,36discovery scans,9.999s,0peers. Flagfalse restored/readback firstattempt. Current live Slack did not register within the observed window; startup-scoped accessibility remains untested.",
   "approvedRepeat": {
     "enableAttempted": true,
     "enableOutcome": "confirmed",
@@ -87,5 +87,43 @@
     "textRead": false,
     "writesToApps": false
   },
-  "repeatApprovalConsumed": true
+  "repeatApprovalConsumed": true,
+  "approvedObservation": {
+    "enableAttempted": true,
+    "enableOutcome": "confirmed",
+    "initialIsEnabled": false,
+    "measurementCompleted": true,
+    "passed": true,
+    "passedMeaning": "status procedure and metadata measurement completed, not editor support",
+    "probe": {
+      "a11yBusAvailable": true,
+      "a11yStatus": {
+        "errors": 1,
+        "isEnabled": true,
+        "screenReaderEnabled": null
+      },
+      "discoveryScans": 36,
+      "discoverySeconds": 9.999,
+      "focusedEditableObjects": [],
+      "inspectedNodes": 0,
+      "pidLookupErrors": 0,
+      "pidLookups": 9,
+      "safeAutoCorrection": false,
+      "schema": 1,
+      "slackA11yConnections": 0,
+      "targetProcesses": 8,
+      "textRead": false,
+      "truncated": false,
+      "writes": false
+    },
+    "restart": false,
+    "restoreAttempts": 1,
+    "restored": true,
+    "schema": 1,
+    "statusChanged": true,
+    "targetReady": true,
+    "textRead": false,
+    "writesToApps": false
+  },
+  "observationApprovalConsumed": true
 }

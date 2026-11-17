@@ -29,7 +29,7 @@
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
     "docs/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
-    "docs/ACTIVE-PLAN.md": "da5edc346d9e4972ed3a77fe48960c5673c653ef4a8edf5d7daa259e05fdd1a9",
+    "docs/ACTIVE-PLAN.md": "df0acf9e088b834f022e2aafd462781b9ad5e0844354be2cad696e12fb14a197",
     "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
     "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
@@ -85,7 +85,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "7549af8f5592ed72eb66e5489f59bc2e0ba6e8c19a8d96a877b2c0ab77a9755b",
+    "docs/NEXT.md": "c60692f292c7e3cdd08245449224fe27c4b55701e4ebc8d0a7e32499f9f4f5ea",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
@@ -95,7 +95,7 @@
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
-    "docs/SLACK-LIVE-STATUS-PLAN.md": "9471be834c307cf7c1210aa2a409af98fb011a77efb18aea87a32b89cc268ecf",
+    "docs/SLACK-LIVE-STATUS-PLAN.md": "db0c6fcbc821f8d84a03898d8553ec94736f789e1133d335332b5134000e7a42",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
@@ -249,6 +249,7 @@
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
+    "tests/slack_probe/test_launch_probe.py": "04146e700c784d4584cd398add80cd6c03466dec0c339f4fbc70e6c5589ef774",
     "tests/slack_probe/test_metadata_probe.py": "4257b8649d4ce10ecbfe52198b47e0a0f1abc9a2dc3971429261f0aec01cc65c",
     "tests/slack_probe/test_peer_observation.py": "8e35fe2c0bbe7cdb975c1667174d5db256a8bc60d341918afa7bd6b21300ed02",
     "tests/slack_probe/test_private_bridge_lab.py": "60be5ce4719229f45ec6e56f1a8ad71c9462d79de47f91e477f4236ae6c4675e",
@@ -378,6 +379,7 @@
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "65c6ca7dc94e02ab66b2d2547e584d5aa2eb660e1b9b0fdbb90b5f09c117e13f",
     "tools/slack_https_bridge.py": "cb05d41ff9e4e3694e8b550581cde77d336e08e7748263ed2a749b02361d4043",
+    "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
@@ -2328,6 +2330,61 @@
         {
           "name": "recv",
           "line": 30,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/slack_probe/test_launch_probe.py",
+      "symbols": [
+        {
+          "name": "Probe",
+          "line": 7,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "LaunchTests",
+          "line": 12,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "__init__",
+          "line": 8,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "slack_pids",
+          "line": 9,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 10,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_refuses_existing_slack_without_launching",
+          "line": 13,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_fixed_launch_scoped_environment_no_kill",
+          "line": 18,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_validation_failure_prevents_launch",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "launch",
+          "line": 20,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "reject",
+          "line": 28,
           "kind": "FunctionDef"
         }
       ]
@@ -5424,6 +5481,31 @@
         {
           "name": "close",
           "line": 210,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tools/slack_launch_probe.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 7,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "launch_environment",
+          "line": 11,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 16,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "main",
+          "line": 35,
           "kind": "FunctionDef"
         }
       ]

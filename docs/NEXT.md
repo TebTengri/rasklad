@@ -48,3 +48,6 @@
 - Owner approved repeat after Slack opened; EXECUTED:8processes/0peers snapshot; flagfalse restored/readback firstattempt. BOTH one-shot status approvals CONSUMED.
 - Snapshot negative is inconclusive for asynchronous registration. Added offline-tested bounded observer + PID preflight (no further live run). See docs/SLACK-LIVE-STATUS-PLAN.md.
 - Old /tmp worktree/builds disappeared. Committed evidence survives; ignored artifacts/runtime must be rebuilt/validated before reuse. No adjacent/private projects inspected.
+
+- Third explicitly approved bounded live observation EXECUTED:8processes/36scans/9.999s/0peers. Flagfalse restored and verified firstattempt. ALL three one-shot approvals CONSUMED.
+- New source-backed lower-scope hypothesis: ACCESSIBILITY_ENABLED=1 for ONE Slack process startup; no global status writes. tools/slack_launch_probe.py prepared/plan-only; owner must fully quit Slack and explicitly authorize launch first.
