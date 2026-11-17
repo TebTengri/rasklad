@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "91bb469ae149c5997e3e6dd1ee6a9f1d6cfbf773ba2e925f7707ff86f336941a",
+  "curatedSha256": "b7019a616f1ba31fdfffa9e5f14de63e1063d7d7ee1c8639f07e55d09f070a99",
   "sourceSha256": {
     "AGENTS.md": "84fa86c51d19d2b9ced4f1b15345bba10a690284fe561a0fcff396c887550a41",
     "CLAUDE.md": "e3d933a900a09b8c6c3c3337f4286462d1f6fd93d126e29ce7c797262d0bfcdc",
@@ -70,6 +70,7 @@
     "docs/EXPERIMENT-006-PREREG.md": "7b8b63d34c154ed8f87d632d3ffb7dff13032d8460bd3f9baa1f72e628aad45b",
     "docs/EXPERIMENT-006.md": "9e6a067346f0bb9d482ebef9d62247422baf14868cc56f0d711c3d720ae32f1b",
     "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md": "5dffcd11d89121a3c8e5c65789f1237378ff926cc25973254996000a83340d92",
+    "docs/FCITX-FIELD-SEAM-001.md": "ff7ca13eeff248b681feaf4d80df5342505356d0eef818e866fb8e56d32fdca4",
     "docs/FCITX-KEEP-GRAB-001.md": "46c3d7879307042288d9f9f631649d79d82fbb9892a1ae513740934385da0d2c",
     "docs/FCITX-RETIREMENT-REVIEW-001.md": "ea1b405b6034eadd8736d603ab2c5b19adfe2cbf42047e85d0e20e541d515dac",
     "docs/FCITX-TRANSPORT-001.md": "6ea5b3f33cd342d5484fbdae8ccd8c267a9aa501993da77ad49d3afafc91a2cf",
@@ -90,7 +91,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "999310bfa0e8fbde14ae229e8ee4d96e6465917698cecbe3eaacc45e46eb25be",
+    "docs/NEXT.md": "f654980e6f22c3750029eb22a822bfe09a58d6956c8d7c27cfd1bfcb10198e16",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
@@ -682,6 +683,10 @@
     },
     {
       "path": "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/FCITX-FIELD-SEAM-001.md",
       "symbols": []
     },
     {
@@ -7822,7 +7827,7 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "2b73accc6b341c6f776e9313696b5aa93d6679050f09d57a61ce8a76d23c2518",
+    "docs/knowledge/Start.md": "1ff217847aff37e24c2ea81d786928e3c3f2b284271dd6785d374f58a41fc44f",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
     "docs/knowledge/aquamarine-readiness.md": "18d5628e82f72985634df4fc98ee8cb0a57b36f00bddecaa72d7072d36f3c321",
@@ -7836,6 +7841,7 @@
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
     "docs/knowledge/fcitx-drain-fixture.md": "dfbad37f880a434a9a3e394077edc9c9792756eaeab226ad858bb6b6b8e52c4f",
+    "docs/knowledge/fcitx-field-seam.md": "94cd4ec9f8b7589574bf56e28f46bfcbe243f73c32ca1f1f00080c1b1e4d1411",
     "docs/knowledge/fcitx.md": "f204e3f567ea3fca736fa3198e078d02f8232d20e56224cadc218a50f0c51b84",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",

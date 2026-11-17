@@ -488,6 +488,21 @@
         "python3 -I -m unittest discover -s tests/aquamarine_readiness -p 'test_*.py'"
       ],
       "status": "prepared_patch_unbuilt"
+    },
+    {
+      "id": "fcitx-field-seam",
+      "kind": "experiment",
+      "title": "Existing Fcitx field lifecycle seam",
+      "paths": [
+        "docs/FCITX-FIELD-SEAM-001.md",
+        "data/field-lifecycle-current-001-result.json",
+        "data/field-lifecycle-build-001-result.json",
+        "src/fcitxlab.cpp",
+        "tests/chromium_ime/adversarial-focus.mjs"
+      ],
+      "notes": "Current noGPU reference fixture18+4 PASS, existingfocus/caps lease invalidation. No newfrontendfieldpatch or liveSlack authority.",
+      "tests": [],
+      "status": "reference_field_lifecycle_pass_native_app_pending"
     }
   ],
   "edges": [

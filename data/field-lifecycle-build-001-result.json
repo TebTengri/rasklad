@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "built": true,
+  "exitCode": 0,
+  "hostWayland": false,
+  "gpu": false,
+  "network": false,
+  "systemInstallation": false,
+  "scopeInactiveVerified": true,
+  "artifacts": {
+    "build/chromium-ime/witness-addon/raskladlab.so": "849e8c0128182d57d0a01d5bdb2298cb74f48593551f3f07a4e9cc2a45c4f632",
+    "build/wayland-ime/keys/rasklad-wayland-keys": "edaf39894f5e44b93a37b72808064ff457206953dcb645f9bf229ed243500b31"
+  },
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "893eb21f1035baa21de915b1a65d23057ac7de139b05a998fe6495471210f7d8",
+    "tools/fcitxlabwitness.h": "f0bfc9dd1a24f960e3578c80bc746edd7345be9e7608676565d2b678cfe85a13",
+    "tools/fcitx_witness_lab.pro": "e15e5be686e05bf15bb11b30045dfb684f89e2734d5d521a892c1d35058cb5f3",
+    "tests/wayland_ime/keys.cpp": "10a11655ffaad5db565520f038ce4b7a29d0648bd79349bd7a92ba05e370f03d"
+  }
+}

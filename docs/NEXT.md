@@ -54,3 +54,5 @@
 - RouteB direct helper prepared byClaude;12guards PASS, exact ownFD/noGPU scope control PASS. Grok critique resolved/limited with evidence; physicalinputexposure declared. Claude5hourquota until19:30Almaty, Gemini followupcode timeout notcredited; Codex only acceptancefieldrename+noGPUcontrol. Fresh hostWayland+GPUapproval requested; direct trial NOTrun.
 
 - Direct trial001 separately approved+PASS: actualHyprland2windows/2observers/close-recreate mappingVerifiedtrue,7iterations,scopeinactive. Approval consumed; owner typing safe after teardown. data/direct-hyprland-mapping-001-result.json. NEXT offline pinnedFcitx appmonitor/context join analysis; fieldbinding stillfalse, Slack remainsobserveonly.
+
+- Current noGPU field-lifecycle fixture rebuilt+PASS18checks/4cases. ExistingFcitxV2 callbacks+ourlease watchers reused; no newfieldfrontendpatch. Case2Focus2/2,cap16,commit0. Tasks96causedthread/forkEAGAIN; closedChrome acceptance192 passedsameRAM1.5GiB/CPU1,scopeinactive. See FCITX-FIELD-SEAM-001.md. Next supervisedrealSlack plan under peercritique; NO liveSlack/profile/hostIME approval.
