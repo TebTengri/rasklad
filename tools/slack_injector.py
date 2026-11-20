@@ -33,11 +33,12 @@ def graphemes(text):
 
 
 def receipt(case):
-    """Addon receipt record expected after the typing commands: kind + code-point count, no text."""
+    """Addon receipt record expected after the typing commands: kind, code-point count and
+    commit sequence 01 (the session's only commit), no text."""
     if type(case) is not str or case not in TYPED:
         raise Refused('case')
     kind = b'c' if case == 'correction' else b'o'
-    return kind + b'%02d\n' % graphemes(EXPECTED[case])
+    return kind + b'%02d01\n' % graphemes(EXPECTED[case])
 
 
 def script(case):

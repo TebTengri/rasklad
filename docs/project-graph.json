@@ -106,7 +106,7 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "fb204b596b1ed94bb5b13c832eec38b546502eff3fa8d695d8b49bc20f51c6b7",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "ddde4ae72308de57bbfc1c90a3433669956dc56a805441299ddec1050b56f304",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
@@ -134,7 +134,7 @@
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
     "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
-    "src/fcitxlab.cpp": "1cdc8a5258e39e8dfc6a41272b3af170160c437b336c5b20a817edfc35cc54b2",
+    "src/fcitxlab.cpp": "b8c5166d80ff1f35c81bbedeb2693b945c1c6ded8e9baabc054bc944799db4a1",
     "src/fcitxlabprofile.cpp": "4d2b737290d4cff7be8299685069d5e0dc97b990a03bb491bfb551e76fd36920",
     "src/fcitxlabprofile.h": "09dfd43ee22daefb63c4fe38efbe42c8b9228913e5fcc44bb6febd3d7866574e",
     "src/jsontranslator.cpp": "9f1cc9fa03bf736748c3b7dd56bfd2472ebaf100539fadacf3ec1eaf17f002ed",
@@ -150,7 +150,7 @@
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
     "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
-    "src/sessionarm.h": "889e96a02be3052a076386b027632a8713d0ade0abcff9e3a3e0a08a2eaac9cd",
+    "src/sessionarm.h": "71a44f8b9a457efa1a76dcaa2d139025315f0f9e49c7ac163d8cbf141d5f4661",
     "src/spellengine.cpp": "23ae1018dd5ade6030ce33276d644d7fbfef43cbebc9eef8dd262ed20285f2d3",
     "src/spellengine.h": "9c433a0709efe9d3298353bd6ab7ee7ca35d7bfb2bc63d8f5ceeea648fb07a38",
     "src/themewatcher.cpp": "d5d9197c384cf992170d6bf2132867ad22095c5371e234d72c873f3eb8ab5a93",
@@ -278,9 +278,9 @@
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_status_trial.py": "1fd537ed769d68a66d163dd75ac0d85bfa01a08128d429517d0e44922358952d",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
-    "tests/slack_session/sessionarm_tests.cpp": "d13cf18ac868938731aae2f81d883819296f44f0db2361f638823bf78c4953fe",
+    "tests/slack_session/sessionarm_tests.cpp": "f1a15a96031e89b85879d85bfd5e99175cc5c29fba0c5640a91bfa3e50d5ff4d",
     "tests/slack_session/test_gate_lab.py": "313631262cb89748fe17d5c52f20dd08e4fed9f8930e0a9fed8a34010bc6aea1",
-    "tests/slack_session/test_injector_supervisor.py": "d99925182a5877579ea9f39f9491aeaa920820327e840e1470b21dd119e6be75",
+    "tests/slack_session/test_injector_supervisor.py": "57ece34121d2767576019bc6c4c8e3742fd43318558fc543db8d97d5fd6d4f16",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
     "tests/ui/ui_tests.cpp": "8723d2068d453708f44a13fe88d23acb01c08e516e840c7e07397a817f5d54df",
@@ -401,7 +401,7 @@
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
-    "tools/native_ime_clients.py": "f1e3c95ecaa9517fb58c3c2c60646ab654c8a3d58977b398bd0c41f2adcb7399",
+    "tools/native_ime_clients.py": "d799c44ad0b931e7bab44860adc223543fab5d98f61d2ba0d3ec21c92044c20a",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
     "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
@@ -423,10 +423,10 @@
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
     "tools/slack_bootstrap_probe.py": "bf3ec38e31b427db095c1df15312ecee720ea8f8259cf1e905cda476dd0b6cb8",
     "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
-    "tools/slack_injector.py": "e71c2fe54a45e1cba39f792ee7c13e94d0883249c379dd57b7f828c284f73429",
+    "tools/slack_injector.py": "cef9d3fd91b27390c83843f22f26c1d87490468613403de9a517a5280105be0a",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
-    "tools/slack_supervisor.py": "a6ac1aa0f0ffa8213c2803dee2f3d74c5fb6d405484d202d7911cbb001200dea",
+    "tools/slack_supervisor.py": "7298a5c320d1e09b80e0284feaf8023207524e66e0d1927c7a312f5261d41ff7",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "2021eeb8970a3cf48ae4b508ffcb626d7df9e48962f46a515c124d34d3accf8e"
   },
@@ -6426,17 +6426,17 @@
         },
         {
           "name": "load_lab_module",
-          "line": 296,
+          "line": 305,
           "kind": "FunctionDef"
         },
         {
           "name": "fd_present",
-          "line": 304,
+          "line": 313,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 318,
+          "line": 327,
           "kind": "FunctionDef"
         },
         {
@@ -6462,6 +6462,11 @@
         {
           "name": "stop_helper",
           "line": 224,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "pending_receipt",
+          "line": 238,
           "kind": "FunctionDef"
         }
       ]
@@ -7208,7 +7213,7 @@
         },
         {
           "name": "script",
-          "line": 43,
+          "line": 44,
           "kind": "FunctionDef"
         }
       ]

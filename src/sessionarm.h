@@ -105,8 +105,10 @@ private:
 
 // ReceiptSink: after each commit the addon reports only its kind and length to
 // the supervisor — never the text. RASKLAD_SESSION_RECEIPT_FD must be an
-// AF_UNIX SOCK_SEQPACKET socket; one 4-byte record per commit: "c07\n"
-// (rule correction, 7 code points) or "o06\n" (original). MSG_NOSIGNAL: a
+// AF_UNIX SOCK_SEQPACKET socket; one 6-byte record per commit: kind, two-digit
+// code-point count, two-digit commit sequence (1-based), newline — "c0701\n" is
+// the first commit, a rule correction of 7 code points. The sequence lets the
+// supervisor reject stale or extra records. MSG_NOSIGNAL: a
 // closed supervisor cannot kill Fcitx with SIGPIPE; any failure is reported
 // to the caller, which latches the session off.
 class ReceiptSink {
@@ -138,17 +140,20 @@ public:
 
     ReceiptSink(const ReceiptSink &) = delete;
     ReceiptSink &operator=(const ReceiptSink &) = delete;
-    ReceiptSink(ReceiptSink &&other) noexcept : fd_(other.fd_), dev_(other.dev_), ino_(other.ino_) { other.fd_ = -1; }
+    ReceiptSink(ReceiptSink &&other) noexcept
+        : fd_(other.fd_), dev_(other.dev_), ino_(other.ino_), sequence_(other.sequence_) { other.fd_ = -1; }
 
     bool valid() const {
         struct stat st {};
         return fd_ >= 0 && fstat(fd_, &st) == 0 && S_ISSOCK(st.st_mode) && st.st_dev == dev_ && st.st_ino == ino_;
     }
 
-    bool send(bool corrected, std::size_t codePoints) const {
-        if (!valid() || codePoints == 0 || codePoints > 99) return false;
-        const char record[4] = {corrected ? 'c' : 'o', static_cast<char>('0' + codePoints / 10),
-                                static_cast<char>('0' + codePoints % 10), '\n'};
+    bool send(bool corrected, std::size_t codePoints) {
+        if (!valid() || codePoints == 0 || codePoints > 99 || sequence_ >= 99) return false;
+        ++sequence_;
+        const char record[6] = {corrected ? 'c' : 'o', static_cast<char>('0' + codePoints / 10),
+                                static_cast<char>('0' + codePoints % 10), static_cast<char>('0' + sequence_ / 10),
+                                static_cast<char>('0' + sequence_ % 10), '\n'};
         ssize_t n;
         do {
             n = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
@@ -160,6 +165,7 @@ private:
     int fd_ = -1;
     dev_t dev_ = 0;
     ino_t ino_ = 0;
+    unsigned sequence_ = 0;
 };
 
 inline std::size_t codePoints(std::string_view text) {

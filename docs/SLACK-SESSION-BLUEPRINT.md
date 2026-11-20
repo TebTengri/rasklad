@@ -205,9 +205,19 @@ binding (pid, surface generation, IC epoch, purpose) must be compositor-issued.
 ## Addon commit receipt (2026-11-20)
 
 `ReceiptSink` (src/sessionarm.h): after every commit the Slack-session addon
-sends one 4-byte SEQPACKET record — `c07\n` (rule correction, 7 code points)
+sends one 4-byte SEQPACKET record (now 6 bytes with a sequence, see below) — `c07\n` (rule correction, 7 code points)
 or `o06\n` (original) — never the text; MSG_NOSIGNAL|MSG_DONTWAIT; any failure
 latches the arm gate off. The addon requires a valid receipt socket to activate.
 `Supervisor.commit_receipt(record)` accepts only the exact expected bytes from
 `slack_injector.receipt(case)`; the observer-text receipt is gone. Offline:
 supervised, gate and control modes all pass; cleanup waited for `c07`.
+
+Grok review of 05e5fa2 (FIX-FIRST; confirmed no text on the receipt wire).
+Closed: records carry a 1-based commit sequence (`c0701\n`), so a stale or
+replayed record cannot match; the supervisor requires an empty receipt queue
+before typing, exactly one record before cleanup and none after; a mismatched
+or orphaned commit revokes the session instead of cleaning up blindly; the
+addon takes the receipt end (CLOEXEC) when it loads, not on first commit.
+Accepted: an exhausted queue (EAGAIN) latches the gate permanently — fail
+closed. Trust boundary: the addon is trusted; the record proves "the addon
+committed this kind and length", not the field contents.

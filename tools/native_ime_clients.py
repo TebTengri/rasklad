@@ -235,25 +235,34 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         binding=(pid,0,0,'normal')  # lab binding; the real one comes from the compositor
         s=sup.Supervisor([pid],'correction')
         if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
+        def pending_receipt(timeout=0):
+            ready,_,_=select.select([receipts],[],[],timeout)
+            return receipts.recv(16) if ready else None
+        report['receiptQueueEmptyBeforeTyping']=pending_receipt() is None
+        if not report['receiptQueueEmptyBeforeTyping']:s.revoke();raise base.Refused('stale_receipt')
         script=inj.script('correction')
         report['supervisedReceiptChecked']=False
         for command in script:
             if command=='backspace' and not s._receipt_ok:
                 # Receipt from the addon (kind + length, no text), not from the observer.
-                ready,_,_=select.select([receipts],[],[],2)
-                record=receipts.recv(16) if ready else None
+                record=pending_receipt(2)
+                time.sleep(.1)
+                extra=pending_receipt()  # exactly one commit is expected
                 report['supervisedReceiptChecked']=True
-                report['supervisedReceiptMatched']=s.commit_receipt(record)
+                report['supervisedReceiptMatched']=extra is None and s.commit_receipt(record)
                 report['supervisedReceiptFromAddon']=record==inj.receipt('correction')
                 # Observer cross-check only (lab): the field shows the expected text.
                 report['observerSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED['correction']
-                if not report['supervisedReceiptMatched']:break
+                if not report['supervisedReceiptMatched']:
+                    s.revoke()  # orphaned or unexpected commit: stop, never clean up blindly
+                    break
             token=s.issue(command,*binding)
             if token is None or not s.send(token,command,*binding,write):raise base.Refused('supervisor_send')
             helper_ack(base,helper)
             time.sleep(.05)
         report['supervisedScriptCompleted']=s.done() and s.sent==len(script) and report['supervisedReceiptChecked']
         report['supervisedFieldCleaned']=link.ask('observe').get('value')==''
+        report['noReceiptAfterCleanup']=pending_receipt(.2) is None
         report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
         before=link.ask('observe')
@@ -357,7 +366,7 @@ def run(base, children):
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         required=(['armWriteEndOnlyInSupervisor'] if control else
-                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','supervisedFieldCleaned',
+                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor'] if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False

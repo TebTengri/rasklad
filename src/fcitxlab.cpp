@@ -172,7 +172,7 @@ rasklad::sessionarm::SessionArm &sessionArm() {
 // Set when the revoke watcher could not be installed: then nothing is armed.
 bool sessionWatchFailed = false;
 bool sessionArmed() { return !sessionWatchFailed && sessionArm().armed(); }
-const rasklad::sessionarm::ReceiptSink &receiptSink() {
+rasklad::sessionarm::ReceiptSink &receiptSink() {
     static auto sink = rasklad::sessionarm::ReceiptSink::fromEnvironment();
     return sink;
 }
@@ -385,6 +385,7 @@ public:
 #ifdef RASKLAD_SLACK_SESSION_LAB
         // Revoke must act at once, not on the next key: clear every shown
         // preedit as soon as the supervisor closes (or writes to) the pipe.
+        (void)receiptSink();  // set CLOEXEC on the receipt end as soon as the addon loads
         if (sessionArm().fd() >= 0) {
             armWatch_ = instance_->eventLoop().addIOEvent(
                 sessionArm().fd(),

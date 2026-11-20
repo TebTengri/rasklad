@@ -184,7 +184,7 @@ class Supervisor:
 
     def commit_receipt(self, record):
         """After the typing commands: the addon's receipt record (kind + length, no text) must equal
-        this case's expected record exactly, e.g. b'c07\\n' for the correction."""
+        this case's expected record exactly, e.g. b'c0701\\n' for the correction."""
         with self._lock:
             if (self._expired() or self.state != 'INJECT' or self.sent != self._typed or self._receipt_ok
                     or type(record) is not bytes or record != self._expected):

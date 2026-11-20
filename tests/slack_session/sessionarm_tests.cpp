@@ -148,8 +148,8 @@ int main() {
         CHECK(sink.send(true, codePoints("привет ")));
         CHECK(sink.send(false, codePoints("hello ")));
         char buf[8] = {};
-        CHECK(read(sp[1], buf, sizeof buf) == 4 && std::string(buf, 4) == "c07\n");
-        CHECK(read(sp[1], buf, sizeof buf) == 4 && std::string(buf, 4) == "o06\n");
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "c0701\n");
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "o0602\n");
         CHECK(!sink.send(true, 0));
         CHECK(!sink.send(true, 100));
         close(sp[1]);
