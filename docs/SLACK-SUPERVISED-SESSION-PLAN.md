@@ -144,3 +144,20 @@ Owner decisions 2026-11-20:
    purpose change is observed, the run aborts before any key is injected.
 These decisions are not approval to run; the live run needs a separate
 one-shot approval after the dry run and review.
+
+## Documentation findings 2026-11-20 (Context7 via ecc:docs-lookup)
+
+- Electron 38+: `--ozone-platform` defaults to `auto` (native Wayland when
+  XDG_SESSION_TYPE=wayland); it must be on the command line. Wayland IME flags
+  are not documented in Context7; use the flags already proven in our Chromium
+  fixture: `--enable-wayland-ime --wayland-text-input-version=3`
+  (tests/chromium_ime/driver.mjs).
+- safeStorage on Linux selects the backend from the desktop session;
+  unrecognised desktops (Hyprland) get `basic_text` unless `--password-store`
+  is given. Host Slack is launched without flags, so it most likely does not use
+  the keyring at all. Candidate simplification: drop the Secret Service proxy
+  (no host D-Bus in the sandbox) after confirming the selected backend in a
+  dry run; this also resolves Grok's keyring-exposure finding.
+- Chromium ProcessSingleton internals are not documented in Context7; our
+  observed failure mode (lock `<host>-<namespace pid>` surviving exit) is
+  handled by the probe's own-lock release.
