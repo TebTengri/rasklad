@@ -63,6 +63,7 @@ class Selection(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         keywords = {k.arg: ast.unparse(k.value) for k in calls[0].keywords}
         self.assertEqual(keywords['slack_launch'], 'pre if launch else False')
+        self.assertEqual(keywords['slack_live'], 'slack_live')
 
     def test_sandbox_args_refuses_bare_true(self):
         with self.assertRaises(self.hypr.base.Refused) as caught:
@@ -194,6 +195,107 @@ class Finish(unittest.TestCase):
 
     def test_broker_outlives_trial(self):
         self.assertGreater(launch.BROKER['seconds'], launch.OBSERVE_SECONDS + launch.QUIT_SECONDS + 30)
+
+
+sup = load('slack_supervisor_live_test', 'tools/slack_supervisor.py')
+
+
+class FakeRecords:
+    """Addon records driven by the fake helper: commits appear after the typing commands."""
+    def __init__(self, receipt=None, context_after=None):
+        self.commits, self.contexts, self.receipt, self.context_after, self.fresh = [], [], receipt, context_after, []
+
+    def on_write(self, data, count):
+        if self.context_after is not None and count == self.context_after:
+            self.fresh.append(b'un001\n')
+        if data == b'space\n' or data == b'hello\n':
+            if self.receipt:
+                self.commits.append(self.receipt)
+
+    def poll(self, timeout=0):
+        fresh, self.fresh = self.fresh, []
+        self.contexts += fresh
+        return fresh
+
+
+class LiveCase(unittest.TestCase):
+    def run_case(self, case, sequence, records):
+        sent = []
+        clients_ = SimpleNamespace(CONTEXT_EVENTS=clients.CONTEXT_EVENTS, compositor_binding=lambda base: (100, 0xabc),
+                                   helper_ack=lambda base, helper: None)
+        seat = SimpleNamespace(intact=lambda: True)
+
+        def write(data):
+            sent.append(data)
+            records.on_write(data, len(sent))
+        with mock.patch.object(launch.time, 'sleep'):
+            out = launch.run_case(clients_, Base, sup, case, sequence, (100, 0xabc, 1, 'normal'), records, seat, None, write)
+        return out, sent
+
+    def test_correction_then_cleanup(self):
+        out, sent = self.run_case('correction', 1, FakeRecords(b'c0701\n'))
+        self.assertTrue(out['completed'])
+        self.assertEqual(sent, [b'word\n', b'space\n'] + [b'backspace\n'] * 7)
+        self.assertNotIn(b'enter\n', sent)
+
+    def test_second_case_uses_sequence_two(self):
+        out, sent = self.run_case('english', 2, FakeRecords(b'o0602\n'))
+        self.assertTrue(out['completed'])
+        self.assertEqual(sent.count(b'backspace\n'), 6)
+        out, sent = self.run_case('english', 2, FakeRecords(b'o0601\n'))
+        self.assertFalse(out['completed'])
+        self.assertNotIn(b'backspace\n', sent)  # never clean up blindly
+
+    def test_context_record_mid_script_revokes(self):
+        out, sent = self.run_case('correction', 1, FakeRecords(b'c0701\n', context_after=1))
+        self.assertFalse(out['completed'])
+        self.assertEqual(sent, [b'word\n'])
+        self.assertEqual(out['revokeReason'], 'focus-change')
+
+    def test_text_may_remain_reported(self):
+        out, _ = self.run_case('correction', 1, FakeRecords(None))
+        self.assertTrue(out['textMayRemain'])
+        out, _ = self.run_case('correction', 1, FakeRecords(b'c0701\n'))
+        self.assertFalse(out['textMayRemain'])
+
+    def test_no_receipt_no_cleanup(self):
+        out, sent = self.run_case('correction', 1, FakeRecords(None))
+        self.assertFalse(out['completed'])
+        self.assertEqual(sent, [b'word\n', b'space\n'])
+
+
+class LiveShape(unittest.TestCase):
+    def test_submap_only_f10_f12_no_exec(self):
+        self.assertIn('bind = , F10, submap, rasklad_go', launch.LIVE_SUBMAP)
+        self.assertEqual(launch.LIVE_SUBMAP.count('F12, submap, rasklad_dead'), 2)
+        self.assertEqual(launch.LIVE_SUBMAP.count('submap, reset'), 0)  # only unlock() resets
+        self.assertNotIn('bind = , F12, submap, reset', launch.LIVE_SUBMAP)
+        self.assertEqual(launch.LIVE_SUBMAP.count('mouse:272'), 2)
+        self.assertNotIn('exec', launch.LIVE_SUBMAP)
+
+    def test_live_extra_binds_supervisor(self):
+        extra = launch.sandbox_extra(Path('/w'), dict(PRE, mode='live'))
+        env = {extra[i + 1]: extra[i + 2] for i, a in enumerate(extra) if a == '--setenv'}
+        self.assertEqual(env.get('RASKLAD_SLACK_LIVE_LAB'), '1')
+        self.assertNotIn('RASKLAD_SLACK_LAUNCH_LAB', env)
+        self.assertIn('/lab/slack_supervisor.py', extra)
+        with self.assertRaises(ValueError):
+            launch.sandbox_extra(Path('/w'), dict(PRE, mode='other'))
+
+    def test_live_cli_needs_both_flags(self):
+        out = subprocess.run([sys.executable, '-I', str(ROOT / 'tools/hyprland_ime_lab.py'), '--slack-live'],
+                             capture_output=True, text=True, timeout=20)
+        self.assertIn('slack_live_requires_run_approved_slack_launch', out.stdout)
+
+    def test_live_budgets(self):
+        self.assertGreater(launch.LIVE_BROKER['seconds'], launch.LIVE_RELAY['seconds'])
+        self.assertGreater(launch.LIVE_OUTER_SECONDS, launch.LIVE_RELAY['seconds'])
+        self.assertGreater(launch.LIVE_RELAY['seconds'], launch.LIVE_WAIT_SECONDS + launch.LIVE_LOOK_SECONDS + launch.QUIT_SECONDS + 30)
+
+    def test_receipt_sequence(self):
+        self.assertEqual(sup.inj.receipt('english', 2), b'o0602\n')
+        with self.assertRaises(sup.inj.Refused):
+            sup.inj.receipt('english', 0)
 
 
 class Helpers(unittest.TestCase):

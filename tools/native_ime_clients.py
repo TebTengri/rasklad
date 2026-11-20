@@ -283,6 +283,7 @@ class HyprSeat:
     PREFIX='hl-virtual-keyboard-unknown'
     def __init__(self,base):
         self.base,self.exempt,self.locked,self.devices=base,False,False,None
+        self.submap='rasklad_lock'  # live Slack session: advanced to rasklad_go after the owner's F10
     def keyboards(self):
         """Sorted (name, address) of every keyboard; the address identifies the live device."""
         devices=json.loads(hyprctl(self.base,'-j','devices').stdout or b'{}')
@@ -305,7 +306,7 @@ class HyprSeat:
             if self.devices is None or not self.intact():self.unlock()
     def intact(self):
         try:
-            return (self.devices is not None and hyprctl(self.base,'submap',raw=True)=='rasklad_lock'
+            return (self.devices is not None and hyprctl(self.base,'submap',raw=True)==self.submap
                     and self.keyboards()==self.devices)
         except (self.base.Refused,OSError,subprocess.SubprocessError,ValueError):
             return False
@@ -590,7 +591,13 @@ class LaunchHelpers:
     hyprctl=staticmethod(lambda base,*args,**kw:hyprctl(base,*args,**kw))
     descends_from=staticmethod(lambda pid,ancestor:descends_from(pid,ancestor))
     AddonRecords=staticmethod(lambda base,sock:AddonRecords(base,sock))
+    HyprSeat=staticmethod(lambda base:HyprSeat(base))
+    compositor_binding=staticmethod(lambda base:compositor_binding(base))
+    helper_ack=staticmethod(lambda base,helper:helper_ack(base,helper))
+    write_end_holders=staticmethod(lambda fd:write_end_holders(fd))
+    load_lab_module=staticmethod(lambda name,path:load_lab_module(name,path))
     PURPOSES=PURPOSES
+    CONTEXT_EVENTS=CONTEXT_EVENTS
 
 
 def load_lab_module(name,path):
@@ -643,10 +650,12 @@ def run(base, children):
     if frontend:verify_frontend_mapping(base,fcitx,frontend[0])
     driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
     gate_report={}
-    if gate and os.environ.get('RASKLAD_SLACK_LAUNCH_LAB')=='1' and os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1':
+    live=os.environ.get('RASKLAD_SLACK_LIVE_LAB')=='1'
+    if gate and (live or os.environ.get('RASKLAD_SLACK_LAUNCH_LAB')=='1') and os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1':
         # Launch trial: real Slack, gate latched off before launch, no helper keyboard, no driver.
+        # Live session: real Slack, seat locked before launch, owner F10, fixed scripts, no driver.
         launch=load_lab_module('slack_launch_inner',Path('/lab/slack_launch_lab.py'))
-        r=launch.run_inside(LaunchHelpers,base,fcitx,gate,children)
+        r=(launch.run_live_inside if live else launch.run_inside)(LaunchHelpers,base,fcitx,gate,children)
         r['fcitxAliveAfterGate']=fcitx.poll() is None
         r['dbusInputFrontendAbsent']=dbus_input_absent
         r['passed']=r.get('passed') is True and r['fcitxAliveAfterGate'] and dbus_input_absent

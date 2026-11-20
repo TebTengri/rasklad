@@ -123,7 +123,7 @@ class Broker:
         # Never opens an outbound connection; incompatible with online.
         if accept_hello and online:raise ValueError('accept-hello-offline-only')
         self.accept_hello=accept_hello
-        if not (1<=seconds<=180 and 1<=max_requests<=512 and 1<=max_bytes<=512*1024*1024 and 1<=max_active<=32):raise ValueError('broker-bounds')
+        if not (1<=seconds<=300 and 1<=max_requests<=512 and 1<=max_bytes<=512*1024*1024 and 1<=max_active<=32):raise ValueError('broker-bounds')
         self.path=str(path);self.online=online;self.allow_ech=allow_ech;self.deadline=time.monotonic()+seconds
         self.max_requests=max_requests;self.max_bytes=max_bytes
         self.lock=threading.Lock();self.active=threading.BoundedSemaphore(max_active)
@@ -237,7 +237,7 @@ class Broker:
 class Relay:
     """Private namespace TCP proxy forwards only to our mounted Unix broker."""
     def __init__(self,path,seconds=30,max_active=8):
-        if not (1<=seconds<=120 and 1<=max_active<=32):raise ValueError('relay-bounds')
+        if not (1<=seconds<=300 and 1<=max_active<=32):raise ValueError('relay-bounds')
         self.path=path;self.deadline=time.monotonic()+seconds;self.active=threading.BoundedSemaphore(max_active)
         self.refused=0
         self.listener=socket.socket();self.listener.bind(('127.0.0.1',0));self.listener.listen(8)

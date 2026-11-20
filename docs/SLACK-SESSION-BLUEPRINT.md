@@ -358,3 +358,36 @@ supervisor's revoke on any context record is the binding guard, and the
 zero-injection IC-reset gate is satisfied. Before 001 the owner's host Slack
 was still running in the tray; it was stopped with SIGTERM and its stale
 SingletonLock (dead PID, verified) removed with owner approval.
+
+## Live session mode (prepared 2026-11-21, not run)
+
+`python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch --slack-live`
+(tools/slack_launch_lab.py `run_live_inside`). Before Slack starts, the keys
+helper is created and HyprSeat locks the seat (only the helper is exempt), so
+the owner's keyboards reach only F10 (go) and F12 (kill). The owner opens the
+test channel and clicks an EMPTY composer with the mouse, then presses F10
+(wait ≤180 s). Binding = compositor active window (Slack tree) + last addon
+focus-in (normal). Two fixed cases under fresh Supervisors: correction
+(`ghbdtn`+space → `привет `, receipt c0701) and English (`hello `, receipt
+o0602, addon commit sequence 2); BackSpace × code points only after an exact
+receipt. No Enter exists. After revoke the owner looks 10 s, then Slack quits.
+Owner rules: empty composer, no selection, hands off mouse and keyboard after
+F10; afterwards three booleans (nothing sent, no new message, composer empty).
+
+### Live mode review dispositions (ecc:security-reviewer FIX-FIRST, Grok FIX-FIRST)
+Accepted and fixed: F12 enters a swallow-all `rasklad_dead` submap instead of
+`reset` (only unlock() resets, after helper stop and arm latch); after F10 the
+mouse buttons 272/273/274 are bound (consumed) in `rasklad_go` and
+`rasklad_dead` (Hyprland binds consume unless `non_consuming`; not yet
+measured); seat is re-checked every 0.1 s while committed text waits for the
+receipt; revoke_all runs every step even if one raises, retries the exemption
+release, records `revokeErrors` (fail the run); foreign windows checked every
+wait pass; wait 180 s, relay 280 s, broker 295 s, outer 320 s, CPU 300 s;
+`textMayRemain` reported when a case was revoked after typing.
+Rejected: composer-vs-search proof (both are purpose normal; covered by the
+owner procedure, revoke on any context record and swallowed clicks); receipt
+bound to IC id (all records in a Slack window carry one id); Supervisor.send
+rewind (helper writes are < PIPE_BUF and length-checked; a failed write
+revokes without cleanup and is reported as textMayRemain).
+Residuals: mouse swallowing and the dead submap are not measured yet; the
+owner's 10 s look happens with the seat already released (do not type).

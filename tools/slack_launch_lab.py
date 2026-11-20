@@ -9,7 +9,7 @@ Inner half (/lab): the session addon's arm pipe is latched off before Slack star
 so the addon never intercepts a key. Recorded: fixed booleans, counts, window
 class, Fcitx program names and addon context records (event + purpose only).
 Never titles, text, screenshots or Slack logs."""
-import json, os, re, resource, signal, socket, subprocess, time
+import json, os, re, resource, select, signal, socket, subprocess, time
 from pathlib import Path
 
 INSIDE = Path(__file__) == Path('/lab/slack_launch_lab.py')
@@ -23,6 +23,34 @@ OUTER_SECONDS = 150    # Hyprland/Fcitx start + observe 90 + quit 15 + margins
 RELAY = dict(seconds=115, max_active=32)  # run 001: Slack opened >16 concurrent tunnels
 BROKER = dict(seconds=170,  # created before Hyprland/Fcitx start; must outlive observe + quit
               max_requests=384, max_bytes=256 * 1024 * 1024, max_active=16)
+# Live session (one owner-approved run): wait for the owner's F10, two fixed scripts, owner look, quit.
+LIVE_CASES = ('correction', 'english')
+LIVE_WAIT_SECONDS = 180   # Slack boot + owner opens the test channel, clicks the composer, presses F10
+LIVE_LOOK_SECONDS = 10    # after revoke: the owner checks the composer before Slack quits
+LIVE_OUTER_SECONDS = 320
+LIVE_RELAY = dict(seconds=280, max_active=32)
+LIVE_BROKER = dict(seconds=295, max_requests=512, max_bytes=256 * 1024 * 1024, max_active=16)
+# Seat lock for the live session: the owner's keyboards reach nothing but F10 (go) and F12 (kill).
+# F12 never re-opens the keyboard: it enters rasklad_dead (swallows everything); only the
+# supervisor's unlock() resets the submap, after the helper is gone and the arm is latched.
+# After F10 the mouse buttons are swallowed too (binds consume by default).
+LIVE_SUBMAP = """submap = rasklad_lock
+bind = , F12, submap, rasklad_dead
+bind = , F10, submap, rasklad_go
+bind = , catchall, submap, rasklad_lock
+submap = rasklad_go
+bind = , F12, submap, rasklad_dead
+bind = , mouse:272, submap, rasklad_go
+bind = , mouse:273, submap, rasklad_go
+bind = , mouse:274, submap, rasklad_go
+bind = , catchall, submap, rasklad_go
+submap = rasklad_dead
+bind = , mouse:272, submap, rasklad_dead
+bind = , mouse:273, submap, rasklad_dead
+bind = , mouse:274, submap, rasklad_dead
+bind = , catchall, submap, rasklad_dead
+submap = reset
+"""
 SLACK_FLAGS = ['--ozone-platform=wayland', '--enable-wayland-ime', '--wayland-text-input-version=3', '--disable-gpu']
 SLACK_BUS = '/run/lab/slack-bus'
 MAX_CONTEXTS = 64
@@ -76,7 +104,8 @@ def start(base, directory, pre, ctx):
         if ctx['proxy'].poll() is not None or time.monotonic() > end:
             raise base.Refused('secrets_proxy')
         time.sleep(.04)
-    ctx['broker'] = bridge.Broker(directory / 'https.sock', online=True, allow_ech=True, **BROKER)
+    ctx['broker'] = bridge.Broker(directory / 'https.sock', online=True, allow_ech=True,
+                                  **(LIVE_BROKER if pre.get('mode') == 'live' else BROKER))
     if boot.slack_pids():
         raise base.Refused('host_slack_running')
     try:
@@ -100,7 +129,15 @@ def sandbox_extra(directory, pre):
              '--bind', str(directory / 'bus'), SLACK_BUS, '--bind', str(directory / 'https.sock'), '/lab/https.sock',
              '--ro-bind', str(ROOT / 'tools/slack_https_bridge.py'), '/lab/slack_https_bridge.py',
              '--ro-bind', str(ROOT / 'tools/slack_launch_lab.py'), '/lab/slack_launch_lab.py']
-    for key, value in (('RASKLAD_SLACK_SESSION_LAB', '1'), ('RASKLAD_SLACK_GATE_LAB', '1'), ('RASKLAD_SLACK_LAUNCH_LAB', '1'),
+    if pre.get('mode') == 'live':
+        mode = 'RASKLAD_SLACK_LIVE_LAB'
+        extra += ['--ro-bind', str(ROOT / 'tools/slack_supervisor.py'), '/lab/slack_supervisor.py',
+                  '--ro-bind', str(ROOT / 'tools/slack_injector.py'), '/lab/slack_injector.py']
+    elif pre.get('mode', 'launch') == 'launch':
+        mode = 'RASKLAD_SLACK_LAUNCH_LAB'
+    else:
+        raise ValueError('slack_mode')
+    for key, value in (('RASKLAD_SLACK_SESSION_LAB', '1'), ('RASKLAD_SLACK_GATE_LAB', '1'), (mode, '1'),
                        ('RASKLAD_SLACK_HOME', home), ('RASKLAD_SLACK_USER', pre['user']), ('RASKLAD_SLACK_LANG', pre['lang'])):
         extra += ['--setenv', key, value]
     return extra
@@ -109,7 +146,7 @@ def sandbox_extra(directory, pre):
 def limits():
     # Step-0 limits: Slack needs more CPU seconds and larger profile files than the Chromium fixture.
     os.nice(10)
-    for kind, value in [(resource.RLIMIT_CPU, 120), (resource.RLIMIT_FSIZE, 512 << 20), (resource.RLIMIT_CORE, 0), (resource.RLIMIT_NOFILE, 4096)]:
+    for kind, value in [(resource.RLIMIT_CPU, 300), (resource.RLIMIT_FSIZE, 512 << 20), (resource.RLIMIT_CORE, 0), (resource.RLIMIT_NOFILE, 4096)]:
         resource.setrlimit(kind, (value, value))
 
 
@@ -291,6 +328,240 @@ def run_inside(clients, base, fcitx, gate, children):
                             and report['relayRefused'] == 0)
         return report
     finally:
+        if slack is not None:
+            if slack.poll() is None:
+                stop(slack, QUIT_SECONDS)
+            if released is None and slack.poll() is not None:
+                release_own_singleton(Path(os.environ.get('RASKLAD_SLACK_HOME', '/nonexistent'), '.config/Slack'),
+                                      socket.gethostname(), slack.pid)
+        if relay is not None:
+            relay.close()
+        receipts.close()
+
+
+# ---------------------------------------------------------------- live session (/lab)
+
+def start_slack(environ, relay_bounds):
+    """Relay + Slack child, shared by the launch trial and the live session."""
+    env = slack_env(environ)
+    bridge = load('slack_bridge_inner', Path('/lab/slack_https_bridge.py'))
+    relay = bridge.Relay('/lab/https.sock', **relay_bounds)
+    proxy = 'http://127.0.0.1:' + str(relay.port)
+    env.update(HTTPS_PROXY=proxy, HTTP_PROXY=proxy, https_proxy=proxy, http_proxy=proxy, NO_PROXY='')
+    return env, relay, [SLACK, '--proxy-server=' + proxy, *SLACK_FLAGS]
+
+
+def run_case(clients, base, sup, case, sequence, binding, records, seat, helper, write):
+    """One fixed script under a fresh Supervisor. Any context record, seat change or compositor
+    change before a key revokes; cleanup only after the addon receipt matched exactly."""
+    inj = sup.inj
+    pid, address, epoch, purpose = binding
+    s = sup.Supervisor([pid], case, sequence=sequence)
+    out = {'case': case, 'receiptMatched': False, 'sent': 0}
+
+    def current():
+        fresh = records.poll()
+        if fresh:
+            s.event(clients.CONTEXT_EVENTS[fresh[0][:1]])
+            return (0, 0, 0, 'none')
+        if not seat.intact():
+            s.event('seat-lost')
+            return (0, 0, 0, 'none')
+        try:
+            now = clients.compositor_binding(base)
+        except (base.Refused, OSError, subprocess.SubprocessError, ValueError):
+            now = None
+        if not now:
+            s.event('surface-change')
+            return (0, 0, 0, 'none')
+        return (now[0], now[1], epoch, purpose)
+
+    def pending_receipt(timeout=0):
+        # Seat and compositor focus are re-checked every 0.1 s while committed text waits for cleanup.
+        end = time.monotonic() + timeout
+        while not records.commits:
+            if records.poll(min(.1, max(0, end - time.monotonic()))):
+                s.event('focus-change')
+                return None
+            if not seat.intact():
+                s.event('seat-lost')
+                return None
+            if time.monotonic() >= end:
+                return None
+        return records.commits.pop(0)
+
+    if not (s.arm(*binding) and s.seat_locked()):
+        out['revokeReason'] = s.revoke_reason
+        return out
+    if pending_receipt() is not None:
+        s.revoke('commit-mismatch')
+    script = inj.script(case)
+    for command in script:
+        if s.state == 'REVOKED':
+            break
+        if command == 'backspace' and not s._receipt_ok:
+            record = pending_receipt(2)
+            time.sleep(.1)
+            extra = pending_receipt()
+            out['receiptMatched'] = extra is None and s.commit_receipt(record)
+            if not out['receiptMatched']:
+                s.revoke('commit-mismatch')  # never clean up blindly
+                break
+        token = s.issue(command, *current())
+        if token is None or not s.send(token, command, *current(), write):
+            break
+        clients.helper_ack(base, helper)
+        time.sleep(.05)
+    out['sent'] = s.sent
+    out['completed'] = s.done() and s.sent == len(script) and out['receiptMatched'] and s.state != 'REVOKED'
+    out['noReceiptAfterCleanup'] = pending_receipt(.3) is None
+    out['completed'] = out['completed'] and out['noReceiptAfterCleanup']
+    out['revokeReason'] = s.revoke_reason
+    # Revoked after typing: the composer may hold 'ghbdtn' or the committed text; never sent (no Enter).
+    out['textMayRemain'] = s.sent > 0 and not out['completed']
+    return out
+
+
+def run_live_inside(clients, base, fcitx, gate, children):
+    """Live session in the owner's test channel. The seat is locked before Slack starts;
+    the owner uses only the mouse to open the channel and the composer, then F10."""
+    if (os.environ.get('RASKLAD_SLACK_LIVE_LAB') != '1' or os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')
+            or os.environ.get('RASKLAD_SLACK_LAUNCH_LAB')):
+        raise base.Refused('slack_live_environment')
+    read_end, write_end, receipts, addon_end = gate
+    addon_end.close()
+    os.close(read_end)
+    sup = clients.load_lab_module('slack_supervisor_live', Path('/lab/slack_supervisor.py'))
+    report = {'slackLive': True, 'textRead': False, 'enterNeverSent': 'enter' not in sup.inj.WIRE}
+    arm = [write_end]
+    helper = slack = relay = seat = None
+    released = None
+
+    def latch():
+        if arm[0] is not None:
+            try:
+                os.write(arm[0], b'x')
+            except OSError:
+                pass
+            os.close(arm[0])
+            arm[0] = None
+
+    def stop_helper():
+        if helper is not None:
+            if not helper.stdin.closed:
+                helper.stdin.close()
+            if helper.poll() is None:
+                helper.terminate()
+                try:
+                    helper.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    helper.kill()
+                    helper.wait()
+
+    def revoke_all():
+        # Order: exemption off -> helper gone -> addon arm latched -> submap off. Each step runs
+        # even if an earlier one raised; the exemption is retried before the helper goes.
+        for step in ('exemption', 'helper', 'arm', 'submap'):
+            try:
+                if step == 'exemption' and seat:
+                    for _ in range(3):
+                        if seat.release_exemption():
+                            break
+                elif step == 'helper':
+                    stop_helper()
+                elif step == 'arm':
+                    latch()
+                elif step == 'submap' and seat:
+                    seat.unlock()
+            except Exception:
+                report.setdefault('revokeErrors', []).append(step)
+
+    def write(data):
+        _, writable, _ = select.select([], [helper.stdin], [], 1)
+        if not writable:
+            raise OSError('helper stdin full')
+        if os.write(helper.stdin.fileno(), data) != len(data):
+            raise OSError('short helper write')
+
+    try:
+        records = clients.AddonRecords(base, receipts)
+        helper = subprocess.Popen(['/lab/rasklad-wayland-keys'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL)
+        children.append(helper)
+        ready, _, _ = select.select([helper.stdout], [], [], 3)
+        if not ready or os.read(helper.stdout.fileno(), 32) != b'{"ready":true}\n':
+            raise base.Refused('helper_ready')
+        os.set_blocking(helper.stdin.fileno(), False)
+        seat = clients.HyprSeat(base)
+        report['seatLockedBeforeSlack'] = seat.lock()
+        if not report['seatLockedBeforeSlack']:
+            raise base.Refused('seat_lock')
+        env, relay, argv = start_slack(os.environ, LIVE_RELAY)
+        started = time.monotonic()
+        slack = subprocess.Popen(argv, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL, cwd=env['HOME'])
+        children.append(slack)
+        signal_at = first_mapped = None
+        while time.monotonic() - started < LIVE_WAIT_SECONDS:
+            if slack.poll() is not None or fcitx.poll() is not None or helper.poll() is not None:
+                raise base.Refused('process_exit_before_arm')
+            records.poll(.2)
+            if records.commits:
+                raise base.Refused('commit_before_arm')
+            submap = clients.hyprctl(base, 'submap', raw=True)
+            if submap == 'rasklad_go':
+                signal_at = round(time.monotonic() - started, 1)
+                break
+            if submap != 'rasklad_lock' or seat.keyboards() != seat.devices:
+                raise base.Refused('seat_lost_before_arm')
+            seen = windows(clients, base, slack.pid)
+            if seen and seen[0] and first_mapped is None:
+                first_mapped = round(time.monotonic() - started, 1)
+            if seen and seen[1]:
+                raise base.Refused('foreign_window')
+        report.update(windowMappedSeconds=first_mapped, ownerSignalSeconds=signal_at,
+                      contextRecordsBeforeArm=len(records.contexts))
+        if signal_at is None:
+            raise base.Refused('owner_signal_timeout')
+        seat.submap = 'rasklad_go'
+        time.sleep(.3)
+        records.poll(.2)
+        last = records.contexts[-1] if records.contexts else b''
+        focused = clients.compositor_binding(base)
+        report['bindingFromCompositor'] = bool(focused) and clients.descends_from(focused[0], slack.pid)
+        report['contextFromAddon'] = last[:1] == b'i' and clients.PURPOSES.get(last[1:2]) in ('normal', 'alpha')
+        report['seatIntactAtArm'] = seat.intact()
+        if not (report['bindingFromCompositor'] and report['contextFromAddon'] and report['seatIntactAtArm']):
+            raise base.Refused('arm_binding')
+        binding = (focused[0], focused[1], int(last[2:5]), clients.PURPOSES[last[1:2]])
+        report['cases'] = []
+        for sequence, case in enumerate(LIVE_CASES, 1):
+            result = run_case(clients, base, sup, case, sequence, binding, records, seat, helper, write)
+            report['cases'].append(result)
+            if not result.get('completed'):
+                break
+            time.sleep(.5)
+        report['helperStdinOnlyInSupervisor'] = not clients.write_end_holders(helper.stdin.fileno())
+        report['armWriteEndOnlyInSupervisor'] = not clients.write_end_holders(arm[0])
+        revoke_all()
+        report['seatReleasedAfterRevoke'] = (clients.hyprctl(base, 'submap', raw=True) not in ('rasklad_lock', 'rasklad_go')
+                                             and not seat.exempt)
+        time.sleep(LIVE_LOOK_SECONDS)
+        report['commitRecordsAfterRevoke'] = len(records.commits)
+        report['slackStop'] = stop(slack, QUIT_SECONDS)
+        released = report['singletonRelease'] = release_own_singleton(Path(env['HOME'], '.config/Slack'),
+                                                                      socket.gethostname(), slack.pid)
+        report['relayRefused'] = relay.refused
+        report['casesCompleted'] = [c['case'] for c in report['cases'] if c.get('completed')]
+        report['textMayRemain'] = any(c.get('textMayRemain') for c in report['cases'])
+        report['passed'] = (report['casesCompleted'] == list(LIVE_CASES) and report['helperStdinOnlyInSupervisor']
+                            and report['armWriteEndOnlyInSupervisor'] and report['seatReleasedAfterRevoke']
+                            and report['commitRecordsAfterRevoke'] == 0 and report['slackStop'] == 'graceful'
+                            and released in ('released', 'absent') and report['relayRefused'] == 0
+                            and not report.get('revokeErrors'))
+        return report
+    finally:
+        revoke_all()
         if slack is not None:
             if slack.poll() is None:
                 stop(slack, QUIT_SECONDS)

@@ -32,7 +32,7 @@ def _binding(client_pid, surface_generation, ic_epoch):
 
 
 class Supervisor:
-    def __init__(self, slack_pids, case, now=time.monotonic, seconds=SESSION_SECONDS):
+    def __init__(self, slack_pids, case, now=time.monotonic, seconds=SESSION_SECONDS, sequence=1):
         """`case` selects a fixed script; commands and wire bytes come only from slack_injector.
         The launcher's `write` passed to send() must be non-blocking (O_NONBLOCK pipe, raise on EAGAIN
         or a short write)."""
@@ -45,6 +45,7 @@ class Supervisor:
             raise ValueError('clock')
         try:
             commands = inj.script(case)
+            expected = inj.receipt(case, sequence)
         except inj.Refused:
             raise ValueError('script') from None
         if not set(commands) <= inj.ALLOWED or len(commands) > 1 + 1 + inj.MAX_BACKSPACE:
@@ -56,7 +57,7 @@ class Supervisor:
         # Set without the lock by any revoke, checked right before each write.
         self._revoked = threading.Event()
         self.case = case
-        self._expected = inj.receipt(case)
+        self._expected = expected
         self._typed = len(inj.TYPED[case])
         self._receipt_ok = False
         self.attempted = 0
