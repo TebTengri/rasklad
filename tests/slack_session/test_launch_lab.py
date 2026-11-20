@@ -202,13 +202,14 @@ sup = load('slack_supervisor_live_test', 'tools/slack_supervisor.py')
 
 class FakeRecords:
     """Addon records driven by the fake helper: commits appear after the typing commands."""
-    def __init__(self, receipt=None, context_after=None):
+    def __init__(self, receipt=None, context_after=None, commit_on=b'space\n'):
         self.commits, self.contexts, self.receipt, self.context_after, self.fresh = [], [], receipt, context_after, []
+        self.commit_on = commit_on
 
     def on_write(self, data, count):
         if self.context_after is not None and count == self.context_after:
             self.fresh.append(b'un001\n')
-        if data == b'space\n' or data == b'hello\n':
+        if data == self.commit_on:
             if self.receipt:
                 self.commits.append(self.receipt)
 
@@ -239,10 +240,11 @@ class LiveCase(unittest.TestCase):
         self.assertNotIn(b'enter\n', sent)
 
     def test_second_case_uses_sequence_two(self):
-        out, sent = self.run_case('english', 2, FakeRecords(b'o0602\n'))
+        out, sent = self.run_case('english', 2, FakeRecords(b'o0602\n', commit_on=b'hello\n'))
         self.assertTrue(out['completed'])
-        self.assertEqual(sent.count(b'backspace\n'), 6)
-        out, sent = self.run_case('english', 2, FakeRecords(b'o0601\n'))
+        self.assertEqual(sent[:2], [b'space\n', b'hello\n'])
+        self.assertEqual(sent.count(b'backspace\n'), 7)  # raw boundary space + committed 'hello '
+        out, sent = self.run_case('english', 2, FakeRecords(b'o0601\n', commit_on=b'hello\n'))
         self.assertFalse(out['completed'])
         self.assertNotIn(b'backspace\n', sent)  # never clean up blindly
 
@@ -320,6 +322,38 @@ class SeatAdditions(unittest.TestCase):
         self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x7'), ('wl_keyboard', '0x2')]))
         s = self.seat()
         self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x1')]))
+
+
+class OwnerEmpty(unittest.TestCase):
+    def test_env_only_for_live_with_confirmation(self):
+        for pre, expected in ((dict(PRE, mode='live', owner_empty=True), True), (dict(PRE, mode='live'), False),
+                              (dict(PRE, mode='launch', owner_empty=True), False)):
+            extra = launch.sandbox_extra(Path('/w'), pre)
+            self.assertEqual('RASKLAD_SLACK_OWNER_EMPTY' in extra, expected)
+
+    def test_cli_requires_live(self):
+        out = subprocess.run([sys.executable, '-I', str(ROOT / 'tools/hyprland_ime_lab.py'), '--owner-empty-composer'],
+                             capture_output=True, text=True, timeout=20)
+        self.assertIn('owner_empty_composer_requires_slack_live', out.stdout)
+
+
+class FieldRecords(unittest.TestCase):
+    def test_parse_and_last_state(self):
+        a, b = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        try:
+            records = clients.AddonRecords(Base, a)
+            for r in (b'in001\n', b'ft001\n', b'fe002\n', b'fe001\n'):
+                b.send(r)
+            fresh = records.poll(.2)
+            self.assertEqual(fresh, [b'in001\n'])  # field bits never count as lifecycle changes
+            self.assertEqual(clients.field_state(records, 1), 'empty')
+            self.assertEqual(clients.field_state(records, 2), 'empty')
+            self.assertIsNone(clients.field_state(records, 3))
+            b.send(b'fz001\n')
+            with self.assertRaises(Base.Refused):
+                records.poll(.2)
+        finally:
+            a.close(); b.close()
 
 
 class Helpers(unittest.TestCase):

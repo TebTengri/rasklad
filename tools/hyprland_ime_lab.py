@@ -355,6 +355,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         paths['addon_conf'] = launch.ADDON_CONF
         pre = launch.preflight(base)
         pre['mode'] = 'live' if slack_live else 'launch'
+        pre['owner_empty'] = os.environ.get('RASKLAD_OWNER_EMPTY_COMPOSER_CLI') == '1' and slack_live
     shim = ROOT/('build/chromium-ime/grab-entry-shim/raskladcoreentry.so' if grab_entry_witness else 'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
     if core_entry_witness:
         base.regular_file(shim)
@@ -474,6 +475,8 @@ def main():
     parser.add_argument('--seat-probe', action='store_true')
     parser.add_argument('--slack-launch', action='store_true')
     parser.add_argument('--slack-live', action='store_true')
+    parser.add_argument('--owner-empty-composer', action='store_true',
+                        help='live only: the owner confirms the test-channel composer is empty (used if Slack reports no field state)')
     parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
     args = parser.parse_args()
     try:
@@ -495,6 +498,10 @@ def main():
             raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
         if args.seat_probe and not args.slack_supervised:
             raise base.Refused('seat_probe_requires_slack_supervised')
+        if args.owner_empty_composer and not args.slack_live:
+            raise base.Refused('owner_empty_composer_requires_slack_live')
+        if args.owner_empty_composer:
+            os.environ['RASKLAD_OWNER_EMPTY_COMPOSER_CLI'] = '1'
         if args.slack_live and not (args.run_approved and args.slack_launch):
             raise base.Refused('slack_live_requires_run_approved_slack_launch')
         if args.slack_launch and not args.run_approved:

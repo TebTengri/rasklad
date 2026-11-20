@@ -137,6 +137,8 @@ def sandbox_extra(directory, pre):
         mode = 'RASKLAD_SLACK_LAUNCH_LAB'
     else:
         raise ValueError('slack_mode')
+    if pre.get('owner_empty') is True and mode == 'RASKLAD_SLACK_LIVE_LAB':
+        extra += ['--setenv', 'RASKLAD_SLACK_OWNER_EMPTY', '1']
     for key, value in (('RASKLAD_SLACK_SESSION_LAB', '1'), ('RASKLAD_SLACK_GATE_LAB', '1'), (mode, '1'),
                        ('RASKLAD_SLACK_HOME', home), ('RASKLAD_SLACK_USER', pre['user']), ('RASKLAD_SLACK_LANG', pre['lang'])):
         extra += ['--setenv', key, value]
@@ -315,7 +317,8 @@ def run_inside(clients, base, fcitx, gate, children):
                       windowMapped=first_mapped is not None, slackWindowClasses=sorted(classes),
                       foreignWindowsMax=foreign_max, fcitxPrograms=sorted(programs)[:8],
                       contextRecords=contexts, contextRecordsTruncated=len(contexts) >= MAX_CONTEXTS,
-                      commitRecords=len(records.commits))
+                      commitRecords=len(records.commits),
+                      fieldStates=sorted({clients.FIELD_STATES[r[1:2]] for r in records.fields}))
         report['slackStop'] = stop(slack, QUIT_SECONDS)
         # Same rule as step 0: once our Slack main process is dead, release only a lock naming its in-namespace PID.
         released = report['singletonRelease'] = release_own_singleton(Path(env['HOME'], '.config/Slack'), socket.gethostname(), slack.pid)
@@ -549,9 +552,22 @@ def run_live_inside(clients, base, fcitx, gate, children):
         if not (report['bindingFromCompositor'] and report['contextFromAddon'] and report['seatIntactAtArm']):
             raise base.Refused('arm_binding')
         binding = (focused[0], focused[1], int(last[2:5]), clients.PURPOSES[last[1:2]])
+        # Live run 002: the owner's composer held a draft. Arm only on a field the addon reports empty.
+        # 'text' always refuses; 'unknown' (client sent no surrounding text, as the Chromium fixture)
+        # only with the owner's explicit --owner-empty-composer confirmation.
+        report['fieldStateAtArm'] = clients.field_state(records, binding[2])
+        report['ownerConfirmedEmptyComposer'] = os.environ.get('RASKLAD_SLACK_OWNER_EMPTY') == '1'
+        if report['fieldStateAtArm'] == 'text':
+            raise base.Refused('composer_not_empty')
+        if report['fieldStateAtArm'] not in ('empty', 'unknown'):
+            raise base.Refused('composer_state_missing')  # no field record at all: never armed
+        if report['fieldStateAtArm'] == 'unknown' and not report['ownerConfirmedEmptyComposer']:
+            raise base.Refused('composer_state_unknown')
         report['cases'] = []
         for sequence, case in enumerate(LIVE_CASES, 1):
             result = run_case(clients, base, sup, case, sequence, binding, records, seat, helper, write)
+            records.poll(.2)
+            result['fieldAfterCase'] = clients.field_state(records, binding[2])
             report['cases'].append(result)
             if not result.get('completed'):
                 break
@@ -573,7 +589,11 @@ def run_live_inside(clients, base, fcitx, gate, children):
                             and report['armWriteEndOnlyInSupervisor'] and report['seatReleasedAfterRevoke']
                             and report['commitRecordsAfterRevoke'] == 0 and report['slackStop'] == 'graceful'
                             and released in ('released', 'absent') and report['relayRefused'] == 0
-                            and not report.get('revokeErrors'))
+                            and not report.get('revokeErrors')
+                            # Never text after a case; when the addon could see the field, empty again.
+                            and all(c.get('fieldAfterCase') != 'text' for c in report['cases'])
+                            and (report['fieldStateAtArm'] != 'empty'
+                                 or all(c.get('fieldAfterCase') == 'empty' for c in report['cases'])))
         return report
     except base.Refused as error:
         # Keep the fixed-shape partial report (cases, diagnostics) instead of losing it upstream.

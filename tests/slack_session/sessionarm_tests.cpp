@@ -156,6 +156,12 @@ int main() {
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "sx999\n");
         CHECK(!sink.sendContext('c', 'n', 1));  // commit kinds are not context events
         CHECK(!sink.sendContext('i', 'z', 1));
+        CHECK(sink.sendField('e', 7));
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "fe007\n");
+        CHECK(sink.sendField('t', 1012));
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "ft012\n");
+        CHECK(!sink.sendField('x', 1));
+        CHECK(!sink.sendContext('f', 'n', 1));  // field records are not context events
         CHECK(!sink.send(true, 0));
         CHECK(!sink.send(true, 100));
         close(sp[1]);

@@ -55,7 +55,7 @@ class Armed(unittest.TestCase):
 class Injector(unittest.TestCase):
     def test_scripts_are_fixed_and_cleanup_matches_expected_text(self):
         self.assertEqual(inj.script('correction'), ['word', 'space'] + ['backspace'] * 7)
-        self.assertEqual(inj.script('english'), ['hello'] + ['backspace'] * 6)
+        self.assertEqual(inj.script('english'), ['space', 'hello'] + ['backspace'] * 7)
         for case in inj.TYPED:
             self.assertTrue(set(inj.script(case)) <= inj.ALLOWED)
         for bad in ('undo', 'Correction', None, ['english']):
@@ -102,9 +102,10 @@ class HappyPath(Armed):
         s, out = new('english'), []
         self.assertTrue(s.arm(PID, GEN, EPOCH, 'alpha'))
         self.assertTrue(s.seat_locked())
-        token = s.issue('hello', PID, GEN, EPOCH, 'alpha')
-        self.assertTrue(s.send(token, 'hello', PID, GEN, EPOCH, 'alpha', out.append))
-        self.assertEqual(out, [b'hello\n'])
+        for command in ('space', 'hello'):
+            token = s.issue(command, PID, GEN, EPOCH, 'alpha')
+            self.assertTrue(s.send(token, command, PID, GEN, EPOCH, 'alpha', out.append))
+        self.assertEqual(out, [b'space\n', b'hello\n'])
 
     def test_commit_receipt_must_match_exactly(self):
         self.assertTrue(self.typed().commit_receipt(b'c0701\n'))

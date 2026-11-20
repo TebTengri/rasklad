@@ -384,6 +384,15 @@ public:
 #endif
                 }));
         }
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Field content changes are reported as one empty/non-empty bit only; they
+        // neither discard state nor count as a lifecycle change.
+        watchers_.emplace_back(instance_->watchEvent(
+            fcitx::EventType::InputContextSurroundingTextUpdated, fcitx::EventWatcherPhase::PreInputMethod,
+            [this](fcitx::Event &event) {
+                reportField(static_cast<fcitx::InputContextEvent &>(event).inputContext());
+            }));
+#endif
 
 #ifdef RASKLAD_SLACK_SESSION_LAB
         // Revoke must act at once, not on the next key: clear every shown
@@ -857,6 +866,26 @@ private:
         auto *s = state(ic, true);
         if (!s) return;  // not the lab client
         if (!receiptSink().sendContext(event, purposeCode(ic), s->id)) {
+            sessionArm().latch();
+            receiptSink().fail();
+            return;
+        }
+        reportField(ic);
+    }
+
+    // Empty / has text / unknown, from the surrounding text the client already sends
+    // to Fcitx. The text itself stays in Fcitx; only this bit leaves the addon.
+    static char fieldCode(fcitx::InputContext *ic) {
+        if (!ic->capabilityFlags().test(fcitx::CapabilityFlag::SurroundingText)) return 'u';
+        const auto &surrounding = ic->surroundingText();
+        if (!surrounding.isValid()) return 'u';
+        return surrounding.text().empty() ? 'e' : 't';
+    }
+
+    void reportField(fcitx::InputContext *ic) {
+        auto *s = state(ic, true);
+        if (!s) return;  // not the lab client
+        if (!receiptSink().sendField(fieldCode(ic), s->id)) {
             sessionArm().latch();
             receiptSink().fail();
         }

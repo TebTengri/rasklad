@@ -403,3 +403,23 @@ expected set (it is not exempt, so the catch-all swallows it; measured with a
 stray keyboard); a change to the helper's (name, address), a removal or any
 prefix-named addition still aborts; after F10 any change revokes. Grok: OK.
 The partial live report is now kept on refusal.
+
+### Live run 002 (2026-11-21, owner-approved, consumed)
+data/hyprland-slack-live-002-result.json. First injection in the owner's test
+channel: the correction case completed (addon receipt c0701, 7 BackSpace, no
+extra commit). The English case was revoked with commit-mismatch: after the
+BackSpaces the addon bypasses until a boundary (by design: never correct a
+suffix of a passed-through token), so `hello ` passed raw and no receipt came;
+no cleanup, nothing sent. The owner reported the composer already held a draft
+before the run and cleared the composer by hand afterwards.
+Fixes: the English case types a raw boundary space first (cleanup 7 =
+space + committed `hello `, receipt o0602); offline closed-Sway Chromium run
+with both cases back to back: PASS. The addon now sends a field record
+(`f` + e/t/u + id: empty / has text / unknown, from the surrounding text the
+client already gives Fcitx; never the text) on every lifecycle event and on
+SurroundingTextUpdated; field records never revoke. Arm gate: `text` refuses,
+no record refuses, `unknown` (the Chromium fixture sends no surrounding text)
+only with `--owner-empty-composer`; after a case `text` fails the run, and if
+the field was visible at arm it must be empty again. Grok FIX-FIRST items 2–3
+fixed; 1 and 4 (extra BackSpace if Slack drops the raw space; a stale `e`)
+are bounded by the empty-composer rule and recorded as residuals.

@@ -12,8 +12,14 @@ WIRE = {'word': b'word\n', 'space': b'space\n', 'hello': b'hello\n', 'backspace'
 ALLOWED = frozenset(WIRE)
 # Helper commands that must never be sent live.
 FORBIDDEN = frozenset({'undo', 'escape', 'lab-off', 'lab-on', 'xspace', 'sample2', 'mixed', 'long'})
-EXPECTED = {'correction': 'привет ', 'english': 'hello '}
-TYPED = {'correction': ('word', 'space'), 'english': ('hello',)}
+# EXPECTED: field content after typing (cleanup removes exactly this many characters).
+# COMMIT: the addon's single commit (its receipt carries this length).
+# The English case starts with a raw space: after the previous case's BackSpaces the addon
+# bypasses until a boundary (never corrects a suffix of a passed-through token), and the
+# space is that boundary. Live run 002 showed 'hello' bypassing without it.
+EXPECTED = {'correction': 'привет ', 'english': ' hello '}
+COMMIT = {'correction': 'привет ', 'english': 'hello '}
+TYPED = {'correction': ('word', 'space'), 'english': ('space', 'hello')}
 MAX_BACKSPACE = 16
 
 
@@ -40,7 +46,7 @@ def receipt(case, sequence=1):
     if type(sequence) is not int or not 1 <= sequence <= 9:
         raise Refused('sequence')
     kind = b'c' if case == 'correction' else b'o'
-    return kind + b'%02d%02d\n' % (graphemes(EXPECTED[case]), sequence)
+    return kind + b'%02d%02d\n' % (graphemes(COMMIT[case]), sequence)
 
 
 def script(case):

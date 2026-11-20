@@ -181,6 +181,20 @@ public:
         return sent == static_cast<ssize_t>(sizeof record);
     }
 
+    // Field state record: 'f' + e (empty) / t (has text) / u (unknown: no surrounding text)
+    // + 3-digit context id. One bit about the field, never its text.
+    bool sendField(char state, std::uint64_t id) const {
+        if (!valid() || (state != 'e' && state != 't' && state != 'u')) return false;
+        const unsigned n = static_cast<unsigned>(id % 1000);
+        const char record[6] = {'f', state, static_cast<char>('0' + n / 100),
+                                static_cast<char>('0' + n / 10 % 10), static_cast<char>('0' + n % 10), '\n'};
+        ssize_t sent;
+        do {
+            sent = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
+        } while (sent < 0 && errno == EINTR);
+        return sent == static_cast<ssize_t>(sizeof record);
+    }
+
     // After any undeliverable record: hang up, so the supervisor's next read
     // sees EOF and stops injecting instead of running on a stale binding.
     void fail() {

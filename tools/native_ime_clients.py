@@ -368,6 +368,14 @@ def descends_from(pid,ancestor):
 
 
 PURPOSES={b'n':'normal',b'a':'alpha',b'p':'password',b'x':'other'}
+FIELD_STATES={b'e':'empty',b't':'text',b'u':'unknown'}
+
+
+def field_state(records,context_id):
+    """Last empty/text/unknown bit the addon reported for this context id (None if none)."""
+    for record in reversed(records.fields):
+        if int(record[2:5])==context_id:return FIELD_STATES[record[1:2]]
+    return None
 CONTEXT_EVENTS={b'i':'focus-change',b'u':'focus-change',b'r':'ic-reset',b'k':'purpose-change',b's':'ic-reset'}
 
 
@@ -375,7 +383,7 @@ class AddonRecords:
     """Fixed 6-byte records from the addon: commits (c/o + count + sequence) and
     context events (i/u/r/k + purpose + id). Never text."""
     def __init__(self,base,sock):
-        self.base,self.sock,self.commits,self.contexts=base,sock,[],[]
+        self.base,self.sock,self.commits,self.contexts,self.fields=base,sock,[],[],[]
     def poll(self,timeout=0):
         fresh=[];end=time.monotonic()+timeout
         while True:
@@ -385,6 +393,8 @@ class AddonRecords:
             if not record:raise self.base.Refused('addon_records_closed')  # addon hung up: stop
             if len(record)!=6 or record[-1:]!=b'\n':raise self.base.Refused('addon_record_shape')
             if record[:1] in (b'c',b'o'):self.commits.append(record)
+            elif record[:1]==b'f' and record[1:2] in FIELD_STATES and record[2:5].isdigit():
+                self.fields.append(record)  # content bit only: never a lifecycle change
             elif record[:1] in CONTEXT_EVENTS and record[1:2] in PURPOSES and record[2:5].isdigit():
                 self.contexts.append(record);fresh.append(record)
             else:raise self.base.Refused('addon_record_kind')
@@ -456,6 +466,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         if not report['contextFromAddon'] or records.commits:raise base.Refused('addon_context')
         epoch,purpose=int(last[2:5]),PURPOSES[last[1:2]]
         report['addonPurpose']=purpose
+        report['fieldStateAtArm']=field_state(records,epoch)
         binding=(surface[0],surface[1],epoch,purpose)
         def current(sv=None):
             sv=sv or s
@@ -496,28 +507,43 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             return records.commits.pop(0)
         report['receiptQueueEmptyBeforeTyping']=pending_receipt() is None
         if not report['receiptQueueEmptyBeforeTyping']:s.revoke();raise base.Refused('stale_receipt')
-        script=inj.script('correction')
+        # Both live cases back to back, as in the live session (addon commit sequence 1, 2).
         report['supervisedReceiptChecked']=False
-        for command in script:
-            if command=='backspace' and not s._receipt_ok:
-                # Receipt from the addon (kind + length, no text), not from the observer.
-                record=pending_receipt(2)
-                time.sleep(.1)
-                extra=pending_receipt()  # exactly one commit is expected
-                report['supervisedReceiptChecked']=True
-                report['supervisedReceiptMatched']=extra is None and s.commit_receipt(record)
-                report['supervisedReceiptFromAddon']=record==inj.receipt('correction')
-                # Observer cross-check only (lab): the field shows the expected text.
-                report['observerSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED['correction']
-                if not report['supervisedReceiptMatched']:
-                    s.revoke()  # orphaned or unexpected commit: stop, never clean up blindly
-                    break
-            token=s.issue(command,*current())  # compositor focus re-read before every key
-            if token is None or not s.send(token,command,*current(),write):raise base.Refused('supervisor_send')
-            helper_ack(base,helper)
-            time.sleep(.05)
-        report['supervisedScriptCompleted']=s.done() and s.sent==len(script) and report['supervisedReceiptChecked']
-        report['supervisedFieldCleaned']=link.ask('observe').get('value')==''
+        completed=[]
+        for sequence,case in enumerate(('correction','english'),1):
+            if sequence>1:
+                s=sup.Supervisor([binding[0]],case,sequence=sequence)
+                if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
+            script=inj.script(case)
+            matched=False
+            for command in script:
+                if command=='backspace' and not s._receipt_ok:
+                    # Receipt from the addon (kind + length, no text), not from the observer.
+                    record=pending_receipt(2)
+                    time.sleep(.1)
+                    extra=pending_receipt()  # exactly one commit is expected
+                    report['supervisedReceiptChecked']=True
+                    matched=extra is None and s.commit_receipt(record)
+                    report[case+'ReceiptFromAddon']=record==inj.receipt(case,sequence)
+                    # Observer cross-check only (lab): the field shows the expected text.
+                    report[case+'ObserverSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED[case]
+                    if not matched:
+                        s.revoke()  # orphaned or unexpected commit: stop, never clean up blindly
+                        break
+                token=s.issue(command,*current())  # compositor focus re-read before every key
+                if token is None or not s.send(token,command,*current(),write):raise base.Refused('supervisor_send')
+                helper_ack(base,helper)
+                time.sleep(.05)
+            if not (matched and s.done() and s.sent==len(script)):break
+            report[case+'FieldCleaned']=link.ask('observe').get('value')==''
+            records.poll(.2)
+            report[case+'AddonFieldAfterCleanup']=field_state(records,epoch)
+            completed.append(case)
+        report['supervisedReceiptMatched']=completed==['correction','english']
+        report['supervisedReceiptFromAddon']=all(report.get(c+'ReceiptFromAddon') is True for c in ('correction','english'))
+        report['observerSawExpectedText']=all(report.get(c+'ObserverSawExpectedText') is True for c in ('correction','english'))
+        report['supervisedScriptCompleted']=report['supervisedReceiptMatched'] and report['supervisedReceiptChecked']
+        report['supervisedFieldCleaned']=all(report.get(c+'FieldCleaned') is True for c in ('correction','english'))
         report['noReceiptAfterCleanup']=pending_receipt(.2) is None
         report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
         # Purpose change: focus the password field; the addon must report it and
@@ -608,7 +634,9 @@ class LaunchHelpers:
     write_end_holders=staticmethod(lambda fd:write_end_holders(fd))
     load_lab_module=staticmethod(lambda name,path:load_lab_module(name,path))
     PURPOSES=PURPOSES
+    FIELD_STATES=FIELD_STATES
     CONTEXT_EVENTS=CONTEXT_EVENTS
+    field_state=staticmethod(lambda records,context_id:field_state(records,context_id))
 
 
 def load_lab_module(name,path):
