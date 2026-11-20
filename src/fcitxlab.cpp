@@ -105,6 +105,17 @@
 #include "fcitxlabprofile.h"
 #endif
 
+#ifdef RASKLAD_MANUAL_LAB
+// SYS-225 slice 1 (docs/SYS-225-MANUAL-GESTURE.md): no automatic correction;
+// a double Shift toggles the CURRENT preedit word us<->ru view, Space commits
+// what is shown. Never touches text the application already accepted.
+#if defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_WITNESS_LAB) || \
+    defined(RASKLAD_DISABLE_TEST_LAB)
+#error "RASKLAD_MANUAL_LAB is a separate artifact"
+#endif
+#include "manualgesture.h"
+#endif
+
 #ifdef RASKLAD_WITNESS_LAB
 #ifndef RASKLAD_PROFILE_LAB
 #error "RASKLAD_WITNESS_LAB requires RASKLAD_PROFILE_LAB (use tools/fcitx_witness_lab.pro)"
@@ -226,7 +237,22 @@ public:
     std::shared_ptr<CallbackBinding> callbackBinding = std::make_shared<CallbackBinding>();
     LabState() : id(nextId_++) { disable->enable(); }
     ~LabState() override { callbackBinding->alive = false; invalidate(); clearBuffer(); }
-    void invalidate() { ++epoch; callbackBinding->epoch = epoch; lease = {}; }
+    void invalidate() {
+        ++epoch; callbackBinding->epoch = epoch; lease = {};
+#ifdef RASKLAD_MANUAL_LAB
+        gesture.reset();
+#endif
+    }
+#ifdef RASKLAD_MANUAL_LAB
+    rasklad::manual::DoubleShift gesture;
+    bool converted = false; // the preedit shows usToRu(word()) instead of word()
+    // Text to show/commit; empty conversion (never for a..z) keeps the original.
+    std::string shown() const {
+        if (!converted) return word();
+        std::string out = rasklad::manual::usToRu(word());
+        return out.empty() ? word() : out;
+    }
+#endif
     const std::uint64_t id;
     std::uint64_t epoch = 1;
     // Survives lifecycle invalidation: an On transition must never capture
@@ -270,6 +296,10 @@ public:
         }
         len_ = 0;
         lease = {};
+#ifdef RASKLAD_MANUAL_LAB
+        converted = false;
+        gesture.reset();
+#endif
         // Normal local-buffer completion only. NEVER acknowledge a disabled
         // composition from buffer reset/destruction: that is not native delivery.
         if (disable->state() == policy::CompositionDisable::State::Active) {
@@ -593,7 +623,11 @@ private:
         struct Original {
             std::string text;
             ~Original() { wipeString(text); }
+#ifdef RASKLAD_MANUAL_LAB
+        } original{s.shown()};
+#else
         } original{s.word()};
+#endif
         // Unknown callbacks retain the original; the Submitted callback stages
         // local ownership release before its ordinary IME write. Either callback
         // may reset or destroy ic and s: never access them after it returns.
@@ -727,10 +761,22 @@ private:
         return true;
     }
 
+#ifdef RASKLAD_MANUAL_LAB
+    // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
+    // release, depending on the frontend on the press) is ignored.
+    static bool isShift(const fcitx::Key &key) {
+        if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
+        return !fcitx::Key(key.sym(), key.states().unset(fcitx::KeyState::Shift)).hasModifier();
+    }
+#endif
     static void showPreedit(fcitx::InputContext *ic, LabState &s) {
+#ifdef RASKLAD_MANUAL_LAB
+        std::string w = s.shown();
+#else
         std::string w = s.word();
+#endif
         fcitx::Text text;
-        const int cursor = static_cast<int>(w.size()); // ASCII: bytes == chars
+        const int cursor = static_cast<int>(w.size()); // Fcitx Text cursor is a byte offset
         text.append(std::move(w), fcitx::TextFormatFlag::Underline);
         text.setCursor(cursor);
         ic->inputPanel().setClientPreedit(text);
@@ -952,6 +998,23 @@ private:
         const fcitx::Key &key = event.key();
 
         if (event.isRelease()) {
+#ifdef RASKLAD_MANUAL_LAB
+            // A bare Shift release may complete the gesture. It is never filtered:
+            // the application sees a symmetric modifier press/release.
+            if (isShift(key)) {
+                auto *s = state(ic, false);
+                if (!s) return;
+                if (s->empty() || familyOff_ || !eligible(ic) || s->stopping() || !validate(ic, *s)) {
+                    s->gesture.reset(); // an abandoned release ends the gesture
+                    return;
+                }
+                if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
+                    s->converted = !s->converted;
+                    showPreedit(ic, *s); // No state/event access after this callback.
+                }
+                return;
+            }
+#endif
             // Never mutates the buffer; only swallows the release of a press
             // we consumed in this same context.
             if (auto *s = state(ic, false); s && s->takePending(key)) {
@@ -1039,6 +1102,23 @@ private:
 
         const fcitx::KeySym sym = key.sym();
         const bool plain = !key.hasModifier();
+#ifdef RASKLAD_MANUAL_LAB
+        // A bare Shift press over a non-empty word defers the decision (no flush,
+        // no bypass) and passes unfiltered. Every other press breaks the gesture.
+        if (isShift(key)) {
+            if (!s->empty() && !s->bypass() && !s->needsBoundary) {
+                s->gesture.feed(rasklad::manual::Input::ShiftPress, event.time());
+                return;
+            }
+            s->gesture.reset();
+            // A bare Shift over an empty buffer must not latch bypass: the next
+            // lowercase word is still a whole word. Shift+letter is non-plain and
+            // takes the flush/bypass path itself.
+            if (s->empty() && !s->bypass() && !s->needsBoundary) return;
+        } else {
+            s->gesture.feed(rasklad::manual::Input::Other, event.time());
+        }
+#endif
         const bool boundary = plain && (sym == FcitxKey_space ||
             sym == FcitxKey_Tab || sym == FcitxKey_Return || sym == FcitxKey_KP_Enter);
         if (s->resumeGeneration != resumeGeneration_) {
@@ -1094,6 +1174,8 @@ private:
                 const auto context = fixtureContext(ic, *s);
                 auto corrected = profile_->correct(w, context.field);
                 std::string out = corrected ? std::move(*corrected) : w;
+#elif defined(RASKLAD_MANUAL_LAB)
+                std::string out = s->shown(); // only what the owner chose to see
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
 #endif
@@ -1130,7 +1212,11 @@ private:
                 discard(ic, *s);
                 return;
             }
+#ifdef RASKLAD_MANUAL_LAB
+            commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
+#else
             commitAndClear(ic, *s, s->word());
+#endif
         }
     }
 

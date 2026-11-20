@@ -11,7 +11,8 @@ import unicodedata
 WIRE = {'word': b'word\n', 'space': b'space\n', 'hello': b'hello\n', 'backspace': b'backspace\n'}
 ALLOWED = frozenset(WIRE)
 # Helper commands that must never be sent live.
-FORBIDDEN = frozenset({'undo', 'escape', 'lab-off', 'lab-on', 'xspace', 'sample2', 'mixed', 'long'})
+FORBIDDEN = frozenset({'undo', 'escape', 'lab-off', 'lab-on', 'xspace', 'sample2', 'mixed', 'long',
+                       'shift2', 'shiftslow', 'shifta'})  # SYS-225 offline manual suite only
 # EXPECTED: field content after typing (cleanup removes exactly this many characters).
 # COMMIT: the addon's single commit (its receipt carries this length).
 # The English case starts with a raw space: after the previous case's BackSpaces the addon

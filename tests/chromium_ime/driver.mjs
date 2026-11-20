@@ -138,6 +138,38 @@ try{
   report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
   const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo','onMidTokenPreserved','onNewWordCorrected','offAgainPassthrough'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
+  // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.
+  if(!nativeWayland)throw Error('native manual suite required');
+  const v=()=>ev('prose.value');
+  phase='manual_convert';await reset();await type('word');await type('shift2');
+  report.manualPreeditConverted=await v()==='привет';
+  await type('space');report.manualConvertedCommit=await v()==='привет ';
+  phase='manual_undo';await reset();await type('word');await type('shift2');await type('shift2');
+  report.manualUndoPreedit=await v()==='ghbdtn';
+  await type('space');report.manualUndoCommit=await v()==='ghbdtn ';
+  phase='manual_no_gesture';await reset();await type('word');await type('space');
+  report.manualNoAutoCorrection=await v()==='ghbdtn ';
+  phase='manual_shift_letter';await reset();await type('word');await type('shifta');await type('space');
+  report.manualShiftLetterOriginal=await v()==='ghbdtnA ';
+  phase='manual_slow';await reset();await type('word');await type('shiftslow');await type('space');
+  report.manualSlowIgnored=await v()==='ghbdtn ';
+  phase='manual_empty';await reset();await type('shift2');
+  report.manualEmptyNothing=await v()==='';
+  // A Shift tap before a word does not stop the word from being composed.
+  await type('word');await type('shift2');await type('space');report.manualShiftBeforeWord=await v()==='привет ';
+  phase='manual_backspace';await reset();await type('word');await type('shift2');await type('backspace');
+  report.manualBackspaceValue=await v();report.manualBackspaceConverted=report.manualBackspaceValue==='приве';
+  await type('space');report.manualBackspaceCommit=await v()==='приве ';
+  // Non-Space flush path (Escape here; Enter/Tab/punctuation share it): commits what is shown.
+  phase='manual_flush';await reset();await type('word');await type('shift2');await type('escape');
+  report.manualFlushCommitsShown=await v()==='привет';
+  phase='manual_password';await reset('secret');await type('word');await type('shift2');await type('space');
+  report.manualPasswordUntouched=await ev(`secret.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
+  phase='manual_focus';await reset();await type('word');await type('shift2');await ev(`other.focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,120));await type('space');
+  report.manualFocusNoLeak=await ev(`other.value===' '`);
+  const required=['manualPreeditConverted','manualConvertedCommit','manualUndoPreedit','manualUndoCommit','manualNoAutoCorrection','manualShiftLetterOriginal','manualSlowIgnored','manualEmptyNothing','manualShiftBeforeWord','manualBackspaceConverted','manualBackspaceCommit','manualFlushCommitsShown','manualPasswordUntouched','manualFocusNoLeak'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else{
  await reset();phase='word';await type('word');
  report.preeditObserved=await ev(`imeEvents.some(x=>x.type==='compositionstart')&&imeEvents.some(x=>x.type==='compositionupdate')`);

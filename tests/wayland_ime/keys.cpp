@@ -28,6 +28,7 @@ static_assert(KEY_BACKSPACE == 14, "unexpected KEY_BACKSPACE");
 static_assert(KEY_ESC == 1, "unexpected KEY_ESC");
 static_assert(KEY_F12 == 88, "unexpected KEY_F12");
 static_assert(KEY_F11 == 87, "unexpected KEY_F11");
+static_assert(KEY_LEFTSHIFT == 42, "unexpected KEY_LEFTSHIFT");
 
 namespace {
 
@@ -226,7 +227,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -243,6 +244,12 @@ Cmd parse(std::string_view line)
     if (envIs("RASKLAD_DISABLE_TEST_LAB", "1")) {
         if (line == "lab-off") return Cmd::LabOff;
         if (line == "lab-on") return Cmd::LabOn;
+    }
+    // SYS-225 manual gesture suite only.
+    if (envIs("RASKLAD_MANUAL_LAB", "1")) {
+        if (line == "shift2") return Cmd::Shift2;
+        if (line == "shiftslow") return Cmd::ShiftSlow;
+        if (line == "shifta") return Cmd::ShiftA;
     }
     return Cmd::Unknown;
 }
@@ -265,6 +272,14 @@ bool run(Session &s, Cmd cmd)
     case Cmd::Escape: return s.tap(KEY_ESC);
     case Cmd::LabOff: return s.tap(KEY_F12);
     case Cmd::LabOn: return s.tap(KEY_F10);
+    case Cmd::Shift2: return s.tap(KEY_LEFTSHIFT) && s.tap(KEY_LEFTSHIFT);
+    case Cmd::ShiftSlow: {
+        if (!s.tap(KEY_LEFTSHIFT)) return false;
+        timespec gap {0, 700 * 1000 * 1000}; // > 400 ms gesture window
+        while (nanosleep(&gap, &gap) != 0 && errno == EINTR) {}
+        return s.tap(KEY_LEFTSHIFT);
+    }
+    case Cmd::ShiftA: return s.chord(KEY_LEFTSHIFT, KEY_A);
     case Cmd::Unknown: break;
     }
     return false;
