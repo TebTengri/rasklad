@@ -50,6 +50,12 @@ def validate_frontend(variant):
         raise base.Refused(str(error)) from error
 
 
+# Measurement submap: F12 leaves, every other key re-enters the same submap (swallowed).
+SEAT_PROBE_SUBMAP = '''submap = rasklad_lock
+bind = , F12, submap, reset
+bind = , catchall, submap, rasklad_lock
+submap = reset
+'''
 SLACK_GATE_ADDON = ROOT/'build/chromium-ime/slack-gate-addon/raskladslackgatetest.so'
 
 
@@ -61,7 +67,7 @@ def supervised_selection(slack_supervised, *others):
         raise base.Refused('slack_supervised_incompatible_options')
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False):
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False):
     frontend_selection(frontend_variant)
     supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
     if grab_epoch_witness and not server_route_witness:
@@ -143,6 +149,8 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
                   '--ro-bind', str(ROOT/'tools/slack_injector.py'), '/lab/slack_injector.py',
                   '--setenv', 'RASKLAD_SLACK_SESSION_LAB', '1', '--setenv', 'RASKLAD_SLACK_GATE_LAB', '1',
                   '--setenv', 'RASKLAD_SLACK_SUPERVISED_LAB', '1']
+        if seat_probe:
+            extra += ['--setenv', 'RASKLAD_SEAT_PROBE_LAB', '1']
     for relative, path in profile.items():
         extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
     env = {'RASKLAD_HYPRLAND_IME_LAB': '1', 'RASKLAD_NATIVE_WAYLAND_LAB': '1',
@@ -254,7 +262,7 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False):
     frontend_selection(frontend_variant)
     supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
     if grab_epoch_witness and not server_route_witness:
@@ -334,7 +342,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         if server_route_witness:
             snapshots['/lab/raskladserverroute.so'] = base.sealed_snapshot(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
         snapshots['/lab/rasklad-wayland-keys'] = base.sealed_snapshot(keys)
-        (directory/'hypr.conf').write_text(probe.CONFIG)
+        (directory/'hypr.conf').write_text(probe.CONFIG+(SEAT_PROBE_SUBMAP if seat_probe else ''))
         (directory/'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
         (directory/'group').write_text(f'lab:x:{os.getgid()}:\n')
         (directory/'machine-id').write_text('00000000000000000000000000000007\n')
@@ -404,6 +412,7 @@ def main():
     parser.add_argument('--server-route-witness',action='store_true')
     parser.add_argument('--focus-repeats', type=int, choices=range(1,6), default=1)
     parser.add_argument('--slack-supervised', action='store_true')
+    parser.add_argument('--seat-probe', action='store_true')
     parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
     args = parser.parse_args()
     try:
@@ -423,13 +432,15 @@ def main():
             raise base.Refused('witness_no_query_requires_addon_witness')
         if args.addon_witness and not (args.focus_stress and args.space_telemetry):
             raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+        if args.seat_probe and not args.slack_supervised:
+            raise base.Refused('seat_probe_requires_slack_supervised')
         if args.slack_supervised and not args.run_approved:
             raise base.Refused('slack_supervised_requires_run_approved')
         if args.inside and args.focus_stress:
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised, args.seat_probe) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'frontendVariant': args.frontend_variant,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,

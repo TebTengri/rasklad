@@ -200,6 +200,82 @@ def helper_ack(base,helper,timeout=4):
     if raw!=b'{"ok":true}\n':raise base.Refused('helper_ack')
 
 
+def hyprctl(base,*args,raw=False):
+    hypr=[p for p in Path(os.environ['XDG_RUNTIME_DIR'],'hypr').iterdir() if p.is_dir()]
+    if len(hypr)!=1:raise base.Refused('hyprland_instance')
+    env={'PATH':'/usr/bin','XDG_RUNTIME_DIR':os.environ['XDG_RUNTIME_DIR'],'HYPRLAND_INSTANCE_SIGNATURE':hypr[0].name}
+    out=subprocess.run(['/usr/bin/hyprctl',*args],capture_output=True,timeout=3,env=env)
+    if len(out.stdout)>65536:raise base.Refused('hyprctl_bound')
+    return out.stdout.decode('utf-8','replace').strip()[:200] if raw else out
+
+
+def run_seat_probe(base,fcitx,gate,driver_env,children):
+    """Measurement only (nested Hyprland): do a catch-all submap and per-device
+    settings stop (a) the supervisor's helper keyboard and (b) a second, stray
+    virtual keyboard standing in for the physical one? Fixture field only."""
+    read_end,write_end,receipts,addon_end=gate
+    addon_end.close();os.close(read_end)
+    report={'seatProbe':True}
+    helpers=[];driver=None
+    def spawn():
+        h=subprocess.Popen(['/lab/rasklad-wayland-keys'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+        children.append(h);helpers.append(h)
+        ready,_,_=select.select([h.stdout],[],[],3)
+        if not ready or os.read(h.stdout.fileno(),32)!=b'{"ready":true}\n':raise base.Refused('helper_ready')
+        return h
+    def key(h,command='hello'):
+        h.stdin.write(command.encode()+b'\n');h.stdin.flush()
+        try:helper_ack(base,h)
+        except base.Refused:return False
+        return True
+    try:
+        driver=subprocess.Popen(['/usr/bin/node','/lab/driver.mjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=driver_env)
+        link=DriverLink(base,driver,time.monotonic()+50)
+        link.line()
+        def delta(h,command='hello'):
+            link.ask('clear');time.sleep(.2)
+            before=link.ask('observe').get('events')
+            acked=key(h,command);time.sleep(.4)
+            return {'acked':acked,'events':link.ask('observe').get('events')-before}
+        supervisor_kb=spawn()
+        report['baselineSupervisorKeyboard']=delta(supervisor_kb)
+        stray=spawn()
+        report['baselineStrayKeyboard']=delta(stray)
+        devices=json.loads(hyprctl(base,'-j','devices').stdout or b'{}')
+        names=[k.get('name') for k in devices.get('keyboards',[]) if type(k) is dict]
+        report['keyboardNames']=[n for n in names if type(n) is str and len(n)<=64][:8]
+        report['submapEnter']=hyprctl(base,'dispatch','submap','rasklad_lock',raw=True)
+        report['submapActive']=hyprctl(base,'submap',raw=True)
+        report['lockedSupervisorKeyboard']=delta(supervisor_kb)
+        report['lockedStrayKeyboard']=delta(stray)
+        report['submapReset']=hyprctl(base,'dispatch','submap','reset',raw=True)
+        report['afterResetSupervisorKeyboard']=delta(supervisor_kb)
+        # Per-device setting at runtime (documented as config; runtime form unverified).
+        report['deviceKeywordResult']=hyprctl(base,'keyword','device[virtual-keyboard]:enabled','false',raw=True) if report['keyboardNames'] else None
+        report['afterDeviceKeywordSupervisorKeyboard']=delta(supervisor_kb)
+        report['compositorAlive']=hyprctl(base,'version',raw=True)!=''
+        link.ask('done');driver.stdin.close()
+        rest=b'';end=time.monotonic()+10
+        while True:
+            ready,_,_=select.select([driver.stdout],[],[],max(0,end-time.monotonic()))
+            if not ready:raise base.Refused('driver_report_timeout')
+            chunk=os.read(driver.stdout.fileno(),65536)
+            if not chunk:break
+            rest+=chunk
+        driver.wait(timeout=5)
+        report['seatProbeComplete']=True
+        return subprocess.CompletedProcess(driver.args,driver.returncode,link.buffer+rest,None),report
+    finally:
+        receipts.close();os.close(write_end)
+        for h in helpers:
+            if not h.stdin.closed:h.stdin.close()
+            if h.poll() is None:h.kill();h.wait()
+        if driver is not None:
+            if driver.poll() is None:driver.kill();driver.wait()
+            if not driver.stdin.closed:driver.stdin.close()
+            driver.stdout.close()
+
+
 def compositor_binding(base):
     """Nested Hyprland only: the focused window as the compositor reports it.
     Returns (pid, window generation = window address), or None."""
@@ -463,7 +539,9 @@ def run(base, children):
     if frontend:verify_frontend_mapping(base,fcitx,frontend[0])
     driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
     gate_report={}
-    if gate and os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1':
+    if gate and os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1' and os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1':
+        p,gate_report=run_seat_probe(base,fcitx,gate,driver_env,children)
+    elif gate and os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1':
         p,gate_report=run_supervised_driver(base,fcitx,gate,driver_env,children)
     elif gate:
         p,gate_report=run_gate_driver(base,fcitx,gate,driver_env)
@@ -476,8 +554,9 @@ def run(base, children):
         r['fcitxAliveAfterGate']=fcitx.poll() is None
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
+        if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1':supervised=False;control=True  # measurement: only require completion
         hypr_required=['bindingFromCompositor','bindingChangeRefused','compositorFocusUnchanged'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
-        required=(['armWriteEndOnlyInSupervisor'] if control else
+        required=(['seatProbeComplete'] if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1' else ['armWriteEndOnlyInSupervisor'] if control else
                   ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','contextFromAddon','purposeCheckArmed','passwordFocusReported','passwordFocusRefused','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor']+hypr_required if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
