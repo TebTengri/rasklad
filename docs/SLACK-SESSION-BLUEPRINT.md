@@ -295,3 +295,10 @@ sees it at the next key (≤ one key step) and revokes. Pointer input is not
 locked: a click that moves focus is caught by the addon focus records and
 compositor binding, a click inside the same field is not. Both need a fixed
 owner rule for the live run: no mouse use after arming.
+
+Nested Hyprland supervised run 002 with the seat lock (owner-approved, commit
+70f7eff): PASS — data/hyprland-slack-supervised-002-result.json. All offline
+and nested-compositor prerequisites for the live Slack session are now
+measured; remaining before live: the Slack launch inside this harness (real
+profile, bridge) and the owner rules (no mouse after arming, three owner
+booleans after the run).
