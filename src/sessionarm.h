@@ -163,10 +163,13 @@ public:
     }
 
     // Context record (6 bytes): event ('i' focus-in, 'u' focus-out, 'r' reset,
-    // 'k' capability change), purpose ('n' normal, 'a' alpha, 'p' password or
-    // sensitive, 'x' other restricted), context id mod 1000, newline. Never text.
+    // 'k' capability change, 's' input-method switch), purpose ('n' normal,
+    // 'a' alpha, 'p' password or sensitive, 'x' restricted or not plain text),
+    // context id mod 1000, newline. Never text. The id only labels the record:
+    // the supervisor revokes on ANY context record after arming, so a wrapped
+    // id cannot be mistaken for the bound context.
     bool sendContext(char event, char purpose, std::uint64_t id) const {
-        if (!valid() || (event != 'i' && event != 'u' && event != 'r' && event != 'k')
+        if (!valid() || (event != 'i' && event != 'u' && event != 'r' && event != 'k' && event != 's')
             || (purpose != 'n' && purpose != 'a' && purpose != 'p' && purpose != 'x')) return false;
         const unsigned n = static_cast<unsigned>(id % 1000);
         const char record[6] = {event, purpose, static_cast<char>('0' + n / 100),
@@ -176,6 +179,12 @@ public:
             sent = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
         } while (sent < 0 && errno == EINTR);
         return sent == static_cast<ssize_t>(sizeof record);
+    }
+
+    // After any undeliverable record: hang up, so the supervisor's next read
+    // sees EOF and stops injecting instead of running on a stale binding.
+    void fail() {
+        if (fd_ >= 0) ::shutdown(fd_, SHUT_RDWR);
     }
 
 private:

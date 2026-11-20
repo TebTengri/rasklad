@@ -232,3 +232,27 @@ revokes; a changed window generation is refused; Hyprland and Fcitx stay alive.
 PASS. Evidence: data/hyprland-slack-supervised-001-result.json.
 Still open before live Slack: host-keyboard isolation while injecting (seat
 grab), IC epoch and content purpose from Fcitx instead of lab values.
+
+## Field context from the addon (2026-11-20)
+
+The addon reports every lifecycle event of the lab client's contexts as a
+6-byte record: event (`i` focus-in, `u` focus-out, `r` reset, `k` capability
+change, `s` input-method switch), purpose class and context id — never text.
+Purpose is fail-closed: `n`/`a` only for a preedit-capable field without
+Password/Sensitive/NoSpellCheck/Terminal/Disable/Email/Digit/Url/Dialable/
+Number/Name; otherwise `p` or `x`. The supervisor binds to the last focus-in
+record and revokes (and stops the keyboard helper) on any later context record;
+an undeliverable record latches the gate and hangs up the socket, so the
+supervisor stops at its next read. Offline: focusing the password field is
+reported (`p`) and the live check alone refuses the next key.
+
+Grok review of ccb9b09 (FIX-FIRST) closed: fail-open purpose default; supervisor
+blind to a failed send (now hang-up → stop); missing records for input-method
+switch and capability-about-to-change; refusal proven via the live check, not a
+manual revoke; hyprctl failure revokes explicitly. Wording: the record id is a
+context label, not the epoch — any record after arming revokes, so wrap-around
+cannot alias. RESIDUAL (documented, not closed): a key already written to the
+helper before a focus change can still be delivered to the newly focused
+field; the window is one key (≤ one 50 ms step). Closing it needs the seat
+grab in the compositor — the next owner-approved Hyprland step. Not yet tested:
+a focus change in the middle of the script.

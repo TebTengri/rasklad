@@ -55,6 +55,10 @@
     "observerSawExpectedText": true,
     "receiptRecord": "c0701\\n (kind, code points, commit sequence; no text)",
     "receiptQueueEmptyBeforeTyping": true,
-    "noReceiptAfterCleanup": true
+    "noReceiptAfterCleanup": true,
+    "contextFromAddon": true,
+    "addonPurpose": "normal",
+    "passwordFocusReported": true,
+    "passwordFocusRefused": true
   }
 }

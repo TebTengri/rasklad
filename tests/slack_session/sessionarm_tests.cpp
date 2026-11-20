@@ -152,6 +152,8 @@ int main() {
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "o0602\n");
         CHECK(sink.sendContext('i', 'n', 1007));
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "in007\n");
+        CHECK(sink.sendContext('s', 'x', 999));
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "sx999\n");
         CHECK(!sink.sendContext('c', 'n', 1));  // commit kinds are not context events
         CHECK(!sink.sendContext('i', 'z', 1));
         CHECK(!sink.send(true, 0));
@@ -159,6 +161,14 @@ int main() {
         close(sp[1]);
         CHECK(!sink.send(true, 7));  // peer closed: EPIPE without SIGPIPE, reported as failure
         close(sp[0]);
+        {   // fail() hangs up: the reader sees EOF
+            int fp[2];
+            CHECK(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fp) == 0);
+            ReceiptSink failing(fp[0]);
+            failing.fail();
+            CHECK(read(fp[1], buf, sizeof buf) == 0);
+            close(fp[0]); close(fp[1]);
+        }
         int st[2];
         CHECK(socketpair(AF_UNIX, SOCK_STREAM, 0, st) == 0 && !ReceiptSink(st[0]).valid());
         close(st[0]); close(st[1]);

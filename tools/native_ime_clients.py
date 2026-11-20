@@ -227,7 +227,7 @@ def descends_from(pid,ancestor):
 
 
 PURPOSES={b'n':'normal',b'a':'alpha',b'p':'password',b'x':'other'}
-CONTEXT_EVENTS={b'i':'focus-change',b'u':'focus-change',b'r':'ic-reset',b'k':'purpose-change'}
+CONTEXT_EVENTS={b'i':'focus-change',b'u':'focus-change',b'r':'ic-reset',b'k':'purpose-change',b's':'ic-reset'}
 
 
 class AddonRecords:
@@ -241,6 +241,7 @@ class AddonRecords:
             ready,_,_=select.select([self.sock],[],[],max(0,end-time.monotonic()))
             if not ready:return fresh
             record=self.sock.recv(16)
+            if not record:raise self.base.Refused('addon_records_closed')  # addon hung up: stop
             if len(record)!=6 or record[-1:]!=b'\n':raise self.base.Refused('addon_record_shape')
             if record[:1] in (b'c',b'o'):self.commits.append(record)
             elif record[:1] in CONTEXT_EVENTS and record[1:2] in PURPOSES and record[2:5].isdigit():
@@ -303,13 +304,24 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         epoch,purpose=int(last[2:5]),PURPOSES[last[1:2]]
         report['addonPurpose']=purpose
         binding=(surface[0],surface[1],epoch,purpose)
-        def current():
-            fresh=records.poll()
-            if fresh:  # any focus/reset/capability change after arm revokes
-                s.event(CONTEXT_EVENTS[fresh[0][:1]]);return (0,0,0,'none')
+        def current(sv=None):
+            sv=sv or s
+            try:
+                fresh=records.poll()
+            except base.Refused:
+                sv.event('error');stop_helper();raise
+            if fresh:  # any focus/reset/capability change after arm revokes and stops the helper
+                sv.event(CONTEXT_EVENTS[fresh[0][:1]])
+                if sv is s:stop_helper()
+                return (0,0,0,'none')
             if not hyprland:return binding
-            now=compositor_binding(base)
-            return (now[0],now[1],epoch,purpose) if now else (0,0,0,'none')
+            try:
+                now=compositor_binding(base)
+            except (base.Refused,OSError,subprocess.SubprocessError):
+                now=None
+            if not now:
+                sv.event('surface-change');return (0,0,0,'none')
+            return (now[0],now[1],epoch,purpose)
         s=sup.Supervisor([binding[0]],'correction')
         if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
         def pending_receipt(timeout=0):
@@ -349,11 +361,13 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         # the supervisor must refuse any further key.
         check=sup.Supervisor([binding[0]],'correction')
         report['purposeCheckArmed']=check.arm(*binding) and check.seat_locked()
+        seen=len(records.contexts)
         link.ask('focus-secret')
-        fresh=records.poll(.5)
-        report['passwordFocusReported']=any(r[:1]==b'i' and r[1:2]==b'p' for r in fresh)
-        if fresh:check.event(CONTEXT_EVENTS[fresh[0][:1]])
-        report['passwordFocusRefused']=check.issue('word',*binding) is None and check.state=='REVOKED'
+        time.sleep(.5)
+        # Refusal must come from the live check alone (no hand-written revoke).
+        report['passwordFocusRefused']=check.issue('word',*current(check)) is None and check.state=='REVOKED'
+        records.poll(.2)
+        report['passwordFocusReported']=any(r[:1]==b'i' and r[1:2]==b'p' for r in records.contexts[seen:])
         link.ask('focus-prose');records.poll(.3)
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
         before=link.ask('observe')

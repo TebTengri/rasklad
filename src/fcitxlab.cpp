@@ -810,7 +810,10 @@ private:
             // Receipt: kind and length only. Undeliverable → fail closed.
             const std::string corrected = std::string(kRuleTo) + ' ';
             const bool isCorrection = text == kRuleTo || text == corrected;
-            if (!receiptSink().send(isCorrection, rasklad::sessionarm::codePoints(text))) sessionArm().latch();
+            if (!receiptSink().send(isCorrection, rasklad::sessionarm::codePoints(text))) {
+                sessionArm().latch();
+                receiptSink().fail();
+            }
         }
 #endif
         if (hadPreedit && binding->alive && binding->epoch == epoch) {
@@ -824,12 +827,16 @@ private:
 
 #ifdef RASKLAD_SLACK_SESSION_LAB
     static char purposeCode(fcitx::InputContext *ic) {
+        // Fail closed: 'n'/'a' only for a preedit-capable plain text field with
+        // none of the flags that eligible() or the session policy forbid.
         const auto flags = ic->capabilityFlags();
         if (flags.testAny(fcitx::CapabilityFlag::PasswordOrSensitive)) return 'p';
-        if (flags.testAny(fcitx::CapabilityFlags{fcitx::CapabilityFlag::Email, fcitx::CapabilityFlag::Digit,
-                                                 fcitx::CapabilityFlag::Url, fcitx::CapabilityFlag::Dialable,
-                                                 fcitx::CapabilityFlag::Number, fcitx::CapabilityFlag::Terminal,
-                                                 fcitx::CapabilityFlag::Name})) return 'x';
+        if (!flags.test(fcitx::CapabilityFlag::Preedit)
+            || flags.testAny(fcitx::CapabilityFlags{fcitx::CapabilityFlag::Email, fcitx::CapabilityFlag::Digit,
+                                                    fcitx::CapabilityFlag::Url, fcitx::CapabilityFlag::Dialable,
+                                                    fcitx::CapabilityFlag::Number, fcitx::CapabilityFlag::Terminal,
+                                                    fcitx::CapabilityFlag::Name, fcitx::CapabilityFlag::NoSpellCheck,
+                                                    fcitx::CapabilityFlag::Disable})) return 'x';
         if (flags.test(fcitx::CapabilityFlag::Alpha)) return 'a';
         return 'n';
     }
@@ -842,12 +849,17 @@ private:
         case fcitx::EventType::InputContextFocusIn: event = 'i'; break;
         case fcitx::EventType::InputContextFocusOut: event = 'u'; break;
         case fcitx::EventType::InputContextReset: event = 'r'; break;
+        case fcitx::EventType::InputContextCapabilityAboutToChange:
         case fcitx::EventType::InputContextCapabilityChanged: event = 'k'; break;
+        case fcitx::EventType::InputContextSwitchInputMethod: event = 's'; break;
         default: return;
         }
         auto *s = state(ic, true);
         if (!s) return;  // not the lab client
-        if (!receiptSink().sendContext(event, purposeCode(ic), s->id)) sessionArm().latch();
+        if (!receiptSink().sendContext(event, purposeCode(ic), s->id)) {
+            sessionArm().latch();
+            receiptSink().fail();
+        }
     }
 
     // Two passes: discard() notifies clients, so never call it inside foreach.
