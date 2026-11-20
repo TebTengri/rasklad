@@ -65,3 +65,14 @@ bus isolation, inert plan tests) → 3 inner Sway mode + dry run (+launch order,
 cleanup tests) → 4 injector/supervisor (+allowlist, revoke tests) → 5 addon
 gates (+binding gate, dry-run IC-reset gate tests) → 6 reviews (Grok ask mode,
 ecc:cpp-reviewer, ecc:security-reviewer) → owner approval for nested Hyprland.
+
+## Milestone 1 result (2026-11-20, offline)
+
+`python3 -I tools/slack_bootstrap_probe.py --dry-run-ime {chromium,slack}`:
+own Fcitx up on the private bus; both clients bind zwp_text_input_manager_v3
+and create a text input; Chromium's autofocus field gets `enter` and
+`enable()`; offline Slack gets `enter` (no field on its error page, so no
+`enable()` until login). Scope parameterization done (rasklad-slack- prefix,
+capped ceilings). Open: helper ready line not confirmed; safeStorage backend
+not named in logs; LAB addon and nested Hyprland next.
+Evidence: data/slack-ime-milestone1-dryrun-result.json.

@@ -46,6 +46,26 @@ class Modes(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'control-dry-only'):
             probe.run(dry=False, control=True)
 
+    def test_ime_milestone_only_in_dry_run_with_known_target(self):
+        with self.assertRaisesRegex(RuntimeError, 'ime-dry-only'):
+            probe.run(dry=False, ime='slack')
+        with self.assertRaisesRegex(RuntimeError, 'ime-dry-only'):
+            probe.run(dry=True, ime='firefox')
+
+    def test_ime_flags_and_field_page_are_fixed(self):
+        self.assertEqual(probe.IME_FLAGS, ['--enable-wayland-ime', '--wayland-text-input-version=3'])
+        self.assertTrue(probe.FIELD_PAGE.startswith('data:text/html,'))
+
+    def test_text_input_markers(self):
+        stream = [b'wl_registry#2.bind(30, "zwp_text_input_manager_v3", 1, new id zwp_text_input_manager_v3#31)\n',
+                  b'zwp_text_input_manager_v3#31.get_text_input(new id zwp_text_input_v3#32, wl_seat#9)\n',
+                  b'zwp_text_input_v3#32.enter(wl_surface#20)\n', b'zwp_text_input_v3#32.enable()\n']
+        flags, _ = probe.scan(iter(stream))
+        for key in ('textInputManagerBound', 'textInputCreated', 'textInputEnter', 'textInputEnabled'):
+            self.assertTrue(flags[key], key)
+        flags, _ = probe.scan(iter([b'wl_keyboard#12.enter(5, wl_surface#20, array[0])\n']))
+        self.assertFalse(flags['textInputEnter'])
+
 
 class Reap(unittest.TestCase):
     def test_never_kills_processes_in_own_mount_namespace(self):

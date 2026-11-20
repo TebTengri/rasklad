@@ -106,9 +106,9 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "baf3b9cb7d88ba412bc1ef126c1554fb78ba0f492aaa5f1e44e65da84c2be24a",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "b414595e99c7cd8412d257708cb1730350b5d8a46faed63009e76026218d5b48",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
-    "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "85eacc2e52389a03fd0b70c8a9daa79da6035f74a82245a3ac15356073251c53",
+    "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
@@ -190,6 +190,7 @@
     "tests/chromium_ime/test_guards.py": "cd9df2295a3858ab0b5e9e42106164b404d56b5b3310061932dc394a10a1db41",
     "tests/closed_mapping/test_boundary.py": "c43f36d8cfd1ef99bae664c75b1f792279437035dfaa611ae894141d36050326",
     "tests/closed_mapping/test_direct_mapping.py": "899658f78f3acc4776653e990d6c05ceedf1b5da43a857f0cf11b3b6bb139e61",
+    "tests/closed_mapping/test_scope_limits.py": "d217606715a8dc51de195de6cd1e630d23232ffeb0dfc8fccfdb6e8fe47f7c6b",
     "tests/common/profilefixture.h": "08f9ca5e3c1e1d73140c7df37e79885f86021dd3de7054b7bc23061e2fb6d097",
     "tests/composition_disable/composition_disable.pro": "d0779322ff2fd391505a5c198a374327e8e14f42c6b734dbda1c57ea19b7e9c4",
     "tests/context/context_tests.cpp": "edc9eb755fcaf3f085a452290e463d4c15237e45a1a8e1831f98cb75aa1ddf12",
@@ -266,7 +267,7 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
-    "tests/slack_probe/test_bootstrap_probe.py": "bc22d30041896f5dd517533cd40ba25b95eb41b47c17a6163ec85ead52e4a1ae",
+    "tests/slack_probe/test_bootstrap_probe.py": "6da82500ac6b5df0a495ca012079b576e7789881016c9838b6c3546e367d616a",
     "tests/slack_probe/test_editor_metadata.py": "ac0885d87584a8169f8707f399fe3a558d008607de52b61cddf77c89ba0ae5a9",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_launch_probe.py": "04146e700c784d4584cd398add80cd6c03466dec0c339f4fbc70e6c5589ef774",
@@ -334,7 +335,7 @@
     "tools/browser_spell/native.cpp": "7ee8169b50025a04e2aedd27279f71c102fef148034e77d83cc7aea032f2cfd4",
     "tools/browser_spell/native.pro": "f11bae353059570c9a29ae266e1d2cec8d0f16447a1d5d0cd9f628e3e1c57607",
     "tools/chromium_ime_lab.py": "aaaae70947bb13446190de2a4c24c16e01fe6fed9d9cf98cae40a73b22a957c7",
-    "tools/closed_hyprland_mapping.py": "86661cc8ad7882bb55e7ef424154d2aebdbd7834c1f543ede1ffb7ce39f7479a",
+    "tools/closed_hyprland_mapping.py": "18aa7324de3ec583a7436e4faac3d9a7543b4db0569bf88fb82cb7793a78e277",
     "tools/context_decisions.cpp": "c7f645c92177874e8e5e5999571d3101e0db1a62303cc932dc6736c2ea8fd17e",
     "tools/context_decisions.pro": "034c194ebdbf9eb2579e5557d24ceb018727018b6dc93bbed3ea1eab8f022236",
     "tools/contextpolicy.cpp": "a886b65ea826a3fcb948100b2e41c07a125e04f80a0c834a16ec4bdadb7ef1eb",
@@ -414,7 +415,7 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
-    "tools/slack_bootstrap_probe.py": "8b4757268a8801590ca87d1aa896263cd45814575e2262e6cfd18ceb03c06e8d",
+    "tools/slack_bootstrap_probe.py": "565d0864bedfdf155cb6cdfe1db930e4404b0aa475f05667b5725395ceeaed46",
     "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
@@ -1371,6 +1372,41 @@
         {
           "name": "test_default_invocation_is_inert",
           "line": 79,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
+      "path": "tests/closed_mapping/test_scope_limits.py",
+      "symbols": [
+        {
+          "name": "props",
+          "line": 14,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "ScopeLimits",
+          "line": 18,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_mapping_defaults_unchanged",
+          "line": 19,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_slack_limits_and_guard_match",
+          "line": 28,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_unit_must_match_prefix",
+          "line": 36,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_rejects_limits_above_ceiling_or_malformed",
+          "line": 42,
           "kind": "FunctionDef"
         }
       ]
@@ -2582,27 +2618,27 @@
         },
         {
           "name": "Reap",
-          "line": 50,
+          "line": 70,
           "kind": "ClassDef"
         },
         {
           "name": "SingletonRelease",
-          "line": 61,
+          "line": 81,
           "kind": "ClassDef"
         },
         {
           "name": "Refusals",
-          "line": 82,
+          "line": 102,
           "kind": "ClassDef"
         },
         {
           "name": "SandboxShape",
-          "line": 122,
+          "line": 142,
           "kind": "ClassDef"
         },
         {
           "name": "BridgeRejectedDomains",
-          "line": 145,
+          "line": 165,
           "kind": "ClassDef"
         },
         {
@@ -2626,103 +2662,118 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "test_ime_milestone_only_in_dry_run_with_known_target",
+          "line": 49,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_ime_flags_and_field_page_are_fixed",
+          "line": 55,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_text_input_markers",
+          "line": 59,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_never_kills_processes_in_own_mount_namespace",
-          "line": 51,
+          "line": 71,
           "kind": "FunctionDef"
         },
         {
           "name": "setUp",
-          "line": 62,
+          "line": 82,
           "kind": "FunctionDef"
         },
         {
           "name": "test_releases_only_own_namespace_lock",
-          "line": 68,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "test_leaves_foreign_lock",
-          "line": 72,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "test_absent",
-          "line": 77,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "setUp",
-          "line": 83,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "test_accepts_private_profile",
           "line": 88,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_refuses_singleton_lock_even_dangling",
-          "line": 91,
+          "name": "test_leaves_foreign_lock",
+          "line": 92,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_refuses_group_writable_profile",
-          "line": 96,
+          "name": "test_absent",
+          "line": 97,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_refuses_symlinked_profile",
-          "line": 101,
+          "name": "setUp",
+          "line": 103,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_host_bus_address_shape",
+          "name": "test_accepts_private_profile",
           "line": 108,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_refuses_singleton_lock_even_dangling",
+          "line": 111,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_refuses_group_writable_profile",
+          "line": 116,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_refuses_symlinked_profile",
+          "line": 121,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_host_bus_address_shape",
+          "line": 128,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_proxy_talks_only_to_secret_service",
-          "line": 115,
+          "line": 135,
           "kind": "FunctionDef"
         },
         {
           "name": "test_only_profile_from_host_home_and_no_display",
-          "line": 123,
+          "line": 143,
           "kind": "FunctionDef"
         },
         {
           "name": "test_private_context_rejects_host_display",
-          "line": 137,
+          "line": 157,
           "kind": "FunctionDef"
         },
         {
           "name": "test_suffix_hides_subdomains",
-          "line": 146,
+          "line": 166,
           "kind": "FunctionDef"
         },
         {
           "name": "test_error_kinds_are_fixed_categories",
-          "line": 152,
+          "line": 172,
           "kind": "FunctionDef"
         },
         {
           "name": "test_late_client_hello_after_preconnect_is_accepted",
-          "line": 161,
+          "line": 181,
           "kind": "FunctionDef"
         },
         {
           "name": "test_accept_hello_is_offline_only",
-          "line": 183,
+          "line": 203,
           "kind": "FunctionDef"
         },
         {
           "name": "test_bounds_validated",
-          "line": 188,
+          "line": 208,
           "kind": "FunctionDef"
         },
         {
           "name": "test_rejected_domain_counted_and_refused",
-          "line": 193,
+          "line": 213,
           "kind": "FunctionDef"
         }
       ]
@@ -4836,73 +4887,83 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "scope_guard",
+          "line": 58,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "checked_limits",
+          "line": 62,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "limits",
-          "line": 51,
+          "line": 72,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 57,
+          "line": 78,
           "kind": "FunctionDef"
         },
         {
           "name": "scope_command",
-          "line": 67,
+          "line": 88,
           "kind": "FunctionDef"
         },
         {
           "name": "cleanup_scope",
-          "line": 76,
+          "line": 99,
           "kind": "FunctionDef"
         },
         {
           "name": "verified_report",
-          "line": 92,
+          "line": 115,
           "kind": "FunctionDef"
         },
         {
           "name": "failure_report",
-          "line": 100,
+          "line": 123,
           "kind": "FunctionDef"
         },
         {
           "name": "startup_flags",
-          "line": 145,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "feedback_verified",
-          "line": 163,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "sandbox_args",
           "line": 168,
           "kind": "FunctionDef"
         },
         {
+          "name": "feedback_verified",
+          "line": 186,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "sandbox_args",
+          "line": 191,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "run",
-          "line": 199,
+          "line": 222,
           "kind": "FunctionDef"
         },
         {
           "name": "wait_socket",
-          "line": 270,
+          "line": 293,
           "kind": "FunctionDef"
         },
         {
           "name": "stop",
-          "line": 284,
+          "line": 307,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 294,
+          "line": 317,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 382,
+          "line": 405,
           "kind": "FunctionDef"
         }
       ]
@@ -6433,102 +6494,112 @@
       "symbols": [
         {
           "name": "load",
-          "line": 44,
+          "line": 53,
           "kind": "FunctionDef"
         },
         {
           "name": "diag_tail",
-          "line": 51,
+          "line": 60,
           "kind": "FunctionDef"
         },
         {
           "name": "process_kinds",
-          "line": 70,
+          "line": 79,
           "kind": "FunctionDef"
         },
         {
           "name": "scan",
-          "line": 86,
+          "line": 95,
           "kind": "FunctionDef"
         },
         {
           "name": "slack_pids",
-          "line": 105,
+          "line": 114,
           "kind": "FunctionDef"
         },
         {
           "name": "reap_sandboxed",
-          "line": 118,
+          "line": 127,
           "kind": "FunctionDef"
         },
         {
           "name": "profile_dir",
-          "line": 134,
+          "line": 143,
           "kind": "FunctionDef"
         },
         {
           "name": "host_bus_address",
-          "line": 149,
+          "line": 158,
           "kind": "FunctionDef"
         },
         {
           "name": "proxy_command",
-          "line": 156,
+          "line": 165,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 161,
+          "line": 170,
           "kind": "FunctionDef"
         },
         {
           "name": "release_own_singleton",
-          "line": 190,
+          "line": 199,
           "kind": "FunctionDef"
         },
         {
           "name": "private_context",
-          "line": 210,
+          "line": 219,
           "kind": "FunctionDef"
         },
         {
           "name": "stop",
-          "line": 218,
+          "line": 227,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "seed_keyboard",
+          "line": 240,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "start_fcitx",
+          "line": 249,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 231,
+          "line": 267,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 331,
+          "line": 380,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 337,
+          "line": 386,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 349,
+          "line": 398,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 453,
+          "line": 510,
           "kind": "FunctionDef"
         },
         {
           "name": "collect",
-          "line": 271,
+          "line": 316,
           "kind": "FunctionDef"
         },
         {
           "name": "chunks",
-          "line": 274,
+          "line": 319,
           "kind": "FunctionDef"
         }
       ]

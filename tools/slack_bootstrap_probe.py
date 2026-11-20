@@ -5,7 +5,7 @@ inside a closed headless Sway with network only through the Slack CONNECT
 bridge? Plan by default. --run-approved needs a separate one-shot owner approval.
 No IME, input, text reading, screenshots or profile copies. Output is fixed
 booleans/counts; the Wayland debug stream is scanned in memory and discarded."""
-import argparse, importlib.util, json, os, re, resource, shutil, signal, stat, subprocess, sys, tempfile, threading, time
+import argparse, importlib.util, json, os, re, resource, select, shutil, signal, stat, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 
 INSIDE = Path(__file__) == Path('/lab/runner.py')
@@ -29,7 +29,16 @@ MARKERS = {
     'connectionFailure': (b'err_connection', b'err_name_not_resolved', b'err_proxy_connection_failed', b'err_tunnel_connection_failed'),
     'displayInit': (b'failed to connect to wayland', b'platform failed to initialize'),
     'fatal': (b'fatal:', b'check failed:'),
+    'textInputManagerBound': (b'"zwp_text_input_manager_v3"',),
+    'textInputCreated': (b'.get_text_input(',),
+    'textInputEnter': (b'.enter(wl_surface',),
+    'textInputEnabled': (b'.enable()',),
 }
+# Dry-run IME milestone: own Fcitx in the closed Sway, Wayland text-input-v3 flags.
+IME_FLAGS = ['--enable-wayland-ime', '--wayland-text-input-version=3']
+IME_TARGETS = ('slack', 'chromium')
+FIELD_PAGE = 'data:text/html,<input autofocus>'
+SAFE_STORAGE_HINTS = (b'basic_text', b'gnome_libsecret', b'kwallet', b'safestorage', b'password-store')
 # Dry-run diagnostics only (empty offline profile, no owner data): fixed flag sets.
 VARIANTS = {'plain': [], 'logging': ['--enable-logging=stderr', '--v=0'],
             'no-sandbox': ['--no-sandbox', '--enable-logging=stderr'],
@@ -176,7 +185,7 @@ def sandbox_args(home, profile, uid, user, work, snapshots, lang='C.UTF-8'):
          '--ro-bind', str(ROOT / 'tools/slack_https_bridge.py'), '/lab/slack_https_bridge.py',
          '--dir', '/lab/wayland-runtime', '--chdir', str(home)]
     for name, fd in sorted(snapshots.items()):
-        a += ['--perms', '0755' if name == 'sway' else '0444', '--ro-bind-data', str(fd), '/lab/wayland-runtime/' + name]
+        a += ['--perms', '0755' if name in ('sway', 'rasklad-wayland-keys') else '0444', '--ro-bind-data', str(fd), '/lab/wayland-runtime/' + name]
     env = {'PATH': '/usr/bin', 'LANG': lang, 'HOME': str(home), 'USER': user, 'LOGNAME': user,
            'XDG_RUNTIME_DIR': runtime, 'XDG_CURRENT_DESKTOP': 'Hyprland', 'XDG_SESSION_TYPE': 'wayland',
            'DBUS_SESSION_BUS_ADDRESS': f'unix:path={runtime}/bus', 'LD_LIBRARY_PATH': '/lab/wayland-runtime',
@@ -228,6 +237,33 @@ def stop(process, seconds):
         return 'killed'
 
 
+def seed_keyboard(children, env):
+    # Keep stdin open and send nothing: the helper only creates the seat keyboard and keymap.
+    child = subprocess.Popen(['/lab/wayland-runtime/rasklad-wayland-keys'], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
+    children.append(child)
+    ready, _, _ = select.select([child.stdout], [], [], 3)
+    return bool(ready) and os.read(child.stdout.fileno(), 32) == b'{"ready":true}\n'
+
+
+def start_fcitx(children, env):
+    # Own Fcitx on the sandbox's private bus; system addons only (no LAB addon in milestone 1).
+    fcitx = subprocess.Popen(['/usr/bin/fcitx5', '-D', '-k', '--disable', 'all', '--enable', 'keyboard,dbus,wayland,waylandim',
+                              '--verbose', '*=0'], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+    children.append(fcitx)
+    end = time.monotonic() + 5
+    while time.monotonic() < end:
+        if fcitx.poll() is not None:
+            return False
+        probe = subprocess.run(['/usr/bin/gdbus', 'call', '--session', '--dest', 'org.freedesktop.DBus', '--object-path',
+                                '/org/freedesktop/DBus', '--method', 'org.freedesktop.DBus.NameHasOwner', 'org.fcitx.Fcitx5'],
+                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=.5)
+        if probe.stdout == b'(true,)\n':
+            return True
+        time.sleep(.05)
+    return False
+
+
 def inside():
     if not private_context(os.environ):
         raise RuntimeError('not-private-control')
@@ -256,11 +292,20 @@ def inside():
         proxy = 'http://127.0.0.1:' + str(relay.port)
         env.update(HTTPS_PROXY=proxy, HTTP_PROXY=proxy, https_proxy=proxy, http_proxy=proxy, NO_PROXY='')
         started = time.monotonic()
+        ime = os.environ.get('RASKLAD_BOOTSTRAP_IME')
+        if ime is not None:
+            if ime not in IME_TARGETS:
+                raise RuntimeError('ime-target')
+            lab_env = dict(os.environ, WAYLAND_DISPLAY=sockets[0].name)
+            report['seatKeyboard'] = seed_keyboard(children, lab_env)
+            report['fcitxUp'] = start_fcitx(children, lab_env)
         control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
         diag = os.environ.get('RASKLAD_BOOTSTRAP_DIAG')
         variant = diag if diag in VARIANTS else 'plain'
         chromium = [CHROMIUM, '--ozone-platform=wayland', '--disable-gpu', '--no-first-run', '--user-data-dir=/tmp/control']
-        target = (chromium + ['about:blank'] if control == 'chromium'
+        target = (chromium + IME_FLAGS + [FIELD_PAGE] if ime == 'chromium'
+                  else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'] + IME_FLAGS if ime == 'slack'
+                  else chromium + ['about:blank'] if control == 'chromium'
                   else chromium + ['--proxy-server=' + proxy, 'https://app.slack.com/'] if control == 'chromium-hello'
                   else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'] + VARIANTS[variant])
         slack = subprocess.Popen(target,
@@ -314,6 +359,10 @@ def inside():
             # Dry run: the profile is the empty temporary one, so Slack's own logs hold no owner data.
             logs = sorted(Path(os.environ['HOME'], '.config/Slack/logs').rglob('*.log'), key=lambda q: q.stat().st_mtime)[-3:]
             report['slackLogs'] = {str(q.relative_to(Path(os.environ['HOME'], '.config/Slack'))): q.read_bytes()[-2500:].decode('utf-8', 'replace') for q in logs}
+        if ime == 'slack':
+            # Dry run only: empty temporary profile, Slack's own logs hold no owner data.
+            raw = b''.join(q.read_bytes()[-200000:] for q in Path(os.environ['HOME'], '.config/Slack/logs').rglob('*.log')).lower()
+            report['safeStorageHints'] = sorted(h.decode() for h in SAFE_STORAGE_HINTS if h in raw)
         report['firstSeenSeconds'] = dict(first)
         markers = report['markers']
         report['attachCount'] = report['firstSeenSeconds'].pop('attachCount', 0)
@@ -346,7 +395,9 @@ def plan():
             'output': 'fixed marker booleans, first-seen seconds, stop mode, bridge counts, rejected-domain suffixes'}
 
 
-def run(dry=False, control=False, hello=False, diag=None):
+def run(dry=False, control=False, hello=False, diag=None, ime=None):
+    if ime is not None and (not dry or ime not in IME_TARGETS):
+        raise RuntimeError('ime-dry-only')
     if (control or hello) and not dry:
         raise RuntimeError('control-dry-only')
     if diag is not None and (not dry or diag not in VARIANTS):
@@ -385,6 +436,9 @@ def run(dry=False, control=False, hello=False, diag=None):
             profile = profile_dir(home)
         for name in ('sway', 'libwlroots-0.20.so', 'libliftoff.so.0'):
             snapshots[name] = base.sealed_snapshot(ROOT / 'build/wayland-ime/runtime' / name, lock['runtimeFiles'][name])
+        if ime:
+            # Own virtual keyboard gives the closed seat a keyboard, so text-input focus exists; it sends no keys.
+            snapshots['rasklad-wayland-keys'] = base.sealed_snapshot(ROOT / 'build/wayland-ime/keys/rasklad-wayland-keys')
         (work / 'passwd').write_text(f'{entry.pw_name}:x:{os.getuid()}:{os.getgid()}::{home}:/usr/bin/nologin\n')
         (work / 'group').write_text(f'{entry.pw_name}:x:{os.getgid()}:\n')
         bus_command = (['/usr/bin/dbus-daemon', '--nofork', '--config-file=' + str(ROOT / 'tests/fcitx_transport/session-bus.conf'),
@@ -405,6 +459,9 @@ def run(dry=False, control=False, hello=False, diag=None):
         if diag:
             at = command.index('--')
             command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_DIAG', diag]
+        if ime:
+            at = command.index('--')
+            command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_IME', ime]
         if slack_pids():
             raise RuntimeError('host-slack-running')
         if not dry:
@@ -458,10 +515,11 @@ def main():
     group.add_argument('--dry-run-chromium-control', action='store_true')
     group.add_argument('--dry-run-hello-capture', action='store_true')
     group.add_argument('--dry-run-diag', choices=sorted(VARIANTS))
+    group.add_argument('--dry-run-ime', choices=IME_TARGETS)
     group.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
-        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else run(dry=True, hello=True) if args.dry_run_hello_capture else run(dry=True, diag=args.dry_run_diag) if args.dry_run_diag else plan()
+        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else run(dry=True, hello=True) if args.dry_run_hello_capture else run(dry=True, diag=args.dry_run_diag) if args.dry_run_diag else run(dry=True, ime=args.dry_run_ime) if args.dry_run_ime else plan()
     except Exception as exc:
         text = str(exc)
         known = (type(exc) is RuntimeError and text in CODES) or (type(exc) is ValueError and text in REASONS)
