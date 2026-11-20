@@ -91,3 +91,18 @@ explicit env; text-input markers scoped to the zwp_text_input_v3 object; error
 codes added. Moot: helper hash pin, helper stdin pipe (helper removed).
 Deferred: tighter private-bus policy (bus is private, profile empty); safeStorage
 hint tokens (dry-only, informational).
+
+### Step 2 review dispositions (ecc:python-reviewer BLOCK, Grok FIX-FIRST)
+
+Fixed: strict `type(x) is int/str` on binding, purpose, command, token (no
+bool/float/str-subclass confusion); every exception and bad input revokes
+(fail closed); one RLock around all methods and the helper write happens
+inside `send` under the lock, so a revoke cannot interleave (tested with a
+blocking writer); token bound to the next scripted command; fixed per-case
+script including the exact cleanup BackSpace count, wire bytes from a fixed
+table; binding and purpose re-checked at issue and at send; commit receipt must
+equal the expected text or the session revokes (`commit-mismatch`); grapheme
+count by whitelist (ASCII/Cyrillic letters, plain space); allowlist parity test
+against the helper's `parse()`. Rejected: deadline from F10 instead of session
+start — 600 s is the owner-accepted total session cap; expiry during typing
+revokes (fail closed).
