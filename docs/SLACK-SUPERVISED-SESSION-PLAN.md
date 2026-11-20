@@ -161,3 +161,20 @@ one-shot approval after the dry run and review.
 - Chromium ProcessSingleton internals are not documented in Context7; our
   observed failure mode (lock `<host>-<namespace pid>` surviving exit) is
   handled by the probe's own-lock release.
+
+## Consolidated current design (2026-11-20, supersedes conflicting text above)
+
+Gemini (gemini-3.8-flash-high, design-only prompt) critique dispositions:
+accepted — one supervisor process that also injects (allowlist stays a pure
+module); linear states IDLE → ARMED(F10) → SEAT_LOCKED → INJECT →
+REVOKED/CLEANUP (F12, deadline, any lifecycle change); identity inside the
+nested compositor = every connected client is ours or in the Slack process
+tree (no window-mapping authority needed); live script reduced to two cases
+(correction, English unchanged) because focus revocation is proven by the
+dry-run IC-reset gate; contradictions removed. Rejected — ephemeral profile
+(owner chose the real profile; login requires it).
+
+Binding rules in force: no clicks or typing by the owner after F10; no Ctrl+Z
+live; BackSpace by committed grapheme count; protected purposes deny; commits
+with controls/newlines rejected; Slack sees no host bus if the dry run confirms
+`basic_text`. Implementation follows docs/SLACK-SESSION-BLUEPRINT.md.
