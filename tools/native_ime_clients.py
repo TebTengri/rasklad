@@ -585,6 +585,14 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             if fd is not None:os.close(fd)
 
 
+class LaunchHelpers:
+    """The few helpers the Slack launch trial reuses (module is loaded by path, not imported)."""
+    hyprctl=staticmethod(lambda base,*args,**kw:hyprctl(base,*args,**kw))
+    descends_from=staticmethod(lambda pid,ancestor:descends_from(pid,ancestor))
+    AddonRecords=staticmethod(lambda base,sock:AddonRecords(base,sock))
+    PURPOSES=PURPOSES
+
+
 def load_lab_module(name,path):
     import importlib.util
     spec=importlib.util.spec_from_file_location(name,path)
@@ -635,6 +643,14 @@ def run(base, children):
     if frontend:verify_frontend_mapping(base,fcitx,frontend[0])
     driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
     gate_report={}
+    if gate and os.environ.get('RASKLAD_SLACK_LAUNCH_LAB')=='1' and os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1':
+        # Launch trial: real Slack, gate latched off before launch, no helper keyboard, no driver.
+        launch=load_lab_module('slack_launch_inner',Path('/lab/slack_launch_lab.py'))
+        r=launch.run_inside(LaunchHelpers,base,fcitx,gate,children)
+        r['fcitxAliveAfterGate']=fcitx.poll() is None
+        r['dbusInputFrontendAbsent']=dbus_input_absent
+        r['passed']=r.get('passed') is True and r['fcitxAliveAfterGate'] and dbus_input_absent
+        return r
     if gate and os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1' and os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1':
         p,gate_report=run_seat_probe(base,fcitx,gate,driver_env,children)
     elif gate and os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1':

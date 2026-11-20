@@ -302,3 +302,44 @@ and nested-compositor prerequisites for the live Slack session are now
 measured; remaining before live: the Slack launch inside this harness (real
 profile, bridge) and the owner rules (no mouse after arming, three owner
 booleans after the run).
+
+## Slack launch trial in nested Hyprland (prepared 2026-11-20, not run)
+
+`python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch`
+(tools/slack_launch_lab.py). Needs its own one-shot owner approval; host Slack
+must be closed. Same outer preconditions as step 0 (host-Slack/profile/bus
+checks repeated right before the sandbox, secrets-only xdg-dbus-proxy, online
+CONNECT broker, step-0 rlimits), inside the nested Hyprland lab with the
+Slack-session addon (`build/chromium-ime/slack-session-addon`, program
+`slack`). The arm pipe is written and closed before Slack starts, so the addon
+never intercepts a key; no helper keyboard, no driver, no injection.
+Slack's env is built from scratch (owner HOME/user, `/run/lab/slack-bus`,
+proxy); lab processes keep HOME=/home/lab.
+Observation 90 s: window mapped by a Slack-tree PID (hyprctl; class only, never
+titles), foreign windows, Fcitx program names, addon context records (event +
+purpose). During it the owner may do the zero-injection check
+composer → search → composer with the mouse, without typing. Pass: window
+mapped, no commit record, no foreign window, graceful stop, own singleton
+released or absent, no leftover Slack process, no SingletonLock, bridge
+cleanup complete.
+
+### Launch trial review dispositions (ecc:security-reviewer FIX-FIRST, Grok FIX-FIRST)
+
+Accepted and fixed: `finish()` runs every cleanup step and never raises
+(errors recorded as `finishErrors`, which fail `outerClean`); snapshot FDs and
+the work directory are closed/removed in a nested finally; pass now requires
+`addonSawSlack` (at least one context record, so the addon loaded and Slack's
+program matched) and `relayRefused == 0`; broker deadline 170 s (bound raised
+to 180) so it outlives Hyprland/Fcitx start + observe + quit; relay, records
+and child env set up inside the try so receipts/relay always close; the own
+singleton is released whenever our Slack main process is dead (also after a
+kill and on the exception path), still only if the lock names its
+in-namespace PID; the latch flag is renamed `armLatchWrittenBeforeLaunch`.
+Rejected: domain names in the report (only the fixed public-suffix allowlist,
+everything else `other`, step-0 disposition); `ownerRecovery` is a fixed
+constant, not data; an addon latch ACK (write + close is unconditional and the
+addon re-polls on every key; commit records must stay 0); lab machine-id and
+passwd for Slack (step-0 decision: Slack sees the host identity).
+Residual: Slack runs as the same uid in the same mount namespace as the lab, so
+it could reach `/run/lab` sockets (private Fcitx bus, hyprctl). Accepted for a
+no-input trial of the owner's own Slack; revisit before stage 2.
