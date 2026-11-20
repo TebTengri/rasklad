@@ -19,9 +19,11 @@ class DisableSuiteGuards(unittest.TestCase):
     def test_appended_inert_parameters(self):
         for function in (lab.run,lab.sandbox_args):
             params=list(inspect.signature(function).parameters.values())
-            self.assertEqual(params[-1].name,'disable_suite')
+            self.assertEqual(params[-1].name,'slack_gate')
             self.assertIs(params[-1].default,False)
-            self.assertEqual(params[-2].name,'frontend_variant')
+            self.assertEqual(params[-2].name,'disable_suite')
+            self.assertIs(params[-2].default,False)
+            self.assertEqual(params[-3].name,'frontend_variant')
 
     def test_default_has_no_new_access_or_environment(self):
         with patch.object(lab.base,'regular_file') as regular:

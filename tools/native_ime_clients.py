@@ -99,6 +99,30 @@ def seed_keyboard(base,children):
     return wait_seed_keyboard(base,child)
 
 
+def slack_gate_pipe(base,child_options):
+    """Offline Slack-session gate test: Fcitx gets only the read end of the arm pipe."""
+    if os.environ.get('RASKLAD_SLACK_GATE_LAB')!='1':return None
+    if os.environ.get('RASKLAD_SLACK_SESSION_LAB')!='1' or private_frontend_variant(base)!='system':raise base.Refused('slack_gate_environment')
+    read_end,write_end=os.pipe()  # both O_CLOEXEC; only the read end is passed on
+    env=dict(child_options.get('env') or os.environ,RASKLAD_SESSION_ARM_FD=str(read_end))
+    child_options.update(env=env,pass_fds=(read_end,))
+    return read_end,write_end
+
+
+def fd_present(pid,fd):
+    """True if `pid` holds a writable descriptor of the same pipe as our write end `fd`.
+    Both pipe ends share one inode, so the access mode from fdinfo tells them apart."""
+    target=os.fstat(fd)
+    for entry in os.scandir(f'/proc/{pid}/fd'):
+        try:
+            st=os.stat(entry.path)
+            if (st.st_dev,st.st_ino)!=(target.st_dev,target.st_ino):continue
+            flags=next(line for line in Path(f'/proc/{pid}/fdinfo/{entry.name}').read_text().splitlines() if line.startswith('flags:'))
+        except (OSError,StopIteration):return True  # cannot prove absence: fail closed
+        if int(flags.split()[1],8)&os.O_ACCMODE!=os.O_RDONLY:return True
+    return False
+
+
 def run(base, children):
     if (os.environ.get('RASKLAD_NATIVE_WAYLAND_LAB') != '1'
             or os.environ.get('HOME') != '/home/lab'
@@ -111,6 +135,7 @@ def run(base, children):
     seeded=seed_keyboard(base,children)
     fcitx_env=fcitx_child_env(base)
     child_options={} if fcitx_env is None else {'env':fcitx_env}
+    gate=slack_gate_pipe(base,child_options)
     fcitx=subprocess.Popen(['/usr/bin/fcitx5','-D','-k','--disable','all','--enable','keyboard,dbus,wayland,waylandim,raskladlab','--verbose','*=0'],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,**child_options);children.append(fcitx)
     end=time.monotonic()+4
     while time.monotonic()<end:
@@ -124,9 +149,24 @@ def run(base, children):
     if fcitx.poll() is not None:raise base.Refused('fcitx_exited')
     if not dbus_input_absent:raise base.Refused('unexpected_dbus_input_frontend')
     if frontend:verify_frontend_mapping(base,fcitx,frontend[0])
-    p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK'))))
+    driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
+    gate_report={}
+    if gate:
+        read_end,write_end=gate
+        os.close(read_end)  # only Fcitx keeps the read end
+        gate_report['armWriteEndAbsentFromFcitx']=not fd_present(fcitx.pid,write_end)
+        if not gate_report['armWriteEndAbsentFromFcitx']:raise base.Refused('arm_write_end_leaked')
+        driver_env['RASKLAD_SESSION_ARM_WRITE_FD']=str(write_end)
+        try:
+            p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=driver_env,pass_fds=(write_end,))
+        finally:
+            os.close(write_end)  # driver revokes by writing a byte and closing its copy
+    else:
+        p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=driver_env)
     if len(p.stdout)>32768:raise base.Refused('driver_output_bound')
     r=json.loads(p.stdout)
+    r.update(gate_report)
+    if gate and r.get('armWriteEndAbsentFromFcitx') is not True:r['passed']=False
     if frontend:r.update(privateFrontendMapped=True,privateFrontendArtifactSha256=frontend[1],privateSeedKeyboard=seeded)
     r['frontendVariant']=private_frontend_variant(base)
     r['driverExitCode']=p.returncode;r['dbusInputFrontendAbsent']=dbus_input_absent;r['passed']=p.returncode==0 and r.get('passed') is True and dbus_input_absent;return r

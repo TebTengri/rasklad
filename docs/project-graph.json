@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "699ab9cf670f16c6533e7e419f05218f31e361bd905b21e3d1c5fbb18f4376c1",
+  "curatedSha256": "d7418ec3ea73ad4c0e7e30c6403a05a16cb9f56599b0ad4bd522e3aa0a15c33f",
   "sourceSha256": {
     "AGENTS.md": "f3269a4521f8b8ec1963eb169290557fad5bd1a275a549c323fb8b43cd9dc3c2",
     "CLAUDE.md": "604e8f99ff6dfc2dc9a72c1760f2968344ae35278eed32f63e0da9d96b382a78",
@@ -106,7 +106,7 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "ae1027734dff0fc2649fc3cfae23013bbc01f40911e57081cbaebb755df6f5e7",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "2364da7fb952dde88d473d7c593d8e96523c9490320c39ceac1b5d87d7a60445",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
@@ -134,7 +134,7 @@
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
     "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
-    "src/fcitxlab.cpp": "99b53901bb23fa8e1acacb0606114cfde6d705e8f05bc456c3f1cc668463c339",
+    "src/fcitxlab.cpp": "49c15d58ced143dd401e385b4c40b884dd8b9ba69010463cdc44689c9fa9e0e3",
     "src/fcitxlabprofile.cpp": "4d2b737290d4cff7be8299685069d5e0dc97b990a03bb491bfb551e76fd36920",
     "src/fcitxlabprofile.h": "09dfd43ee22daefb63c4fe38efbe42c8b9228913e5fcc44bb6febd3d7866574e",
     "src/jsontranslator.cpp": "9f1cc9fa03bf736748c3b7dd56bfd2472ebaf100539fadacf3ec1eaf17f002ed",
@@ -150,7 +150,7 @@
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
     "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
-    "src/sessionarm.h": "c4bff86dd1b42303be303e681276c999c932918c119c615edb6acc4caac5087f",
+    "src/sessionarm.h": "f25a1846cc4c7bbbf8027d1ee740423a592383fa8f1a109f4770bb47b75649af",
     "src/spellengine.cpp": "23ae1018dd5ade6030ce33276d644d7fbfef43cbebc9eef8dd262ed20285f2d3",
     "src/spellengine.h": "9c433a0709efe9d3298353bd6ab7ee7ca35d7bfb2bc63d8f5ceeea648fb07a38",
     "src/themewatcher.cpp": "d5d9197c384cf992170d6bf2132867ad22095c5371e234d72c873f3eb8ab5a93",
@@ -183,7 +183,7 @@
     "tests/browser/spell.test.mjs": "1a9572b8c18f20208c194c6b8b2132ba1702b2da933af658a29b1aea93d3c496",
     "tests/chromium_ime/addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9",
     "tests/chromium_ime/adversarial-focus.mjs": "1c36e6a1a2d5e75079e43273fa451b6adc8a32f516667c63e795b5671d241543",
-    "tests/chromium_ime/driver.mjs": "1db8f73a796b380d3d8372c86dad19842bb1ad5516935c593e87cbba08787f8b",
+    "tests/chromium_ime/driver.mjs": "1b996ce151a7e870cc703faac48f8012fa3b9b862b561c6d9afdbd65c339c7cf",
     "tests/chromium_ime/focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "tests/chromium_ime/keys.py": "93693dd61cb687266cd613c648d1248b7d3291061fa26aacd01aa8fde6f6a42f",
     "tests/chromium_ime/server-route-witness.mjs": "1ec0bfa5ab927cba1cdc31eb328f0786585dcbf002327dd07476a2eff6064d6a",
@@ -278,7 +278,8 @@
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_status_trial.py": "1fd537ed769d68a66d163dd75ac0d85bfa01a08128d429517d0e44922358952d",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
-    "tests/slack_session/sessionarm_tests.cpp": "b8dd44d944ff6c288b16fd52d391a9a8940c61623f86d8e5b73ecbcd24177ef1",
+    "tests/slack_session/sessionarm_tests.cpp": "15f9fbee7ddb90f8e8706cbc46a95944ab4fda2a43b98fb298635e83d9135676",
+    "tests/slack_session/test_gate_lab.py": "c70a44a326ec6d4cc0d600b91130aaaea23a76b806a074c0f6e81aa1a7af2b82",
     "tests/slack_session/test_injector_supervisor.py": "891f9d15310ef8ebd24d5cb6bd8aacef8ad959940386a26ebe3e9f0744fad321",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
@@ -295,9 +296,9 @@
     "tests/wayland_ime/keys.pro": "458e3410f8e67fdf735d1bcdb63070170fddcdd0f7ebdcd9ba510a50873e1faf",
     "tests/wayland_ime/server_route_witness_tests.mjs": "cc2ac97af439e9be23f57b94a95581eddef3229e6ead83c5ba01ad9fa34f4bfb",
     "tests/wayland_ime/space_telemetry_tests.mjs": "587c5792186f69c379646a49d65634fbbb8f6cc0e9bcbc6facd9bc17d254f170",
-    "tests/wayland_ime/test_addon_witness_guards.py": "f1de2a3088e191e3629894222bb1c998257e2ef8ef6543c1b147f38c52b77545",
+    "tests/wayland_ime/test_addon_witness_guards.py": "e96f83f3f42b3c2fc5dee7ec55f6045b1145581abae0d4db366fc7a644b5194f",
     "tests/wayland_ime/test_core_entry_witness_guards.py": "89124219b7d4fb7f7f1d91ba6ee705191a838a173cfc201016d7ebc5e89a4d47",
-    "tests/wayland_ime/test_disable_suite_guards.py": "5be7b711b7ba1cc1405cd5a4ae6b9625855bec529b2a7040085bcc7a77e793de",
+    "tests/wayland_ime/test_disable_suite_guards.py": "d5ab888b745a6d4819fb2bbeb7aaf41c542110ba9c139326fef386e1d7e81129",
     "tests/wayland_ime/test_drm_discovery.py": "964c693539f0f09c0b80598073743b2408b3d42f59e080e8a6f4cc8b79cc6046",
     "tests/wayland_ime/test_drm_metadata_snapshot.py": "08cf4b51269a2a7d6d62db7247e998d0de2fa886980cec0dbbe6e7b5b63984b9",
     "tests/wayland_ime/test_grab_entry_witness_guards.py": "4c4371ea074447c07c25d9e6efcad81b63f55f4942e7c5038cc1a4e9bde6fc37",
@@ -376,7 +377,8 @@
     "tools/fcitx_lab_runner.py": "a55f3c8c4d7eb157f998257e8534df658b9b9f98572286fee583aa69196912b5",
     "tools/fcitx_profile_lab.pro": "3edd53c82551969b5284bd68ed8f87874c3cc6a3b98f3da85e063beb7bb466ae",
     "tools/fcitx_retirement_candidate.py": "71354dbb33198c4fc82039375b94219f5fc39759c6ab595fd53af58e0abff007",
-    "tools/fcitx_slack_lab.pro": "a67696db655a2e8274b13751e43fdb3b028aa1073fdc82b06cb99de47a3f0dd2",
+    "tools/fcitx_slack_gate_test.pro": "6a1bb6fb40b19bd3a369af27f5186ce9cf769bc0982fe030b52613c6aa76d689",
+    "tools/fcitx_slack_lab.pro": "b37cce8b6221a3ebeaf1f32e088fac5b6d1d1db6e2a086f1f07bd38aa776b86b",
     "tools/fcitx_witness_lab.pro": "e15e5be686e05bf15bb11b30045dfb684f89e2734d5d521a892c1d35058cb5f3",
     "tools/fcitxlabwitness.h": "f0bfc9dd1a24f960e3578c80bc746edd7345be9e7608676565d2b678cfe85a13",
     "tools/frontcodedlexicon.cpp": "47bf10757720104c18c9e344a0a98ca737c5e30097e2ae8a088ddcdeb7b1aa7a",
@@ -399,7 +401,7 @@
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
-    "tools/native_ime_clients.py": "aa627ddc959363ebf453c3e306c35c9ffe0bf025322f8ff98cfff358447477fb",
+    "tools/native_ime_clients.py": "92e0619021ca78b2d41b1bb993c502a080577f9818941e7cd4590f14814f2d9a",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
     "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
@@ -426,7 +428,7 @@
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
     "tools/slack_supervisor.py": "460c0f262c7addf09df5c0d023ba382a9aa58f817df39d96f7000e5ae00b0541",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
-    "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
+    "tools/wayland_ime_lab.py": "5a34307a56d3c10f6acd7fc8b0e74fc283d8748eddaf905016b7bc17fa68addf"
   },
   "files": [
     {
@@ -3453,6 +3455,71 @@
       "symbols": []
     },
     {
+      "path": "tests/slack_session/test_gate_lab.py",
+      "symbols": [
+        {
+          "name": "load",
+          "line": 12,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Base",
+          "line": 24,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "GatePipe",
+          "line": 29,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "WriteEndDetection",
+          "line": 52,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "LabSelection",
+          "line": 72,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Refused",
+          "line": 25,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "test_inactive_without_gate_env",
+          "line": 30,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_requires_session_env_and_system_frontend",
+          "line": 35,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_fcitx_gets_only_read_end",
+          "line": 40,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_read_end_only_is_absent_write_end_is_present",
+          "line": 53,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_slack_gate_is_exclusive",
+          "line": 73,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_sandbox_sets_gate_env_and_addon",
+          "line": 83,
+          "kind": "FunctionDef"
+        }
+      ]
+    },
+    {
       "path": "tests/slack_session/test_injector_supervisor.py",
       "symbols": [
         {
@@ -3921,47 +3988,47 @@
         },
         {
           "name": "test_invalid_combinations_refuse_before_endpoint_files_or_process",
-          "line": 74,
+          "line": 78,
           "kind": "FunctionDef"
         },
         {
           "name": "test_invalid_sandbox_combinations_refuse_before_base_plan",
-          "line": 91,
+          "line": 95,
           "kind": "FunctionDef"
         },
         {
           "name": "test_witness_selects_fixed_binary_config_and_module_without_new_rights",
-          "line": 101,
+          "line": 105,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_adds_only_one_environment_marker",
-          "line": 128,
+          "line": 132,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_requires_witness_before_files_endpoint_or_base_plan",
-          "line": 140,
+          "line": 144,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_cli_is_inert_and_dependency_checked",
-          "line": 159,
+          "line": 163,
           "kind": "FunctionDef"
         },
         {
           "name": "test_selected_module_must_pass_regular_file_guard",
-          "line": 178,
+          "line": 182,
           "kind": "FunctionDef"
         },
         {
           "name": "test_default_and_valid_witness_plans_are_inert",
-          "line": 184,
+          "line": 188,
           "kind": "FunctionDef"
         },
         {
           "name": "test_cli_invalid_selection_does_not_start_run",
-          "line": 197,
+          "line": 201,
           "kind": "FunctionDef"
         }
       ]
@@ -4111,17 +4178,17 @@
         },
         {
           "name": "test_default_has_no_new_access_or_environment",
-          "line": 26,
+          "line": 28,
           "kind": "FunctionDef"
         },
         {
           "name": "test_selected_changes_only_addon_and_child_flag",
-          "line": 34,
+          "line": 36,
           "kind": "FunctionDef"
         },
         {
           "name": "test_incompatible_matrix_refuses_before_access",
-          "line": 47,
+          "line": 49,
           "kind": "FunctionDef"
         }
       ]
@@ -5706,6 +5773,10 @@
       ]
     },
     {
+      "path": "tools/fcitx_slack_gate_test.pro",
+      "symbols": []
+    },
+    {
       "path": "tools/fcitx_slack_lab.pro",
       "symbols": []
     },
@@ -6289,8 +6360,18 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "run",
+          "name": "slack_gate_pipe",
           "line": 102,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "fd_present",
+          "line": 112,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "run",
+          "line": 126,
           "kind": "FunctionDef"
         }
       ]
@@ -7271,18 +7352,23 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "slack_gate_selection",
+          "line": 147,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "run",
-          "line": 143,
+          "line": 155,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 215,
+          "line": 230,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 254,
+          "line": 269,
           "kind": "FunctionDef"
         }
       ]
@@ -7407,13 +7493,13 @@
       "from": "src/fcitxlab.cpp",
       "to": "src/sessionarm.h",
       "kind": "literal_include_or_import",
-      "line": 96
+      "line": 98
     },
     {
       "from": "src/fcitxlab.cpp",
       "to": "src/fcitxlabprofile.h",
       "kind": "literal_include_or_import",
-      "line": 100
+      "line": 102
     },
     {
       "from": "src/fcitxlabprofile.cpp",
@@ -8631,7 +8717,7 @@
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
     "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
     "docs/knowledge/slack-bootstrap.md": "ebe24773264407c6849214d76b28b9330eba7e9354801e615bce61a461122348",
-    "docs/knowledge/slack-session-blueprint.md": "d1eff018ea9a1c7b4476b5de66c1cd31a2a3e26699726d56cdf9701bde4c0881",
+    "docs/knowledge/slack-session-blueprint.md": "85394384a2810d8f7de26738d420431fa53a1170d8614e8b4ad20ce14571f31b",
     "docs/knowledge/wayland-object-id-scope.md": "3d3cfae2dabc50e352f30c49ccde20ac739d5785ae6023b9256eba57e31d3955",
     "docs/knowledge/window-provenance.md": "030755dc724a501d5d5da7fccfbe6518eebae1cc064601795dd57b1b691b5a30",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"

@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "command": "python3 -I tools/wayland_ime_lab.py --run --slack-gate",
+  "addon": "tools/fcitx_slack_gate_test.pro (Slack session gates, program chromium-browser, offline test only)",
+  "result": {
+    "passed": true,
+    "checks": 5,
+    "gateArmedCorrected": true,
+    "gatePreeditShownBeforeRevoke": true,
+    "gateRevokeClearedPreedit": true,
+    "gateRevokedNothingTyped": true,
+    "gateFieldStillFocused": true,
+    "armWriteEndAbsentFromFcitx": true,
+    "dbusInputFrontendAbsent": true,
+    "browserVersion": "Chrome/155.0.8059.84",
+    "referenceCompositor": "Sway/wlroots software only",
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "negativeControl": {
+    "change": "driver revoke step removed (temporary, not committed)",
+    "passed": false,
+    "gateArmedCorrected": true,
+    "gatePreeditShownBeforeRevoke": true,
+    "gateRevokeClearedPreedit": false,
+    "gateRevokedNothingTyped": false
+  },
+  "conclusion": "With the arm pipe open the fixed rule corrects (ghbdtn+Space -> привет ). Writing one byte and closing the pipe mid-word clears the shown preedit immediately and afterwards no keystroke reaches the field; the field stays focused. Fcitx holds only the read end. The control proves the checks fail without revoke.",
+  "notCovered": [
+    "Slack itself (composer needs login)",
+    "nested Hyprland",
+    "supervisor/injector wiring to the helper (test driver played the supervisor)"
+  ]
+}

@@ -161,3 +161,14 @@ second pass; a missing revoke watcher fails closed; #error also excludes the
 disable-reentry test build; stopping() early return documented as unreachable.
 Launcher requirement (composition step): revoke writes one byte and closes the
 write end; test that the write end is absent from /proc/<fcitx>/fd.
+
+## Offline gate test (2026-11-20, closed Sway, owned Chromium fixture)
+
+`python3 -I tools/wayland_ime_lab.py --run --slack-gate` with the gate-test
+artifact `tools/fcitx_slack_gate_test.pro` (same gates, program
+`chromium-browser`, because Chromium in Sway reports no Slack program and the
+policy rejects empty ids). 5/5: armed correction; preedit shown mid-word;
+revoke (byte + close) clears the preedit at once; no keystroke reaches the
+field afterwards; field still focused. Fcitx holds only the read end (fdinfo
+access mode check). Negative control without revoke fails the two revoke
+checks. Evidence: data/slack-gate-offline-001-result.json.

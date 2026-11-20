@@ -148,6 +148,10 @@ constexpr std::size_t kMaxPendingReleases = 8;
 // Separate compile-time lab variant; never an environment-controlled app list.
 #ifdef RASKLAD_CHROMIUM_LAB
 constexpr const char kLabProgram[] = "chromium";
+#elif defined(RASKLAD_SLACK_SESSION_LAB) && defined(RASKLAD_SLACK_GATE_TEST_PROGRAM)
+// Offline gate-test artifact only: the same gates against the owned Chromium
+// fixture (its observed native Wayland program). Never used with Slack.
+constexpr const char kLabProgram[] = "chromium-browser";
 #elif defined(RASKLAD_SLACK_SESSION_LAB)
 // Measured Fcitx input-context program of Slack's native Wayland window
 // (data/slack-ime-milestone1-dryrun-result.json). Not an authentication.

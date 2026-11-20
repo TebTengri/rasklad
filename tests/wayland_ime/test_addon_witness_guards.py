@@ -59,6 +59,10 @@ class WitnessGuards(unittest.TestCase):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
                     if module is REFERENCE:
+                        # Appended inert selector for the offline Slack gate test.
+                        self.assertEqual(parameters[-1].name,'slack_gate')
+                        self.assertIs(parameters[-1].default,False)
+                        parameters=parameters[:-1]
                         self.assertEqual(parameters[-1].name,'disable_suite')
                         self.assertIs(parameters[-1].default,False)
                         parameters=parameters[:-1]
