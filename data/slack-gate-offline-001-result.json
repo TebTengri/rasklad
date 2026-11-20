@@ -35,6 +35,20 @@
   "notCovered": [
     "Slack itself (composer needs login)",
     "nested Hyprland",
-    "Python Supervisor class driving the helper (next)"
-  ]
+    "compositor-sourced binding (pid, surface generation, IC epoch) and seat grab"
+  ],
+  "supervised": {
+    "command": "python3 -I tools/wayland_ime_lab.py --run --slack-supervised",
+    "passed": true,
+    "supervisorSent": 9,
+    "supervisedScriptCompleted": true,
+    "supervisedReceiptMatched": true,
+    "supervisedFieldCleaned": true,
+    "supervisedRevokedRefusesNext": true,
+    "supervisedNothingAfterRevoke": true,
+    "helperStdinOnlyInSupervisor": true,
+    "armWriteEndOnlyInSupervisor": true,
+    "fcitxAliveAfterGate": true,
+    "note": "Real tools/slack_supervisor.py Supervisor('correction') owns the helper stdin (non-blocking) and the arm write end; the driver only observes. Lab binding (chromium pid, 0, 0, normal); the real binding comes from the compositor."
+  }
 }

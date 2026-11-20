@@ -97,6 +97,15 @@ class Holders(unittest.TestCase):
         self.assertNotIn('RASKLAD_SESSION_ARM_WRITE_FD', source)
         self.assertNotIn('RASKLAD_SESSION_ARM_WRITE_FD', (ROOT / 'tests/chromium_ime/driver.mjs').read_text())
 
+    def test_supervised_driver_never_spawns_the_helper(self):
+        driver = (ROOT / 'tests/chromium_ime/driver.mjs').read_text()
+        self.assertIn("if(nativeWayland&&!supervised){\n vk=spawn(", driver)
+        source = (ROOT / 'tools/native_ime_clients.py').read_text()
+        body = source[source.index('def run_supervised_driver'):source.index('def load_lab_module')]
+        self.assertIn('os.set_blocking(helper.stdin.fileno(),False)', body)
+        self.assertIn("sup.Supervisor([pid],'correction')", body)
+        self.assertNotIn('pass_fds', body)
+
 
 class LabSelection(unittest.TestCase):
     def test_slack_gate_is_exclusive(self):
@@ -120,9 +129,11 @@ class LabSelection(unittest.TestCase):
         with self.assertRaises(lab.base.Refused):
             lab.slack_gate_selection('other')
         lab.slack_gate_selection('control', focus_stress=False)
+        lab.slack_gate_selection('supervised', focus_stress=False)
 
     def test_gate_flags_require_plain_run(self):
-        for argv in (['--slack-gate'], ['--smoke-nested-hypr', '--slack-gate'], ['--run', '--slack-gate', '--slack-gate-control']):
+        for argv in (['--slack-gate'], ['--slack-supervised'], ['--smoke-nested-hypr', '--slack-gate'],
+                     ['--run', '--slack-gate', '--slack-gate-control'], ['--run', '--slack-supervised', '--slack-gate']):
             out = subprocess.run([sys.executable, '-I', str(ROOT / 'tools/wayland_ime_lab.py')] + argv,
                                  capture_output=True, text=True, timeout=20)
             self.assertNotEqual(out.returncode, 0)

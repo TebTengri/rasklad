@@ -8,7 +8,9 @@ if(process.env.RASKLAD_CHROMIUM_IME_LAB!=='1'||process.env.HOME!=='/home/lab'||
  (nativeWayland?(process.env.DISPLAY||process.env.WAYLAND_DISPLAY!=='wayland-lab'):process.env.DISPLAY!==':77'))throw Error('not private lab');
 let vk=null,vkExited=null,vkAlive=false,vkBuffer='',vkWaiters=[];
 function nextVkLine(timeout=4000){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('private virtual-keyboard timeout')),timeout);vkWaiters.push(x=>{clearTimeout(timer);resolve(x);});});}
-if(nativeWayland){
+const supervised=process.env.RASKLAD_SLACK_SUPERVISED_LAB==='1';
+// Supervised mode: only the Python supervisor owns the virtual keyboard.
+if(nativeWayland&&!supervised){
  vk=spawn('/lab/rasklad-wayland-keys',[],{stdio:['pipe','pipe','ignore']});vkAlive=true;vkExited=new Promise(r=>vk.once('exit',()=>{vkAlive=false;r();}));vk.stdout.setEncoding('utf8');
  const ready=nextVkLine();
  vk.stdout.on('data',data=>{vkBuffer+=data;let at;while((at=vkBuffer.indexOf('\n'))>=0){const line=vkBuffer.slice(0,at);vkBuffer=vkBuffer.slice(at+1);vkWaiters.shift()?.(line);}});
@@ -45,7 +47,24 @@ try{
  await ev(`new Promise((resolve,reject)=>{const end=Date.now()+4000;function ready(){if(document.getElementById('prose'))return resolve(true);if(Date.now()>end)return reject(Error('load'));setTimeout(ready,20);}ready();})`);
  async function reset(id='prose'){await ev(`document.querySelectorAll('textarea,input').forEach(x=>x.value='');document.getElementById(${JSON.stringify(id)}).focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,150));}
  async function type(name){if(nativeWayland){const ack=nextVkLine(5000);vk.stdin.write(name+'\n');if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');}else execFileSync('/usr/bin/python3',['-I','/lab/keys.py',name,String(child.pid)],{stdio:['ignore','ignore','pipe'],timeout:5000});await new Promise(r=>setTimeout(r,200));}
- if(process.env.RASKLAD_SLACK_GATE_LAB==='1'){
+ if(supervised){
+  // Observer only: the Python Supervisor types through the helper it alone owns.
+  if(!nativeWayland||process.env.RASKLAD_SLACK_GATE_LAB!=='1')throw Error('supervised gate lab required');
+  await reset();phase='supervised';
+  process.stdout.write(JSON.stringify({chromiumPid:child.pid})+'\n');
+  const lines=[];let waiter=null,stdinBuffer='';
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data',d=>{stdinBuffer+=d;let at;while((at=stdinBuffer.indexOf('\n'))>=0){lines.push(stdinBuffer.slice(0,at));stdinBuffer=stdinBuffer.slice(at+1);}if(waiter&&lines.length){const w=waiter;waiter=null;w();}});
+  const next=()=>lines.length?Promise.resolve(lines.shift()):new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('supervisor timeout')),20000);waiter=()=>{clearTimeout(t);resolve(lines.shift());};});
+  let observations=0;
+  for(;;){const command=await next();
+   if(command==='observe'){observations++;process.stdout.write(JSON.stringify({value:await ev('prose.value'),events:await ev('imeEvents.length')})+'\n');}
+   else if(command==='done'){process.stdout.write(JSON.stringify({done:true})+'\n');break;}
+   else throw Error('unknown supervisor command');}
+  process.stdin.pause();
+  report.supervisedObservations=observations;report.supervisedFieldFocused=await ev('document.activeElement===prose');
+  report.checks=1;report.passed=report.supervisedFieldFocused===true;
+ }else if(process.env.RASKLAD_SLACK_GATE_LAB==='1'){
   // Offline Slack-session gate test (owned Chromium fixture, gate-test addon).
   // The Python parent plays the supervisor and alone holds the arm write end;
   // the driver only asks for revoke over stdout and waits for the stdin ack.

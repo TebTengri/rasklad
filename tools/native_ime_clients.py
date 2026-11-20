@@ -160,6 +160,120 @@ def run_gate_driver(base,fcitx,gate,driver_env):
             if fd is not None:os.close(fd)
 
 
+class DriverLink:
+    """Line protocol with the observing driver (stdout requests/answers, stdin commands)."""
+    def __init__(self,base,driver,deadline):
+        self.base,self.driver,self.deadline,self.buffer,self.total=base,driver,deadline,b'',0
+    def line(self):
+        while b'\n' not in self.buffer:
+            remaining=self.deadline-time.monotonic()
+            if remaining<=0:raise self.base.Refused('driver_timeout')
+            ready,_,_=select.select([self.driver.stdout],[],[],remaining)
+            if not ready:continue
+            chunk=os.read(self.driver.stdout.fileno(),65536)
+            if not chunk:raise self.base.Refused('driver_eof')
+            self.total+=len(chunk)
+            if self.total>65536:raise self.base.Refused('driver_output_bound')
+            self.buffer+=chunk
+        line,self.buffer=self.buffer.split(b'\n',1)
+        return json.loads(line)
+    def ask(self,command):
+        self.driver.stdin.write(command.encode('ascii')+b'\n');self.driver.stdin.flush()
+        return self.line()
+
+
+def helper_ack(base,helper,timeout=4):
+    raw=b'';end=time.monotonic()+timeout
+    while not raw.endswith(b'\n'):
+        remaining=end-time.monotonic()
+        if remaining<=0:raise base.Refused('helper_ack_timeout')
+        ready,_,_=select.select([helper.stdout],[],[],remaining)
+        if ready:
+            chunk=os.read(helper.stdout.fileno(),64)
+            if not chunk:raise base.Refused('helper_eof')
+            raw+=chunk
+    if raw!=b'{"ok":true}\n':raise base.Refused('helper_ack')
+
+
+def run_supervised_driver(base,fcitx,gate,driver_env,children):
+    """The real Supervisor drives the fixed 'correction' script through the helper.
+    Only this process holds the helper's stdin and the arm write end; the driver
+    only observes the owned field."""
+    sup=load_lab_module('slack_supervisor_lab',Path('/lab/slack_supervisor.py'))
+    inj=sup.inj
+    read_end,write_end=gate
+    report={}
+    os.close(read_end);read_end=None
+    helper=subprocess.Popen(['/lab/rasklad-wayland-keys'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+    children.append(helper)
+    driver=None
+    try:
+        ready,_,_=select.select([helper.stdout],[],[],3)
+        if not ready or os.read(helper.stdout.fileno(),32)!=b'{"ready":true}\n':raise base.Refused('helper_ready')
+        os.set_blocking(helper.stdin.fileno(),False)  # Supervisor contract: write must not block
+        def write(data):
+            if os.write(helper.stdin.fileno(),data)!=len(data):raise OSError('short helper write')
+        driver=subprocess.Popen(['/usr/bin/node','/lab/driver.mjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=driver_env)
+        link=DriverLink(base,driver,time.monotonic()+50)
+        hello=link.line()
+        pid=hello.get('chromiumPid')
+        if type(pid) is not int or pid<=1:raise base.Refused('driver_hello')
+        binding=(pid,0,0,'normal')  # lab binding; the real one comes from the compositor
+        s=sup.Supervisor([pid],'correction')
+        if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
+        for command in inj.script('correction'):
+            if command=='backspace' and not s._receipt_ok:
+                observed=link.ask('observe')
+                report['supervisedReceiptMatched']=s.commit_receipt(observed.get('value'))
+                if not report['supervisedReceiptMatched']:break
+            token=s.issue(command,*binding)
+            if token is None or not s.send(token,command,*binding,write):raise base.Refused('supervisor_send')
+            helper_ack(base,helper)
+            time.sleep(.05)
+        report['supervisedScriptCompleted']=s.done()
+        report['supervisedFieldCleaned']=link.ask('observe').get('value')==''
+        report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
+        # F12: revoke the supervisor and the addon arm pipe (byte + close).
+        before=link.ask('observe')
+        report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
+        s.event('f12')
+        os.write(write_end,b'x');os.close(write_end);write_end=None
+        report['supervisedRevokedRefusesNext']=s.issue('backspace',*binding) is None and s.state=='REVOKED'
+        time.sleep(.3)
+        after=link.ask('observe')
+        report['supervisedNothingAfterRevoke']=after.get('value')==before.get('value') and after.get('events')==before.get('events')
+        report['supervisorSent']=s.sent
+        link.ask('done')
+        out=link.buffer
+        driver.stdin.close()
+        rest=b''
+        end=time.monotonic()+10
+        while True:
+            ready,_,_=select.select([driver.stdout],[],[],max(0,end-time.monotonic()))
+            if not ready:raise base.Refused('driver_report_timeout')
+            chunk=os.read(driver.stdout.fileno(),65536)
+            if not chunk:break
+            rest+=chunk
+            if len(rest)>32768:raise base.Refused('driver_output_bound')
+        driver.wait(timeout=5)
+        return subprocess.CompletedProcess(driver.args,driver.returncode,out+rest,None),report
+    finally:
+        if driver is not None:
+            if driver.poll() is None:driver.kill();driver.wait()
+            if not driver.stdin.closed:driver.stdin.close()
+            driver.stdout.close()
+        for fd in (read_end,write_end):
+            if fd is not None:os.close(fd)
+
+
+def load_lab_module(name,path):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location(name,path)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def fd_present(pid,fd):
     """True if `pid` holds a writable descriptor of the same pipe as our write end `fd`.
     Both pipe ends share one inode, so the access mode from fdinfo tells them apart."""
@@ -202,7 +316,9 @@ def run(base, children):
     if frontend:verify_frontend_mapping(base,fcitx,frontend[0])
     driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
     gate_report={}
-    if gate:
+    if gate and os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1':
+        p,gate_report=run_supervised_driver(base,fcitx,gate,driver_env,children)
+    elif gate:
         p,gate_report=run_gate_driver(base,fcitx,gate,driver_env)
     else:
         p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=driver_env)
@@ -212,7 +328,11 @@ def run(base, children):
     if gate:
         r['fcitxAliveAfterGate']=fcitx.poll() is None
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
-        required=['armWriteEndOnlyInSupervisor'] if control else ['armWriteEndOnlyInSupervisor','revokeServed']
+        supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
+        required=(['armWriteEndOnlyInSupervisor'] if control else
+                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptMatched','supervisedFieldCleaned',
+                   'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor'] if supervised else
+                  ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False
     if frontend:r.update(privateFrontendMapped=True,privateFrontendArtifactSha256=frontend[1],privateSeedKeyboard=seeded)
     r['frontendVariant']=private_frontend_variant(base)

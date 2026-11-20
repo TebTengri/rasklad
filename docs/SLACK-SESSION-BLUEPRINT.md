@@ -184,3 +184,11 @@ gate run now also requires 0 input events after revoke and Fcitx alive;
 `--slack-gate*` only with plain `--run`; fds closed on all driver paths.
 Result: gate 6/6, control 5/5. Evidence schema 2 in
 data/slack-gate-offline-001-result.json.
+
+Supervised run: `--slack-supervised` — the real `Supervisor('correction')`
+owns the helper stdin (non-blocking) and the arm write end; the driver only
+observes. 9 commands sent (word, space, 7 BackSpace); receipt "привет "
+matched before cleanup; field empty after; F12 revokes, next command refused,
+nothing reaches the field; no other process held the helper stdin or the arm
+write end. Remaining before live: compositor-sourced binding and seat grab in
+nested Hyprland, then the owner-approved session.
