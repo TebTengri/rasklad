@@ -134,9 +134,13 @@ user-data-dir (loses authentication; profile copying is outside the owner's
 earlier scope); dry run in nested Hyprland (each needs host GPU approval;
 closed Sway stays the dry-run target).
 
-Owner decisions required before implementation:
-1. Profile snapshot before the run (a local copy in ignored build/, deleted
-   after) — conflicts with the earlier "no real-profile copying" rule.
-2. Route alternative (Gemini): Slack Web in the own Chromium fixture with a
-   private test profile — avoids closing host Slack and touching its profile,
-   but requires a fresh login in the fixture and does not test the Electron app.
+Owner decisions 2026-11-20:
+1. No profile snapshot. The real profile is used in place; the owner accepts
+   the profile-corruption risk. Grok's snapshot fix is declined by the owner.
+2. Desktop Slack (Electron) in the owner-designated real test channel; the
+   Slack Web alternative is not pursued for the first session.
+3. Grok's IC-reset gate is also checked live as a zero-injection pre-check:
+   after launch the owner moves composer→search→composer; if no IC reset or
+   purpose change is observed, the run aborts before any key is injected.
+These decisions are not approval to run; the live run needs a separate
+one-shot approval after the dry run and review.
