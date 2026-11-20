@@ -107,8 +107,34 @@ class Holders(unittest.TestCase):
         source = (ROOT / 'tools/native_ime_clients.py').read_text()
         body = source[source.index('def run_supervised_driver'):source.index('def load_lab_module')]
         self.assertIn('os.set_blocking(helper.stdin.fileno(),False)', body)
-        self.assertIn("sup.Supervisor([pid],'correction')", body)
+        self.assertIn("sup.Supervisor([binding[0]],'correction')", body)
+        self.assertIn("token=s.issue(command,*current())", body)
         self.assertNotIn('pass_fds', body)
+
+
+class HyprlandSupervised(unittest.TestCase):
+    def setUp(self):
+        self.hypr = load('hyprland_ime_lab_test', ROOT / 'tools/hyprland_ime_lab.py')
+
+    def test_selection_alone_only(self):
+        self.hypr.supervised_selection(False, True, True, True, True, True, True, 3, True, True, 'keep-grab')
+        self.hypr.supervised_selection(True, False, False, False, False, False, False, 1, False, False, 'system')
+        for bad in ((True, True, False, False, False, False, False, 1, False, False, 'system'),
+                    (True, False, False, False, False, False, False, 2, False, False, 'system'),
+                    (True, False, False, False, False, False, False, 1, False, False, 'keep-grab'),
+                    (1, False, False, False, False, False, False, 1, False, False, 'system')):
+            with self.assertRaises(self.hypr.base.Refused):
+                self.hypr.supervised_selection(*bad)
+
+    def test_cli_requires_run_approved(self):
+        out = subprocess.run([sys.executable, '-I', str(ROOT / 'tools/hyprland_ime_lab.py'), '--slack-supervised'],
+                             capture_output=True, text=True, timeout=20)
+        self.assertIn('slack_supervised_requires_run_approved', out.stdout)
+
+    def test_descends_from(self):
+        self.assertTrue(clients.descends_from(os.getpid(), os.getpid()))
+        self.assertTrue(clients.descends_from(os.getpid(), os.getppid()))
+        self.assertFalse(clients.descends_from(os.getppid(), os.getpid()))
 
 
 class LabSelection(unittest.TestCase):

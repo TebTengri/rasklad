@@ -50,8 +50,20 @@ def validate_frontend(variant):
         raise base.Refused(str(error)) from error
 
 
-def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+SLACK_GATE_ADDON = ROOT/'build/chromium-ime/slack-gate-addon/raskladslackgatetest.so'
+
+
+def supervised_selection(slack_supervised, *others):
+    """The supervised Slack-session fixture runs alone: no witness, focus or frontend variant."""
+    if type(slack_supervised) is not bool:
+        raise base.Refused('slack_supervised_mode')
+    if slack_supervised and (others[:6] != (False,)*6 or others[6] != 1 or others[7:9] != (False, False) or others[9] != 'system'):
+        raise base.Refused('slack_supervised_incompatible_options')
+
+
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False):
     frontend_selection(frontend_variant)
+    supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
     if grab_epoch_witness and not server_route_witness:
         raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
@@ -124,6 +136,13 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
     if focus_repeats>1:
         extra += ['--setenv', 'RASKLAD_FOCUS_REPEATS_LAB', str(focus_repeats)]
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
+    if slack_supervised:
+        if profile:
+            raise base.Refused('slack_supervised_profile')
+        extra += ['--ro-bind', str(ROOT/'tools/slack_supervisor.py'), '/lab/slack_supervisor.py',
+                  '--ro-bind', str(ROOT/'tools/slack_injector.py'), '/lab/slack_injector.py',
+                  '--setenv', 'RASKLAD_SLACK_SESSION_LAB', '1', '--setenv', 'RASKLAD_SLACK_GATE_LAB', '1',
+                  '--setenv', 'RASKLAD_SLACK_SUPERVISED_LAB', '1']
     for relative, path in profile.items():
         extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
     env = {'RASKLAD_HYPRLAND_IME_LAB': '1', 'RASKLAD_NATIVE_WAYLAND_LAB': '1',
@@ -235,8 +254,9 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system"):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False):
     frontend_selection(frontend_variant)
+    supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
     if grab_epoch_witness and not server_route_witness:
         raise base.Refused('grab_epoch_requires_server_route_witness')
     if server_route_witness and not grab_entry_witness:
@@ -262,7 +282,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
-    if input_root is None:
+    if input_root is None and not slack_supervised:
         raise base.Refused('explicit_input_root_required')
     if space_telemetry and not focus_stress:
         raise base.Refused('space_telemetry_requires_focus_suite')
@@ -279,6 +299,11 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     if addon_witness:
         paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladwitness.conf'
         base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
+    if slack_supervised:
+        paths['addon'] = SLACK_GATE_ADDON
+        paths['addon_conf'] = ROOT/'tests/slack_session/raskladslackgatetest.conf'
+        for name in ('slack_supervisor.py', 'slack_injector.py'):
+            base.regular_file(ROOT/'tools'/name)
     shim = ROOT/('build/chromium-ime/grab-entry-shim/raskladcoreentry.so' if grab_entry_witness else 'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
     if core_entry_witness:
         base.regular_file(shim)
@@ -289,7 +314,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
             base.regular_file(ROOT/source)
     keys = ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'
     base.regular_file(keys, True)
-    profile = {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
+    profile = {} if slack_supervised else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
                for relative in chrome.PROFILE_PATHS}
     for path in profile.values():
         base.regular_file(path)
@@ -329,7 +354,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant,slack_supervised=slack_supervised),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)
@@ -378,6 +403,7 @@ def main():
     parser.add_argument('--grab-epoch-witness',action='store_true')
     parser.add_argument('--server-route-witness',action='store_true')
     parser.add_argument('--focus-repeats', type=int, choices=range(1,6), default=1)
+    parser.add_argument('--slack-supervised', action='store_true')
     parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
     args = parser.parse_args()
     try:
@@ -397,11 +423,13 @@ def main():
             raise base.Refused('witness_no_query_requires_addon_witness')
         if args.addon_witness and not (args.focus_stress and args.space_telemetry):
             raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+        if args.slack_supervised and not args.run_approved:
+            raise base.Refused('slack_supervised_requires_run_approved')
         if args.inside and args.focus_stress:
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'frontendVariant': args.frontend_variant,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
@@ -414,6 +442,7 @@ def main():
             'focusRepeatCount': args.focus_repeats,
             'serverRouteWitnessPlanned':args.server_route_witness,
             'grabEpochWitnessPlanned':args.grab_epoch_witness,
+            'slackSupervisedPlanned':args.slack_supervised,
             'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
         print(json.dumps(report, sort_keys=True))
         return 0 if report.get('passed', True) else 1

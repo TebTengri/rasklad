@@ -3,6 +3,7 @@
 """Shared native Chromium/Fcitx fixture; called only inside a private lab namespace."""
 import hashlib
 import json
+import re
 import os
 import select
 from pathlib import Path
@@ -199,6 +200,32 @@ def helper_ack(base,helper,timeout=4):
     if raw!=b'{"ok":true}\n':raise base.Refused('helper_ack')
 
 
+def compositor_binding(base):
+    """Nested Hyprland only: the focused window as the compositor reports it.
+    Returns (pid, window generation = window address), or None."""
+    hypr=[p for p in Path(os.environ['XDG_RUNTIME_DIR'],'hypr').iterdir() if p.is_dir()]
+    if len(hypr)!=1:raise base.Refused('hyprland_instance')
+    env={'PATH':'/usr/bin','XDG_RUNTIME_DIR':os.environ['XDG_RUNTIME_DIR'],'HYPRLAND_INSTANCE_SIGNATURE':hypr[0].name}
+    out=subprocess.run(['/usr/bin/hyprctl','-j','activewindow'],capture_output=True,timeout=3,env=env)
+    if out.returncode!=0 or len(out.stdout)>65536:raise base.Refused('hyprctl_activewindow')
+    try:window=json.loads(out.stdout)
+    except ValueError:return None
+    if type(window) is not dict:return None
+    pid,address=window.get('pid'),window.get('address')
+    if type(pid) is not int or pid<=1 or type(address) is not str or not re.fullmatch(r'0x[0-9a-f]{1,16}',address):
+        return None
+    return pid,int(address,16)
+
+
+def descends_from(pid,ancestor):
+    for _ in range(64):
+        if pid==ancestor:return True
+        try:pid=int(Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()[1])
+        except (OSError,ValueError,IndexError):return False
+        if pid<=1:return False
+    return False
+
+
 def run_supervised_driver(base,fcitx,gate,driver_env,children):
     """The real Supervisor drives the fixed 'correction' script through the helper.
     Only this process holds the helper's stdin and the arm write end; the driver
@@ -232,8 +259,23 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         hello=link.line()
         pid=hello.get('chromiumPid')
         if type(pid) is not int or pid<=1:raise base.Refused('driver_hello')
-        binding=(pid,0,0,'normal')  # lab binding; the real one comes from the compositor
-        s=sup.Supervisor([pid],'correction')
+        hyprland=os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1'
+        if hyprland:
+            focused=None
+            for _ in range(50):
+                focused=compositor_binding(base)
+                if focused and descends_from(focused[0],pid):break
+                time.sleep(.1)
+            report['bindingFromCompositor']=bool(focused) and descends_from(focused[0],pid)
+            if not report['bindingFromCompositor']:raise base.Refused('compositor_focus_not_fixture')
+            binding=(focused[0],focused[1],0,'normal')  # IC epoch and purpose: still lab values
+        else:
+            binding=(pid,0,0,'normal')  # Sway lab binding
+        def current():
+            if not hyprland:return binding
+            now=compositor_binding(base)
+            return (now[0],now[1],0,'normal') if now else (0,0,0,'none')
+        s=sup.Supervisor([binding[0]],'correction')
         if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
         def pending_receipt(timeout=0):
             ready,_,_=select.select([receipts],[],[],timeout)
@@ -256,8 +298,8 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
                 if not report['supervisedReceiptMatched']:
                     s.revoke()  # orphaned or unexpected commit: stop, never clean up blindly
                     break
-            token=s.issue(command,*binding)
-            if token is None or not s.send(token,command,*binding,write):raise base.Refused('supervisor_send')
+            token=s.issue(command,*current())  # compositor focus re-read before every key
+            if token is None or not s.send(token,command,*current(),write):raise base.Refused('supervisor_send')
             helper_ack(base,helper)
             time.sleep(.05)
         report['supervisedScriptCompleted']=s.done() and s.sent==len(script) and report['supervisedReceiptChecked']
@@ -271,6 +313,12 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         os.write(write_end,b'x');os.close(write_end);write_end=None
         stop_helper()
         report['supervisedRevokedRefusesNext']=s.issue('backspace',*binding) is None and s.state=='REVOKED'
+        if hyprland:
+            # A changed surface generation must be refused (fresh supervisor, no key sent).
+            check=sup.Supervisor([binding[0]],'correction')
+            check.arm(*binding);check.seat_locked()
+            report['bindingChangeRefused']=check.issue('word',binding[0],binding[1]+1,0,'normal') is None and check.state=='REVOKED'
+            report['compositorFocusUnchanged']=current()==binding
         time.sleep(.3)
         after=link.ask('observe')
         report['supervisedNothingAfterRevoke']=(after.get('value')==before.get('value') and after.get('events')==before.get('events')
@@ -365,9 +413,10 @@ def run(base, children):
         r['fcitxAliveAfterGate']=fcitx.poll() is None
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
+        hypr_required=['bindingFromCompositor','bindingChangeRefused','compositorFocusUnchanged'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
         required=(['armWriteEndOnlyInSupervisor'] if control else
                   ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','supervisedFieldCleaned',
-                   'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor'] if supervised else
+                   'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor']+hypr_required if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False
     if frontend:r.update(privateFrontendMapped=True,privateFrontendArtifactSha256=frontend[1],privateSeedKeyboard=seeded)

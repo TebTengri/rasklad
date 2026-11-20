@@ -66,6 +66,11 @@ class WitnessGuards(unittest.TestCase):
                         self.assertEqual(parameters[-1].name,'disable_suite')
                         self.assertIs(parameters[-1].default,False)
                         parameters=parameters[:-1]
+                    else:
+                        # Appended inert selector for the supervised Slack-session fixture.
+                        self.assertEqual(parameters[-1].name,'slack_supervised')
+                        self.assertIs(parameters[-1].default,False)
+                        parameters=parameters[:-1]
                     self.assertEqual(parameters[-1].name,'frontend_variant')
                     self.assertEqual(parameters[-1].default,'system')
                     parameters=parameters[:-1]
