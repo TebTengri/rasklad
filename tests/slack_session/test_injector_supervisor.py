@@ -2,6 +2,7 @@ import importlib.util
 import re
 import sys
 import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -31,7 +32,7 @@ class Clock:
 
 
 def new(case='correction', clock=None, seconds=sup.SESSION_SECONDS):
-    return sup.Supervisor([PID, PID + 1], inj.script(case), inj.WIRE, now=clock or Clock(), seconds=seconds)
+    return sup.Supervisor([PID, PID + 1], case, now=clock or Clock(), seconds=seconds)
 
 
 class Armed(unittest.TestCase):
@@ -44,6 +45,11 @@ class Armed(unittest.TestCase):
     def step(self, s, command, out):
         token = s.issue(command, *B)
         return s.send(token, command, *B, out.append)
+
+    def typed(self):
+        s, out = self.armed(), []
+        self.assertTrue(self.step(s, 'word', out) and self.step(s, 'space', out))
+        return s
 
 
 class Injector(unittest.TestCase):
@@ -78,6 +84,8 @@ class HappyPath(Armed):
     def test_full_script_writes_exact_bytes_in_order(self):
         s, out = self.armed(), []
         for command in inj.script('correction'):
+            if command == 'backspace' and not s._receipt_ok:
+                self.assertTrue(s.commit_receipt('привет '))
             self.assertTrue(self.step(s, command, out))
         self.assertEqual(out, [b'word\n', b'space\n'] + [b'backspace\n'] * 7)
         self.assertTrue(s.done())
@@ -93,12 +101,25 @@ class HappyPath(Armed):
         self.assertEqual(out, [b'hello\n'])
 
     def test_commit_receipt_must_match_exactly(self):
-        s = self.armed()
-        self.assertTrue(s.commit_receipt('привет ', inj.EXPECTED['correction']))
-        for bad in ('привет', 'ghbdtn ', None):
-            s = self.armed()
-            self.assertFalse(s.commit_receipt(bad, inj.EXPECTED['correction']))
+        self.assertTrue(self.typed().commit_receipt('привет '))
+        for bad in ('привет', 'ghbdtn ', None, 'hello '):
+            s = self.typed()
+            self.assertFalse(s.commit_receipt(bad))
             self.assertEqual(s.revoke_reason, 'commit-mismatch')
+
+    def test_backspace_requires_matching_receipt(self):
+        s = self.typed()
+        self.assertIsNone(s.issue('backspace', *B))
+        self.assertEqual(s.revoke_reason, 'commit-mismatch')
+
+    def test_receipt_before_typing_finished_or_twice_revokes(self):
+        s, out = self.armed(), []
+        self.step(s, 'word', out)
+        self.assertFalse(s.commit_receipt('привет '))
+        s = self.typed()
+        self.assertTrue(s.commit_receipt('привет '))
+        self.assertFalse(s.commit_receipt('привет '))
+        self.assertEqual(s.state, 'REVOKED')
 
 
 class Refusals(Armed):
@@ -245,12 +266,46 @@ class Revocation(Armed):
         for pids, seconds in (([], 10), ([1], 10), ([True], 10), ([PID], 0), ([PID], 601), ([PID], True),
                               ([PID], float('nan')), ([PID], float('inf'))):
             with self.assertRaises(ValueError):
-                sup.Supervisor(pids, inj.script('english'), inj.WIRE, now=Clock(), seconds=seconds)
-        for commands in ([], ['undo'], [None]):
+                sup.Supervisor(pids, 'english', now=Clock(), seconds=seconds)
+        for case in ('undo', None, ['word'], 'lab-off'):
             with self.assertRaises(ValueError):
-                sup.Supervisor([PID], commands, inj.WIRE, now=Clock())
-        with self.assertRaises(ValueError):
-            sup.Supervisor([PID], ['word'], inj.WIRE, now=None)
+                sup.Supervisor([PID], case, now=Clock())
+        for clock in (None, lambda: float('nan'), lambda: 'now'):
+            with self.assertRaises(ValueError):
+                sup.Supervisor([PID], 'english', now=clock)
+
+    def test_wire_bytes_only_from_fixed_table(self):
+        s = new()
+        self.assertEqual(s._wire, inj.WIRE)
+        self.assertNotIn('undo', s._wire)
+
+    def test_bad_clock_after_start_revokes(self):
+        clock = Clock()
+        s = self.armed(clock=clock)
+        token = s.issue('word', *B)
+        clock.t = float('nan')
+        self.assertFalse(s.send(token, 'word', *B, [].append))
+        self.assertEqual((s.state, s.revoke_reason), ('REVOKED', 'error'))
+
+    def test_revoke_flag_set_while_write_blocks_and_stops_next_write(self):
+        s = self.typed()
+        self.assertTrue(s.commit_receipt('привет '))
+        token = s.issue('backspace', *B)
+        entered, release, written = threading.Event(), threading.Event(), []
+
+        def blocking_write(data):
+            entered.set(); release.wait(2); written.append(data)
+
+        t = threading.Thread(target=s.send, args=(token, 'backspace', *B, blocking_write))
+        t.start(); entered.wait(2)
+        revoker = threading.Thread(target=s.event, args=('f12',))
+        revoker.start(); time.sleep(0.05)
+        self.assertTrue(s._revoked.is_set())  # visible before the lock is free
+        release.set(); t.join(2); revoker.join(2)
+        self.assertEqual(s.state, 'REVOKED')
+        self.assertIsNone(s.issue('backspace', *B))
+        self.assertEqual(written, [b'backspace\n'])
+        self.assertEqual(s.attempted, 3)
 
 
 if __name__ == '__main__':

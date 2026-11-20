@@ -106,3 +106,15 @@ count by whitelist (ASCII/Cyrillic letters, plain space); allowlist parity test
 against the helper's `parse()`. Rejected: deadline from F10 instead of session
 start — 600 s is the owner-accepted total session cap; expiry during typing
 revokes (fail closed).
+
+Re-review of 027f5d8 (ecc:python-reviewer FIX-FIRST; all earlier BLOCK items
+verified fixed). Closed: Supervisor takes only a case name and builds the
+script and wire bytes from slack_injector itself (no caller tables); a revoke
+flag is set without the lock and checked right before every write, and the
+launcher's write must be non-blocking (documented contract); BackSpace is
+refused until the addon receipt equals the case's own expected text, only once
+and only after the typing commands; seat_locked fail-closed; done() checks the
+deadline; non-finite or non-numeric clock revokes; `attempted` counted before
+each write. Accepted as intended: send before issue revokes the session.
+Open for step 3: the launcher must keep the helper stdin private to `write`
+(the helper itself still parses forbidden commands from any writer).

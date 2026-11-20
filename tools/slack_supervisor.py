@@ -6,10 +6,16 @@ change, any error). REVOKED is terminal. Every public method holds one lock, and
 `send` writes while holding it, so a revoke cannot interleave with a write. Any
 unexpected input or exception revokes (fail closed).
 """
+import importlib.util
 import math
 import secrets
 import threading
 import time
+from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location('slack_injector_fixed', Path(__file__).with_name('slack_injector.py'))
+inj = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(inj)
 
 STATES = ('IDLE', 'ARMED', 'SEAT_LOCKED', 'INJECT', 'REVOKED')
 NORMAL_PURPOSES = frozenset({'normal', 'alpha'})
@@ -26,7 +32,10 @@ def _binding(client_pid, surface_generation, ic_epoch):
 
 
 class Supervisor:
-    def __init__(self, slack_pids, commands, wire, now=time.monotonic, seconds=SESSION_SECONDS):
+    def __init__(self, slack_pids, case, now=time.monotonic, seconds=SESSION_SECONDS):
+        """`case` selects a fixed script; commands and wire bytes come only from slack_injector.
+        The launcher's `write` passed to send() must be non-blocking (O_NONBLOCK pipe, raise on EAGAIN
+        or a short write)."""
         pids = list(slack_pids)
         if not pids or not all(type(p) is int and p > 1 for p in pids):
             raise ValueError('slack-pids')
@@ -34,15 +43,28 @@ class Supervisor:
             raise ValueError('seconds')
         if not callable(now):
             raise ValueError('clock')
-        commands = list(commands)
-        if not commands or not all(type(c) is str and type(wire.get(c)) is bytes for c in commands):
+        try:
+            commands = inj.script(case)
+        except inj.Refused:
+            raise ValueError('script') from None
+        if not set(commands) <= inj.ALLOWED or len(commands) > 1 + 1 + inj.MAX_BACKSPACE:
             raise ValueError('script')
+        start = now()
+        if type(start) not in (int, float) or not math.isfinite(start):
+            raise ValueError('clock')
         self._lock = threading.RLock()
+        # Set without the lock by any revoke, checked right before each write.
+        self._revoked = threading.Event()
+        self.case = case
+        self._expected = inj.EXPECTED[case]
+        self._typed = len(inj.TYPED[case])
+        self._receipt_ok = False
+        self.attempted = 0
         self.slack_pids = frozenset(pids)
         self.now = now
-        self.deadline = now() + seconds
+        self.deadline = start + seconds
         self._queue = commands
-        self._wire = dict(wire)
+        self._wire = {c: inj.WIRE[c] for c in inj.ALLOWED}
         self.state = 'IDLE'
         self.binding = None
         self._token = None
@@ -51,11 +73,17 @@ class Supervisor:
 
     # -- internal (lock held) --
     def _expired(self):
-        if self.state != 'REVOKED' and self.now() >= self.deadline:
-            self._revoke('deadline')
+        try:
+            t = self.now()
+            bad_clock = type(t) not in (int, float) or not math.isfinite(t)
+        except Exception:
+            bad_clock = True
+        if self.state != 'REVOKED' and (bad_clock or t >= self.deadline):
+            self._revoke('error' if bad_clock else 'deadline')
         return self.state == 'REVOKED'
 
     def _revoke(self, reason):
+        self._revoked.set()
         if self.state != 'REVOKED':
             self.revoke_reason = reason
         self.state = 'REVOKED'
@@ -94,11 +122,15 @@ class Supervisor:
 
     def seat_locked(self):
         with self._lock:
-            if self._expired() or self.state != 'ARMED':
+            try:
+                if self._expired() or self.state != 'ARMED':
+                    self._revoke('error')
+                    return False
+                self.state = 'SEAT_LOCKED'
+                return True
+            except Exception:
                 self._revoke('error')
                 return False
-            self.state = 'SEAT_LOCKED'
-            return True
 
     def issue(self, command, client_pid, surface_generation, ic_epoch, purpose):
         """Single-use token for exactly the next scripted command, only while the binding is unchanged."""
@@ -111,6 +143,10 @@ class Supervisor:
                     return None
                 if type(command) is not str or not self._queue or command != self._queue[0]:
                     self._revoke('error')
+                    return None
+                # Cleanup only after the addon receipt matched the expected text exactly.
+                if command == 'backspace' and not self._receipt_ok:
+                    self._revoke('commit-mismatch')
                     return None
                 self.state = 'INJECT'
                 self._token = (secrets.token_hex(16), command)
@@ -135,6 +171,10 @@ class Supervisor:
                 if not self._current_ok(client_pid, surface_generation, ic_epoch, purpose):
                     return False
                 self._queue.pop(0)
+                if self._revoked.is_set():
+                    self._revoke('error')
+                    return False
+                self.attempted += 1
                 write(self._wire[command])
                 self.sent += 1
                 return True
@@ -142,19 +182,22 @@ class Supervisor:
                 self._revoke('error')
                 return False
 
-    def commit_receipt(self, committed, expected):
-        """After typing: the addon's committed text must equal the case's expected text exactly."""
+    def commit_receipt(self, committed):
+        """After the typing commands: the addon's committed text must equal this case's expected text."""
         with self._lock:
-            if type(committed) is not str or type(expected) is not str or committed != expected:
+            if (self._expired() or self.state != 'INJECT' or self.sent != self._typed or self._receipt_ok
+                    or type(committed) is not str or committed != self._expected):
                 self._revoke('commit-mismatch')
                 return False
-            return self.state != 'REVOKED'
+            self._receipt_ok = True
+            return True
 
     def done(self):
         with self._lock:
-            return self.state != 'REVOKED' and not self._queue
+            return not self._expired() and not self._queue
 
     def event(self, name):
+        self._revoked.set()  # immediately, even while a write holds the lock
         with self._lock:
             try:
                 reason = name if type(name) is str and name in REVOKE_EVENTS else 'error'
