@@ -310,6 +310,17 @@ class HyprSeat:
                     and self.keyboards()==self.devices)
         except (self.base.Refused,OSError,subprocess.SubprocessError,ValueError):
             return False
+    def accept_additions(self,now):
+        """Live session, before F10 only: a keyboard added under the lock is swallowed by the
+        catch-all (measured), so it may join the expected set. Refused: any change to the
+        exempt helper (name, address) or any further device whose name starts with PREFIX."""
+        if self.devices is None:return False
+        ours=[d for d in self.devices if d[0]==self.PREFIX]
+        if len(ours)!=1 or ours[0] not in now or any(d not in now for d in self.devices):return False
+        added=[d for d in now if d not in self.devices]
+        if any(d[0].startswith(self.PREFIX) for d in added):return False
+        self.devices=sorted(now)
+        return True
     def release_exemption(self):
         """First step of every revoke: the helper name must not stay exempt."""
         if not self.exempt:return True

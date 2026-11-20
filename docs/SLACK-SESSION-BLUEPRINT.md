@@ -391,3 +391,15 @@ rewind (helper writes are < PIPE_BUF and length-checked; a failed write
 revokes without cleanup and is reported as textMayRemain).
 Residuals: mouse swallowing and the dead submap are not measured yet; the
 owner's 10 s look happens with the seat already released (do not type).
+
+### Live run 001 and fix (2026-11-21)
+Run 001 (data/hyprland-slack-live-001-result.json) aborted right after Slack
+started, before F10, with `seat_lost_before_arm`; the owner pressed nothing.
+No key was injected, Slack stopped cleanly, profile clean. The keyboard list
+changed while Slack started (cause recorded from the next run on:
+`seatLostDetail`, `keyboardsAddedBeforeArm`). Fix: before F10 only, a newly
+added keyboard whose name does not start with the helper prefix joins the
+expected set (it is not exempt, so the catch-all swallows it; measured with a
+stray keyboard); a change to the helper's (name, address), a removal or any
+prefix-named addition still aborts; after F10 any change revokes. Grok: OK.
+The partial live report is now kept on refusal.

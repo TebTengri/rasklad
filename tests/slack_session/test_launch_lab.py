@@ -298,6 +298,30 @@ class LiveShape(unittest.TestCase):
             sup.inj.receipt('english', 0)
 
 
+class SeatAdditions(unittest.TestCase):
+    def seat(self):
+        s = clients.HyprSeat(Base)
+        s.devices = [('hl-virtual-keyboard-unknown', '0x1'), ('wl_keyboard', '0x2')]
+        return s
+
+    def test_other_name_joins(self):
+        s = self.seat()
+        now = s.devices + [('hl-virtual-keyboard-fcitx5', '0x3')]
+        self.assertTrue(s.accept_additions(now))
+        self.assertEqual(s.devices, sorted(now))
+
+    def test_second_helper_name_refused(self):
+        for name in ('hl-virtual-keyboard-unknown', 'hl-virtual-keyboard-unknown-1'):
+            s = self.seat()
+            self.assertFalse(s.accept_additions(s.devices + [(name, '0x9')]))
+
+    def test_helper_change_or_removal_refused(self):
+        s = self.seat()
+        self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x7'), ('wl_keyboard', '0x2')]))
+        s = self.seat()
+        self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x1')]))
+
+
 class Helpers(unittest.TestCase):
     def test_launch_helpers_bound(self):
         self.assertIs(clients.LaunchHelpers.PURPOSES, clients.PURPOSES)
