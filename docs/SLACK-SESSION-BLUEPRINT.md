@@ -221,3 +221,14 @@ addon takes the receipt end (CLOEXEC) when it loads, not on first commit.
 Accepted: an exhausted queue (EAGAIN) latches the gate permanently — fail
 closed. Trust boundary: the addon is trusted; the record proves "the addon
 committed this kind and length", not the field contents.
+
+## Nested Hyprland supervised run (2026-11-20, owner-approved, one shot)
+
+`tools/hyprland_ime_lab.py --run-approved --slack-supervised` (commit 4e771bf):
+the Supervisor binds to the compositor's focused window (`hyprctl activewindow`:
+pid + window address, checked to descend from the fixture Chromium) and re-reads
+it before every key; 9 keys sent; cleanup after addon receipt `c0701`; F12
+revokes; a changed window generation is refused; Hyprland and Fcitx stay alive.
+PASS. Evidence: data/hyprland-slack-supervised-001-result.json.
+Still open before live Slack: host-keyboard isolation while injecting (seat
+grab), IC epoch and content purpose from Fcitx instead of lab values.
