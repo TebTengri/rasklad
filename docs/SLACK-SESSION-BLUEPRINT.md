@@ -135,3 +135,20 @@ single synthetic rule, focus/epoch discard. Tests: `g++ -std=c++20
 Pre-existing unrelated failure: tests/fcitx_transport test_runner
 `test_mounts_only_fixed_project_files` assumes the checkout is not under
 /home/<user>.
+
+### Step 3 review dispositions (ecc:cpp-reviewer FIX-FIRST, Grok FIX-FIRST)
+
+Fixed: after revoke this private Fcitx swallows every key (discard +
+filterAndAccept), so no engine pass-through/compose/forward can type; an
+event-loop IO watch on the arm fd discards every lab context (clears shown
+preedit) at the moment the pipe closes or gets data; on a refused commit the
+client still gets the empty preedit; commitAndClear reports refusal and the
+Off path returns Unknown, not Submitted; arm fd re-validated by dev/ino on
+every check (no fd reuse) and set CLOEXEC; commit text is an allowlist (one
+ASCII/Cyrillic U+0400–U+045F word, optional single trailing space, ≤ 256
+bytes); #error also excludes witness/application-off/preedit-reentry builds;
+distinct artifact name raskladslacklab (own conf
+tests/slack_session/raskladslacklab.conf). Contract recorded: the supervisor
+holds the write end O_CLOEXEC; Fcitx gets only the read end; single-threaded
+event loop. Still to verify in the composed dry run: Slack does not commit its
+own preedit on focus loss; revoke HUP reaches the real Fcitx process.

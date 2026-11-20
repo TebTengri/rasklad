@@ -6,8 +6,13 @@
 // writer is open and silent. Closing it (revoke, supervisor exit/crash) or any
 // byte written latches the gate off for the life of the process: fail closed.
 //
-// safeCommitText: last check before commitString(); valid UTF-8 without C0/C1
-// controls, DEL or line/paragraph separators.
+// Contract for the launcher/supervisor: the write end is held only by the
+// supervisor (O_CLOEXEC, never inherited by Fcitx or its children); only the
+// read end is passed to Fcitx. Fcitx event handling is single-threaded; the
+// latch is not designed for concurrent callers.
+//
+// safeCommitText: last check before commitString(); allowlist — one word of
+// ASCII or Cyrillic letters, optionally followed by exactly one U+0020.
 #pragma once
 
 #include <cerrno>
@@ -42,23 +47,30 @@ public:
         const int flags = fcntl(fd, F_GETFL);
         if (flags < 0 || (flags & O_ACCMODE) != O_RDONLY) return;
         if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) return;
+        if (fcntl(fd, F_SETFD, FD_CLOEXEC) != 0) return;
         fd_ = fd;
+        dev_ = st.st_dev;
+        ino_ = st.st_ino;
         latched_ = false;
         latched_ = !poll0(); // already closed or written: never armed
     }
 
     SessionArm(const SessionArm &) = delete;
     SessionArm &operator=(const SessionArm &) = delete;
-    SessionArm(SessionArm &&other) noexcept : fd_(other.fd_), latched_(other.latched_) {
+    SessionArm(SessionArm &&other) noexcept
+        : fd_(other.fd_), dev_(other.dev_), ino_(other.ino_), latched_(other.latched_) {
         other.fd_ = -1;
         other.latched_ = true;
     }
 
     bool armed() {
         if (latched_) return false;
-        if (!poll0()) latched_ = true;
+        if (!sameFile() || !poll0()) latched_ = true;
         return !latched_;
     }
+
+    // Descriptor for the event-loop watcher; -1 when never valid.
+    int fd() const { return fd_; }
 
 private:
     // True only when the pipe reports no event at all (writer open, no data).
@@ -72,34 +84,42 @@ private:
         return rc == 0;
     }
 
+    // The descriptor must still be the pipe validated at start (no fd reuse).
+    bool sameFile() const {
+        struct stat st {};
+        return fd_ >= 0 && fstat(fd_, &st) == 0 && S_ISFIFO(st.st_mode) && st.st_dev == dev_ &&
+               st.st_ino == ino_;
+    }
+
     int fd_ = -1;
+    dev_t dev_ = 0;
+    ino_t ino_ = 0;
     bool latched_ = true;
 };
 
 inline bool safeCommitText(std::string_view text) {
     if (text.empty() || text.size() > 256) return false;
+    std::size_t letters = 0;
     for (std::size_t i = 0; i < text.size();) {
         const auto c = static_cast<unsigned char>(text[i]);
-        unsigned cp = 0;
-        std::size_t n = 0;
-        if (c < 0x80) { cp = c; n = 1; }
-        else if (c >= 0xc2 && c <= 0xdf) { cp = c & 0x1f; n = 2; }
-        else if (c >= 0xe0 && c <= 0xef) { cp = c & 0x0f; n = 3; }
-        else if (c >= 0xf0 && c <= 0xf4) { cp = c & 0x07; n = 4; }
-        else return false;
-        if (i + n > text.size()) return false;
-        for (std::size_t k = 1; k < n; ++k) {
-            const auto cc = static_cast<unsigned char>(text[i + k]);
-            if ((cc & 0xc0) != 0x80) return false;
-            cp = (cp << 6) | (cc & 0x3f);
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            ++letters;
+            ++i;
+            continue;
         }
-        if ((n == 3 && cp < 0x800) || (n == 4 && (cp < 0x10000 || cp > 0x10ffff))) return false; // overlong / range
-        if (cp >= 0xd800 && cp <= 0xdfff) return false;                                          // surrogates
-        if (cp < 0x20 || cp == 0x7f || (cp >= 0x80 && cp <= 0x9f)) return false;                // C0, DEL, C1
-        if (cp == 0x2028 || cp == 0x2029) return false;                                         // line/para sep
-        i += n;
+        if (c == ' ') return letters > 0 && i + 1 == text.size(); // one trailing space only
+        // Cyrillic letters U+0400..U+045F: lead 0xD0 (0x80..0xBF) or 0xD1 (0x80..0x9F).
+        if (i + 1 < text.size()) {
+            const auto n = static_cast<unsigned char>(text[i + 1]);
+            if ((c == 0xd0 && n >= 0x80 && n <= 0xbf) || (c == 0xd1 && n >= 0x80 && n <= 0x9f)) {
+                ++letters;
+                i += 2;
+                continue;
+            }
+        }
+        return false;
     }
-    return true;
+    return letters > 0;
 }
 
 } // namespace rasklad::sessionarm

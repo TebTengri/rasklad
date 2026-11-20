@@ -90,7 +90,8 @@
 #include "applicationpermissions.h"
 #include "compositiondisable.h"
 #ifdef RASKLAD_SLACK_SESSION_LAB
-#if defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_DISABLE_TEST_LAB)
+#if defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
+    defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST)
 #error "RASKLAD_SLACK_SESSION_LAB is a separate artifact"
 #endif
 #include "sessionarm.h"
@@ -108,6 +109,7 @@
 #endif
 
 #include <fcitx-utils/capabilityflags.h>
+#include <fcitx-utils/event.h>
 #include <fcitx-utils/handlertable.h>
 #include <fcitx-utils/key.h>
 #include <fcitx-utils/keysym.h>
@@ -366,6 +368,22 @@ public:
                 }));
         }
 
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Revoke must act at once, not on the next key: clear every shown
+        // preedit as soon as the supervisor closes (or writes to) the pipe.
+        if (sessionArm().fd() >= 0) {
+            armWatch_ = instance_->eventLoop().addIOEvent(
+                sessionArm().fd(),
+                {fcitx::IOEventFlag::In, fcitx::IOEventFlag::Hup, fcitx::IOEventFlag::Err},
+                [this](fcitx::EventSourceIO *source, int, fcitx::IOEventFlags) {
+                    if (!sessionArmed()) {
+                        source->setEnabled(false);
+                        revokeAll();
+                    }
+                    return true;
+                });
+        }
+#endif
 #ifdef RASKLAD_WITNESS_LAB
         // Only after profile.ready() and successful property registration.
         // Fails closed (no endpoint, counters disabled) outside the fixed
@@ -589,8 +607,9 @@ private:
     static void submitLabOff(fcitx::InputContext *ic, LabState &s, bool current) {
         disableLab(ic, s, current,
             [&s](fcitx::InputContext *context, const std::string &original) {
-                commitAndClear(context, s, original);
-                return policy::CompositionDisable::Result::Submitted;
+                return commitAndClear(context, s, original)
+                    ? policy::CompositionDisable::Result::Submitted
+                    : policy::CompositionDisable::Result::Unknown;
             });
     }
 
@@ -740,7 +759,8 @@ private:
     // shown; the empty-preedit wire update is sent only afterwards, and only
     // if the context still exists. Nothing touches LabState after
     // commitString(); a local bool carries the decision.
-    static void commitAndClear(fcitx::InputContext *ic, LabState &s,
+    // Returns false when the Slack session gate refused the commit.
+    static bool commitAndClear(fcitx::InputContext *ic, LabState &s,
                                std::string text) {
         auto ref = ic->watch();
         auto binding = s.callbackBinding;
@@ -755,10 +775,14 @@ private:
         lw::inc(lw::Counter::commitStringCalls); // any key, immediately before
 #endif
 #ifdef RASKLAD_SLACK_SESSION_LAB
-        // Final gate: state is already staged; on refusal nothing is committed.
+        // Final gate: state is already staged; on refusal nothing is committed,
+        // but the client still gets the empty preedit (no stale composition).
         if (!sessionArmed() || !rasklad::sessionarm::safeCommitText(text)) {
             wipeString(text);
-            return;
+            if (hadPreedit && binding->alive && binding->epoch == epoch) {
+                if (auto *current = ref.get(); current && current->hasFocus()) current->updatePreedit();
+            }
+            return false;
         }
 #endif
         ic->commitString(text);
@@ -768,9 +792,29 @@ private:
             }
         }
         wipeString(text);
+        return true;
     }
 
+#ifdef RASKLAD_SLACK_SESSION_LAB
+    void revokeAll() {
+        manager_->foreach([this](fcitx::InputContext *ic) {
+            if (auto *s = state(ic, false)) discard(ic, *s);
+            return true;
+        });
+    }
+#endif
+
     void handleKey(fcitx::KeyEvent &event) {
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // After revoke nothing may type through this private Fcitx: no engine
+        // pass-through, compose or forward. Discard and swallow every key.
+        if (!sessionArmed()) {
+            auto *revoked = event.inputContext();
+            if (auto *s = state(revoked, false)) discard(revoked, *s);
+            event.filterAndAccept();
+            return;
+        }
+#endif
 #ifdef RASKLAD_WITNESS_LAB
         // Schema 2 totals: no code, sym, text or timing read or stored here.
         lw::inc(event.isRelease() ? lw::Counter::allKeyReleaseSeen
@@ -997,6 +1041,9 @@ private:
     bool registered_ = false;
     std::vector<std::unique_ptr<fcitx::HandlerTableEntry<fcitx::EventHandler>>>
         watchers_;
+#ifdef RASKLAD_SLACK_SESSION_LAB
+    std::unique_ptr<fcitx::EventSourceIO> armWatch_; // destroyed before watchers_/factory_
+#endif
 #ifdef RASKLAD_WITNESS_LAB
     rasklad::fcitxlab::witness::Owner witness_;
 #endif
