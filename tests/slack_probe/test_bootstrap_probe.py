@@ -58,6 +58,27 @@ class Reap(unittest.TestCase):
             child.kill(); child.wait()
 
 
+class SingletonRelease(unittest.TestCase):
+    def setUp(self):
+        self.profile = Path(tempfile.mkdtemp())
+        os.symlink('host-7', self.profile / 'SingletonLock')
+        os.symlink('123', self.profile / 'SingletonCookie')
+        os.symlink('/tmp/scoped_x/SingletonSocket', self.profile / 'SingletonSocket')
+
+    def test_releases_only_own_namespace_lock(self):
+        self.assertEqual(probe.release_own_singleton(self.profile, 'host', 7), 'released')
+        self.assertEqual(sorted(os.listdir(self.profile)), [])
+
+    def test_leaves_foreign_lock(self):
+        self.assertEqual(probe.release_own_singleton(self.profile, 'host', 8), 'foreign-left')
+        self.assertEqual(probe.release_own_singleton(self.profile, 'other', 7), 'foreign-left')
+        self.assertEqual(len(os.listdir(self.profile)), 3)
+
+    def test_absent(self):
+        empty = Path(tempfile.mkdtemp())
+        self.assertEqual(probe.release_own_singleton(empty, 'host', 7), 'absent')
+
+
 class Refusals(unittest.TestCase):
     def setUp(self):
         self.home = Path(tempfile.mkdtemp())

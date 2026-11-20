@@ -187,6 +187,26 @@ def sandbox_args(home, profile, uid, user, work, snapshots, lang='C.UTF-8'):
     return a + ['--', '/usr/bin/python3', '-I', '/lab/runner.py', '--inside']
 
 
+def release_own_singleton(profile, hostname, inner_pid):
+    """After our sandboxed Slack stopped: remove Chromium singleton links only if the lock
+    names exactly our in-namespace PID (e.g. 'host-7'); that PID is meaningless outside and can
+    collide with a host process, blocking the owner's normal Slack. Anything else is left alone."""
+    lock = Path(profile) / 'SingletonLock'
+    try:
+        target = os.readlink(lock)
+    except OSError:
+        return 'absent'
+    if target != f'{hostname}-{inner_pid}':
+        return 'foreign-left'
+    for name in ('SingletonLock', 'SingletonCookie', 'SingletonSocket'):
+        try:
+            if os.path.islink(Path(profile) / name):
+                os.unlink(Path(profile) / name)
+        except OSError:
+            return 'remove-failed'
+    return 'released'
+
+
 def private_context(env, inside_flag=INSIDE, uid=None):
     uid = os.getuid() if uid is None else uid
     return (inside_flag and env.get('RASKLAD_SLACK_BOOTSTRAP_LAB') == '1'
@@ -281,6 +301,9 @@ def inside():
         report['slackExitedEarly'] = exited_early
         report['slackExitCode'] = slack.returncode if exited_early else None
         report['slackStop'] = stop(slack, QUIT_SECONDS)
+        if report['slackStop'] != 'killed' or slack.poll() is not None:
+            import socket as _socket
+            report['singletonRelease'] = release_own_singleton(Path(os.environ['HOME'], '.config/Slack'), _socket.gethostname(), slack.pid)
         report['relayRefused'] = relay.refused
         collector.join(3)
         report['collectionComplete'] = not collector.is_alive()

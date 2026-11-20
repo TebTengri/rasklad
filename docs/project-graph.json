@@ -91,7 +91,7 @@
     "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
     "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "b0e8ff650d6799e9278143aa6ffb28d029eeb0d456d9f0f1c6ba55f5c0dd37b9",
+    "docs/NEXT.md": "1b51b087c17512f753f6e5b69be2434ce40d94a4c4aa9a8219328166f1dff397",
     "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
     "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
@@ -101,7 +101,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-BOOTSTRAP-PROBE.md": "a297e80802073277f6f4f9a3f490a26099747dfcafa1f7f3f5383e6f4b621143",
+    "docs/SLACK-BOOTSTRAP-PROBE.md": "14fb8c764c199ccb8476eaeebaca840d62b2a0c5fc11aa6c252e47c52d8aad04",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
@@ -265,7 +265,7 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
-    "tests/slack_probe/test_bootstrap_probe.py": "57b5370a804a83200035c80db5dee542893c559edfba7253ebee92e0dcc6d126",
+    "tests/slack_probe/test_bootstrap_probe.py": "bc22d30041896f5dd517533cd40ba25b95eb41b47c17a6163ec85ead52e4a1ae",
     "tests/slack_probe/test_editor_metadata.py": "ac0885d87584a8169f8707f399fe3a558d008607de52b61cddf77c89ba0ae5a9",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_launch_probe.py": "04146e700c784d4584cd398add80cd6c03466dec0c339f4fbc70e6c5589ef774",
@@ -413,7 +413,7 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
-    "tools/slack_bootstrap_probe.py": "818b8b1431d1ba645f08904b63754d96aeb539a1cc5be525ab8ccb4361e8fcdc",
+    "tools/slack_bootstrap_probe.py": "8b4757268a8801590ca87d1aa896263cd45814575e2262e6cfd18ceb03c06e8d",
     "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
@@ -2581,18 +2581,23 @@
           "kind": "ClassDef"
         },
         {
-          "name": "Refusals",
+          "name": "SingletonRelease",
           "line": 61,
           "kind": "ClassDef"
         },
         {
+          "name": "Refusals",
+          "line": 82,
+          "kind": "ClassDef"
+        },
+        {
           "name": "SandboxShape",
-          "line": 101,
+          "line": 122,
           "kind": "ClassDef"
         },
         {
           "name": "BridgeRejectedDomains",
-          "line": 124,
+          "line": 145,
           "kind": "ClassDef"
         },
         {
@@ -2626,73 +2631,93 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "test_releases_only_own_namespace_lock",
+          "line": 68,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_leaves_foreign_lock",
+          "line": 72,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_absent",
+          "line": 77,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "setUp",
+          "line": 83,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_accepts_private_profile",
-          "line": 67,
+          "line": 88,
           "kind": "FunctionDef"
         },
         {
           "name": "test_refuses_singleton_lock_even_dangling",
-          "line": 70,
+          "line": 91,
           "kind": "FunctionDef"
         },
         {
           "name": "test_refuses_group_writable_profile",
-          "line": 75,
+          "line": 96,
           "kind": "FunctionDef"
         },
         {
           "name": "test_refuses_symlinked_profile",
-          "line": 80,
+          "line": 101,
           "kind": "FunctionDef"
         },
         {
           "name": "test_host_bus_address_shape",
-          "line": 87,
+          "line": 108,
           "kind": "FunctionDef"
         },
         {
           "name": "test_proxy_talks_only_to_secret_service",
-          "line": 94,
+          "line": 115,
           "kind": "FunctionDef"
         },
         {
           "name": "test_only_profile_from_host_home_and_no_display",
-          "line": 102,
+          "line": 123,
           "kind": "FunctionDef"
         },
         {
           "name": "test_private_context_rejects_host_display",
-          "line": 116,
+          "line": 137,
           "kind": "FunctionDef"
         },
         {
           "name": "test_suffix_hides_subdomains",
-          "line": 125,
+          "line": 146,
           "kind": "FunctionDef"
         },
         {
           "name": "test_error_kinds_are_fixed_categories",
-          "line": 131,
+          "line": 152,
           "kind": "FunctionDef"
         },
         {
           "name": "test_late_client_hello_after_preconnect_is_accepted",
-          "line": 140,
+          "line": 161,
           "kind": "FunctionDef"
         },
         {
           "name": "test_accept_hello_is_offline_only",
-          "line": 162,
+          "line": 183,
           "kind": "FunctionDef"
         },
         {
           "name": "test_bounds_validated",
-          "line": 167,
+          "line": 188,
           "kind": "FunctionDef"
         },
         {
           "name": "test_rejected_domain_counted_and_refused",
-          "line": 172,
+          "line": 193,
           "kind": "FunctionDef"
         }
       ]
@@ -6452,48 +6477,53 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "private_context",
+          "name": "release_own_singleton",
           "line": 190,
           "kind": "FunctionDef"
         },
         {
+          "name": "private_context",
+          "line": 210,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "stop",
-          "line": 198,
+          "line": 218,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 211,
+          "line": 231,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 308,
+          "line": 331,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 314,
+          "line": 337,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 326,
+          "line": 349,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 430,
+          "line": 453,
           "kind": "FunctionDef"
         },
         {
           "name": "collect",
-          "line": 251,
+          "line": 271,
           "kind": "FunctionDef"
         },
         {
           "name": "chunks",
-          "line": 254,
+          "line": 274,
           "kind": "FunctionDef"
         }
       ]

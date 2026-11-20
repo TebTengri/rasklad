@@ -109,3 +109,14 @@ attached 6 buffers (offline error page), then closed the window ~14 s later.
 Docs (Context7, Electron): Electron 38 defaults to native Wayland when
 XDG_SESSION_TYPE=wayland; ELECTRON_OZONE_PLATFORM_HINT was removed. Slack's
 official Linux help covers installation only.
+
+## Live run 003 — feasibility YES (owner one-shot approval, consumed)
+
+Real profile: toplevel at 0.65 s, 141 buffer attaches, 16 tunnels, 906 KB,
+0 errors; only slackb.com (telemetry) rejected. Graceful stop, no remaining
+processes. Issue: SingletonLock left as `<host>-7` — the sandbox PID, which on
+the host is a kernel worker, so normal Slack could think the profile is in use.
+With owner approval the three stale links were removed after verifying no Slack
+process and the exact target. The probe now releases singleton links itself,
+only when the lock names exactly its in-namespace Slack PID (tests added).
+Evidence: data/slack-bootstrap-live-003-result.json.
