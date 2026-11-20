@@ -382,7 +382,7 @@ CONTEXT_EVENTS={b'i':'focus-change',b'u':'focus-change',b'r':'ic-reset',b'k':'pu
 
 
 class AddonRecords:
-    """Fixed 6-byte records from the addon: commits (c/o + count + sequence) and
+    """Fixed 6-byte records from the addon: commits (c/o/w + count + sequence) and
     context events (i/u/r/k + purpose + id). Never text."""
     def __init__(self,base,sock):
         self.base,self.sock,self.commits,self.contexts,self.fields=base,sock,[],[],[]
@@ -394,7 +394,7 @@ class AddonRecords:
             record=self.sock.recv(16)
             if not record:raise self.base.Refused('addon_records_closed')  # addon hung up: stop
             if len(record)!=6 or record[-1:]!=b'\n':raise self.base.Refused('addon_record_shape')
-            if record[:1] in (b'c',b'o'):self.commits.append(record)
+            if record[:1] in (b'c',b'o',b'w') and record[1:5].isdigit():self.commits.append(record)  # w = own-word replacement
             elif record[:1]==b'f' and record[1:2] in FIELD_STATES and record[2:5].isdigit():
                 self.fields.append(record)  # content bit only: never a lifecycle change
             elif record[:1] in CONTEXT_EVENTS and record[1:2] in PURPOSES and record[2:5].isdigit():
@@ -492,7 +492,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             if not now:
                 sv.event('surface-change');return (0,0,0,'none')
             return (now[0],now[1],epoch,purpose)
-        s=sup.Supervisor([binding[0]],'correction')
+        s=sup.Supervisor([binding[0]],'manual' if os.environ.get('RASKLAD_MANUAL_LAB')=='1' else 'correction')
         if not s.arm(*binding):raise base.Refused('supervisor_arm')
         seat=None
         if hyprland:
@@ -512,40 +512,48 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         # Both live cases back to back, as in the live session (addon commit sequence 1, 2).
         report['supervisedReceiptChecked']=False
         completed=[]
-        for sequence,case in enumerate(('correction','english'),1):
-            if sequence>1:
+        cases=('manual','manualafter') if os.environ.get('RASKLAD_MANUAL_LAB')=='1' else ('correction','english')
+        report['manualGesture']=cases==('manual','manualafter')
+        sequence=1
+        for index,case in enumerate(cases,1):
+            if index>1:
                 s=sup.Supervisor([binding[0]],case,sequence=sequence)
                 if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
             script=inj.script(case)
             matched=False
             for command in script:
-                if command=='backspace' and not s._receipt_ok:
+                if s.receipt_due():
                     # Receipt from the addon (kind + length, no text), not from the observer.
+                    due=[r for n,r in inj.receipts(case,sequence) if n==s.sent][0]
                     record=pending_receipt(2)
                     time.sleep(.1)
-                    extra=pending_receipt()  # exactly one commit is expected
+                    extra=pending_receipt()  # exactly one commit per checkpoint
                     report['supervisedReceiptChecked']=True
                     matched=extra is None and s.commit_receipt(record)
-                    report[case+'ReceiptFromAddon']=record==inj.receipt(case,sequence)
-                    # Observer cross-check only (lab): the field shows the expected text.
-                    report[case+'ObserverSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED[case]
+                    report[case+'ReceiptFromAddon']=report.get(case+'ReceiptFromAddon',True) and record==due
                     if not matched:
                         s.revoke()  # orphaned or unexpected commit: stop, never clean up blindly
                         break
+                    if s._receipt_ok:
+                        # Observer cross-check only (lab): the field shows the expected text.
+                        report[case+'ObserverSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED[case]
+                    else:
+                        time.sleep(.4)
                 token=s.issue(command,*current())  # compositor focus re-read before every key
                 if token is None or not s.send(token,command,*current(),write):raise base.Refused('supervisor_send')
                 helper_ack(base,helper)
                 time.sleep(.05)
+            sequence+=len(inj.receipts(case,sequence))
             if not (matched and s.done() and s.sent==len(script)):break
             report[case+'FieldCleaned']=link.ask('observe').get('value')==''
             records.poll(.2)
             report[case+'AddonFieldAfterCleanup']=field_state(records,epoch)
             completed.append(case)
-        report['supervisedReceiptMatched']=completed==['correction','english']
-        report['supervisedReceiptFromAddon']=all(report.get(c+'ReceiptFromAddon') is True for c in ('correction','english'))
-        report['observerSawExpectedText']=all(report.get(c+'ObserverSawExpectedText') is True for c in ('correction','english'))
+        report['supervisedReceiptMatched']=completed==list(cases)
+        report['supervisedReceiptFromAddon']=all(report.get(c+'ReceiptFromAddon') is True for c in cases)
+        report['observerSawExpectedText']=all(report.get(c+'ObserverSawExpectedText') is True for c in cases)
         report['supervisedScriptCompleted']=report['supervisedReceiptMatched'] and report['supervisedReceiptChecked']
-        report['supervisedFieldCleaned']=all(report.get(c+'FieldCleaned') is True for c in ('correction','english'))
+        report['supervisedFieldCleaned']=all(report.get(c+'FieldCleaned') is True for c in cases)
         report['noReceiptAfterCleanup']=pending_receipt(.2) is None
         report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
         # Purpose change: focus the password field; the addon must report it and

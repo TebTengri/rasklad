@@ -45,10 +45,12 @@ class Supervisor:
             raise ValueError('clock')
         try:
             commands = inj.script(case)
-            expected = inj.receipt(case, sequence)
+            checkpoints = inj.receipts(case, sequence)
         except inj.Refused:
             raise ValueError('script') from None
-        if not set(commands) <= inj.ALLOWED or len(commands) > 1 + 1 + inj.MAX_BACKSPACE:
+        if (not set(commands) <= inj.ALLOWED or len(commands) > len(inj.TYPED[case]) + inj.MAX_BACKSPACE
+                or len(inj.TYPED[case]) > 4 or any(not 1 <= n <= len(inj.TYPED[case]) for n, _ in checkpoints)
+                or [n for n, _ in checkpoints] != sorted({n for n, _ in checkpoints})):
             raise ValueError('script')
         start = now()
         if type(start) not in (int, float) or not math.isfinite(start):
@@ -57,9 +59,9 @@ class Supervisor:
         # Set without the lock by any revoke, checked right before each write.
         self._revoked = threading.Event()
         self.case = case
-        self._expected = expected
+        self._checkpoints = list(checkpoints)  # pending, in order
         self._typed = len(inj.TYPED[case])
-        self._receipt_ok = False
+        self._receipt_ok = False  # True only after every checkpoint matched
         self.attempted = 0
         self.slack_pids = frozenset(pids)
         self.now = now
@@ -149,6 +151,10 @@ class Supervisor:
                 if command == 'backspace' and not self._receipt_ok:
                     self._revoke('commit-mismatch')
                     return None
+                # A due checkpoint must be checked before any further key.
+                if self._checkpoints and self.sent == self._checkpoints[0][0]:
+                    self._revoke('commit-mismatch')
+                    return None
                 self.state = 'INJECT'
                 self._token = (secrets.token_hex(16), command)
                 return self._token[0]
@@ -183,15 +189,23 @@ class Supervisor:
                 self._revoke('error')
                 return False
 
-    def commit_receipt(self, record):
-        """After the typing commands: the addon's receipt record (kind + length, no text) must equal
-        this case's expected record exactly, e.g. b'c0701\\n' for the correction."""
+    def receipt_due(self):
+        """True when the next checkpoint's receipt must be checked before any further key."""
         with self._lock:
-            if (self._expired() or self.state != 'INJECT' or self.sent != self._typed or self._receipt_ok
-                    or type(record) is not bytes or record != self._expected):
+            return (self.state == 'INJECT' and bool(self._checkpoints)
+                    and self.sent == self._checkpoints[0][0])
+
+    def commit_receipt(self, record):
+        """At a checkpoint: the addon's receipt record (kind + length + sequence, no text) must equal
+        the expected record exactly, e.g. b'c0701\\n' for the correction."""
+        with self._lock:
+            if (self._expired() or self.state != 'INJECT' or not self._checkpoints
+                    or self.sent != self._checkpoints[0][0]
+                    or type(record) is not bytes or record != self._checkpoints[0][1]):
                 self._revoke('commit-mismatch')
                 return False
-            self._receipt_ok = True
+            self._checkpoints.pop(0)
+            self._receipt_ok = not self._checkpoints
             return True
 
     def done(self):

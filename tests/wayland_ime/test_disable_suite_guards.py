@@ -19,7 +19,7 @@ class DisableSuiteGuards(unittest.TestCase):
     def test_appended_inert_parameters(self):
         for function in (lab.run,lab.sandbox_args):
             params=list(inspect.signature(function).parameters.values())
-            if params[-1].name=='manual_suite':  # SYS-225: keyword-only, run() only
+            while params[-1].name in ('manual_suite','manual_gesture'):  # SYS-225: keyword-only, run() only
                 self.assertIs(params[-1].kind,inspect.Parameter.KEYWORD_ONLY);self.assertIs(params[-1].default,False);params=params[:-1]
             self.assertEqual(params[-1].name,'slack_gate')
             self.assertIs(params[-1].default,False)

@@ -317,3 +317,49 @@ class Revocation(Armed):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ManualCheckpoints(unittest.TestCase):
+    def test_receipts_and_sequences(self):
+        self.assertEqual(inj.receipts('manual', 1), [(3, b'c0701\n')])
+        self.assertEqual(inj.receipts('manualafter', 2), [(3, b'o0702\n'), (4, b'w0703\n')])
+        self.assertEqual(inj.script('manualafter'), ['space', 'word', 'space', 'shift2'] + ['backspace'] * 8)
+        with self.assertRaises(inj.Refused):
+            inj.receipt('manualafter')  # two checkpoints: no single receipt
+        with self.assertRaises(inj.Refused):
+            inj.receipts('manualafter', 9)  # sequence would overflow
+
+    def drive(self, case, records, sequence=1):
+        s = sup.Supervisor([100], case, sequence=sequence)
+        b = (100, 7, 1, 'normal')
+        self.assertTrue(s.arm(*b) and s.seat_locked())
+        it = iter(records)
+        for command in inj.script(case):
+            if s.receipt_due():
+                if not s.commit_receipt(next(it)):
+                    return s
+            t = s.issue(command, *b)
+            if t is None or not s.send(t, command, *b, lambda data: None):
+                return s
+        return s
+
+    def test_after_space_needs_both_receipts(self):
+        s = self.drive('manualafter', [b'o0701\n', b'w0702\n'])
+        self.assertTrue(s.done() and s.state != 'REVOKED')
+        s = self.drive('manualafter', [b'o0701\n', b'c0702\n'])
+        self.assertEqual(s.revoke_reason, 'commit-mismatch')
+        self.assertEqual(s.sent, 4)  # no BackSpace without the replacement receipt
+
+    def test_due_checkpoint_blocks_next_key(self):
+        s = sup.Supervisor([100], 'manualafter')
+        b = (100, 7, 1, 'normal')
+        s.arm(*b); s.seat_locked()
+        for command in ('space', 'word', 'space'):
+            s.send(s.issue(command, *b), command, *b, lambda data: None)
+        self.assertTrue(s.receipt_due())
+        self.assertIsNone(s.issue('shift2', *b))  # receipt not yet checked
+        self.assertEqual(s.revoke_reason, 'commit-mismatch')
+
+    def test_manual_case_single_receipt(self):
+        s = self.drive('manual', [b'c0701\n'])
+        self.assertTrue(s.done())

@@ -352,6 +352,9 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         paths['addon'] = SLACK_GATE_ADDON
     if manual_suite:
         paths['addon'] = ROOT/'build/chromium-ime/manual-addon/raskladlab.so'  # SYS-225, no profile
+    if slack_supervised and os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1':
+        paths['addon'] = ROOT/'build/chromium-ime/slack-manual-gate-addon/raskladslackmanualgatetest.so'
+        MANUAL_SUITE = True  # the helper accepts shift2; the driver runs the manual cases
         paths['addon_conf'] = ROOT/'tests/slack_session/raskladslackgatetest.conf'
         for name in ('slack_supervisor.py', 'slack_injector.py'):
             base.regular_file(ROOT/'tools'/name)
@@ -365,6 +368,9 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         pre = launch.preflight(base)
         pre['mode'] = 'live' if slack_live else 'launch'
         pre['owner_empty'] = os.environ.get('RASKLAD_OWNER_EMPTY_COMPOSER_CLI') == '1' and slack_live
+        pre['manual'] = os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1' and slack_live
+        if pre['manual']:
+            paths['addon'] = launch.MANUAL_ADDON  # SYS-225 manual double-Shift Slack artifact
     shim = ROOT/('build/chromium-ime/grab-entry-shim/raskladcoreentry.so' if grab_entry_witness else 'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
     if core_entry_witness:
         base.regular_file(shim)
@@ -484,6 +490,7 @@ def main():
     parser.add_argument('--seat-probe', action='store_true')
     parser.add_argument('--slack-launch', action='store_true')
     parser.add_argument('--slack-live', action='store_true')
+    parser.add_argument('--manual-gesture', action='store_true', help='live only: SYS-225 manual double-Shift cases')
     parser.add_argument('--manual-suite', action='store_true', help='SYS-225 owned Chromium fixture suite (with --run-approved)')
     parser.add_argument('--owner-empty-composer', action='store_true',
                         help='live only: the owner confirms the test-channel composer is empty (used if Slack reports no field state)')
@@ -512,6 +519,10 @@ def main():
             raise base.Refused('owner_empty_composer_requires_slack_live')
         if args.owner_empty_composer:
             os.environ['RASKLAD_OWNER_EMPTY_COMPOSER_CLI'] = '1'
+        if args.manual_gesture and not (args.slack_live or args.slack_supervised) or (args.manual_gesture and args.seat_probe):
+            raise base.Refused('manual_gesture_requires_slack_live_or_supervised')
+        if args.manual_gesture:
+            os.environ['RASKLAD_MANUAL_GESTURE_CLI'] = '1'
         if args.slack_live and not (args.run_approved and args.slack_launch):
             raise base.Refused('slack_live_requires_run_approved_slack_launch')
         if args.slack_launch and not args.run_approved:

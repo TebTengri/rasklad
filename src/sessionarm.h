@@ -149,10 +149,15 @@ public:
         return fd_ >= 0 && fstat(fd_, &st) == 0 && S_ISSOCK(st.st_mode) && st.st_dev == dev_ && st.st_ino == ino_;
     }
 
-    bool send(bool corrected, std::size_t codePoints) {
+    bool send(bool corrected, std::size_t codePoints) { return sendKind(corrected ? 'c' : 'o', codePoints); }
+    // 'w': the addon replaced its own last committed word (SYS-225 manual variant).
+    // Not 'r': that first byte is the context-reset record.
+    bool sendReplace(std::size_t codePoints) { return sendKind('w', codePoints); }
+    bool sendKind(char kind, std::size_t codePoints) {
+        if (kind != 'c' && kind != 'o' && kind != 'w') return false;
         if (!valid() || codePoints == 0 || codePoints > 99 || sequence_ >= 99) return false;
         ++sequence_;
-        const char record[6] = {corrected ? 'c' : 'o', static_cast<char>('0' + codePoints / 10),
+        const char record[6] = {kind, static_cast<char>('0' + codePoints / 10),
                                 static_cast<char>('0' + codePoints % 10), static_cast<char>('0' + sequence_ / 10),
                                 static_cast<char>('0' + sequence_ % 10), '\n'};
         ssize_t n;

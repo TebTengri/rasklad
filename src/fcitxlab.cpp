@@ -110,8 +110,7 @@
 // SYS-225 slice 1 (docs/SYS-225-MANUAL-GESTURE.md): no automatic correction;
 // a double Shift toggles the CURRENT preedit word us<->ru view, Space commits
 // what is shown. Never touches text the application already accepted.
-#if defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_WITNESS_LAB) || \
-    defined(RASKLAD_DISABLE_TEST_LAB)
+#if defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_DISABLE_TEST_LAB)
 #error "RASKLAD_MANUAL_LAB is a separate artifact"
 #endif
 #include "manualgesture.h"
@@ -818,12 +817,25 @@ private:
         const long n = rasklad::manual::codePointCount(oldText);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
-        if (!ok) { s.forgetLast(); wipeString(newText); return; }
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Supervised session: the same final gate as every commit, checked last.
+        const bool gated = sessionArmed() && rasklad::sessionarm::safeCommitText(newText);
+#else
+        const bool gated = true;
+#endif
+        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Receipt: kind and new length only. Undeliverable -> fail closed.
+        if (!receiptSink().sendReplace(static_cast<std::size_t>(rasklad::manual::codePointCount(newText)))) {
+            sessionArm().latch();
+            receiptSink().fail();
+        }
+#endif
         wipeString(newText);
     }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the

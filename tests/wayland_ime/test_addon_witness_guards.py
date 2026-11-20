@@ -58,8 +58,8 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
-                    if parameters[-1].name == 'manual_suite':
-                        # SYS-225 keyword-only inert selector, never positional.
+                    while parameters[-1].name in ('manual_suite', 'manual_gesture'):
+                        # SYS-225 keyword-only inert selectors, never positional.
                         self.assertIs(parameters[-1].kind, inspect.Parameter.KEYWORD_ONLY)
                         self.assertIs(parameters[-1].default, False)
                         parameters = parameters[:-1]

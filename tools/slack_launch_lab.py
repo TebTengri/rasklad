@@ -25,6 +25,9 @@ BROKER = dict(seconds=170,  # created before Hyprland/Fcitx start; must outlive 
               max_requests=384, max_bytes=256 * 1024 * 1024, max_active=16)
 # Live session (one owner-approved run): wait for the owner's F10, two fixed scripts, owner look, quit.
 LIVE_CASES = ('correction', 'english')
+# SYS-225: manual double-Shift addon (no automatic correction), owner-approved runs only.
+MANUAL_ADDON = ROOT / 'build/chromium-ime/slack-manual-addon/raskladslackmanual.so'
+MANUAL_LIVE_CASES = ('manual', 'manualafter')
 LIVE_WAIT_SECONDS = 180   # Slack boot + owner opens the test channel, clicks the composer, presses F10
 LIVE_LOOK_SECONDS = 10    # after revoke: the owner checks the composer before Slack quits
 LIVE_OUTER_SECONDS = 320
@@ -75,7 +78,7 @@ def preflight(base, env=os.environ):
     boot = load('slack_bootstrap_for_launch', ROOT / 'tools/slack_bootstrap_probe.py')
     if boot.slack_pids():
         raise base.Refused('host_slack_running')
-    for path in (Path(SLACK), Path(boot.PROXY), ADDON, ADDON_CONF, ROOT / 'tools/slack_https_bridge.py'):
+    for path in (Path(SLACK), Path(boot.PROXY), ADDON, MANUAL_ADDON, ADDON_CONF, ROOT / 'tools/slack_https_bridge.py'):
         base.regular_file(path, path in (Path(SLACK), Path(boot.PROXY)))
     import pwd
     entry = pwd.getpwuid(os.getuid())
@@ -139,6 +142,9 @@ def sandbox_extra(directory, pre):
         raise ValueError('slack_mode')
     if pre.get('owner_empty') is True and mode == 'RASKLAD_SLACK_LIVE_LAB':
         extra += ['--setenv', 'RASKLAD_SLACK_OWNER_EMPTY', '1']
+    if pre.get('manual') is True and mode == 'RASKLAD_SLACK_LIVE_LAB':
+        # The helper accepts shift2 only with RASKLAD_MANUAL_LAB; the inner run picks the manual cases.
+        extra += ['--setenv', 'RASKLAD_MANUAL_LAB', '1', '--setenv', 'RASKLAD_SLACK_MANUAL_LIVE', '1']
     for key, value in (('RASKLAD_SLACK_SESSION_LAB', '1'), ('RASKLAD_SLACK_GATE_LAB', '1'), (mode, '1'),
                        ('RASKLAD_SLACK_HOME', home), ('RASKLAD_SLACK_USER', pre['user']), ('RASKLAD_SLACK_LANG', pre['lang'])):
         extra += ['--setenv', key, value]
@@ -402,7 +408,7 @@ def run_case(clients, base, sup, case, sequence, binding, records, seat, helper,
     for command in script:
         if s.state == 'REVOKED':
             break
-        if command == 'backspace' and not s._receipt_ok:
+        if s.receipt_due():
             record = pending_receipt(2)
             time.sleep(.1)
             extra = pending_receipt()
@@ -410,6 +416,9 @@ def run_case(clients, base, sup, case, sequence, binding, records, seat, helper,
             if not out['receiptMatched']:
                 s.revoke('commit-mismatch')  # never clean up blindly
                 break
+            out['receiptMatched'] = s._receipt_ok  # partial until every checkpoint matched
+            if not s._receipt_ok:
+                time.sleep(.4)  # let the client confirm its surrounding text before the next key
         token = s.issue(command, *current())
         if token is None or not s.send(token, command, *current(), write):
             break
@@ -565,12 +574,16 @@ def run_live_inside(clients, base, fcitx, gate, children):
         if report['fieldStateAtArm'] == 'unknown' and not report['ownerConfirmedEmptyComposer']:
             raise base.Refused('composer_state_unknown')
         report['cases'] = []
-        for sequence, case in enumerate(LIVE_CASES, 1):
+        cases = MANUAL_LIVE_CASES if os.environ.get('RASKLAD_SLACK_MANUAL_LIVE') == '1' else LIVE_CASES
+        report['manualGesture'] = cases == MANUAL_LIVE_CASES
+        sequence = 1  # the addon's commit sequence: one per receipt checkpoint
+        for index, case in enumerate(cases, 1):
             result = run_case(clients, base, sup, case, sequence, binding, records, seat, helper, write)
+            sequence += len(sup.inj.receipts(case, sequence))
             records.poll(.2)
             result['fieldAfterCase'] = clients.field_state(records, binding[2])
             report['cases'].append(result)
-            if not result.get('completed') or sequence == len(LIVE_CASES):
+            if not result.get('completed') or index == len(cases):
                 break
             time.sleep(.5)
             # Live run 006: Slack sent a context record after the cleanup (consumed as the end of
@@ -599,7 +612,7 @@ def run_live_inside(clients, base, fcitx, gate, children):
         report['relayRefused'] = relay.refused
         report['casesCompleted'] = [c['case'] for c in report['cases'] if c.get('completed')]
         report['textMayRemain'] = any(c.get('textMayRemain') for c in report['cases'])
-        report['passed'] = (report['casesCompleted'] == list(LIVE_CASES) and report['helperStdinOnlyInSupervisor']
+        report['passed'] = (report['casesCompleted'] == list(cases) and report['helperStdinOnlyInSupervisor']
                             and report['armWriteEndOnlyInSupervisor'] and report['seatReleasedAfterRevoke']
                             and report['commitRecordsAfterRevoke'] == 0 and report['slackStop'] == 'graceful'
                             and released in ('released', 'absent') and report['relayRefused'] == 0

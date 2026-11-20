@@ -118,3 +118,24 @@ data/hyprland-manual-gesture-001-result.json: 17/17. Chromium под Hyprland
 Риск для живого Slack: пока слово в preedit, Slack не видит backtick и точку
 сразу (форматирование `code`, автоссылки, эмодзи по `:` срабатывают только
 после commit). Измерить в живом прогоне.
+
+## Стенд для живого Slack (2026-11-21, только офлайн; запусков в Slack нет)
+
+- Сборки: `tools/fcitx_slack_manual_lab.pro` (живой Slack) и
+  `tools/fcitx_slack_manual_gate_test.pro` (закрытый стенд). Те же замок
+  клавиатуры, F10, канал квитанций и последняя проверка перед commit; замена
+  слова после Space тоже проходит через неё и отправляет квитанцию `w`
+  (длина + номер, без текста; не `r` — это запись сброса поля, Grok FIX-FIRST).
+- Супервизор: несколько контрольных квитанций по порядку; любая клавиша при
+  ожидаемой квитанции отзывает сеанс; BackSpace только после всех.
+- Сценарии: `manual` — ghbdtn, двойной Shift, Space → `c0701`, 7 BackSpace;
+  `manualafter` — пробел, ghbdtn, Space → `o07..`, двойной Shift → `w07..`,
+  8 BackSpace. Enter не существует; shift2 помощник принимает только при
+  RASKLAD_MANUAL_LAB=1.
+- Закрытый Sway под надзором: `manual` полностью (квитанция аддона,
+  наблюдатель, очистка); `manualafter` безопасно остановлен (Sway не даёт
+  surrounding text — замены нет, вслепую не стирается).
+- Запуск: закрытый Hyprland под надзором
+  `hyprland_ime_lab.py --run-approved --slack-supervised --manual-gesture`;
+  живой Slack `--run-approved --slack-launch --slack-live --manual-gesture`.
+  Каждый — только по отдельному разрешению владельца.

@@ -161,6 +161,8 @@ int main() {
         CHECK(sink.sendField('t', 1012));
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "ft012\n");
         CHECK(!sink.sendField('x', 1));
+        CHECK(!sink.sendKind('x', 3));
+        CHECK(!sink.sendKind('r', 3)); // reserved for the context-reset record
         CHECK(rasklad::sessionarm::blankText(""));
         CHECK(rasklad::sessionarm::blankText("\n"));
         CHECK(rasklad::sessionarm::blankText(" \u200b\ufeff\n"));

@@ -361,6 +361,23 @@ class FieldRecords(unittest.TestCase):
             a.close(); b.close()
 
 
+class ReplaceRecord(unittest.TestCase):
+    def test_w_is_a_commit_r_stays_context(self):
+        a, b = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        try:
+            records = clients.AddonRecords(Base, a)
+            for r in (b'w0702\n', b'rn001\n'):
+                b.send(r)
+            fresh = records.poll(.2)
+            self.assertEqual(records.commits, [b'w0702\n'])
+            self.assertEqual(fresh, [b'rn001\n'])
+            b.send(b'wx001\n')  # malformed replacement record
+            with self.assertRaises(Base.Refused):
+                records.poll(.2)
+        finally:
+            a.close(); b.close()
+
+
 class Helpers(unittest.TestCase):
     def test_launch_helpers_bound(self):
         self.assertIs(clients.LaunchHelpers.PURPOSES, clients.PURPOSES)
