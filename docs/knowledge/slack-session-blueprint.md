@@ -1,8 +1,8 @@
 # Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx
 
-Accepted architect blueprint; milestone 1 offline in closed Sway. Not implemented yet.
+Milestone 1 (IME dry run) done; step 2 pure injector/supervisor done; next: addon gates, nested Hyprland composition.
 
-Статус: planned
+Статус: in_progress
 
 ## Файлы
 
@@ -13,8 +13,16 @@ Accepted architect blueprint; milestone 1 offline in closed Sway. Not implemente
 - `tools/hyprland_mapping_probe.py`
 - `tools/closed_hyprland_mapping.py`
 - `tools/native_ime_clients.py`
+- `tools/slack_injector.py`
+- `tools/slack_supervisor.py`
 
 ## Связи
 
+
+## Проверки
+
+- `python3 -m unittest discover -s tests/slack_session`
+- `python3 -m unittest discover -s tests/slack_probe`
+- `python3 -m unittest discover -s tests/closed_mapping`
 
 Снимок из `docs/project-map.json`; перед решениями проверьте `bin/project-map check`.
