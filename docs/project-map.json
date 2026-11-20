@@ -503,6 +503,24 @@
       "notes": "Current noGPU reference fixture18+4 PASS, existingfocus/caps lease invalidation. No newfrontendfieldpatch or liveSlack authority.",
       "tests": [],
       "status": "reference_field_lifecycle_pass_native_app_pending"
+    },
+    {
+      "id": "slack-bootstrap",
+      "kind": "experiment",
+      "title": "Real-profile Slack bootstrap feasibility (step 0)",
+      "paths": [
+        "docs/SLACK-BOOTSTRAP-PROBE.md",
+        "tools/slack_bootstrap_probe.py",
+        "tools/slack_https_bridge.py",
+        "tests/slack_probe/test_bootstrap_probe.py",
+        "data/slack-bootstrap-dryrun-001-result.json",
+        "docs/SLACK-SUPERVISED-SESSION-PLAN.md"
+      ],
+      "notes": "Dry runs PASS: Chromium control maps window 0.44s; empty-profile offline Slack registry only. Live real-profile run needs one-shot owner approval.",
+      "tests": [
+        "python3 -m unittest discover -s tests/slack_probe"
+      ],
+      "status": "prepared_dry_run_pass_live_not_run"
     }
   ],
   "edges": [

@@ -15,6 +15,24 @@ def destination(header):
     if not any(host==d or host.endswith('.'+d) for d in DOMAINS):raise ValueError('domain')
     return host
 
+# Rejected targets are reported by suffix ONLY when it is public infrastructure;
+# anything else (company SSO, customer domains) collapses to 'other'.
+KNOWN_SUFFIXES=('slack-files.com','slackb.com','slack-core.com','slack-msgs.com','slack-redir.net','slackhq.com',
+    'gvt1.com','gvt2.com','google.com','googleapis.com','gstatic.com','sentry.io','amazonaws.com','cloudfront.net',
+    'giphy.com','gravatar.com','okta.com','microsoftonline.com')
+
+def rejected_suffix(header):
+    # Last two labels of a CONNECT target, reported only if in KNOWN_SUFFIXES.
+    try:
+        authority=header.split(b'\r\n',1)[0].split(b' ')[1].decode('ascii').lower()
+        host=authority.rsplit(':',1)[0]
+    except (IndexError,UnicodeError):return 'malformed'
+    if len(host)>253 or not re.fullmatch(r'[a-z0-9.-]+',host):return 'malformed'
+    labels=[label for label in host.split('.') if label]
+    if len(labels)<2:return 'malformed'
+    suffix='.'.join(labels[-2:])
+    return suffix if suffix in KNOWN_SUFFIXES else 'other'
+
 def public_addresses(host,resolver=socket.getaddrinfo):
     answers=resolver(host,443,type=socket.SOCK_STREAM)
     result=[]
@@ -89,10 +107,12 @@ def pump(left,right,deadline,allow_bytes):
             (right if source is left else left).sendall(data)
 
 class Broker:
-    def __init__(self,path,online=False,allow_ech=False):
-        self.path=str(path);self.online=online;self.allow_ech=allow_ech;self.deadline=time.monotonic()+30
-        self.lock=threading.Lock();self.active=threading.BoundedSemaphore(8)
-        self.stats={'accepted':0,'blocked':0,'tlsDenied':0,'tlsRejectReasons':{},'opened':0,'errors':0,'forwardedBytes':0}
+    def __init__(self,path,online=False,allow_ech=False,seconds=30,max_requests=64,max_bytes=64*1024*1024,max_active=8):
+        if not (1<=seconds<=120 and 1<=max_requests<=512 and 1<=max_bytes<=512*1024*1024 and 1<=max_active<=32):raise ValueError('broker-bounds')
+        self.path=str(path);self.online=online;self.allow_ech=allow_ech;self.deadline=time.monotonic()+seconds
+        self.max_requests=max_requests;self.max_bytes=max_bytes
+        self.lock=threading.Lock();self.active=threading.BoundedSemaphore(max_active)
+        self.stats={'accepted':0,'blocked':0,'tlsDenied':0,'tlsRejectReasons':{},'rejectedDomains':{},'opened':0,'errors':0,'forwardedBytes':0}
         self.listener=socket.socket(socket.AF_UNIX);self.listener.bind(self.path)
         import os
         os.chmod(self.path,0o600);self.listener.listen(8);self.listener.settimeout(.2)
@@ -104,14 +124,14 @@ class Broker:
             except socket.timeout:continue
             except OSError:return
             with self.lock:
-                self.stats['accepted']+=1;admitted=self.stats['accepted']<=64
+                self.stats['accepted']+=1;admitted=self.stats['accepted']<=self.max_requests
             if not admitted:client.close();return
             if not self.active.acquire(False):client.close();continue
             worker=threading.Thread(target=self._client,args=(client,),daemon=True)
             self.workers.append(worker);worker.start()
     def _allow(self,count):
         with self.lock:
-            if self.stats['forwardedBytes']+count>64*1024*1024:return False
+            if self.stats['forwardedBytes']+count>self.max_bytes:return False
             self.stats['forwardedBytes']+=count;return True
     def _client(self,client):
         remote=None;established=False
@@ -124,7 +144,16 @@ class Broker:
                 chunk=client.recv(min(2048,MAX_HEADER+1-len(header)))
                 if not chunk or len(header)+len(chunk)>MAX_HEADER:raise ValueError('header')
                 header+=chunk
-            head,tail=header.split(b'\r\n\r\n',1);host=destination(head)
+            head,tail=header.split(b'\r\n\r\n',1)
+            try:host=destination(head)
+            except ValueError as exc:
+                if str(exc)=='domain':
+                    suffix=rejected_suffix(head)
+                    with self.lock:
+                        counts=self.stats['rejectedDomains']
+                        if suffix in counts or len(counts)<32:counts[suffix]=counts.get(suffix,0)+1
+                        else:counts['other']=counts.get('other',0)+1
+                raise
             if not self.online:raise ValueError('offline-check')
             client.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n');established=True
             try:

@@ -33,6 +33,7 @@
 - [Route B host-parent nested Hyprland mapping probe](direct-hyprland-mapping.md)
 - [Aquamarine feedback readiness and parallel review](aquamarine-readiness.md)
 - [Existing Fcitx field lifecycle seam](fcitx-field-seam.md)
+- [Real-profile Slack bootstrap feasibility (step 0)](slack-bootstrap.md)
 
 Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
 решения и статусы изменять в `docs/project-map.json`, затем обновить карту.

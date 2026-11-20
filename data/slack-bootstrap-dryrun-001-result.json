@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "tool": "tools/slack_bootstrap_probe.py",
+  "ownerDataUsed": false,
+  "networkEnabled": false,
+  "hostBusConnected": false,
+  "runs": [
+    {
+      "mode": "dry-run-empty-profile",
+      "target": "installed Slack 4.53.287-1",
+      "passed": true,
+      "registryBoundSeconds": 0.4,
+      "toplevelCreated": false,
+      "bufferAttached": false,
+      "windowMapped": false,
+      "observedSeconds": 75,
+      "slackStop": "graceful",
+      "slackProcessesRemaining": 0,
+      "bridge": {
+        "accepted": 6,
+        "blocked": 6,
+        "opened": 0,
+        "rejectedDomains": {
+          "gvt1.com": 2
+        },
+        "cleanupComplete": true
+      }
+    },
+    {
+      "mode": "dry-run-chromium-control",
+      "target": "installed Chromium (positive control)",
+      "passed": true,
+      "registryBoundSeconds": 0.23,
+      "toplevelCreatedSeconds": 0.36,
+      "bufferAttachedSeconds": 0.44,
+      "windowMapped": true,
+      "observedSeconds": 15.62,
+      "slackStop": "graceful"
+    }
+  ],
+  "interpretation": "Instrumentation detects a mapped window (positive control). Empty-profile offline Slack binds the Wayland registry but maps no window in 75 s, matching earlier experiments; the cause (no network/login vs. sandbox) is what the approved real-profile run decides.",
+  "afterReviewFixes": {
+    "tests": "67 PASS",
+    "chromiumControl": {
+      "windowMapped": true,
+      "attachCount": 21,
+      "stop": "graceful"
+    },
+    "emptyProfileSlack": {
+      "windowMapped": false,
+      "attachCount": 0,
+      "stop": "graceful",
+      "remaining": 0,
+      "rejectedDomains": {
+        "gvt1.com": 2
+      }
+    }
+  }
+}
