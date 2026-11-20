@@ -72,6 +72,12 @@ class Injector(unittest.TestCase):
         for name, wire in inj.WIRE.items():
             self.assertEqual(wire, name.encode('ascii') + b'\n')
 
+    def test_receipt_records(self):
+        self.assertEqual(inj.receipt('correction'), b'c07\n')
+        self.assertEqual(inj.receipt('english'), b'o06\n')
+        with self.assertRaises(inj.Refused):
+            inj.receipt('undo')
+
     def test_graphemes_whitelist(self):
         self.assertEqual(inj.graphemes('привет '), 7)
         self.assertEqual(inj.graphemes('hello '), 6)
@@ -85,7 +91,7 @@ class HappyPath(Armed):
         s, out = self.armed(), []
         for command in inj.script('correction'):
             if command == 'backspace' and not s._receipt_ok:
-                self.assertTrue(s.commit_receipt('привет '))
+                self.assertTrue(s.commit_receipt(b'c07\n'))
             self.assertTrue(self.step(s, command, out))
         self.assertEqual(out, [b'word\n', b'space\n'] + [b'backspace\n'] * 7)
         self.assertTrue(s.done())
@@ -101,8 +107,8 @@ class HappyPath(Armed):
         self.assertEqual(out, [b'hello\n'])
 
     def test_commit_receipt_must_match_exactly(self):
-        self.assertTrue(self.typed().commit_receipt('привет '))
-        for bad in ('привет', 'ghbdtn ', None, 'hello '):
+        self.assertTrue(self.typed().commit_receipt(b'c07\n'))
+        for bad in (b'c06\n', b'o07\n', b'o06\n', 'привет ', None, b'c07', b'c07\n\n'):
             s = self.typed()
             self.assertFalse(s.commit_receipt(bad))
             self.assertEqual(s.revoke_reason, 'commit-mismatch')
@@ -115,10 +121,10 @@ class HappyPath(Armed):
     def test_receipt_before_typing_finished_or_twice_revokes(self):
         s, out = self.armed(), []
         self.step(s, 'word', out)
-        self.assertFalse(s.commit_receipt('привет '))
+        self.assertFalse(s.commit_receipt(b'c07\n'))
         s = self.typed()
-        self.assertTrue(s.commit_receipt('привет '))
-        self.assertFalse(s.commit_receipt('привет '))
+        self.assertTrue(s.commit_receipt(b'c07\n'))
+        self.assertFalse(s.commit_receipt(b'c07\n'))
         self.assertEqual(s.state, 'REVOKED')
 
 
@@ -289,7 +295,7 @@ class Revocation(Armed):
 
     def test_revoke_flag_set_while_write_blocks_and_stops_next_write(self):
         s = self.typed()
-        self.assertTrue(s.commit_receipt('привет '))
+        self.assertTrue(s.commit_receipt(b'c07\n'))
         token = s.issue('backspace', *B)
         entered, release, written = threading.Event(), threading.Event(), []
 

@@ -40,13 +40,17 @@ class GatePipe(unittest.TestCase):
     def test_fcitx_gets_only_read_end(self):
         with unittest.mock.patch.dict(os.environ, {'RASKLAD_SLACK_GATE_LAB': '1', 'RASKLAD_SLACK_SESSION_LAB': '1'}, clear=True):
             options = {}
-            read_end, write_end = clients.slack_gate_pipe(Base, options)
+            read_end, write_end, receipts, addon_end = clients.slack_gate_pipe(Base, options)
         try:
-            self.assertEqual(options['pass_fds'], (read_end,))
+            self.assertEqual(options['pass_fds'], (read_end, addon_end.fileno()))
             self.assertEqual(options['env']['RASKLAD_SESSION_ARM_FD'], str(read_end))
+            self.assertEqual(options['env']['RASKLAD_SESSION_RECEIPT_FD'], str(addon_end.fileno()))
             self.assertFalse(os.get_inheritable(write_end))
+            self.assertFalse(receipts.get_inheritable())
+            import socket
+            self.assertEqual(receipts.type, socket.SOCK_SEQPACKET)
         finally:
-            os.close(read_end); os.close(write_end)
+            os.close(read_end); os.close(write_end); receipts.close(); addon_end.close()
 
 
 class WriteEndDetection(unittest.TestCase):

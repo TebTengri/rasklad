@@ -104,9 +104,11 @@ def slack_gate_pipe(base,child_options):
     if os.environ.get('RASKLAD_SLACK_GATE_LAB')!='1':return None
     if os.environ.get('RASKLAD_SLACK_SESSION_LAB')!='1' or private_frontend_variant(base)!='system':raise base.Refused('slack_gate_environment')
     read_end,write_end=os.pipe()  # both O_CLOEXEC; only the read end is passed on
-    env=dict(child_options.get('env') or os.environ,RASKLAD_SESSION_ARM_FD=str(read_end))
-    child_options.update(env=env,pass_fds=(read_end,))
-    return read_end,write_end
+    import socket
+    receipts,addon_end=socket.socketpair(socket.AF_UNIX,socket.SOCK_SEQPACKET)
+    env=dict(child_options.get('env') or os.environ,RASKLAD_SESSION_ARM_FD=str(read_end),RASKLAD_SESSION_RECEIPT_FD=str(addon_end.fileno()))
+    child_options.update(env=env,pass_fds=(read_end,addon_end.fileno()))
+    return read_end,write_end,receipts,addon_end
 
 
 def write_end_holders(fd):
@@ -124,7 +126,8 @@ def write_end_holders(fd):
 def run_gate_driver(base,fcitx,gate,driver_env):
     """The supervisor role stays in this process: the write end never leaves it.
     The driver asks for revoke with one stdout line and waits for the ack on stdin."""
-    read_end,write_end=gate
+    read_end,write_end,receipts,addon_end=gate
+    addon_end.close()  # only Fcitx keeps its receipt end
     report={'revokeServed':False}
     try:
         os.close(read_end);read_end=None  # only Fcitx keeps the read end
@@ -156,6 +159,7 @@ def run_gate_driver(base,fcitx,gate,driver_env):
             driver.stdout.close()
         return subprocess.CompletedProcess(driver.args,driver.returncode,out,None),report
     finally:
+        receipts.close()
         for fd in (read_end,write_end):
             if fd is not None:os.close(fd)
 
@@ -201,7 +205,8 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
     only observes the owned field."""
     sup=load_lab_module('slack_supervisor_lab',Path('/lab/slack_supervisor.py'))
     inj=sup.inj
-    read_end,write_end=gate
+    read_end,write_end,receipts,addon_end=gate
+    addon_end.close()  # only Fcitx keeps its receipt end
     report={}
     os.close(read_end);read_end=None
     helper=subprocess.Popen(['/lab/rasklad-wayland-keys'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
@@ -234,11 +239,14 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         report['supervisedReceiptChecked']=False
         for command in script:
             if command=='backspace' and not s._receipt_ok:
-                # LAB ONLY: the observer reports the owned fixture field. Live sessions must
-                # take the receipt from the addon/compositor, never from an observer.
-                observed=link.ask('observe')
+                # Receipt from the addon (kind + length, no text), not from the observer.
+                ready,_,_=select.select([receipts],[],[],2)
+                record=receipts.recv(16) if ready else None
                 report['supervisedReceiptChecked']=True
-                report['supervisedReceiptMatched']=s.commit_receipt(observed.get('value'))
+                report['supervisedReceiptMatched']=s.commit_receipt(record)
+                report['supervisedReceiptFromAddon']=record==inj.receipt('correction')
+                # Observer cross-check only (lab): the field shows the expected text.
+                report['observerSawExpectedText']=link.ask('observe').get('value')==inj.EXPECTED['correction']
                 if not report['supervisedReceiptMatched']:break
             token=s.issue(command,*binding)
             if token is None or not s.send(token,command,*binding,write):raise base.Refused('supervisor_send')
@@ -274,6 +282,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         driver.wait(timeout=5)
         return subprocess.CompletedProcess(driver.args,driver.returncode,out+rest,None),report
     finally:
+        receipts.close()
         if not helper.stdin.closed:helper.stdin.close()
         if helper.poll() is None:helper.kill();helper.wait()
         if driver is not None:
@@ -348,7 +357,7 @@ def run(base, children):
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         required=(['armWriteEndOnlyInSupervisor'] if control else
-                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedFieldCleaned',
+                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor'] if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False

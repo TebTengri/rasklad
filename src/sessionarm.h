@@ -24,6 +24,7 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -65,6 +66,9 @@ public:
         other.latched_ = true;
     }
 
+    // Local fail-closed latch (e.g. a receipt could not be delivered).
+    void latch() { latched_ = true; }
+
     bool armed() {
         if (latched_) return false;
         if (!sameFile() || !poll0()) latched_ = true;
@@ -98,6 +102,71 @@ private:
     ino_t ino_ = 0;
     bool latched_ = true;
 };
+
+// ReceiptSink: after each commit the addon reports only its kind and length to
+// the supervisor — never the text. RASKLAD_SESSION_RECEIPT_FD must be an
+// AF_UNIX SOCK_SEQPACKET socket; one 4-byte record per commit: "c07\n"
+// (rule correction, 7 code points) or "o06\n" (original). MSG_NOSIGNAL: a
+// closed supervisor cannot kill Fcitx with SIGPIPE; any failure is reported
+// to the caller, which latches the session off.
+class ReceiptSink {
+public:
+    static ReceiptSink fromEnvironment() {
+        const char *raw = std::getenv("RASKLAD_SESSION_RECEIPT_FD");
+        if (!raw || !*raw || std::strlen(raw) > 4) return ReceiptSink(-1);
+        int fd = 0;
+        for (const char *p = raw; *p; ++p) {
+            if (*p < '0' || *p > '9') return ReceiptSink(-1);
+            fd = fd * 10 + (*p - '0');
+        }
+        return ReceiptSink(fd);
+    }
+
+    explicit ReceiptSink(int fd) {
+        struct stat st {};
+        int type = 0;
+        socklen_t len = sizeof type;
+        if (fd < 3 || fstat(fd, &st) != 0 || !S_ISSOCK(st.st_mode)) return;
+        if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &type, &len) != 0 || type != SOCK_SEQPACKET) return;
+        const int flags = fcntl(fd, F_GETFL);
+        if (flags < 0 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) != 0) return;
+        if (fcntl(fd, F_SETFD, FD_CLOEXEC) != 0) return;
+        fd_ = fd;
+        dev_ = st.st_dev;
+        ino_ = st.st_ino;
+    }
+
+    ReceiptSink(const ReceiptSink &) = delete;
+    ReceiptSink &operator=(const ReceiptSink &) = delete;
+    ReceiptSink(ReceiptSink &&other) noexcept : fd_(other.fd_), dev_(other.dev_), ino_(other.ino_) { other.fd_ = -1; }
+
+    bool valid() const {
+        struct stat st {};
+        return fd_ >= 0 && fstat(fd_, &st) == 0 && S_ISSOCK(st.st_mode) && st.st_dev == dev_ && st.st_ino == ino_;
+    }
+
+    bool send(bool corrected, std::size_t codePoints) const {
+        if (!valid() || codePoints == 0 || codePoints > 99) return false;
+        const char record[4] = {corrected ? 'c' : 'o', static_cast<char>('0' + codePoints / 10),
+                                static_cast<char>('0' + codePoints % 10), '\n'};
+        ssize_t n;
+        do {
+            n = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
+        } while (n < 0 && errno == EINTR);
+        return n == static_cast<ssize_t>(sizeof record);
+    }
+
+private:
+    int fd_ = -1;
+    dev_t dev_ = 0;
+    ino_t ino_ = 0;
+};
+
+inline std::size_t codePoints(std::string_view text) {
+    std::size_t n = 0;
+    for (unsigned char c : text) n += (c & 0xc0) != 0x80;
+    return n;
+}
 
 inline bool safeCommitText(std::string_view text) {
     if (text.empty() || text.size() > 256) return false;

@@ -201,3 +201,13 @@ closed and the helper gone; non-blocking write waits ≤ 1 s for room, then
 refuses; observer evaluation bounded to 2 s. LIVE REQUIREMENTS (not lab): the
 commit receipt must come from the addon/compositor, never from an observer; the
 binding (pid, surface generation, IC epoch, purpose) must be compositor-issued.
+
+## Addon commit receipt (2026-11-20)
+
+`ReceiptSink` (src/sessionarm.h): after every commit the Slack-session addon
+sends one 4-byte SEQPACKET record — `c07\n` (rule correction, 7 code points)
+or `o06\n` (original) — never the text; MSG_NOSIGNAL|MSG_DONTWAIT; any failure
+latches the arm gate off. The addon requires a valid receipt socket to activate.
+`Supervisor.commit_receipt(record)` accepts only the exact expected bytes from
+`slack_injector.receipt(case)`; the observer-text receipt is gone. Offline:
+supervised, gate and control modes all pass; cleanup waited for `c07`.

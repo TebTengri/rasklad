@@ -172,6 +172,10 @@ rasklad::sessionarm::SessionArm &sessionArm() {
 // Set when the revoke watcher could not be installed: then nothing is armed.
 bool sessionWatchFailed = false;
 bool sessionArmed() { return !sessionWatchFailed && sessionArm().armed(); }
+const rasklad::sessionarm::ReceiptSink &receiptSink() {
+    static auto sink = rasklad::sessionarm::ReceiptSink::fromEnvironment();
+    return sink;
+}
 #endif
 // Fixed fixture labels only: these do not authenticate a process or namespace.
 bool fixtureScope() {
@@ -183,7 +187,7 @@ bool fixtureScope() {
 #ifdef RASKLAD_CHROMIUM_LAB
            equal("RASKLAD_CHROMIUM_IME_LAB", "1");
 #elif defined(RASKLAD_SLACK_SESSION_LAB)
-           equal("RASKLAD_SLACK_SESSION_LAB", "1") && sessionArmed();
+           equal("RASKLAD_SLACK_SESSION_LAB", "1") && receiptSink().valid() && sessionArmed();
 #else
            equal("RASKLAD_PRIVATE_LAB", "1");
 #endif
@@ -797,6 +801,14 @@ private:
         }
 #endif
         ic->commitString(text);
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        {
+            // Receipt: kind and length only. Undeliverable → fail closed.
+            const std::string corrected = std::string(kRuleTo) + ' ';
+            const bool isCorrection = text == kRuleTo || text == corrected;
+            if (!receiptSink().send(isCorrection, rasklad::sessionarm::codePoints(text))) sessionArm().latch();
+        }
+#endif
         if (hadPreedit && binding->alive && binding->epoch == epoch) {
             if (auto *current = ref.get(); current && current->hasFocus()) {
                 current->updatePreedit();

@@ -56,7 +56,7 @@ class Supervisor:
         # Set without the lock by any revoke, checked right before each write.
         self._revoked = threading.Event()
         self.case = case
-        self._expected = inj.EXPECTED[case]
+        self._expected = inj.receipt(case)
         self._typed = len(inj.TYPED[case])
         self._receipt_ok = False
         self.attempted = 0
@@ -182,11 +182,12 @@ class Supervisor:
                 self._revoke('error')
                 return False
 
-    def commit_receipt(self, committed):
-        """After the typing commands: the addon's committed text must equal this case's expected text."""
+    def commit_receipt(self, record):
+        """After the typing commands: the addon's receipt record (kind + length, no text) must equal
+        this case's expected record exactly, e.g. b'c07\\n' for the correction."""
         with self._lock:
             if (self._expired() or self.state != 'INJECT' or self.sent != self._typed or self._receipt_ok
-                    or type(committed) is not str or committed != self._expected):
+                    or type(record) is not bytes or record != self._expected):
                 self._revoke('commit-mismatch')
                 return False
             self._receipt_ok = True

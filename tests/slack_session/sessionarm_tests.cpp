@@ -10,6 +10,8 @@
 
 using rasklad::sessionarm::SessionArm;
 using rasklad::sessionarm::safeCommitText;
+using rasklad::sessionarm::ReceiptSink;
+using rasklad::sessionarm::codePoints;
 
 static int failures = 0;
 #define CHECK(cond) do { if (!(cond)) { std::fprintf(stderr, "FAIL %s:%d %s\n", __FILE__, __LINE__, #cond); ++failures; } } while (0)
@@ -137,6 +139,39 @@ int main() {
             CHECK(!SessionArm::fromEnvironment().armed());
         }
         unsetenv("RASKLAD_SESSION_ARM_FD");
+    }
+    {   // receipt sink: SEQPACKET only, fixed 4-byte records, no SIGPIPE when the reader is gone
+        int sp[2];
+        CHECK(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, sp) == 0);
+        ReceiptSink sink(sp[0]);
+        CHECK(sink.valid());
+        CHECK(sink.send(true, codePoints("привет ")));
+        CHECK(sink.send(false, codePoints("hello ")));
+        char buf[8] = {};
+        CHECK(read(sp[1], buf, sizeof buf) == 4 && std::string(buf, 4) == "c07\n");
+        CHECK(read(sp[1], buf, sizeof buf) == 4 && std::string(buf, 4) == "o06\n");
+        CHECK(!sink.send(true, 0));
+        CHECK(!sink.send(true, 100));
+        close(sp[1]);
+        CHECK(!sink.send(true, 7));  // peer closed: EPIPE without SIGPIPE, reported as failure
+        close(sp[0]);
+        int st[2];
+        CHECK(socketpair(AF_UNIX, SOCK_STREAM, 0, st) == 0 && !ReceiptSink(st[0]).valid());
+        close(st[0]); close(st[1]);
+        int p[2]; pipePair(p);
+        CHECK(!ReceiptSink(p[1]).valid());
+        close(p[0]); close(p[1]);
+        CHECK(!ReceiptSink(-1).valid());
+        unsetenv("RASKLAD_SESSION_RECEIPT_FD");
+        CHECK(!ReceiptSink::fromEnvironment().valid());
+    }
+    {   // a local latch turns the gate off permanently
+        int p[2]; pipePair(p);
+        SessionArm arm(p[0]);
+        CHECK(arm.armed());
+        arm.latch();
+        CHECK(!arm.armed());
+        close(p[0]); close(p[1]);
     }
     if (failures) return 1;
     std::puts("sessionarm_tests OK");

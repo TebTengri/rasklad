@@ -19,12 +19,13 @@
     "gateFieldStillFocused": true,
     "armWriteEndOnlyInSupervisor": true,
     "revokeServed": true,
-    "fcitxAliveAfterGate": true
+    "fcitxAliveAfterGate": true,
+    "note": "rerun after receipt sink: passed"
   },
   "control": {
     "passed": true,
     "checks": 5,
-    "note": "same steps without revoke",
+    "note": "same steps without revoke; rerun after receipt sink: passed",
     "gateControlTextAppeared": true,
     "gateControlKeysReached": true,
     "gateInputEventsAfter": 42,
@@ -49,6 +50,9 @@
     "helperStdinOnlyInSupervisor": true,
     "armWriteEndOnlyInSupervisor": true,
     "fcitxAliveAfterGate": true,
-    "note": "Real tools/slack_supervisor.py Supervisor('correction') owns the helper stdin (non-blocking) and the arm write end; the driver only observes. Lab binding (chromium pid, 0, 0, normal); the real binding comes from the compositor."
+    "note": "Real Supervisor('correction') owns the helper stdin (non-blocking) and the arm write end; cleanup is gated by the addon receipt over a SOCK_SEQPACKET socket (Fcitx holds only its end); the driver only observes as a lab cross-check. Lab binding (chromium pid, 0, 0, normal).",
+    "supervisedReceiptFromAddon": true,
+    "observerSawExpectedText": true,
+    "receiptRecord": "c07\\n (kind + code points, no text)"
   }
 }
