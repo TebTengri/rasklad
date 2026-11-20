@@ -56,5 +56,25 @@
         "gvt1.com": 2
       }
     }
+  },
+  "rootCause": {
+    "finding": "Slack boot reads /etc/os-release and an /etc/*-release file; missing in the sandbox -> unhandled \"No unique release file found!\" in the environment step, boot stalls before any window (seen in Slack's own browser.log of the empty dry-run profile).",
+    "ruledOut": {
+      "electronSandbox": "--no-sandbox and --no-zygote: same stall",
+      "network": "live 002 bridge OK, still stalled"
+    },
+    "fix": "bind /etc/os-release and /etc/arch-release read-only",
+    "afterFix": {
+      "mode": "dry-run-diag plain, empty offline profile",
+      "toplevelCreatedSeconds": 0.62,
+      "configureAckedSeconds": 0.62,
+      "attachCount": 6,
+      "windowMappedThreshold": "not met (needs 10)",
+      "behaviour": "offline error page ERR_TUNNEL_CONNECTION_FAILED, then window closed ~14 s later"
+    }
+  },
+  "docs": {
+    "electron": "Context7 /electron/electron: Electron 38 defaults --ozone-platform=auto (native Wayland when XDG_SESSION_TYPE=wayland); ELECTRON_OZONE_PLATFORM_HINT removed in 38",
+    "slack": "official Linux help covers install only (Ubuntu/RHEL), no Wayland/proxy/keyring guidance"
   }
 }

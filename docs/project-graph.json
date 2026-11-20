@@ -101,7 +101,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-BOOTSTRAP-PROBE.md": "dc09a9007c8499760ef85788b58d2a8652f8a7713b389f057b7dd11ef2eb2155",
+    "docs/SLACK-BOOTSTRAP-PROBE.md": "a297e80802073277f6f4f9a3f490a26099747dfcafa1f7f3f5383e6f4b621143",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
@@ -413,7 +413,7 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
-    "tools/slack_bootstrap_probe.py": "60ae7660afd8b53e59e03144fad3cdcdf3af887b5083169911450881b4634819",
+    "tools/slack_bootstrap_probe.py": "818b8b1431d1ba645f08904b63754d96aeb539a1cc5be525ab8ccb4361e8fcdc",
     "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
@@ -6403,82 +6403,97 @@
       "symbols": [
         {
           "name": "load",
-          "line": 38,
+          "line": 44,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "diag_tail",
+          "line": 51,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "process_kinds",
+          "line": 70,
           "kind": "FunctionDef"
         },
         {
           "name": "scan",
-          "line": 45,
+          "line": 86,
           "kind": "FunctionDef"
         },
         {
           "name": "slack_pids",
-          "line": 64,
+          "line": 105,
           "kind": "FunctionDef"
         },
         {
           "name": "reap_sandboxed",
-          "line": 77,
+          "line": 118,
           "kind": "FunctionDef"
         },
         {
           "name": "profile_dir",
-          "line": 93,
+          "line": 134,
           "kind": "FunctionDef"
         },
         {
           "name": "host_bus_address",
-          "line": 108,
+          "line": 149,
           "kind": "FunctionDef"
         },
         {
           "name": "proxy_command",
-          "line": 115,
+          "line": 156,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 120,
+          "line": 161,
           "kind": "FunctionDef"
         },
         {
           "name": "private_context",
-          "line": 147,
+          "line": 190,
           "kind": "FunctionDef"
         },
         {
           "name": "stop",
-          "line": 155,
+          "line": 198,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 168,
+          "line": 211,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 244,
+          "line": 308,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 250,
+          "line": 314,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 262,
+          "line": 326,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 361,
+          "line": 430,
           "kind": "FunctionDef"
         },
         {
           "name": "collect",
-          "line": 206,
+          "line": 251,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "chunks",
+          "line": 254,
           "kind": "FunctionDef"
         }
       ]

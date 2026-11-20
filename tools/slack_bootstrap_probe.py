@@ -30,7 +30,13 @@ MARKERS = {
     'displayInit': (b'failed to connect to wayland', b'platform failed to initialize'),
     'fatal': (b'fatal:', b'check failed:'),
 }
-CODES = {'control-dry-only', 'root-not-admitted', 'host-slack-running', 'unsafe-bwrap', 'runtime-signatures', 'secrets-proxy',
+# Dry-run diagnostics only (empty offline profile, no owner data): fixed flag sets.
+VARIANTS = {'plain': [], 'logging': ['--enable-logging=stderr', '--v=0'],
+            'no-sandbox': ['--no-sandbox', '--enable-logging=stderr'],
+            'no-zygote': ['--no-zygote', '--no-sandbox', '--enable-logging=stderr'],
+            'disable-dev-shm': ['--disable-dev-shm-usage', '--enable-logging=stderr']}
+WAYLAND_LINE = (b'wl_', b'xdg_', b'zwp_', b'wp_', b'zxdg_', b'org_kde', b'zwlr_')
+CODES = {'diag-dry-only', 'control-dry-only', 'root-not-admitted', 'host-slack-running', 'unsafe-bwrap', 'runtime-signatures', 'secrets-proxy',
          'output-bound', 'report-shape', 'not-private-control', 'private-display'}
 REASONS = {'profile-not-directory', 'profile-ownership', 'profile-symlink-parent', 'singleton-lock-present', 'host-bus-address'}
 
@@ -40,6 +46,41 @@ def load(name, path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def diag_tail(chunks, limit=6000):
+    """Dry-run only: last non-Wayland-protocol stderr lines, bounded."""
+    kept = []
+    size = 0
+    rest = b''
+    for chunk in chunks:
+        lines = (rest + chunk).split(b'\n')
+        rest = lines.pop()[-4096:]
+        for line in lines:
+            if any(m in line for m in WAYLAND_LINE) or not line.strip():
+                continue
+            line = line[:300]
+            kept.append(line)
+            size += len(line) + 1
+            while size > limit:
+                size -= len(kept.pop(0)) + 1
+    return b'\n'.join(kept).decode('utf-8', 'replace')
+
+
+def process_kinds(main_pid, proc=Path('/proc')):
+    counts = {}
+    for entry in list(proc.iterdir())[:4096]:
+        if not entry.name.isdecimal():
+            continue
+        try:
+            if os.readlink(entry / 'exe') != SLACK:
+                continue
+            argv = (entry / 'cmdline').read_bytes()[:16384].split(b'\0')
+        except OSError:
+            continue
+        kind = 'main' if int(entry.name) == main_pid else next((a[7:].decode('ascii', 'replace') for a in argv if a.startswith(b'--type=')), 'unknown')
+        counts[kind] = counts.get(kind, 0) + 1
+    return counts
 
 
 def scan(chunks, now=time.monotonic, started=None, publish=None):
@@ -124,6 +165,8 @@ def sandbox_args(home, profile, uid, user, work, snapshots, lang='C.UTF-8'):
          '--ro-bind-try', '/etc/ld.so.cache', '/etc/ld.so.cache', '--ro-bind', '/etc/fonts', '/etc/fonts',
          '--ro-bind', '/etc/machine-id', '/etc/machine-id', '--ro-bind', '/etc/ssl', '/etc/ssl',
          '--ro-bind', '/etc/ca-certificates', '/etc/ca-certificates',
+         # Slack's boot reads the distro identity; without it the environment step throws and boot stalls.
+         '--ro-bind', '/etc/os-release', '/etc/os-release', '--ro-bind-try', '/etc/arch-release', '/etc/arch-release',
          '--ro-bind', str(work / 'passwd'), '/etc/passwd', '--ro-bind', str(work / 'group'), '/etc/group',
          '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--tmpfs', '/run', '--tmpfs', '/home',
          '--perms', '0700', '--dir', runtime,
@@ -194,17 +237,30 @@ def inside():
         env.update(HTTPS_PROXY=proxy, HTTP_PROXY=proxy, https_proxy=proxy, http_proxy=proxy, NO_PROXY='')
         started = time.monotonic()
         control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
+        diag = os.environ.get('RASKLAD_BOOTSTRAP_DIAG')
+        variant = diag if diag in VARIANTS else 'plain'
         chromium = [CHROMIUM, '--ozone-platform=wayland', '--disable-gpu', '--no-first-run', '--user-data-dir=/tmp/control']
         target = (chromium + ['about:blank'] if control == 'chromium'
                   else chromium + ['--proxy-server=' + proxy, 'https://app.slack.com/'] if control == 'chromium-hello'
-                  else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'])
+                  else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'] + VARIANTS[variant])
         slack = subprocess.Popen(target,
                                  env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         children.append(slack)
         first = {}
         result = {}
         def collect():
-            result['flags'], _ = scan(iter(lambda: slack.stdout.read(4096), b''), started=started, publish=first)
+            if diag:
+                tee = []
+                def chunks():
+                    for chunk in iter(lambda: slack.stdout.read(4096), b''):
+                        tee.append(chunk)
+                        if sum(map(len, tee)) > 8 << 20:
+                            tee.pop(0)
+                        yield chunk
+                result['flags'], _ = scan(chunks(), started=started, publish=first)
+                result['tail'] = diag_tail(tee)
+            else:
+                result['flags'], _ = scan(iter(lambda: slack.stdout.read(4096), b''), started=started, publish=first)
         collector = threading.Thread(target=collect, daemon=True)
         collector.start()
         attached_at = None
@@ -214,6 +270,8 @@ def inside():
             if slack.poll() is not None:
                 exited_early = True
                 break
+            if diag and 'processKinds10s' not in report and time.monotonic() - started >= 10:
+                report['processKinds10s'] = process_kinds(slack.pid)
             if attached_at is None and 'bufferAttached' in first:
                 attached_at = time.monotonic()
             if attached_at is not None and time.monotonic() - attached_at >= SETTLE_SECONDS:
@@ -227,6 +285,12 @@ def inside():
         collector.join(3)
         report['collectionComplete'] = not collector.is_alive()
         report['markers'] = result.get('flags', {})
+        if diag:
+            report['variant'] = variant
+            report['diagTail'] = result.get('tail', '')
+            # Dry run: the profile is the empty temporary one, so Slack's own logs hold no owner data.
+            logs = sorted(Path(os.environ['HOME'], '.config/Slack/logs').rglob('*.log'), key=lambda q: q.stat().st_mtime)[-3:]
+            report['slackLogs'] = {str(q.relative_to(Path(os.environ['HOME'], '.config/Slack'))): q.read_bytes()[-2500:].decode('utf-8', 'replace') for q in logs}
         report['firstSeenSeconds'] = dict(first)
         markers = report['markers']
         report['attachCount'] = report['firstSeenSeconds'].pop('attachCount', 0)
@@ -259,9 +323,11 @@ def plan():
             'output': 'fixed marker booleans, first-seen seconds, stop mode, bridge counts, rejected-domain suffixes'}
 
 
-def run(dry=False, control=False, hello=False):
+def run(dry=False, control=False, hello=False, diag=None):
     if (control or hello) and not dry:
         raise RuntimeError('control-dry-only')
+    if diag is not None and (not dry or diag not in VARIANTS):
+        raise RuntimeError('diag-dry-only')
     """dry=True: empty temporary profile, private bus, offline bridge; no owner data or network."""
     if os.geteuid() == 0:
         raise RuntimeError('root-not-admitted')
@@ -313,6 +379,9 @@ def run(dry=False, control=False, hello=False):
             at = command.index('--')
             command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_CONTROL', 'chromium-hello' if hello else 'chromium']
         report['positiveControl'] = 'chromium-hello' if hello else 'chromium' if control else None
+        if diag:
+            at = command.index('--')
+            command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_DIAG', diag]
         if slack_pids():
             raise RuntimeError('host-slack-running')
         if not dry:
@@ -322,8 +391,8 @@ def run(dry=False, control=False, hello=False):
                                      stderr=subprocess.DEVNULL, env={'PATH': '/usr/bin'}, start_new_session=True, preexec_fn=limits)
             report['sandboxExitCode'] = child.wait(timeout=OUTER_SECONDS)
             out.seek(0)
-            raw = out.read(16385)
-        if len(raw) > 16384:
+            raw = out.read(32769)
+        if len(raw) > 32768:
             raise RuntimeError('output-bound')
         inner = json.loads(raw)
         if type(inner) is not dict:
@@ -365,10 +434,11 @@ def main():
     group.add_argument('--dry-run-empty-profile', action='store_true')
     group.add_argument('--dry-run-chromium-control', action='store_true')
     group.add_argument('--dry-run-hello-capture', action='store_true')
+    group.add_argument('--dry-run-diag', choices=sorted(VARIANTS))
     group.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
-        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else run(dry=True, hello=True) if args.dry_run_hello_capture else plan()
+        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else run(dry=True, hello=True) if args.dry_run_hello_capture else run(dry=True, diag=args.dry_run_diag) if args.dry_run_diag else plan()
     except Exception as exc:
         text = str(exc)
         known = (type(exc) is RuntimeError and text in CODES) or (type(exc) is ValueError and text in REASONS)

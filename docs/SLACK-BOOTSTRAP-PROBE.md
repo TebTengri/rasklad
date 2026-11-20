@@ -96,3 +96,16 @@ refusals. Still no toplevel in 75 s; registry bound at 0.41 s; graceful stop,
 no leftovers, no lock. Only 2 connections in 75 s means Slack stalls before its
 UI regardless of network. The identical Wayland pattern with an empty offline
 profile allows diagnosis offline. Evidence: data/slack-bootstrap-live-002-result.json.
+
+## Root cause of the stall (offline diagnosis, no owner data)
+
+Dry-run diagnostics (`--dry-run-diag <variant>`, empty offline profile only)
+read Slack's own `logs/default/browser.log`: boot throws "No unique release
+file found!" because the sandbox lacked `/etc/os-release` and
+`/etc/arch-release`, and stops before creating a window. `--no-sandbox` and
+`--no-zygote` changed nothing; live run 002 had working network. After binding
+both files read-only, empty-profile Slack created a toplevel at 0.62 s and
+attached 6 buffers (offline error page), then closed the window ~14 s later.
+Docs (Context7, Electron): Electron 38 defaults to native Wayland when
+XDG_SESSION_TYPE=wayland; ELECTRON_OZONE_PLATFORM_HINT was removed. Slack's
+official Linux help covers installation only.
