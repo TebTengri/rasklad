@@ -20,7 +20,7 @@ ADDON_CONF = ROOT / 'tests/slack_session/raskladslacklab-nested.conf'
 OBSERVE_SECONDS = 90   # boot + the owner's zero-injection composer→search→composer check
 QUIT_SECONDS = 15      # graceful SIGTERM before SIGKILL (profile flush)
 OUTER_SECONDS = 150    # Hyprland/Fcitx start + observe 90 + quit 15 + margins
-RELAY = dict(seconds=115, max_active=16)
+RELAY = dict(seconds=115, max_active=32)  # run 001: Slack opened >16 concurrent tunnels
 BROKER = dict(seconds=170,  # created before Hyprland/Fcitx start; must outlive observe + quit
               max_requests=384, max_bytes=256 * 1024 * 1024, max_active=16)
 SLACK_FLAGS = ['--ozone-platform=wayland', '--enable-wayland-ime', '--wayland-text-input-version=3', '--disable-gpu']
