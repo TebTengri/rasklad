@@ -521,6 +521,23 @@
         "python3 -m unittest discover -s tests/slack_probe"
       ],
       "status": "prepared_dry_run_pass_live_not_run"
+    },
+    {
+      "id": "slack-session-blueprint",
+      "kind": "plan",
+      "title": "Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx",
+      "paths": [
+        "docs/SLACK-SESSION-BLUEPRINT.md",
+        "docs/SLACK-SUPERVISED-SESSION-PLAN.md",
+        "tools/slack_bootstrap_probe.py",
+        "tools/hyprland_ime_lab.py",
+        "tools/hyprland_mapping_probe.py",
+        "tools/closed_hyprland_mapping.py",
+        "tools/native_ime_clients.py"
+      ],
+      "notes": "Accepted architect blueprint; milestone 1 offline in closed Sway. Not implemented yet.",
+      "tests": [],
+      "status": "planned"
     }
   ],
   "edges": [

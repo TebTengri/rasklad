@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "0439756cd4368ead33b4b08e5f08d192668040e780fedf0f4363f9193359b77f",
+  "curatedSha256": "29173ce6f78a2fd91d712ff260f621648543ce5e195cf5cb678d888e2f987d57",
   "sourceSha256": {
     "AGENTS.md": "f3269a4521f8b8ec1963eb169290557fad5bd1a275a549c323fb8b43cd9dc3c2",
     "CLAUDE.md": "604e8f99ff6dfc2dc9a72c1760f2968344ae35278eed32f63e0da9d96b382a78",
@@ -106,8 +106,9 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "baf3b9cb7d88ba412bc1ef126c1554fb78ba0f492aaa5f1e44e65da84c2be24a",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
-    "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "132e090de1abe6fc6682ee43dc368590021dbffaa470d0a4b3b1fe0fcc6ad0cb",
+    "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "85eacc2e52389a03fd0b70c8a9daa79da6035f74a82245a3ac15356073251c53",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
     "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
@@ -831,6 +832,10 @@
     },
     {
       "path": "docs/SLACK-LIVE-STATUS-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/SLACK-SESSION-BLUEPRINT.md",
       "symbols": []
     },
     {
@@ -8119,7 +8124,7 @@
     }
   ],
   "vaultSha256": {
-    "docs/knowledge/Start.md": "76cf48ecb6f4947432041b358c7ae75dc9c139679bc120edfcc356b13cd10df9",
+    "docs/knowledge/Start.md": "fb63cdf621fc3389e839e244a223ba80d1767dcec3c8e44cf46fb163e0d39476",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
     "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
     "docs/knowledge/aquamarine-readiness.md": "18d5628e82f72985634df4fc98ee8cb0a57b36f00bddecaa72d7072d36f3c321",
@@ -8145,6 +8150,7 @@
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
     "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
     "docs/knowledge/slack-bootstrap.md": "ebe24773264407c6849214d76b28b9330eba7e9354801e615bce61a461122348",
+    "docs/knowledge/slack-session-blueprint.md": "781c759f791e69b29a2812b4f7701711e7ef018212aaa68205ab7fb77c84f9c0",
     "docs/knowledge/wayland-object-id-scope.md": "3d3cfae2dabc50e352f30c49ccde20ac739d5785ae6023b9256eba57e31d3955",
     "docs/knowledge/window-provenance.md": "030755dc724a501d5d5da7fccfbe6518eebae1cc064601795dd57b1b691b5a30",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
