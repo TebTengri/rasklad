@@ -512,7 +512,16 @@ def run_live_inside(clients, base, fcitx, gate, children):
             if submap == 'rasklad_go':
                 signal_at = round(time.monotonic() - started, 1)
                 break
-            if submap != 'rasklad_lock' or seat.keyboards() != seat.devices:
+            now_keyboards = seat.keyboards()
+            if submap != 'rasklad_lock' or now_keyboards != seat.devices:
+                # Diagnostics: fixed submap names and keyboard device names only (no text, no addresses).
+                known = ('rasklad_lock', 'rasklad_go', 'rasklad_dead', 'default', '')
+                report['seatLostDetail'] = {
+                    'submap': submap if submap in known else 'other',
+                    'added': sorted({n for n, _ in now_keyboards} - {n for n, _ in seat.devices}
+                                    | {n for n, a in now_keyboards if (n, a) not in seat.devices})[:4],
+                    'removed': sorted({n for n, a in seat.devices if (n, a) not in now_keyboards})[:4],
+                    'seconds': round(time.monotonic() - started, 1)}
                 raise base.Refused('seat_lost_before_arm')
             seen = windows(clients, base, slack.pid)
             if seen and seen[0] and first_mapped is None:
@@ -559,6 +568,10 @@ def run_live_inside(clients, base, fcitx, gate, children):
                             and report['commitRecordsAfterRevoke'] == 0 and report['slackStop'] == 'graceful'
                             and released in ('released', 'absent') and report['relayRefused'] == 0
                             and not report.get('revokeErrors'))
+        return report
+    except base.Refused as error:
+        # Keep the fixed-shape partial report (cases, diagnostics) instead of losing it upstream.
+        report.update(passed=False, reason=str(error))
         return report
     finally:
         revoke_all()
