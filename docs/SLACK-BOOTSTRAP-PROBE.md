@@ -88,3 +88,11 @@ a ClientHello after `200` while Chromium preconnects tunnels. Fixed: hello wait
 20 s, Relay 115 s / 16 active (configurable, bounded), `relayRefused` and
 per-stage error categories reported. Regression test covers a 4 s late hello.
 Hypothesis is unverified until a live repeat (separate one-shot approval).
+
+## Live run 002 (owner one-shot approval, consumed)
+
+Bridge fix confirmed: 2 tunnels opened, 23 949 bytes, 0 errors, 0 relay
+refusals. Still no toplevel in 75 s; registry bound at 0.41 s; graceful stop,
+no leftovers, no lock. Only 2 connections in 75 s means Slack stalls before its
+UI regardless of network. The identical Wayland pattern with an empty offline
+profile allows diagnosis offline. Evidence: data/slack-bootstrap-live-002-result.json.

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "approval": "owner one-shot, consumed",
+  "preflight": {
+    "slackProcesses": 0,
+    "singletonLock": false
+  },
+  "result": {
+    "passed": true,
+    "windowMapped": false,
+    "registryBoundSeconds": 0.41,
+    "toplevelCreated": false,
+    "attachCount": 0,
+    "observedSeconds": 75.11,
+    "slackStop": "graceful",
+    "slackProcessesRemaining": 0,
+    "singletonLockLeft": false,
+    "relayRefused": 0,
+    "markers": {
+      "secretServiceError": false,
+      "singletonFailure": false,
+      "connectionFailure": false,
+      "fatal": false,
+      "displayInit": false
+    },
+    "bridge": {
+      "accepted": 2,
+      "opened": 2,
+      "errors": 0,
+      "forwardedBytes": 23949,
+      "rejectedDomains": {},
+      "tlsDenied": 0
+    }
+  },
+  "interpretation": "Bridge fix confirmed: Slack's connections now open (2, 24 KB, 0 errors). Still no toplevel in 75 s and only 2 connections: Slack stalls before its UI, independent of network. Empty-profile offline Slack shows the same Wayland pattern (registry only), so further diagnosis can proceed offline without owner data."
+}
