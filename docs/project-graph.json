@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "869a334508e7b77958d71e7aec13b78b25455ca19b27cd75ec54cb3f152ad49a",
+  "curatedSha256": "699ab9cf670f16c6533e7e419f05218f31e361bd905b21e3d1c5fbb18f4376c1",
   "sourceSha256": {
     "AGENTS.md": "f3269a4521f8b8ec1963eb169290557fad5bd1a275a549c323fb8b43cd9dc3c2",
     "CLAUDE.md": "604e8f99ff6dfc2dc9a72c1760f2968344ae35278eed32f63e0da9d96b382a78",
@@ -106,7 +106,7 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "eb46cd3fda169bef3a1dd34a2561f4dcbda0b50f6f4b3d7872b7f42f5e4b6e16",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "ae1027734dff0fc2649fc3cfae23013bbc01f40911e57081cbaebb755df6f5e7",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
@@ -134,7 +134,7 @@
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
     "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
-    "src/fcitxlab.cpp": "893eb21f1035baa21de915b1a65d23057ac7de139b05a998fe6495471210f7d8",
+    "src/fcitxlab.cpp": "99b53901bb23fa8e1acacb0606114cfde6d705e8f05bc456c3f1cc668463c339",
     "src/fcitxlabprofile.cpp": "4d2b737290d4cff7be8299685069d5e0dc97b990a03bb491bfb551e76fd36920",
     "src/fcitxlabprofile.h": "09dfd43ee22daefb63c4fe38efbe42c8b9228913e5fcc44bb6febd3d7866574e",
     "src/jsontranslator.cpp": "9f1cc9fa03bf736748c3b7dd56bfd2472ebaf100539fadacf3ec1eaf17f002ed",
@@ -150,6 +150,7 @@
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
     "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
+    "src/sessionarm.h": "c4bff86dd1b42303be303e681276c999c932918c119c615edb6acc4caac5087f",
     "src/spellengine.cpp": "23ae1018dd5ade6030ce33276d644d7fbfef43cbebc9eef8dd262ed20285f2d3",
     "src/spellengine.h": "9c433a0709efe9d3298353bd6ab7ee7ca35d7bfb2bc63d8f5ceeea648fb07a38",
     "src/themewatcher.cpp": "d5d9197c384cf992170d6bf2132867ad22095c5371e234d72c873f3eb8ab5a93",
@@ -277,7 +278,8 @@
     "tests/slack_probe/test_quit_request.py": "34032ddd5689f42b47e9b9327c54e1dde512514ff87778785e6434d7642c3939",
     "tests/slack_probe/test_status_trial.py": "1fd537ed769d68a66d163dd75ac0d85bfa01a08128d429517d0e44922358952d",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
-    "tests/slack_session/test_injector_supervisor.py": "122cadb1fe9fd520f49a35a2905b588b10a33f347c9394b455bffb1c03cd8c25",
+    "tests/slack_session/sessionarm_tests.cpp": "b8dd44d944ff6c288b16fd52d391a9a8940c61623f86d8e5b73ecbcd24177ef1",
+    "tests/slack_session/test_injector_supervisor.py": "891f9d15310ef8ebd24d5cb6bd8aacef8ad959940386a26ebe3e9f0744fad321",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
     "tests/ui/ui_tests.cpp": "8723d2068d453708f44a13fe88d23acb01c08e516e840c7e07397a817f5d54df",
@@ -374,6 +376,7 @@
     "tools/fcitx_lab_runner.py": "a55f3c8c4d7eb157f998257e8534df658b9b9f98572286fee583aa69196912b5",
     "tools/fcitx_profile_lab.pro": "3edd53c82551969b5284bd68ed8f87874c3cc6a3b98f3da85e063beb7bb466ae",
     "tools/fcitx_retirement_candidate.py": "71354dbb33198c4fc82039375b94219f5fc39759c6ab595fd53af58e0abff007",
+    "tools/fcitx_slack_lab.pro": "a67696db655a2e8274b13751e43fdb3b028aa1073fdc82b06cb99de47a3f0dd2",
     "tools/fcitx_witness_lab.pro": "e15e5be686e05bf15bb11b30045dfb684f89e2734d5d521a892c1d35058cb5f3",
     "tools/fcitxlabwitness.h": "f0bfc9dd1a24f960e3578c80bc746edd7345be9e7608676565d2b678cfe85a13",
     "tools/frontcodedlexicon.cpp": "47bf10757720104c18c9e344a0a98ca737c5e30097e2ae8a088ddcdeb7b1aa7a",
@@ -416,12 +419,12 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
-    "tools/slack_bootstrap_probe.py": "c2012c756634d30bd8a53c43b5678564627b638de02ced96b944538e1d097dfd",
+    "tools/slack_bootstrap_probe.py": "bf3ec38e31b427db095c1df15312ecee720ea8f8259cf1e905cda476dd0b6cb8",
     "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
-    "tools/slack_injector.py": "bfe3b7078b0c819254ac2751ef6c1ce6464cd66500eecfee51d8d6522ddb7914",
+    "tools/slack_injector.py": "a8526ad44c1cdafa91ee9da5447463f43fd1ba95fc8802f31bf67dec2bdd9e4d",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
-    "tools/slack_supervisor.py": "1a95dd0d1c4ac3e58e7a543abbcae42c159b4bebe8ac1da29deca8899f52620a",
+    "tools/slack_supervisor.py": "460c0f262c7addf09df5c0d023ba382a9aa58f817df39d96f7000e5ae00b0541",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
     "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2"
   },
@@ -1012,6 +1015,10 @@
     },
     {
       "path": "src/rasklad_core.pro",
+      "symbols": []
+    },
+    {
+      "path": "src/sessionarm.h",
       "symbols": []
     },
     {
@@ -3442,101 +3449,235 @@
       ]
     },
     {
+      "path": "tests/slack_session/sessionarm_tests.cpp",
+      "symbols": []
+    },
+    {
       "path": "tests/slack_session/test_injector_supervisor.py",
       "symbols": [
         {
           "name": "load",
-          "line": 9,
+          "line": 12,
           "kind": "FunctionDef"
         },
         {
           "name": "Clock",
-          "line": 22,
+          "line": 26,
           "kind": "ClassDef"
         },
         {
-          "name": "armed",
-          "line": 30,
+          "name": "new",
+          "line": 34,
           "kind": "FunctionDef"
         },
         {
-          "name": "Injector",
-          "line": 36,
+          "name": "Armed",
+          "line": 38,
           "kind": "ClassDef"
         },
         {
-          "name": "SupervisorStates",
-          "line": 70,
+          "name": "Injector",
+          "line": 55,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "HappyPath",
+          "line": 83,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Refusals",
+          "line": 125,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Revocation",
+          "line": 214,
           "kind": "ClassDef"
         },
         {
           "name": "__init__",
-          "line": 23,
+          "line": 27,
           "kind": "FunctionDef"
         },
         {
           "name": "__call__",
-          "line": 26,
+          "line": 30,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_cases_only_use_allowed_commands",
-          "line": 37,
+          "name": "armed",
+          "line": 39,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_dangerous_helper_commands_never_allowed",
+          "name": "step",
           "line": 45,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_every_command_needs_a_fresh_token",
-          "line": 52,
+          "name": "typed",
+          "line": 49,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_cleanup_by_committed_grapheme_count",
-          "line": 59,
+          "name": "test_scripts_are_fixed_and_cleanup_matches_expected_text",
+          "line": 56,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_linear_happy_path",
-          "line": 71,
+          "name": "test_allowlist_parity_with_helper_parse",
+          "line": 65,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_one_outstanding_token",
-          "line": 81,
+          "name": "test_graphemes_whitelist",
+          "line": 75,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_arm_refuses_foreign_client_or_protected_purpose",
-          "line": 86,
+          "name": "test_full_script_writes_exact_bytes_in_order",
+          "line": 84,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_binding_change_revokes",
-          "line": 92,
+          "name": "test_alpha_purpose_arms_and_stays_bound",
+          "line": 95,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_every_lifecycle_event_revokes_and_is_terminal",
-          "line": 98,
+          "name": "test_commit_receipt_must_match_exactly",
+          "line": 103,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_deadline_revokes_even_with_token",
+          "name": "test_backspace_requires_matching_receipt",
           "line": 110,
           "kind": "FunctionDef"
         },
         {
-          "name": "test_wrong_token_revokes",
-          "line": 118,
+          "name": "test_receipt_before_typing_finished_or_twice_revokes",
+          "line": 115,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_out_of_script_command_revokes",
+          "line": 126,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_str_subclass_command_and_token_refused",
+          "line": 132,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_token_bound_to_command_and_single_use",
+          "line": 143,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_bad_tokens_revoke_without_exception",
+          "line": 154,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_send_without_issue_and_foreign_token",
+          "line": 161,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_type_confusion_in_binding_refused",
+          "line": 169,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_binding_or_purpose_change_at_send_revokes",
+          "line": 177,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_arm_refusals",
+          "line": 185,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_out_of_order_transitions_revoke",
+          "line": 195,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_failing_write_revokes",
+          "line": 206,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_every_event_revokes_terminally",
+          "line": 215,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_deadline_boundary",
+          "line": 228,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_revoke_cannot_interleave_with_write",
+          "line": 242,
           "kind": "FunctionDef"
         },
         {
           "name": "test_constructor_bounds",
-          "line": 124,
+          "line": 265,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_wire_bytes_only_from_fixed_table",
+          "line": 277,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_bad_clock_after_start_revokes",
+          "line": 282,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "test_revoke_flag_set_while_write_blocks_and_stops_next_write",
+          "line": 290,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "Sneaky",
+          "line": 133,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "Sneaky",
+          "line": 186,
+          "kind": "ClassDef"
+        },
+        {
+          "name": "boom",
+          "line": 207,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "slow_write",
+          "line": 247,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "blocking_write",
+          "line": 296,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__eq__",
+          "line": 134,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "__eq__",
+          "line": 187,
           "kind": "FunctionDef"
         }
       ]
@@ -5565,6 +5706,10 @@
       ]
     },
     {
+      "path": "tools/fcitx_slack_lab.pro",
+      "symbols": []
+    },
+    {
       "path": "tools/fcitx_witness_lab.pro",
       "symbols": []
     },
@@ -6716,43 +6861,48 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "fcitx_programs",
+          "line": 245,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "start_fcitx",
-          "line": 242,
+          "line": 256,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 264,
+          "line": 278,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 378,
+          "line": 394,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 384,
+          "line": 400,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 396,
+          "line": 412,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 508,
+          "line": 524,
           "kind": "FunctionDef"
         },
         {
           "name": "collect",
-          "line": 314,
+          "line": 328,
           "kind": "FunctionDef"
         },
         {
           "name": "chunks",
-          "line": 317,
+          "line": 331,
           "kind": "FunctionDef"
         }
       ]
@@ -6872,27 +7022,17 @@
       "symbols": [
         {
           "name": "Refused",
-          "line": 19,
+          "line": 20,
           "kind": "ClassDef"
         },
         {
           "name": "graphemes",
-          "line": 23,
+          "line": 24,
           "kind": "FunctionDef"
         },
         {
-          "name": "case_commands",
-          "line": 30,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "cleanup_commands",
-          "line": 36,
-          "kind": "FunctionDef"
-        },
-        {
-          "name": "encode",
-          "line": 43,
+          "name": "script",
+          "line": 35,
           "kind": "FunctionDef"
         }
       ]
@@ -6991,48 +7131,73 @@
       "path": "tools/slack_supervisor.py",
       "symbols": [
         {
+          "name": "_binding",
+          "line": 27,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "Supervisor",
-          "line": 17,
+          "line": 34,
           "kind": "ClassDef"
         },
         {
           "name": "__init__",
-          "line": 18,
+          "line": 35,
           "kind": "FunctionDef"
         },
         {
           "name": "_expired",
-          "line": 31,
+          "line": 75,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_revoke",
+          "line": 85,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "_current_ok",
+          "line": 94,
           "kind": "FunctionDef"
         },
         {
           "name": "arm",
-          "line": 36,
+          "line": 104,
           "kind": "FunctionDef"
         },
         {
           "name": "seat_locked",
-          "line": 50,
+          "line": 123,
           "kind": "FunctionDef"
         },
         {
           "name": "issue",
-          "line": 56,
+          "line": 135,
           "kind": "FunctionDef"
         },
         {
-          "name": "consume",
-          "line": 67,
+          "name": "send",
+          "line": 158,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "commit_receipt",
+          "line": 185,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "done",
+          "line": 195,
           "kind": "FunctionDef"
         },
         {
           "name": "event",
-          "line": 76,
+          "line": 199,
           "kind": "FunctionDef"
         },
         {
           "name": "revoke",
-          "line": 81,
+          "line": 208,
           "kind": "FunctionDef"
         }
       ]
@@ -7240,9 +7405,15 @@
     },
     {
       "from": "src/fcitxlab.cpp",
+      "to": "src/sessionarm.h",
+      "kind": "literal_include_or_import",
+      "line": 96
+    },
+    {
+      "from": "src/fcitxlab.cpp",
       "to": "src/fcitxlabprofile.h",
       "kind": "literal_include_or_import",
-      "line": 94
+      "line": 100
     },
     {
       "from": "src/fcitxlabprofile.cpp",
@@ -7729,6 +7900,12 @@
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
       "line": 8
+    },
+    {
+      "from": "tests/slack_session/sessionarm_tests.cpp",
+      "to": "src/sessionarm.h",
+      "kind": "literal_include_or_import",
+      "line": 2
     },
     {
       "from": "tests/ui/ui_tests.cpp",
@@ -8454,7 +8631,7 @@
     "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
     "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
     "docs/knowledge/slack-bootstrap.md": "ebe24773264407c6849214d76b28b9330eba7e9354801e615bce61a461122348",
-    "docs/knowledge/slack-session-blueprint.md": "658c8d2946e2d93cd74a40d09bb38500062b778a4edd2b3263e1e98b2cd54f1c",
+    "docs/knowledge/slack-session-blueprint.md": "d1eff018ea9a1c7b4476b5de66c1cd31a2a3e26699726d56cdf9701bde4c0881",
     "docs/knowledge/wayland-object-id-scope.md": "3d3cfae2dabc50e352f30c49ccde20ac739d5785ae6023b9256eba57e31d3955",
     "docs/knowledge/window-provenance.md": "030755dc724a501d5d5da7fccfbe6518eebae1cc064601795dd57b1b691b5a30",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"

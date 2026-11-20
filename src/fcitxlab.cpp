@@ -89,6 +89,12 @@
 #include "applicationpolicy.h"
 #include "applicationpermissions.h"
 #include "compositiondisable.h"
+#ifdef RASKLAD_SLACK_SESSION_LAB
+#if defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_DISABLE_TEST_LAB)
+#error "RASKLAD_SLACK_SESSION_LAB is a separate artifact"
+#endif
+#include "sessionarm.h"
+#endif
 
 #ifdef RASKLAD_PROFILE_LAB
 #include "fcitxlabprofile.h"
@@ -139,10 +145,22 @@ constexpr std::size_t kMaxPendingReleases = 8;
 // Separate compile-time lab variant; never an environment-controlled app list.
 #ifdef RASKLAD_CHROMIUM_LAB
 constexpr const char kLabProgram[] = "chromium";
+#elif defined(RASKLAD_SLACK_SESSION_LAB)
+// Measured Fcitx input-context program of Slack's native Wayland window
+// (data/slack-ime-milestone1-dryrun-result.json). Not an authentication.
+constexpr const char kLabProgram[] = "slack";
 #else
 constexpr const char kLabProgram[] = "rasklad-ime-lab";
 #endif
 namespace policy = rasklad::policy;
+#ifdef RASKLAD_SLACK_SESSION_LAB
+// Supervisor arm pipe, read once from the environment; latches off on revoke.
+rasklad::sessionarm::SessionArm &sessionArm() {
+    static auto arm = rasklad::sessionarm::SessionArm::fromEnvironment();
+    return arm;
+}
+bool sessionArmed() { return sessionArm().armed(); }
+#endif
 // Fixed fixture labels only: these do not authenticate a process or namespace.
 bool fixtureScope() {
     const auto equal = [](const char *key, const char *value) {
@@ -152,6 +170,8 @@ bool fixtureScope() {
     return equal("HOME", "/home/lab") && equal("XDG_RUNTIME_DIR", "/run/lab") &&
 #ifdef RASKLAD_CHROMIUM_LAB
            equal("RASKLAD_CHROMIUM_IME_LAB", "1");
+#elif defined(RASKLAD_SLACK_SESSION_LAB)
+           equal("RASKLAD_SLACK_SESSION_LAB", "1") && sessionArmed();
 #else
            equal("RASKLAD_PRIVATE_LAB", "1");
 #endif
@@ -443,6 +463,10 @@ private:
         if (!ic || !ic->hasFocus()) {
             return false;
         }
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Revoked or never armed: intercept nothing (buffer is discarded by the caller).
+        if (!sessionArmed()) return false;
+#endif
 #ifdef RASKLAD_CHROMIUM_LAB
         // GTK/X11 supplies chromium; the observed native Wayland app-id is
         // chromium-browser. Both designate only this lab's controlled client.
@@ -554,6 +578,10 @@ private:
 
     static policy::CompositionDisable::Result commitOriginalUnknown(
         fcitx::InputContext *context, const std::string &original) {
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        if (!sessionArmed() || !rasklad::sessionarm::safeCommitText(original))
+            return policy::CompositionDisable::Result::Unknown;
+#endif
         context->commitString(original);
         return policy::CompositionDisable::Result::Unknown;
     }
@@ -725,6 +753,13 @@ private:
         }
 #ifdef RASKLAD_WITNESS_LAB
         lw::inc(lw::Counter::commitStringCalls); // any key, immediately before
+#endif
+#ifdef RASKLAD_SLACK_SESSION_LAB
+        // Final gate: state is already staged; on refusal nothing is committed.
+        if (!sessionArmed() || !rasklad::sessionarm::safeCommitText(text)) {
+            wipeString(text);
+            return;
+        }
 #endif
         ic->commitString(text);
         if (hadPreedit && binding->alive && binding->epoch == epoch) {

@@ -1,6 +1,6 @@
 # Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx
 
-Milestone 1 (IME dry run) done; step 2 pure injector/supervisor done; next: addon gates, nested Hyprland composition.
+M1 IME dry run done; step 2 supervisor done; step 3 addon gate variant built (arm pipe, program slack, commit text); next: nested composition wiring.
 
 Статус: in_progress
 
@@ -15,6 +15,9 @@ Milestone 1 (IME dry run) done; step 2 pure injector/supervisor done; next: addo
 - `tools/native_ime_clients.py`
 - `tools/slack_injector.py`
 - `tools/slack_supervisor.py`
+- `src/sessionarm.h`
+- `tools/fcitx_slack_lab.pro`
+- `tests/slack_session/sessionarm_tests.cpp`
 
 ## Связи
 

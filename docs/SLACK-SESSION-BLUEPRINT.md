@@ -118,3 +118,20 @@ deadline; non-finite or non-numeric clock revokes; `attempted` counted before
 each write. Accepted as intended: send before issue revokes the session.
 Open for step 3: the launcher must keep the helper stdin private to `write`
 (the helper itself still parses forbidden commands from any writer).
+
+## Step 3: addon gates (separate artifact `tools/fcitx_slack_lab.pro`)
+
+`RASKLAD_SLACK_SESSION_LAB` (mutually exclusive with Chromium/profile/disable
+variants): program `slack` (measured via own Fcitx DebugInfo in the dry run);
+scope requires `RASKLAD_SLACK_SESSION_LAB=1` plus the lab HOME/runtime;
+`src/sessionarm.h` arm pipe — the supervisor holds the write end, the addon the
+read end (`RASKLAD_SESSION_ARM_FD`, must be a read-only FIFO, fd ≥ 3); armed
+only while the writer is open and silent; close or any byte latches off for the
+process lifetime; checked in `eligible()` and immediately before every
+`commitString()`; commit text must be valid UTF-8 without C0/C1, DEL or line
+separators (≤ 256 bytes). Existing gates kept: protected capability flags,
+single synthetic rule, focus/epoch discard. Tests: `g++ -std=c++20
+-fsanitize=address,undefined tests/slack_session/sessionarm_tests.cpp`.
+Pre-existing unrelated failure: tests/fcitx_transport test_runner
+`test_mounts_only_fixed_project_files` assumes the checkout is not under
+/home/<user>.

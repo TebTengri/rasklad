@@ -239,6 +239,20 @@ def stop(process, seconds):
         return 'killed'
 
 
+PROGRAM = re.compile(rb'program:([A-Za-z0-9._-]{1,64})')
+
+
+def fcitx_programs(env):
+    """Own Fcitx only: input-context program names from DebugInfo; no text, bounded."""
+    try:
+        out = subprocess.run(['/usr/bin/gdbus', 'call', '--session', '--dest', 'org.fcitx.Fcitx5', '--object-path',
+                              '/controller', '--method', 'org.fcitx.Fcitx.Controller1.DebugInfo'],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=2, env=env).stdout[:65536]
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return sorted({m.decode() for m in PROGRAM.findall(out)})[:8]
+
+
 def start_fcitx(children, env):
     # Own Fcitx on the sandbox's private bus; system addons only (no LAB addon in milestone 1).
     fcitx = subprocess.Popen(['/usr/bin/fcitx5', '-D', '-k', '--disable', 'all', '--enable', 'keyboard,dbus,wayland,waylandim',
@@ -340,6 +354,8 @@ def inside():
             if attached_at is not None and time.monotonic() - attached_at >= SETTLE_SECONDS:
                 break
             time.sleep(.2)
+        if ime is not None:
+            report['fcitxPrograms'] = fcitx_programs(dict(os.environ, WAYLAND_DISPLAY=sockets[0].name))
         report['observedSeconds'] = round(time.monotonic() - started, 2)
         report['slackExitedEarly'] = exited_early
         report['slackExitCode'] = slack.returncode if exited_early else None

@@ -535,9 +535,12 @@
         "tools/closed_hyprland_mapping.py",
         "tools/native_ime_clients.py",
         "tools/slack_injector.py",
-        "tools/slack_supervisor.py"
+        "tools/slack_supervisor.py",
+        "src/sessionarm.h",
+        "tools/fcitx_slack_lab.pro",
+        "tests/slack_session/sessionarm_tests.cpp"
       ],
-      "notes": "Milestone 1 (IME dry run) done; step 2 pure injector/supervisor done; next: addon gates, nested Hyprland composition.",
+      "notes": "M1 IME dry run done; step 2 supervisor done; step 3 addon gate variant built (arm pipe, program slack, commit text); next: nested composition wiring.",
       "tests": [
         "python3 -m unittest discover -s tests/slack_session",
         "python3 -m unittest discover -s tests/slack_probe",

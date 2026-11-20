@@ -34,5 +34,12 @@
     "nested Hyprland",
     "Slack composer field (needs login)"
   ],
-  "seatKeyboard": "The virtual-keyboard helper refuses outside its own lab (HOME/fixture guards) and was not needed: Sway grants text-input focus without it. Removed from the sandbox; rerun confirmed the same markers."
+  "seatKeyboard": "The virtual-keyboard helper refuses outside its own lab (HOME/fixture guards) and was not needed: Sway grants text-input focus without it. Removed from the sandbox; rerun confirmed the same markers.",
+  "fcitxProgram": {
+    "slack": [
+      "slack"
+    ],
+    "chromium": [],
+    "source": "own Fcitx DebugInfo, program names only, dry run"
+  }
 }
