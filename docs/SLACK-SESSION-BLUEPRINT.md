@@ -343,3 +343,18 @@ passwd for Slack (step-0 decision: Slack sees the host identity).
 Residual: Slack runs as the same uid in the same mount namespace as the lab, so
 it could reach `/run/lab` sockets (private Fcitx bus, hyprctl). Accepted for a
 no-input trial of the owner's own Slack; revisit before stage 2.
+
+### Launch trial results (owner-approved, one shot each)
+
+001 (data/hyprland-slack-launch-001-result.json): window mapped in 2.2 s
+(class `slack`), Fcitx program `slack`, addon records delivered, 0 commits,
+clean stop and profile; failed only on relayRefused=4 (concurrency 16 → 32).
+The owner did not click, so the focus check was not done.
+002 (data/hyprland-slack-launch-002-result.json): PASS. Each mouse move
+composer → search → composer produced focus-out, capability and focus-in
+records (context id 1 throughout: one text-input per window). Composer and
+search both report purpose `normal`, so purpose cannot distinguish them: the
+supervisor's revoke on any context record is the binding guard, and the
+zero-injection IC-reset gate is satisfied. Before 001 the owner's host Slack
+was still running in the tray; it was stopped with SIGTERM and its stale
+SingletonLock (dead PID, verified) removed with owner approval.

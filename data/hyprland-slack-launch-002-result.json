@@ -1,0 +1,202 @@
+{
+ "approval": "owner one-shot, consumed",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch",
+ "commit": "e86413c",
+ "conclusion": "PASS. Each owner click produced focus-out + capability + focus-in records from the addon (context id 1 throughout, one text-input per window); composer and search both report purpose normal, so purpose cannot tell them apart and the supervisor must revoke on any context record (it already does). Grok IC-reset gate satisfied via focus-change records.",
+ "date": "2026-11-20",
+ "ownerAction": "mouse only, no typing: composer -> search -> composer after Slack loaded",
+ "result": {
+  "addonSawSlack": true,
+  "armLatchWrittenBeforeLaunch": true,
+  "bridgeStats": {
+   "accepted": 36,
+   "blocked": 24,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 1183236,
+   "opened": 12,
+   "rejectedDomains": {
+    "slackb.com": 24
+   },
+   "tlsDenied": 0
+  },
+  "commitRecords": 0,
+  "compositorStayedAlive": true,
+  "contextRecords": [
+   [
+    1.8,
+    "k",
+    "other",
+    1
+   ],
+   [
+    1.8,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    22.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    22.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    22.5,
+    "i",
+    "normal",
+    1
+   ],
+   [
+    33.0,
+    "u",
+    "normal",
+    1
+   ],
+   [
+    33.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    33.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    33.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    33.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    33.4,
+    "i",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "u",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    56.5,
+    "i",
+    "normal",
+    1
+   ],
+   [
+    59.0,
+    "u",
+    "normal",
+    1
+   ],
+   [
+    59.2,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    59.2,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    59.2,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    59.2,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    59.2,
+    "i",
+    "normal",
+    1
+   ]
+  ],
+  "contextRecordsTruncated": false,
+  "dbusInputFrontendAbsent": true,
+  "exactCompositor": "installed nested Hyprland",
+  "fcitxAlive": true,
+  "fcitxAliveAfterGate": true,
+  "fcitxPrograms": [
+   "slack"
+  ],
+  "finishErrors": [],
+  "foreignWindowsMax": 0,
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "inputInjected": false,
+  "maxTrialSeconds": 150,
+  "observedSeconds": 90.1,
+  "outerClean": true,
+  "parentDisplayConnection": true,
+  "passed": true,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "relayRefused": 0,
+  "renderNodeGranted": true,
+  "singletonLockLeft": false,
+  "singletonRelease": "released",
+  "slackConnected": true,
+  "slackExitedEarly": false,
+  "slackLaunch": true,
+  "slackProcessesRemaining": 0,
+  "slackStop": "graceful",
+  "slackWindowClasses": [
+   "slack"
+  ],
+  "textRead": false,
+  "windowMapped": true,
+  "windowMappedSeconds": 2.2
+ },
+ "schema": 1
+}
