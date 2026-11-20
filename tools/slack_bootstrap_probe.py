@@ -31,8 +31,9 @@ MARKERS = {
     'fatal': (b'fatal:', b'check failed:'),
     'textInputManagerBound': (b'"zwp_text_input_manager_v3"',),
     'textInputCreated': (b'.get_text_input(',),
-    'textInputEnter': (b'.enter(wl_surface',),
-    'textInputEnabled': (b'.enable()',),
+    # Scoped to the text-input object so other interfaces' enter/enable cannot set the flag.
+    'textInputEnter': (re.compile(rb'zwp_text_input_v3#\d+\.enter\(wl_surface'),),
+    'textInputEnabled': (re.compile(rb'zwp_text_input_v3#\d+\.enable\(\)'),),
 }
 # Dry-run IME milestone: own Fcitx in the closed Sway, Wayland text-input-v3 flags.
 IME_FLAGS = ['--enable-wayland-ime', '--wayland-text-input-version=3']
@@ -46,7 +47,8 @@ VARIANTS = {'plain': [], 'logging': ['--enable-logging=stderr', '--v=0'],
             'disable-dev-shm': ['--disable-dev-shm-usage', '--enable-logging=stderr']}
 WAYLAND_LINE = (b'wl_', b'xdg_', b'zwp_', b'wp_', b'zxdg_', b'org_kde', b'zwlr_')
 CODES = {'diag-dry-only', 'control-dry-only', 'root-not-admitted', 'host-slack-running', 'unsafe-bwrap', 'runtime-signatures', 'secrets-proxy',
-         'output-bound', 'report-shape', 'not-private-control', 'private-display'}
+         'output-bound', 'report-shape', 'not-private-control', 'private-display', 'ime-dry-only', 'ime-target',
+         'dry-marker-required'}
 REASONS = {'profile-not-directory', 'profile-ownership', 'profile-symlink-parent', 'singleton-lock-present', 'host-bus-address'}
 
 
@@ -104,7 +106,7 @@ def scan(chunks, now=time.monotonic, started=None, publish=None):
         # Count attaches that start in this chunk (overlap excluded), capped.
         first['attachCount'] = min(10000, first['attachCount'] + chunk.lower().count(b'.attach(wl_buffer'))
         for name, needles in MARKERS.items():
-            if not flags[name] and any(n in frame for n in needles):
+            if not flags[name] and any(n.search(frame) if hasattr(n, 'search') else n in frame for n in needles):
                 flags[name] = True
                 first[name] = round(now() - started, 2)
         tail = frame[-128:]
@@ -246,9 +248,13 @@ def start_fcitx(children, env):
     while time.monotonic() < end:
         if fcitx.poll() is not None:
             return False
-        probe = subprocess.run(['/usr/bin/gdbus', 'call', '--session', '--dest', 'org.freedesktop.DBus', '--object-path',
+        try:
+            probe = subprocess.run(['/usr/bin/gdbus', 'call', '--session', '--dest', 'org.freedesktop.DBus', '--object-path',
                                 '/org/freedesktop/DBus', '--method', 'org.freedesktop.DBus.NameHasOwner', 'org.fcitx.Fcitx5'],
-                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=.5)
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=.5, env=env)
+        except (OSError, subprocess.TimeoutExpired):
+            time.sleep(.05)
+            continue
         if probe.stdout == b'(true,)\n':
             return True
         time.sleep(.05)
@@ -282,15 +288,17 @@ def inside():
         env = dict(os.environ, WAYLAND_DISPLAY=sockets[0].name, WAYLAND_DEBUG='client')
         proxy = 'http://127.0.0.1:' + str(relay.port)
         env.update(HTTPS_PROXY=proxy, HTTP_PROXY=proxy, https_proxy=proxy, http_proxy=proxy, NO_PROXY='')
-        started = time.monotonic()
         ime = os.environ.get('RASKLAD_BOOTSTRAP_IME')
+        control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
+        diag = os.environ.get('RASKLAD_BOOTSTRAP_DIAG')
+        # Second gate: dry-only paths (they read Slack's logs) also require the explicit dry marker.
+        if (ime or diag or control) and os.environ.get('RASKLAD_BOOTSTRAP_DRY') != '1':
+            raise RuntimeError('dry-marker-required')
         if ime is not None:
             if ime not in IME_TARGETS:
                 raise RuntimeError('ime-target')
-            lab_env = dict(os.environ, WAYLAND_DISPLAY=sockets[0].name)
-            report['fcitxUp'] = start_fcitx(children, lab_env)
-        control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
-        diag = os.environ.get('RASKLAD_BOOTSTRAP_DIAG')
+            report['fcitxUp'] = start_fcitx(children, dict(os.environ, WAYLAND_DISPLAY=sockets[0].name))
+        started = time.monotonic()
         variant = diag if diag in VARIANTS else 'plain'
         chromium = [CHROMIUM, '--ozone-platform=wayland', '--disable-gpu', '--no-first-run', '--user-data-dir=/tmp/control']
         target = (chromium + IME_FLAGS + [FIELD_PAGE] if ime == 'chromium'
@@ -386,7 +394,7 @@ def plan():
 
 
 def run(dry=False, control=False, hello=False, diag=None, ime=None):
-    if ime is not None and (not dry or ime not in IME_TARGETS):
+    if ime is not None and (not dry or ime not in IME_TARGETS or control or hello or diag):
         raise RuntimeError('ime-dry-only')
     if (control or hello) and not dry:
         raise RuntimeError('control-dry-only')
@@ -449,6 +457,9 @@ def run(dry=False, control=False, hello=False, diag=None, ime=None):
         if ime:
             at = command.index('--')
             command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_IME', ime]
+        if dry:
+            at = command.index('--')
+            command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_DRY', '1']
         if slack_pids():
             raise RuntimeError('host-slack-running')
         if not dry:

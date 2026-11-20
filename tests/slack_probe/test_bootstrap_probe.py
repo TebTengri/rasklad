@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 import importlib.util, json, os, socket, subprocess, sys, tempfile, time, unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -63,8 +64,29 @@ class Modes(unittest.TestCase):
         flags, _ = probe.scan(iter(stream))
         for key in ('textInputManagerBound', 'textInputCreated', 'textInputEnter', 'textInputEnabled'):
             self.assertTrue(flags[key], key)
-        flags, _ = probe.scan(iter([b'wl_keyboard#12.enter(5, wl_surface#20, array[0])\n']))
+        flags, _ = probe.scan(iter([b'wl_keyboard#12.enter(5, wl_surface#20, array[0])\n', b'wl_surface#20.enter(wl_output#4)\n',
+                                    b'zwp_pointer_constraints_v1#7.enable()\n']))
         self.assertFalse(flags['textInputEnter'])
+        self.assertFalse(flags['textInputEnabled'])
+
+    def test_ime_cannot_combine_with_other_dry_modes(self):
+        for extra in (dict(control=True), dict(hello=True), dict(diag='plain')):
+            with self.assertRaisesRegex(RuntimeError, 'ime-dry-only'):
+                probe.run(dry=True, ime='slack', **extra)
+
+    def test_inside_requires_dry_marker_for_dry_paths(self):
+        env = {'RASKLAD_BOOTSTRAP_IME': 'slack'}
+        with mock.patch.dict(os.environ, env, clear=False), mock.patch.object(probe, 'private_context', return_value=True):
+            os.environ.pop('RASKLAD_BOOTSTRAP_DRY', None)
+            with mock.patch.object(probe, 'load') as load, mock.patch.object(probe.subprocess, 'Popen') as popen:
+                load.return_value.Relay.return_value.port = 1
+                runtime = Path(tempfile.mkdtemp())
+                sock = socket.socket(socket.AF_UNIX); sock.bind(str(runtime / 'wayland-1'))
+                popen.return_value.poll.return_value = None
+                with mock.patch.dict(os.environ, {'XDG_RUNTIME_DIR': str(runtime)}):
+                    with self.assertRaisesRegex(RuntimeError, 'dry-marker-required'):
+                        probe.inside()
+                sock.close()
 
 
 class Reap(unittest.TestCase):

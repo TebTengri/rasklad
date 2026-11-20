@@ -76,3 +76,18 @@ and create a text input; Chromium's autofocus field gets `enter` and
 capped ceilings). The virtual-keyboard helper was not needed (Sway grants focus) and was removed. Open: safeStorage backend
 not named in logs; LAB addon and nested Hyprland next.
 Evidence: data/slack-ime-milestone1-dryrun-result.json.
+
+### Milestone 1 review dispositions (ecc:security-reviewer, Grok ask mode)
+
+Both confirmed: `--dry-run-ime` cannot reach the real profile or the online
+broker; mapping probe limits unchanged. Fixed: scope guard now checks CPU
+against the requested percent (200% Slack scope was refused by its own guard;
+guard is now evaluated in tests against fake cgroup files); ceilings bound to
+the unit prefix (mapping can never exceed 1536M/96/100%/27s); non-dict limits
+refused and copied; inside() requires an explicit RASKLAD_BOOTSTRAP_DRY marker
+for ime/diag/control paths; ime cannot combine with other dry modes; Fcitx
+probe errors handled and excluded from the observe window; gdbus gets the
+explicit env; text-input markers scoped to the zwp_text_input_v3 object; error
+codes added. Moot: helper hash pin, helper stdin pipe (helper removed).
+Deferred: tighter private-bus policy (bus is private, profile empty); safeStorage
+hint tokens (dry-only, informational).
