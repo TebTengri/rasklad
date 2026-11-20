@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-supervised --seat-probe",
+  "commit": "5c36e9f",
+  "approval": "owner one-shot approval (2026-11-20)",
+  "config": "catch-all submap rasklad_lock + device { name = hl-virtual-keyboard-unknown; keybinds = false }",
+  "result": {
+    "afterResetStrayKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "afterResetSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "baselineStrayKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "baselineSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "compositorAlive": true,
+    "compositorStayedAlive": true,
+    "exactCompositor": "installed nested Hyprland",
+    "fcitxAliveAfterGate": true,
+    "keyboardNames": [
+      "wl_keyboard",
+      "hl-virtual-keyboard-fcitx5",
+      "hl-virtual-keyboard-unknown",
+      "hl-virtual-keyboard-unknown-1"
+    ],
+    "lockedStrayAfterKeyword": {
+      "acked": true,
+      "events": 20
+    },
+    "lockedStrayKeyboard": {
+      "acked": true,
+      "events": 0
+    },
+    "lockedSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "passed": true,
+    "seatProbe": true,
+    "seatProbeComplete": true,
+    "strayKeywordResult": "ok",
+    "submapActive": "rasklad_lock",
+    "submapEnter": "ok",
+    "submapReset": "ok"
+  },
+  "findings": [
+    "Under the catch-all submap the supervisor helper (keybinds=false) still delivers (20 events) while the stray virtual keyboard is blocked (0).",
+    "The runtime form works: hyprctl keyword device[hl-virtual-keyboard-unknown-1]:keybinds false unblocked the stray keyboard at once (0 -> 20), so per-device exemption can be set at arm time, no config reload.",
+    "Consequence: the exemption is keyed by device name only. Names are assigned by order (unknown, unknown-1); the supervisor must check that exactly one exempt device exists and that it is its own before arming, and must never exempt more.",
+    "Not measured: the physical wl_keyboard (no host input by policy); it is a normal keyboard subject to the same catch-all. F12 inside the submap is bound for it."
+  ]
+}

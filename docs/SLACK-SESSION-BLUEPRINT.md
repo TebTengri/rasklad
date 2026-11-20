@@ -269,3 +269,16 @@ and a plain submap would also block the injection. Hyprland names devices
 per-device `keybinds = false` for the supervisor helper only — to be measured
 next. The first approved run did not measure (seat_probe not forwarded; fixed
 in 1b1fa9b with an AST test).
+
+Seat probe 2 (owner-approved, data/hyprland-seat-probe-002-result.json):
+catch-all submap + `keybinds = false` for the supervisor helper device only —
+helper 20 events under lock, stray keyboard 0. The same exemption applied at
+runtime via `hyprctl keyword device[...]:keybinds false` takes effect at once
+(stray 0 → 20). Design: on arm the supervisor (1) lists devices and requires
+exactly one `hl-virtual-keyboard-unknown*` — its own, spawned just before —
+(2) sets keybinds=false for it only, (3) enters the lock submap (F12 leaves);
+on revoke: submap reset, exemption removed, helper destroyed. Physical
+`wl_keyboard` is not measured directly (no host input by policy).
+Name-keyed exemption is the weak point: any other virtual keyboard created
+with the exempt name would pass — hence the device count check before arming
+and on every key.

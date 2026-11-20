@@ -106,7 +106,7 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "546d19d67c03504cd1176a05247f67c9661a5b23b9c6dd522005b93a8036dfa7",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "79fb92b2d6f8b91eab08bd5642fd7fdbcd648483a7865c2813957900b337905f",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
@@ -390,7 +390,7 @@
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
     "tools/hyprland_feedback_parent.py": "18c72b48fa1455043ea85cb0236e0be251be2192eff0cef90e5113ce6d51dd6c",
-    "tools/hyprland_ime_lab.py": "7b553ca59b85d1361e12a52eb2cf3f8e9318474715b5d53c65eef79105aea43b",
+    "tools/hyprland_ime_lab.py": "1e2ce9e8e591d0d408614a3a02feb05c5aa04015c08070d4011a1bc07c1e387e",
     "tools/hyprland_mapping_probe.py": "4c3bd3c881683e48eb98d0dbb2b8e7a839f309651a5f88501aa79ec88a8f7b25",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
@@ -401,7 +401,7 @@
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
-    "tools/native_ime_clients.py": "ab33d9e42da547511ffbf0aa34e34150b139800fa873de2a2e35272ec67917ee",
+    "tools/native_ime_clients.py": "960b8d84823670666260947213b86e1171749c957c57b65f75bfff5fb6fd975e",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
     "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
@@ -6033,32 +6033,32 @@
         },
         {
           "name": "supervised_selection",
-          "line": 62,
+          "line": 66,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 70,
+          "line": 74,
           "kind": "FunctionDef"
         },
         {
           "name": "start_bus",
-          "line": 165,
+          "line": 169,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 192,
+          "line": 196,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 265,
+          "line": 269,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 399,
+          "line": 403,
           "kind": "FunctionDef"
         }
       ]
@@ -6476,37 +6476,37 @@
         },
         {
           "name": "compositor_binding",
-          "line": 279,
+          "line": 280,
           "kind": "FunctionDef"
         },
         {
           "name": "descends_from",
-          "line": 296,
+          "line": 297,
           "kind": "FunctionDef"
         },
         {
           "name": "AddonRecords",
-          "line": 309,
+          "line": 310,
           "kind": "ClassDef"
         },
         {
           "name": "run_supervised_driver",
-          "line": 329,
+          "line": 330,
           "kind": "FunctionDef"
         },
         {
           "name": "load_lab_module",
-          "line": 492,
+          "line": 493,
           "kind": "FunctionDef"
         },
         {
           "name": "fd_present",
-          "line": 500,
+          "line": 501,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 514,
+          "line": 515,
           "kind": "FunctionDef"
         },
         {
@@ -6536,12 +6536,12 @@
         },
         {
           "name": "__init__",
-          "line": 312,
+          "line": 313,
           "kind": "FunctionDef"
         },
         {
           "name": "poll",
-          "line": 314,
+          "line": 315,
           "kind": "FunctionDef"
         },
         {
@@ -6551,22 +6551,22 @@
         },
         {
           "name": "write",
-          "line": 346,
+          "line": 347,
           "kind": "FunctionDef"
         },
         {
           "name": "stop_helper",
-          "line": 351,
+          "line": 352,
           "kind": "FunctionDef"
         },
         {
           "name": "current",
-          "line": 383,
+          "line": 384,
           "kind": "FunctionDef"
         },
         {
           "name": "pending_receipt",
-          "line": 403,
+          "line": 404,
           "kind": "FunctionDef"
         }
       ]
