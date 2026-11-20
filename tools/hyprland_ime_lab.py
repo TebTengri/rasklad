@@ -362,7 +362,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
                         raise base.Refused('changed_gpu_identity')
                 if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
                     raise base.Refused('render_node_not_admitted')
-                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant,slack_supervised=slack_supervised),
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant,slack_supervised=slack_supervised,seat_probe=seat_probe),
                                          pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
                                          stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
                                          start_new_session=True, preexec_fn=chrome.limits)

@@ -131,6 +131,15 @@ class HyprlandSupervised(unittest.TestCase):
                              capture_output=True, text=True, timeout=20)
         self.assertIn('slack_supervised_requires_run_approved', out.stdout)
 
+    def test_run_forwards_every_selector_to_sandbox_args(self):
+        import ast, inspect
+        tree = ast.parse(inspect.getsource(self.hypr.run))
+        calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, 'id', None) == 'sandbox_args']
+        self.assertEqual(len(calls), 1)
+        keywords = {k.arg: getattr(k.value, 'id', None) for k in calls[0].keywords}
+        for name in ('slack_supervised', 'seat_probe'):
+            self.assertEqual(keywords.get(name), name)
+
     def test_descends_from(self):
         self.assertTrue(clients.descends_from(os.getpid(), os.getpid()))
         self.assertTrue(clients.descends_from(os.getpid(), os.getppid()))
