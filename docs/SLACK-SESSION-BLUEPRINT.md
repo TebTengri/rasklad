@@ -282,3 +282,16 @@ on revoke: submap reset, exemption removed, helper destroyed. Physical
 Name-keyed exemption is the weak point: any other virtual keyboard created
 with the exempt name would pass — hence the device count check before arming
 and on every key.
+
+Grok review of fb4d883 (seat lock, FIX-FIRST). Closed: the exemption is bound
+to the live device (name + address, re-listed after the keyword; a recreated
+device with the same name breaks `intact()`); every revoke runs exemption off →
+helper gone → addon arm closed → submap off; `lock()` unwinds on any failure;
+`unlock()` keeps state until each compositor step answers ok; focus-unchanged
+is required again. Unit tests with a fake hyprctl cover these paths.
+ACCEPTED RESIDUALS (documented): F12 in the lock submap is the owner's kill
+switch, so any non-exempt keyboard can also leave the submap; the supervisor
+sees it at the next key (≤ one key step) and revokes. Pointer input is not
+locked: a click that moves focus is caught by the addon focus records and
+compositor binding, a click inside the same field is not. Both need a fixed
+owner rule for the live run: no mouse use after arming.

@@ -282,29 +282,51 @@ class HyprSeat:
     from keybinds, then enter the catch-all submap (F12 leaves)."""
     PREFIX='hl-virtual-keyboard-unknown'
     def __init__(self,base):
-        self.base,self.exempt,self.names=base,None,None
+        self.base,self.exempt,self.locked,self.devices=base,False,False,None
     def keyboards(self):
+        """Sorted (name, address) of every keyboard; the address identifies the live device."""
         devices=json.loads(hyprctl(self.base,'-j','devices').stdout or b'{}')
-        return sorted(k['name'] for k in devices.get('keyboards',[]) if type(k) is dict and type(k.get('name')) is str)
+        return sorted((k['name'],k.get('address')) for k in devices.get('keyboards',[])
+                      if type(k) is dict and type(k.get('name')) is str and type(k.get('address')) is str)
     def lock(self):
-        names=self.keyboards()
-        candidates=[n for n in names if n.startswith(self.PREFIX)]
-        if candidates!=[self.PREFIX]:return False  # exactly one helper: ours
-        if hyprctl(self.base,'keyword',f'device[{self.PREFIX}]:keybinds','false',raw=True)!='ok':return False
-        self.exempt=self.PREFIX
-        if hyprctl(self.base,'dispatch','submap','rasklad_lock',raw=True)!='ok':return False
-        self.names=names
-        return self.intact()
-    def intact(self):
-        return (self.names is not None and hyprctl(self.base,'submap',raw=True)=='rasklad_lock'
-                and self.keyboards()==self.names)
-    def unlock(self):
         try:
-            hyprctl(self.base,'dispatch','submap','reset')
-            if self.exempt:hyprctl(self.base,'keyword',f'device[{self.exempt}]:keybinds','true')
+            before=self.keyboards()
+            ours=[d for d in before if d[0].startswith(self.PREFIX)]
+            if [d[0] for d in ours]!=[self.PREFIX]:return False  # exactly one helper: ours
+            self.exempt=True  # set before the call: cleanup must try to undo it
+            if hyprctl(self.base,'keyword',f'device[{self.PREFIX}]:keybinds','false',raw=True)!='ok':return False
+            self.locked=True
+            if hyprctl(self.base,'dispatch','submap','rasklad_lock',raw=True)!='ok':return False
+            # Re-list after the keyword: the exempt name must still be the same live device.
+            self.devices=before
+            if self.keyboards()!=before:return False
+            return self.intact()
+        finally:
+            if self.devices is None or not self.intact():self.unlock()
+    def intact(self):
+        try:
+            return (self.devices is not None and hyprctl(self.base,'submap',raw=True)=='rasklad_lock'
+                    and self.keyboards()==self.devices)
+        except (self.base.Refused,OSError,subprocess.SubprocessError,ValueError):
+            return False
+    def release_exemption(self):
+        """First step of every revoke: the helper name must not stay exempt."""
+        if not self.exempt:return True
+        try:
+            if hyprctl(self.base,'keyword',f'device[{self.PREFIX}]:keybinds','true',raw=True)=='ok':self.exempt=False
         except (self.base.Refused,OSError,subprocess.SubprocessError):
             pass
-        self.exempt=self.names=None
+        return not self.exempt
+    def unlock(self):
+        """Exemption off, then submap off; state is kept until each step succeeds."""
+        self.devices=None
+        released=self.release_exemption()
+        if self.locked:
+            try:
+                if hyprctl(self.base,'dispatch','submap','reset',raw=True)=='ok':self.locked=False
+            except (self.base.Refused,OSError,subprocess.SubprocessError):
+                pass
+        return released and not self.locked
 
 
 def compositor_binding(base):
@@ -380,6 +402,17 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             _,writable,_=select.select([],[helper.stdin],[],1)
             if not writable:raise OSError('helper stdin full')
             if os.write(helper.stdin.fileno(),data)!=len(data):raise OSError('short helper write')
+        def revoke_all():
+            # Order: exemption off → helper gone → addon arm closed → submap off.
+            nonlocal write_end
+            seat=hyprland_seat_holder.get('seat')
+            if seat:seat.release_exemption()
+            stop_helper()
+            if write_end is not None:
+                try:os.write(write_end,b'x')
+                except OSError:pass
+                os.close(write_end);write_end=None
+            if seat:seat.unlock()
         def stop_helper():
             if not helper.stdin.closed:helper.stdin.close()  # no further command can be written
             if helper.poll() is None:
@@ -417,17 +450,17 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             try:
                 fresh=records.poll()
             except base.Refused:
-                sv.event('error');stop_helper();raise
+                sv.event('error');revoke_all();raise
             if fresh:  # any focus/reset/capability change after arm revokes and stops the helper
                 sv.event(CONTEXT_EVENTS[fresh[0][:1]])
-                if sv is s:stop_helper()
+                if sv is s:revoke_all()
                 return (0,0,0,'none')
             if not hyprland:return binding
             try:
                 now=compositor_binding(base)
                 if now and not seat.intact():
                     sv.event('seat-lost')
-                    if sv is s:stop_helper()
+                    if sv is s:revoke_all()
                     return (0,0,0,'none')
             except (base.Refused,OSError,subprocess.SubprocessError,ValueError):
                 now=None
@@ -487,6 +520,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         records.poll(.2)
         report['passwordFocusReported']=any(r[:1]==b'i' and r[1:2]==b'p' for r in records.contexts[seen:])
         link.ask('focus-prose');records.poll(.3)
+        report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
         if hyprland:
             # A new keyboard during the session (stand-in for any other input source):
             # the submap must swallow its keys and the supervisor must revoke.
@@ -503,13 +537,10 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
                 stray.stdin.close();stray.kill();stray.wait()
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
         before=link.ask('observe')
-        report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
         s.event('f12')
-        os.write(write_end,b'x');os.close(write_end);write_end=None
-        stop_helper()
+        revoke_all()
         if hyprland:
-            seat.unlock()
-            report['seatReleasedAfterRevoke']=hyprctl(base,'submap',raw=True)!='rasklad_lock'
+            report['seatReleasedAfterRevoke']=hyprctl(base,'submap',raw=True)!='rasklad_lock' and not seat.exempt
         report['supervisedRevokedRefusesNext']=s.issue('backspace',*binding) is None and s.state=='REVOKED'
         if hyprland:
             # A changed surface generation must be refused (fresh supervisor, no key sent).
@@ -538,7 +569,11 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         driver.wait(timeout=5)
         return subprocess.CompletedProcess(driver.args,driver.returncode,out+rest,None),report
     finally:
-        if hyprland_seat_holder.get('seat'):hyprland_seat_holder['seat'].unlock()
+        if hyprland_seat_holder.get('seat'):
+            hyprland_seat_holder['seat'].release_exemption()
+            if not helper.stdin.closed:helper.stdin.close()
+            if helper.poll() is None:helper.kill();helper.wait()
+            hyprland_seat_holder['seat'].unlock()
         receipts.close()
         if not helper.stdin.closed:helper.stdin.close()
         if helper.poll() is None:helper.kill();helper.wait()
@@ -616,7 +651,7 @@ def run(base, children):
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1':supervised=False;control=True  # measurement: only require completion
-        hypr_required=['bindingFromCompositor','bindingChangeRefused','seatLocked','strayBlockedDuringLock','newDeviceRevokes','seatReleasedAfterRevoke'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
+        hypr_required=['bindingFromCompositor','bindingChangeRefused','seatLocked','strayBlockedDuringLock','newDeviceRevokes','seatReleasedAfterRevoke','compositorFocusUnchanged'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
         required=(['seatProbeComplete'] if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1' else ['armWriteEndOnlyInSupervisor'] if control else
                   ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','contextFromAddon','purposeCheckArmed','passwordFocusReported','passwordFocusRefused','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor']+hypr_required if supervised else

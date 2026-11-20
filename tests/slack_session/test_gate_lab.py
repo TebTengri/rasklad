@@ -165,6 +165,78 @@ class AddonRecordParsing(unittest.TestCase):
             a.close(); b.close()
 
 
+class FakeHypr:
+    def __init__(self, keyboards, fail=()):
+        self.keyboards, self.fail, self.submap, self.calls = list(keyboards), set(fail), 'default', []
+
+    def __call__(self, base, *args, raw=False):
+        import json as _json
+        self.calls.append(args)
+        if args == ('-j', 'devices'):
+            out = _json.dumps({'keyboards': [{'name': n, 'address': a} for n, a in self.keyboards]}).encode()
+            return subprocess.CompletedProcess(args, 0, out, b'')
+        if args[0] in self.fail:
+            result = 'error'
+        elif args[:2] == ('dispatch', 'submap'):
+            self.submap = 'rasklad_lock' if args[2] == 'rasklad_lock' else 'default'
+            result = 'ok'
+        elif args == ('submap',):
+            result = self.submap
+        else:
+            result = 'ok'
+        return result if raw else subprocess.CompletedProcess(args, 0, result.encode(), b'')
+
+
+class Seat(unittest.TestCase):
+    ONE = [('wl_keyboard', '0x1'), ('hl-virtual-keyboard-fcitx5', '0x2'), ('hl-virtual-keyboard-unknown', '0x3')]
+
+    def seat(self, fake):
+        original = clients.hyprctl
+        clients.hyprctl = fake
+        self.addCleanup(setattr, clients, 'hyprctl', original)
+        return clients.HyprSeat(Base)
+
+    def test_lock_and_unlock(self):
+        fake = FakeHypr(self.ONE)
+        seat = self.seat(fake)
+        self.assertTrue(seat.lock())
+        self.assertTrue(seat.intact())
+        self.assertIn(('keyword', 'device[hl-virtual-keyboard-unknown]:keybinds', 'false'), fake.calls)
+        self.assertTrue(seat.unlock())
+        self.assertEqual(fake.submap, 'default')
+        self.assertIn(('keyword', 'device[hl-virtual-keyboard-unknown]:keybinds', 'true'), fake.calls)
+        self.assertFalse(seat.exempt)
+
+    def test_refuses_second_helper(self):
+        fake = FakeHypr(self.ONE + [('hl-virtual-keyboard-unknown-1', '0x4')])
+        seat = self.seat(fake)
+        self.assertFalse(seat.lock())
+        self.assertNotIn(('keyword', 'device[hl-virtual-keyboard-unknown]:keybinds', 'false'), fake.calls)
+
+    def test_replaced_device_breaks_intact(self):
+        fake = FakeHypr(self.ONE)
+        seat = self.seat(fake)
+        self.assertTrue(seat.lock())
+        fake.keyboards[-1] = ('hl-virtual-keyboard-unknown', '0x9')  # same name, new device
+        self.assertFalse(seat.intact())
+
+    def test_submap_failure_unwinds_exemption(self):
+        fake = FakeHypr(self.ONE, fail={'dispatch'})
+        seat = self.seat(fake)
+        self.assertFalse(seat.lock())
+        self.assertFalse(seat.exempt)
+        self.assertIn(('keyword', 'device[hl-virtual-keyboard-unknown]:keybinds', 'true'), fake.calls)
+
+    def test_failed_release_keeps_state(self):
+        fake = FakeHypr(self.ONE)
+        seat = self.seat(fake)
+        self.assertTrue(seat.lock())
+        fake.fail = {'keyword', 'dispatch'}
+        self.assertFalse(seat.unlock())
+        self.assertTrue(seat.exempt)
+        self.assertTrue(seat.locked)
+
+
 class LabSelection(unittest.TestCase):
     def test_slack_gate_is_exclusive(self):
         for options in (dict(focus_stress=True), dict(addon_witness=True), dict(frontend_variant='keep-grab'),
