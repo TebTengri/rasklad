@@ -164,11 +164,23 @@ try{
   // Non-Space flush path (Escape here; Enter/Tab/punctuation share it): commits what is shown.
   phase='manual_flush';await reset();await type('word');await type('shift2');await type('escape');
   report.manualFlushCommitsShown=await v()==='привет';
+  await type('space'); // Escape latches bypass; a boundary ends it before the next case
+  // After Space the addon may replace only its own last word, and only when the client
+  // reports surrounding text proving that word + space sits right before the cursor.
+  // Measured: this Chromium under closed Sway reports none, so here the gesture must
+  // refuse and leave the field untouched (the success path needs a client with
+  // surrounding text, e.g. Slack under Hyprland).
+  phase='manual_after_space';await reset();await type('word');await type('space');await type('shift2');
+  report.manualAfterSpaceValue=await v();report.manualAfterSpaceUnknownRefused=report.manualAfterSpaceValue==='ghbdtn '&&await ev(`imeEvents.some(x=>x.type==='compositionstart')`);
+  phase='manual_after_space_dom_cleared';await reset();await type('word');await type('space');
+  await ev(`prose.value=''`);await type('shift2');report.manualClearedFieldUntouched=await v()==='';
+  phase='manual_after_space_key_between';await reset();await type('word');await type('space');await type('backspace');await type('shift2');
+  report.manualKeyBetweenNoReplace=await v()==='ghbdtn';
   phase='manual_password';await reset('secret');await type('word');await type('shift2');await type('space');
   report.manualPasswordUntouched=await ev(`secret.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
   phase='manual_focus';await reset();await type('word');await type('shift2');await ev(`other.focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,120));await type('space');
   report.manualFocusNoLeak=await ev(`other.value===' '`);
-  const required=['manualPreeditConverted','manualConvertedCommit','manualUndoPreedit','manualUndoCommit','manualNoAutoCorrection','manualShiftLetterOriginal','manualSlowIgnored','manualEmptyNothing','manualShiftBeforeWord','manualBackspaceConverted','manualBackspaceCommit','manualFlushCommitsShown','manualPasswordUntouched','manualFocusNoLeak'];
+  const required=['manualPreeditConverted','manualConvertedCommit','manualUndoPreedit','manualUndoCommit','manualNoAutoCorrection','manualShiftLetterOriginal','manualSlowIgnored','manualEmptyNothing','manualShiftBeforeWord','manualBackspaceConverted','manualBackspaceCommit','manualFlushCommitsShown','manualAfterSpaceUnknownRefused','manualClearedFieldUntouched','manualKeyBetweenNoReplace','manualPasswordUntouched','manualFocusNoLeak'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else{
  await reset();phase='word';await type('word');

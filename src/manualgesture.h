@@ -30,6 +30,37 @@ inline std::string usToRu(std::string_view word) {
     return out;
 }
 
+// Number of Unicode code points in valid UTF-8, or -1 if malformed.
+inline long codePointCount(std::string_view text) {
+    long n = 0;
+    for (std::size_t i = 0; i < text.size(); ++n) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        std::size_t len = c < 0x80 ? 1 : (c & 0xe0) == 0xc0 ? 2 : (c & 0xf0) == 0xe0 ? 3 : (c & 0xf8) == 0xf0 ? 4 : 0;
+        if (!len || i + len > text.size()) return -1;
+        for (std::size_t k = 1; k < len; ++k)
+            if ((static_cast<unsigned char>(text[i + k]) & 0xc0) != 0x80) return -1;
+        i += len;
+    }
+    return n;
+}
+
+// True if the text immediately before the cursor (a code-point index into valid
+// UTF-8) is exactly `expected`. Malformed text or an out-of-range cursor: false.
+inline bool endsBeforeCursor(std::string_view text, unsigned cursor, std::string_view expected) {
+    std::size_t byte = 0;
+    for (unsigned cp = 0; cp < cursor; ++cp) {
+        if (byte >= text.size()) return false;
+        const unsigned char c = static_cast<unsigned char>(text[byte]);
+        std::size_t len = c < 0x80 ? 1 : (c & 0xe0) == 0xc0 ? 2 : (c & 0xf0) == 0xe0 ? 3 : (c & 0xf8) == 0xf0 ? 4 : 0;
+        if (!len || byte + len > text.size()) return false;
+        byte += len;
+    }
+    if (codePointCount(text) < 0) return false;
+    const std::string_view before = text.substr(0, byte);
+    return before.size() >= expected.size() &&
+           before.substr(before.size() - expected.size()) == expected;
+}
+
 // Event kinds the addon feeds in; everything that is not a bare Shift
 // press/release is Other (it breaks a pending gesture).
 enum class Input { ShiftPress, ShiftRelease, Other };

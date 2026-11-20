@@ -23,7 +23,8 @@
 //    (e.g. under shared input state policies).
 //  * Buffer: at most 32 lowercase ASCII letters. Zeroed best effort on clear;
 //    std::string temporaries for preedit/commit may leave allocator copies.
-//  * No logging, stdout/stderr, clipboard, deleteSurroundingText,
+//  * deleteSurroundingText only in RASKLAD_MANUAL_LAB replaceLast() (see there).
+//  * No logging, stdout/stderr, clipboard,
 //    forwardKey, network, IPC of our own, child processes or evaluation.
 //    Initialization reads fixed fixture environment labels; only PROFILE_LAB
 //    initialization reads fixed verified /lab/profile files;
@@ -241,16 +242,35 @@ public:
         ++epoch; callbackBinding->epoch = epoch; lease = {};
 #ifdef RASKLAD_MANUAL_LAB
         gesture.reset();
+        forgetLast();
 #endif
     }
 #ifdef RASKLAD_MANUAL_LAB
     rasklad::manual::DoubleShift gesture;
     bool converted = false; // the preedit shows usToRu(word()) instead of word()
     // Text to show/commit; empty conversion (never for a..z) keeps the original.
-    std::string shown() const {
-        if (!converted) return word();
-        std::string out = rasklad::manual::usToRu(word());
-        return out.empty() ? word() : out;
+    std::string shown() const { return form(word(), converted); }
+    static std::string form(const std::string &typed, bool asRu) {
+        if (!asRu) return typed;
+        std::string out = rasklad::manual::usToRu(typed);
+        return out.empty() ? typed : out;
+    }
+    // The last word this addon committed with Space, kept only until any other
+    // key, lifecycle event or failed check. Only it may be replaced after Space.
+    // Pending: committed, not yet confirmed by a FRESH surrounding-text update from
+    // the client. Confirmed: such an update showed exactly that word + space right
+    // before a collapsed cursor at lastCursor; any later update that differs
+    // (text or cursor, e.g. a mouse click) forgets it. Only Confirmed may replace.
+    std::string lastTyped;
+    bool lastConverted = false;
+    bool lastValid = false;
+    bool lastConfirmed = false;
+    unsigned lastCursor = 0;
+    std::string lastText() const { return form(lastTyped, lastConverted) + ' '; }
+    void forgetLast() {
+        volatile char *p = lastTyped.data();
+        for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
+        lastTyped.clear(); lastConverted = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
     }
 #endif
     const std::uint64_t id;
@@ -414,6 +434,14 @@ public:
 #endif
                 }));
         }
+#ifdef RASKLAD_MANUAL_LAB
+        watchers_.emplace_back(instance_->watchEvent(
+            fcitx::EventType::InputContextSurroundingTextUpdated, fcitx::EventWatcherPhase::PreInputMethod,
+            [this](fcitx::Event &event) {
+                auto *ic = static_cast<fcitx::InputContextEvent &>(event).inputContext();
+                if (auto *s = state(ic, false)) observeSurrounding(ic, *s);
+            }));
+#endif
 #ifdef RASKLAD_SLACK_SESSION_LAB
         // Field content changes are reported as one empty/non-empty bit only; they
         // neither discard state nor count as a lifecycle change.
@@ -762,6 +790,42 @@ private:
     }
 
 #ifdef RASKLAD_MANUAL_LAB
+    // Replace the word this addon just committed with Space by its other form.
+    // Only if nothing happened since (enforced by forgetLast on every other key and
+    // lifecycle event), the context is focused, and the client's surrounding text
+    // shows exactly that word + space right before a collapsed cursor. Unknown
+    // surrounding text refuses (fail closed). Deletes exactly that many code points.
+    static bool lastMatches(fcitx::InputContext *ic, const LabState &s) {
+        const auto &st = ic->surroundingText();
+        return st.isValid() && st.cursor() == st.anchor() &&
+            rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), s.lastText());
+    }
+    // Surrounding-text update from the client (fresh by definition).
+    static void observeSurrounding(fcitx::InputContext *ic, LabState &s) {
+        if (!s.lastValid) return;
+        const bool match = lastMatches(ic, s);
+        if (!s.lastConfirmed) {
+            // Stale pre-commit updates may still arrive: they never confirm and never arm.
+            if (match) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
+            return;
+        }
+        if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
+    }
+    static void replaceLast(fcitx::InputContext *ic, LabState &s) {
+        const std::string oldText = s.lastText();
+        std::string newText = LabState::form(s.lastTyped, !s.lastConverted) + ' ';
+        const auto &st = ic->surroundingText();
+        const long n = rasklad::manual::codePointCount(oldText);
+        const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
+            st.cursor() == s.lastCursor;
+        if (!ok) { s.forgetLast(); wipeString(newText); return; }
+        // Staged before any client call: the new form is Pending until the client
+        // confirms it with a fresh update (so a repeat toggle never acts on stale text).
+        s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
+        ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
+        ic->commitString(newText);
+        wipeString(newText);
+    }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
     // release, depending on the frontend on the press) is ignored.
     static bool isShift(const fcitx::Key &key) {
@@ -1004,7 +1068,16 @@ private:
             if (isShift(key)) {
                 auto *s = state(ic, false);
                 if (!s) return;
-                if (s->empty() || familyOff_ || !eligible(ic) || s->stopping() || !validate(ic, *s)) {
+                if (familyOff_ || !eligible(ic) || s->stopping()) {
+                    s->gesture.reset(); s->forgetLast();
+                    return;
+                }
+                if (s->empty() && s->lastValid) {
+                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time()))
+                        replaceLast(ic, *s); // No state/event access after this call.
+                    return;
+                }
+                if (s->empty() || !validate(ic, *s)) {
                     s->gesture.reset(); // an abandoned release ends the gesture
                     return;
                 }
@@ -1106,7 +1179,7 @@ private:
         // A bare Shift press over a non-empty word defers the decision (no flush,
         // no bypass) and passes unfiltered. Every other press breaks the gesture.
         if (isShift(key)) {
-            if (!s->empty() && !s->bypass() && !s->needsBoundary) {
+            if ((!s->empty() || s->lastValid) && !s->bypass() && !s->needsBoundary) {
                 s->gesture.feed(rasklad::manual::Input::ShiftPress, event.time());
                 return;
             }
@@ -1117,6 +1190,7 @@ private:
             if (s->empty() && !s->bypass() && !s->needsBoundary) return;
         } else {
             s->gesture.feed(rasklad::manual::Input::Other, event.time());
+            s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
         }
 #endif
         const bool boundary = plain && (sym == FcitxKey_space ||
@@ -1176,6 +1250,8 @@ private:
                 std::string out = corrected ? std::move(*corrected) : w;
 #elif defined(RASKLAD_MANUAL_LAB)
                 std::string out = s->shown(); // only what the owner chose to see
+                s->forgetLast();
+                s->lastTyped = w; s->lastConverted = s->converted; s->lastValid = true; // Pending
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
 #endif

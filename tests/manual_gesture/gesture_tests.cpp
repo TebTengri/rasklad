@@ -55,6 +55,17 @@ int main() {
     g.feed(Input::ShiftPress, 1000); g.feed(Input::ShiftRelease, 1050);
     g.feed(Input::ShiftPress, 900); CHECK(!g.feed(Input::ShiftRelease, 950));
 
+    using rasklad::manual::endsBeforeCursor;
+    using rasklad::manual::codePointCount;
+    CHECK(codePointCount("привет ") == 7);
+    CHECK(codePointCount("\xd0") == -1);
+    CHECK(endsBeforeCursor("ghbdtn ", 7, "ghbdtn "));
+    CHECK(endsBeforeCursor("ok привет ", 10, "привет "));
+    CHECK(!endsBeforeCursor("ok привет ", 9, "привет "));   // cursor moved left
+    CHECK(endsBeforeCursor("ok привет tail", 10, "привет ")); // text after cursor is fine
+    CHECK(!endsBeforeCursor("ok hello ", 9, "привет "));
+    CHECK(!endsBeforeCursor("abc", 4, "c"));                 // cursor past the end
+    CHECK(!endsBeforeCursor("ab\xd0", 2, "ab"));            // malformed anywhere
     if (failures) return 1;
     std::printf("manual gesture tests OK\n");
     return 0;
