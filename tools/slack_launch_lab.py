@@ -570,9 +570,22 @@ def run_live_inside(clients, base, fcitx, gate, children):
             records.poll(.2)
             result['fieldAfterCase'] = clients.field_state(records, binding[2])
             report['cases'].append(result)
-            if not result.get('completed'):
+            if not result.get('completed') or sequence == len(LIVE_CASES):
                 break
             time.sleep(.5)
+            # Live run 006: Slack sent a context record after the cleanup (consumed as the end of
+            # the case). Re-derive the binding from the newest addon record before the next case:
+            # same compositor window, same context id, normal purpose, not a focus-out, field empty.
+            records.poll(.2)
+            last = records.contexts[-1] if records.contexts else b''
+            now = clients.compositor_binding(base)
+            fresh = (bool(now) and (now[0], now[1]) == binding[:2] and last[:1] in (b'i', b'k', b'r')
+                     and int(last[2:5] or b'0') == binding[2] and clients.PURPOSES.get(last[1:2]) in ('normal', 'alpha')
+                     and clients.field_state(records, binding[2]) == 'empty' and seat.intact())
+            result['rebindOk'] = fresh
+            if not fresh:
+                break
+            binding = (binding[0], binding[1], binding[2], clients.PURPOSES[last[1:2]])
         report['helperStdinOnlyInSupervisor'] = not clients.write_end_holders(helper.stdin.fileno())
         report['armWriteEndOnlyInSupervisor'] = not clients.write_end_holders(arm[0])
         revoke_all()

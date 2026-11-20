@@ -432,3 +432,16 @@ first; Slack reopens on it. 005: Slack sends surrounding text (field state is
 known, not `unknown`), but the empty composer was reported as `text` →
 `blankText()` treats whitespace / zero-width-only surrounding text as empty;
 malformed UTF-8 counts as content.
+
+### Live run 006 (2026-11-21, owner-approved, consumed): PASS
+data/hyprland-slack-live-006-result.json. First complete supervised session
+in the owner's test channel, without the owner flag: the addon reported the
+composer empty at arm; correction (c0701) and English (o0602) committed and
+cleaned, addon field empty after each case, no Enter, seat released, Slack
+stopped gracefully, profile clean, only slackb.com blocked. Owner booleans:
+nothing sent, no new message in the channel, composer empty (all true).
+Follow-up fixed in code (not yet run live): Slack sent a context record after
+case-1 cleanup, which was consumed as the end of the case; before the next
+case the binding is now re-derived from the newest addon record (same window
+and context id, normal purpose, not a focus-out, field empty, seat intact),
+otherwise the session stops.

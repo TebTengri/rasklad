@@ -4,7 +4,11 @@
  "commit": "c81437c",
  "conclusion": "PASS. First complete supervised live session in the owner test channel: addon-verified empty composer at arm (no owner flag), correction (c0701) and English (o0602) committed and cleaned, addon field empty after each case, no Enter, clean stop and profile. Follow-up: a context record after case 1 cleanup was consumed as case 1 end; case 2 should re-derive the binding from the latest addon record.",
  "date": "2026-11-21",
- "ownerBooleans": "pending",
+ "ownerBooleans": {
+  "composerEmpty": true,
+  "noNewMessageInChannel": true,
+  "nothingSent": true
+ },
  "result": {
   "armWriteEndOnlyInSupervisor": true,
   "bindingFromCompositor": true,
