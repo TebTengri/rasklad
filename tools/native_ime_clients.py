@@ -226,6 +226,29 @@ def descends_from(pid,ancestor):
     return False
 
 
+PURPOSES={b'n':'normal',b'a':'alpha',b'p':'password',b'x':'other'}
+CONTEXT_EVENTS={b'i':'focus-change',b'u':'focus-change',b'r':'ic-reset',b'k':'purpose-change'}
+
+
+class AddonRecords:
+    """Fixed 6-byte records from the addon: commits (c/o + count + sequence) and
+    context events (i/u/r/k + purpose + id). Never text."""
+    def __init__(self,base,sock):
+        self.base,self.sock,self.commits,self.contexts=base,sock,[],[]
+    def poll(self,timeout=0):
+        fresh=[];end=time.monotonic()+timeout
+        while True:
+            ready,_,_=select.select([self.sock],[],[],max(0,end-time.monotonic()))
+            if not ready:return fresh
+            record=self.sock.recv(16)
+            if len(record)!=6 or record[-1:]!=b'\n':raise self.base.Refused('addon_record_shape')
+            if record[:1] in (b'c',b'o'):self.commits.append(record)
+            elif record[:1] in CONTEXT_EVENTS and record[1:2] in PURPOSES and record[2:5].isdigit():
+                self.contexts.append(record);fresh.append(record)
+            else:raise self.base.Refused('addon_record_kind')
+            end=time.monotonic()  # drain what is queued, then return
+
+
 def run_supervised_driver(base,fcitx,gate,driver_env,children):
     """The real Supervisor drives the fixed 'correction' script through the helper.
     Only this process holds the helper's stdin and the arm write end; the driver
@@ -268,18 +291,34 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
                 time.sleep(.1)
             report['bindingFromCompositor']=bool(focused) and descends_from(focused[0],pid)
             if not report['bindingFromCompositor']:raise base.Refused('compositor_focus_not_fixture')
-            binding=(focused[0],focused[1],0,'normal')  # IC epoch and purpose: still lab values
+            surface=focused
         else:
-            binding=(pid,0,0,'normal')  # Sway lab binding
+            surface=(pid,0)  # Sway lab: no compositor query
+        # IC epoch and purpose come from the addon's last context record.
+        records=AddonRecords(base,receipts)
+        records.poll(.5)
+        last=records.contexts[-1] if records.contexts else b''
+        report['contextFromAddon']=last[:1]==b'i' and PURPOSES.get(last[1:2]) in ('normal','alpha')
+        if not report['contextFromAddon'] or records.commits:raise base.Refused('addon_context')
+        epoch,purpose=int(last[2:5]),PURPOSES[last[1:2]]
+        report['addonPurpose']=purpose
+        binding=(surface[0],surface[1],epoch,purpose)
         def current():
+            fresh=records.poll()
+            if fresh:  # any focus/reset/capability change after arm revokes
+                s.event(CONTEXT_EVENTS[fresh[0][:1]]);return (0,0,0,'none')
             if not hyprland:return binding
             now=compositor_binding(base)
-            return (now[0],now[1],0,'normal') if now else (0,0,0,'none')
+            return (now[0],now[1],epoch,purpose) if now else (0,0,0,'none')
         s=sup.Supervisor([binding[0]],'correction')
         if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
         def pending_receipt(timeout=0):
-            ready,_,_=select.select([receipts],[],[],timeout)
-            return receipts.recv(16) if ready else None
+            end=time.monotonic()+timeout
+            while not records.commits:
+                if records.poll(max(0,end-time.monotonic())):
+                    s.event('focus-change');return None
+                if time.monotonic()>=end:return None
+            return records.commits.pop(0)
         report['receiptQueueEmptyBeforeTyping']=pending_receipt() is None
         if not report['receiptQueueEmptyBeforeTyping']:s.revoke();raise base.Refused('stale_receipt')
         script=inj.script('correction')
@@ -306,6 +345,16 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         report['supervisedFieldCleaned']=link.ask('observe').get('value')==''
         report['noReceiptAfterCleanup']=pending_receipt(.2) is None
         report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
+        # Purpose change: focus the password field; the addon must report it and
+        # the supervisor must refuse any further key.
+        check=sup.Supervisor([binding[0]],'correction')
+        report['purposeCheckArmed']=check.arm(*binding) and check.seat_locked()
+        link.ask('focus-secret')
+        fresh=records.poll(.5)
+        report['passwordFocusReported']=any(r[:1]==b'i' and r[1:2]==b'p' for r in fresh)
+        if fresh:check.event(CONTEXT_EVENTS[fresh[0][:1]])
+        report['passwordFocusRefused']=check.issue('word',*binding) is None and check.state=='REVOKED'
+        link.ask('focus-prose');records.poll(.3)
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
         before=link.ask('observe')
         report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
@@ -415,7 +464,7 @@ def run(base, children):
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         hypr_required=['bindingFromCompositor','bindingChangeRefused','compositorFocusUnchanged'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
         required=(['armWriteEndOnlyInSupervisor'] if control else
-                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','supervisedFieldCleaned',
+                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','contextFromAddon','purposeCheckArmed','passwordFocusReported','passwordFocusRefused','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor']+hypr_required if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False

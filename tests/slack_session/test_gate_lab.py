@@ -137,6 +137,25 @@ class HyprlandSupervised(unittest.TestCase):
         self.assertFalse(clients.descends_from(os.getppid(), os.getpid()))
 
 
+class AddonRecordParsing(unittest.TestCase):
+    def test_records(self):
+        import socket
+        a, b = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        try:
+            records = clients.AddonRecords(Base, a)
+            for r in (b'in007\n', b'c0701\n', b'up007\n'):
+                b.send(r)
+            fresh = records.poll(.2)
+            self.assertEqual(fresh, [b'in007\n', b'up007\n'])
+            self.assertEqual(records.commits, [b'c0701\n'])
+            for bad in (b'hello!', b'zn001\n', b'iq001\n', b'in0a1\n', b'in01\n'):
+                b.send(bad)
+                with self.assertRaises(Base.Refused):
+                    records.poll(.2)
+        finally:
+            a.close(); b.close()
+
+
 class LabSelection(unittest.TestCase):
     def test_slack_gate_is_exclusive(self):
         for options in (dict(focus_stress=True), dict(addon_witness=True), dict(frontend_variant='keep-grab'),

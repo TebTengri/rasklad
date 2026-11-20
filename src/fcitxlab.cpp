@@ -379,6 +379,9 @@ public:
                     if (auto *s = state(ic, false)) {
                         discard(ic, *s); // Invalidates even an idle context first.
                     }
+#ifdef RASKLAD_SLACK_SESSION_LAB
+                    reportContext(event.type(), ic);
+#endif
                 }));
         }
 
@@ -820,6 +823,33 @@ private:
     }
 
 #ifdef RASKLAD_SLACK_SESSION_LAB
+    static char purposeCode(fcitx::InputContext *ic) {
+        const auto flags = ic->capabilityFlags();
+        if (flags.testAny(fcitx::CapabilityFlag::PasswordOrSensitive)) return 'p';
+        if (flags.testAny(fcitx::CapabilityFlags{fcitx::CapabilityFlag::Email, fcitx::CapabilityFlag::Digit,
+                                                 fcitx::CapabilityFlag::Url, fcitx::CapabilityFlag::Dialable,
+                                                 fcitx::CapabilityFlag::Number, fcitx::CapabilityFlag::Terminal,
+                                                 fcitx::CapabilityFlag::Name})) return 'x';
+        if (flags.test(fcitx::CapabilityFlag::Alpha)) return 'a';
+        return 'n';
+    }
+
+    // Lifecycle of the lab client's contexts → supervisor (event, purpose, id).
+    // Undeliverable → the session gate latches off.
+    void reportContext(fcitx::EventType type, fcitx::InputContext *ic) {
+        char event = 0;
+        switch (type) {
+        case fcitx::EventType::InputContextFocusIn: event = 'i'; break;
+        case fcitx::EventType::InputContextFocusOut: event = 'u'; break;
+        case fcitx::EventType::InputContextReset: event = 'r'; break;
+        case fcitx::EventType::InputContextCapabilityChanged: event = 'k'; break;
+        default: return;
+        }
+        auto *s = state(ic, true);
+        if (!s) return;  // not the lab client
+        if (!receiptSink().sendContext(event, purposeCode(ic), s->id)) sessionArm().latch();
+    }
+
     // Two passes: discard() notifies clients, so never call it inside foreach.
     // (discard's stopping() early return is unreachable here: the Off paths
     // exist only in the test labs excluded by #error above.)

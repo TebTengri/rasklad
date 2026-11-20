@@ -59,6 +59,7 @@ try{
   let observations=0;
   for(;;){const command=await next();
    if(command==='observe'){observations++;const bounded=e=>Promise.race([ev(e),new Promise((_,reject)=>setTimeout(()=>reject(Error('observe timeout')),2000))]);process.stdout.write(JSON.stringify({value:await bounded('prose.value'),events:await bounded('imeEvents.length')})+'\n');}
+   else if(command==='focus-secret'||command==='focus-prose'){await ev(`document.getElementById(${JSON.stringify(command.slice(6)==='secret'?'secret':'prose')}).focus();true`);process.stdout.write(JSON.stringify({focused:command.slice(6)})+'\n');}
    else if(command==='done'){process.stdout.write(JSON.stringify({done:true})+'\n');break;}
    else throw Error('unknown supervisor command');}
   process.stdin.pause();

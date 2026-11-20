@@ -24,6 +24,7 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <cstdint>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -159,6 +160,22 @@ public:
             n = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
         } while (n < 0 && errno == EINTR);
         return n == static_cast<ssize_t>(sizeof record);
+    }
+
+    // Context record (6 bytes): event ('i' focus-in, 'u' focus-out, 'r' reset,
+    // 'k' capability change), purpose ('n' normal, 'a' alpha, 'p' password or
+    // sensitive, 'x' other restricted), context id mod 1000, newline. Never text.
+    bool sendContext(char event, char purpose, std::uint64_t id) const {
+        if (!valid() || (event != 'i' && event != 'u' && event != 'r' && event != 'k')
+            || (purpose != 'n' && purpose != 'a' && purpose != 'p' && purpose != 'x')) return false;
+        const unsigned n = static_cast<unsigned>(id % 1000);
+        const char record[6] = {event, purpose, static_cast<char>('0' + n / 100),
+                                static_cast<char>('0' + n / 10 % 10), static_cast<char>('0' + n % 10), '\n'};
+        ssize_t sent;
+        do {
+            sent = ::send(fd_, record, sizeof record, MSG_NOSIGNAL | MSG_DONTWAIT);
+        } while (sent < 0 && errno == EINTR);
+        return sent == static_cast<ssize_t>(sizeof record);
     }
 
 private:

@@ -150,6 +150,10 @@ int main() {
         char buf[8] = {};
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "c0701\n");
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "o0602\n");
+        CHECK(sink.sendContext('i', 'n', 1007));
+        CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "in007\n");
+        CHECK(!sink.sendContext('c', 'n', 1));  // commit kinds are not context events
+        CHECK(!sink.sendContext('i', 'z', 1));
         CHECK(!sink.send(true, 0));
         CHECK(!sink.send(true, 100));
         close(sp[1]);
