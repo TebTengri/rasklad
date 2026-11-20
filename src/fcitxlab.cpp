@@ -89,6 +89,9 @@
 #include "applicationpolicy.h"
 #include "applicationpermissions.h"
 #include "compositiondisable.h"
+#if defined(RASKLAD_SLACK_GATE_TEST_PROGRAM) && !defined(RASKLAD_SLACK_SESSION_LAB)
+#error "RASKLAD_SLACK_GATE_TEST_PROGRAM only modifies the Slack session gate build"
+#endif
 #ifdef RASKLAD_SLACK_SESSION_LAB
 #if defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
     defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST) || \

@@ -172,3 +172,15 @@ revoke (byte + close) clears the preedit at once; no keystroke reaches the
 field afterwards; field still focused. Fcitx holds only the read end (fdinfo
 access mode check). Negative control without revoke fails the two revoke
 checks. Evidence: data/slack-gate-offline-001-result.json.
+
+Review of 7a45a54 (ecc:security-reviewer FIX-FIRST). Closed: the arm write end
+never leaves the supervising Python process (driver asks for revoke over
+stdout, ack on stdin) and at revoke time no other process in the sandbox holds
+it (all-pid fdinfo scan); the gate-test library loads from the sealed snapshot
+(Library=raskladlab, extra plain bind removed); `#error` for the test-program
+macro without the session build; committed control mode `--slack-gate-control`
+(same steps without revoke must type: 42 input events, text appears) and the
+gate run now also requires 0 input events after revoke and Fcitx alive;
+`--slack-gate*` only with plain `--run`; fds closed on all driver paths.
+Result: gate 6/6, control 5/5. Evidence schema 2 in
+data/slack-gate-offline-001-result.json.

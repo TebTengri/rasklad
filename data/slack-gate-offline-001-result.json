@@ -1,35 +1,40 @@
 {
-  "schema": 1,
+  "schema": 2,
   "date": "2026-11-20",
-  "command": "python3 -I tools/wayland_ime_lab.py --run --slack-gate",
-  "addon": "tools/fcitx_slack_gate_test.pro (Slack session gates, program chromium-browser, offline test only)",
-  "result": {
+  "commands": [
+    "python3 -I tools/wayland_ime_lab.py --run --slack-gate",
+    "python3 -I tools/wayland_ime_lab.py --run --slack-gate-control"
+  ],
+  "addon": "tools/fcitx_slack_gate_test.pro (Slack session gates, program chromium-browser, offline test only; loaded from the sealed snapshot)",
+  "supervisorRole": "lab Python parent holds the only arm write end; the driver requests revoke over stdout and gets the ack on stdin",
+  "gate": {
     "passed": true,
-    "checks": 5,
+    "checks": 6,
     "gateArmedCorrected": true,
     "gatePreeditShownBeforeRevoke": true,
     "gateRevokeClearedPreedit": true,
     "gateRevokedNothingTyped": true,
+    "gateRevokedNoInputEvents": true,
+    "gateInputEventsAfter": 0,
     "gateFieldStillFocused": true,
-    "armWriteEndAbsentFromFcitx": true,
-    "dbusInputFrontendAbsent": true,
-    "browserVersion": "Chrome/155.0.8059.84",
-    "referenceCompositor": "Sway/wlroots software only",
-    "hostInput": false,
-    "hostConfigurationChanged": false
+    "armWriteEndOnlyInSupervisor": true,
+    "revokeServed": true,
+    "fcitxAliveAfterGate": true
   },
-  "negativeControl": {
-    "change": "driver revoke step removed (temporary, not committed)",
-    "passed": false,
-    "gateArmedCorrected": true,
-    "gatePreeditShownBeforeRevoke": true,
-    "gateRevokeClearedPreedit": false,
-    "gateRevokedNothingTyped": false
+  "control": {
+    "passed": true,
+    "checks": 5,
+    "note": "same steps without revoke",
+    "gateControlTextAppeared": true,
+    "gateControlKeysReached": true,
+    "gateInputEventsAfter": 42,
+    "armWriteEndOnlyInSupervisor": true,
+    "fcitxAliveAfterGate": true
   },
-  "conclusion": "With the arm pipe open the fixed rule corrects (ghbdtn+Space -> привет ). Writing one byte and closing the pipe mid-word clears the shown preedit immediately and afterwards no keystroke reaches the field; the field stays focused. Fcitx holds only the read end. The control proves the checks fail without revoke.",
+  "conclusion": "With the arm pipe open the fixed rule corrects. Revoke (byte + close by the supervisor process) clears the shown preedit at once; afterwards no input/composition event reaches the field while the same keys in the control run produce 42 events and visible text; Fcitx stays alive and the field focused, so the block is the gate, not lost focus or a dead daemon. No process other than the supervisor held the write end at revoke time.",
   "notCovered": [
     "Slack itself (composer needs login)",
     "nested Hyprland",
-    "supervisor/injector wiring to the helper (test driver played the supervisor)"
+    "Python Supervisor class driving the helper (next)"
   ]
 }

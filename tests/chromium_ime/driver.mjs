@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // CDP only observes/configures our fixture. All typing uses private XTest.
 import {spawn,execFileSync} from 'node:child_process';
-import {readFileSync,readlinkSync,writeSync,closeSync} from 'node:fs';
+import {readFileSync,readlinkSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const nativeWayland=process.env.RASKLAD_NATIVE_WAYLAND_LAB==='1';
 if(process.env.RASKLAD_CHROMIUM_IME_LAB!=='1'||process.env.HOME!=='/home/lab'||
@@ -47,22 +47,41 @@ try{
  async function type(name){if(nativeWayland){const ack=nextVkLine(5000);vk.stdin.write(name+'\n');if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');}else execFileSync('/usr/bin/python3',['-I','/lab/keys.py',name,String(child.pid)],{stdio:['ignore','ignore','pipe'],timeout:5000});await new Promise(r=>setTimeout(r,200));}
  if(process.env.RASKLAD_SLACK_GATE_LAB==='1'){
   // Offline Slack-session gate test (owned Chromium fixture, gate-test addon).
-  // The driver plays the supervisor: it holds the only write end of the arm pipe.
-  const armFd=Number(process.env.RASKLAD_SESSION_ARM_WRITE_FD);
-  if(!nativeWayland||!Number.isSafeInteger(armFd)||armFd<3)throw Error('slack gate pipe required');
+  // The Python parent plays the supervisor and alone holds the arm write end;
+  // the driver only asks for revoke over stdout and waits for the stdin ack.
+  if(!nativeWayland)throw Error('slack gate requires native Wayland');
+  const control=process.env.RASKLAD_SLACK_GATE_CONTROL==='1';
   const composing=`imeEvents.filter(x=>x.type==='compositionstart').length>imeEvents.filter(x=>x.type==='compositionend').length`;
   await reset();
   phase='gate_armed';await type('word');await type('space');
   report.gateArmedCorrected=await ev(`prose.value==='привет '`);
   phase='gate_preedit';await type('word');
   report.gatePreeditShownBeforeRevoke=await ev(`prose.value==='привет ghbdtn'&&${composing}`);
-  phase='gate_revoke';writeSync(armFd,'x');closeSync(armFd);await new Promise(r=>setTimeout(r,400));
-  report.gateRevokeClearedPreedit=await ev(`prose.value==='привет '&&!(${composing})`);
+  if(!control){
+   phase='gate_revoke';
+   const ack=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('revoke ack timeout')),3000);process.stdin.once('data',d=>{clearTimeout(t);process.stdin.pause();resolve(String(d));});});
+   process.stdout.write('{"gate":"revoke"}\n');
+   if(await ack!=='revoked\n')throw Error('revoke ack');
+   await new Promise(r=>setTimeout(r,400));
+   report.gateRevokeClearedPreedit=await ev(`prose.value==='привет '&&!(${composing})`);
+  }
+  const eventsBefore=await ev('imeEvents.length');
   phase='gate_after_revoke';await type('hello');await type('word');await type('space');
-  report.gateRevokedNothingTyped=await ev(`prose.value==='привет '`);
+  // IME delivery reaches the page as composition/beforeinput/input events, not keydown.
+  report.gateInputEventsAfter=await ev(`imeEvents.length-${eventsBefore}`);
   report.gateFieldStillFocused=await ev(`document.activeElement===prose`);
-  const required=['gateArmedCorrected','gatePreeditShownBeforeRevoke','gateRevokeClearedPreedit','gateRevokedNothingTyped','gateFieldStillFocused'];
-  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+  let required;
+  if(control){
+   // Same steps without revoke: the keys must reach the field (proves the setup can type).
+   report.gateControlTextAppeared=await ev(`prose.value!=='привет '&&prose.value.startsWith('привет ')`);
+   report.gateControlKeysReached=report.gateInputEventsAfter>0;
+   required=['gateArmedCorrected','gatePreeditShownBeforeRevoke','gateControlTextAppeared','gateControlKeysReached','gateFieldStillFocused'];
+  }else{
+   report.gateRevokedNothingTyped=await ev(`prose.value==='привет '`);
+   report.gateRevokedNoInputEvents=report.gateInputEventsAfter===0;
+   required=['gateArmedCorrected','gatePreeditShownBeforeRevoke','gateRevokeClearedPreedit','gateRevokedNothingTyped','gateRevokedNoInputEvents','gateFieldStillFocused'];
+  }
+  report.gateControl=control;report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_DISABLE_TEST_LAB==='1'){
   if(!nativeWayland||process.env.RASKLAD_FOCUS_STRESS_LAB==='1')throw Error('exclusive native disable suite required');
   await reset();

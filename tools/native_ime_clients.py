@@ -109,6 +109,57 @@ def slack_gate_pipe(base,child_options):
     return read_end,write_end
 
 
+def write_end_holders(fd):
+    """PIDs other than ours that hold a writable descriptor of our pipe."""
+    holders=[]
+    for entry in os.scandir('/proc'):
+        if not entry.name.isdigit() or int(entry.name)==os.getpid():continue
+        try:
+            if fd_present(int(entry.name),fd):holders.append(int(entry.name))
+        except OSError:
+            continue  # process exited during the scan
+    return holders
+
+
+def run_gate_driver(base,fcitx,gate,driver_env):
+    """The supervisor role stays in this process: the write end never leaves it.
+    The driver asks for revoke with one stdout line and waits for the ack on stdin."""
+    read_end,write_end=gate
+    report={'revokeServed':False}
+    try:
+        os.close(read_end);read_end=None  # only Fcitx keeps the read end
+        driver=subprocess.Popen(['/usr/bin/node','/lab/driver.mjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=driver_env)
+        out=b'';end=time.monotonic()+50
+        try:
+            while True:
+                remaining=end-time.monotonic()
+                if remaining<=0:raise subprocess.TimeoutExpired('driver',50)
+                ready,_,_=select.select([driver.stdout],[],[],remaining)
+                if not ready:continue
+                chunk=os.read(driver.stdout.fileno(),65536)
+                if not chunk:break
+                out+=chunk
+                if len(out)>32768:raise base.Refused('driver_output_bound')
+                if b'{"gate":"revoke"}\n' in out and not report['revokeServed']:
+                    out=out.replace(b'{"gate":"revoke"}\n',b'',1)
+                    holders=write_end_holders(write_end)
+                    report['armWriteEndOnlyInSupervisor']=not holders
+                    os.write(write_end,b'x');os.close(write_end);write_end=None
+                    report['revokeServed']=True
+                    driver.stdin.write(b'revoked\n');driver.stdin.flush();driver.stdin.close()
+            if 'armWriteEndOnlyInSupervisor' not in report:
+                report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
+            driver.wait(timeout=5)
+        finally:
+            if driver.poll() is None:driver.kill();driver.wait()
+            if not driver.stdin.closed:driver.stdin.close()
+            driver.stdout.close()
+        return subprocess.CompletedProcess(driver.args,driver.returncode,out,None),report
+    finally:
+        for fd in (read_end,write_end):
+            if fd is not None:os.close(fd)
+
+
 def fd_present(pid,fd):
     """True if `pid` holds a writable descriptor of the same pipe as our write end `fd`.
     Both pipe ends share one inode, so the access mode from fdinfo tells them apart."""
@@ -152,21 +203,17 @@ def run(base, children):
     driver_env=dict(os.environ,RASKLAD_OWN_FCITX_PID=str(fcitx.pid),RASKLAD_CLK_TCK=str(os.sysconf('SC_CLK_TCK')))
     gate_report={}
     if gate:
-        read_end,write_end=gate
-        os.close(read_end)  # only Fcitx keeps the read end
-        gate_report['armWriteEndAbsentFromFcitx']=not fd_present(fcitx.pid,write_end)
-        if not gate_report['armWriteEndAbsentFromFcitx']:raise base.Refused('arm_write_end_leaked')
-        driver_env['RASKLAD_SESSION_ARM_WRITE_FD']=str(write_end)
-        try:
-            p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=driver_env,pass_fds=(write_end,))
-        finally:
-            os.close(write_end)  # driver revokes by writing a byte and closing its copy
+        p,gate_report=run_gate_driver(base,fcitx,gate,driver_env)
     else:
         p=subprocess.run(['/usr/bin/node','/lab/driver.mjs'],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=50,env=driver_env)
     if len(p.stdout)>32768:raise base.Refused('driver_output_bound')
     r=json.loads(p.stdout)
     r.update(gate_report)
-    if gate and r.get('armWriteEndAbsentFromFcitx') is not True:r['passed']=False
+    if gate:
+        r['fcitxAliveAfterGate']=fcitx.poll() is None
+        control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
+        required=['armWriteEndOnlyInSupervisor'] if control else ['armWriteEndOnlyInSupervisor','revokeServed']
+        if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False
     if frontend:r.update(privateFrontendMapped=True,privateFrontendArtifactSha256=frontend[1],privateSeedKeyboard=seeded)
     r['frontendVariant']=private_frontend_variant(base)
     r['driverExitCode']=p.returncode;r['dbusInputFrontendAbsent']=dbus_input_absent;r['passed']=p.returncode==0 and r.get('passed') is True and dbus_input_absent;return r
