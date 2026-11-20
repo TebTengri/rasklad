@@ -520,8 +520,9 @@ def run_live_inside(clients, base, fcitx, gate, children):
                 before = {n for n, _ in seat.devices}
                 if seat.accept_additions(now_keyboards):
                     added = sorted({n for n, _ in now_keyboards} - before)
-                    report.setdefault('keyboardsAddedBeforeArm', [])
-                    report['keyboardsAddedBeforeArm'] = sorted(set(report['keyboardsAddedBeforeArm']) | set(added))[:4]
+                    removed = sorted(before - {n for n, _ in now_keyboards})
+                    report['keyboardsAddedBeforeArm'] = sorted(set(report.get('keyboardsAddedBeforeArm', [])) | set(added))[:4]
+                    report['keyboardsRemovedBeforeArm'] = sorted(set(report.get('keyboardsRemovedBeforeArm', [])) | set(removed))[:4]
             if submap != 'rasklad_lock' or now_keyboards != seat.devices:
                 # Diagnostics: fixed submap names and keyboard device names only (no text, no addresses).
                 known = ('rasklad_lock', 'rasklad_go', 'rasklad_dead', 'default', '')

@@ -321,7 +321,12 @@ class SeatAdditions(unittest.TestCase):
         s = self.seat()
         self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x7'), ('wl_keyboard', '0x2')]))
         s = self.seat()
-        self.assertFalse(s.accept_additions([('hl-virtual-keyboard-unknown', '0x1')]))
+        self.assertFalse(s.accept_additions([('wl_keyboard', '0x2')]))  # helper gone
+
+    def test_other_keyboard_may_go_away(self):
+        s = self.seat()
+        s.devices = s.devices + [('hl-virtual-keyboard-fcitx5', '0x3')]
+        self.assertTrue(s.accept_additions([('hl-virtual-keyboard-unknown', '0x1'), ('wl_keyboard', '0x2')]))
 
 
 class OwnerEmpty(unittest.TestCase):
