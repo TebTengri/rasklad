@@ -3,6 +3,7 @@
 import ipaddress, re, select, socket, threading, time, subprocess
 DOMAINS=('slack.com','slack-edge.com','slack-imgs.com')
 MAX_HEADER=8192
+HELLO_WAIT_SECONDS=20  # bounded by max_active and the broker deadline
 
 def destination(header):
     if len(header)>MAX_HEADER:raise ValueError('header')
@@ -170,6 +171,8 @@ class Broker:
                 raise
             if not self.online and not self.accept_hello:raise ValueError('offline-check')
             client.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n');established=True;stage='hello'
+            # Chromium may preconnect a tunnel and send its ClientHello only when a request needs it.
+            client.settimeout(HELLO_WAIT_SECONDS)
             try:
                 initial,name=tls_hello(client,tail,self.allow_ech)
                 if name!=host:raise ValueError('sni-mismatch')
@@ -233,8 +236,10 @@ class Broker:
 
 class Relay:
     """Private namespace TCP proxy forwards only to our mounted Unix broker."""
-    def __init__(self,path):
-        self.path=path;self.deadline=time.monotonic()+30;self.active=threading.BoundedSemaphore(8)
+    def __init__(self,path,seconds=30,max_active=8):
+        if not (1<=seconds<=120 and 1<=max_active<=32):raise ValueError('relay-bounds')
+        self.path=path;self.deadline=time.monotonic()+seconds;self.active=threading.BoundedSemaphore(max_active)
+        self.refused=0
         self.listener=socket.socket();self.listener.bind(('127.0.0.1',0));self.listener.listen(8)
         self.listener.settimeout(.2);self.port=self.listener.getsockname()[1];self.stopped=False
         self.lock=threading.Lock();self.sockets=set();self.workers=[]
@@ -244,7 +249,9 @@ class Relay:
             try:client,_=self.listener.accept()
             except socket.timeout:continue
             except OSError:return
-            if not self.active.acquire(False):client.close();continue
+            if not self.active.acquire(False):
+                with self.lock:self.refused+=1
+                client.close();continue
             worker=threading.Thread(target=self._client,args=(client,),daemon=True)
             self.workers.append(worker);worker.start()
     def _client(self,client):

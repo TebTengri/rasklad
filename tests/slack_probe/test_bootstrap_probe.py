@@ -137,6 +137,28 @@ class BridgeRejectedDomains(unittest.TestCase):
         self.assertEqual(bridge.error_kind(sp.TimeoutExpired('x', 1), 'resolve'), 'resolve:dns-timeout')
         self.assertEqual(bridge.error_kind(RuntimeError('secret.example'), 'pump'), 'pump:other')
 
+    def test_late_client_hello_after_preconnect_is_accepted(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'https.sock'
+            broker = bridge.Broker(path, online=False, accept_hello=True, seconds=20)
+            try:
+                with socket.socket(socket.AF_UNIX) as client:
+                    client.connect(str(path))
+                    client.sendall(b'CONNECT app.slack.com:443 HTTP/1.1\r\n\r\n')
+                    self.assertTrue(client.recv(64).startswith(b'HTTP/1.1 200'))
+                    time.sleep(4)  # longer than the old 3 s idle limit
+                    import ssl
+                    incoming, outgoing = ssl.MemoryBIO(), ssl.MemoryBIO()
+                    tls = ssl.create_default_context().wrap_bio(incoming, outgoing, server_hostname='app.slack.com')
+                    try:tls.do_handshake()
+                    except ssl.SSLWantReadError:pass
+                    client.sendall(outgoing.read())
+                    time.sleep(.3)
+            finally:
+                stats = broker.close()
+            self.assertEqual(stats['helloParsed'], 1)
+            self.assertEqual(stats['errors'], 0)
+
     def test_accept_hello_is_offline_only(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaisesRegex(ValueError, 'accept-hello-offline-only'):

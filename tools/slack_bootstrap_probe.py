@@ -17,6 +17,7 @@ OBSERVE_SECONDS = 75        # inside: max wait for window + settle
 SETTLE_SECONDS = 15         # after the first buffer attach
 QUIT_SECONDS = 15           # graceful SIGTERM before SIGKILL (profile flush)
 OUTER_SECONDS = 125          # observe 75 + quit 15 + sway/collector margins
+RELAY = dict(seconds=115, max_active=16)  # inside; must cover the observation window
 BROKER = dict(seconds=120, max_requests=384, max_bytes=256 * 1024 * 1024, max_active=16)
 MARKERS = {
     'registryBound': (b'.get_registry(',),
@@ -170,7 +171,7 @@ def inside():
     bridge = load('slack_https_bridge', Path('/lab/slack_https_bridge.py'))
     report = {'passed': False, 'textRead': False, 'inputInjected': False}
     children = []
-    relay = bridge.Relay('/lab/https.sock')
+    relay = bridge.Relay('/lab/https.sock', seconds=RELAY['seconds'], max_active=RELAY['max_active'])
     try:
         runtime = Path(os.environ['XDG_RUNTIME_DIR'])
         config = Path('/tmp/sway.conf')
@@ -222,6 +223,7 @@ def inside():
         report['slackExitedEarly'] = exited_early
         report['slackExitCode'] = slack.returncode if exited_early else None
         report['slackStop'] = stop(slack, QUIT_SECONDS)
+        report['relayRefused'] = relay.refused
         collector.join(3)
         report['collectionComplete'] = not collector.is_alive()
         report['markers'] = result.get('flags', {})

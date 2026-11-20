@@ -37,5 +37,23 @@
       "errors": 0
     },
     "conclusion": "ClientHello parsing is not the cause; failure is in resolve/connect/pump and needs an online diagnostic."
-  }
+  },
+  "bridgeSelfTest": {
+    "approval": "owner one-shot, consumed",
+    "client": "own Python ssl, no Slack/profile/keyring",
+    "slackCom": {
+      "direct": "TLSv1.3",
+      "viaRelay": "TLSv1.3",
+      "opened": 2,
+      "errors": 0
+    },
+    "standardHosts": {
+      "hosts": 5,
+      "allTLSv1.3": true,
+      "echMode": "outer-sni-only",
+      "opened": 5,
+      "errors": 0
+    }
+  },
+  "rootCauseHypothesis": "Bridge works for prompt ClientHellos. Live Slack: 8 accepted = Relay max_active 8; broker waited only 3 s for a ClientHello after 200 (Chromium preconnects tunnels), Relay stopped accepting after 30 s. Fixed: hello wait 20 s, Relay 115 s/16 active, relayRefused and error stages reported. Unverified until a live repeat."
 }

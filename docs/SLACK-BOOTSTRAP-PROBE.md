@@ -76,3 +76,15 @@ network, so the result is inconclusive. Offline hello capture
 domains with 0 errors, so parsing is not the cause. The bridge now records
 fixed error categories by stage (header/hello/resolve/connect/pump). Evidence:
 data/slack-bootstrap-live-001-result.json.
+
+## Bridge self-test (owner one-shot approval, consumed) and fix
+
+Own Python ssl client through the online bridge, no Slack/profile/keyring:
+slack.com direct and via Relay, plus app/edgeapi/wss-primary.slack.com,
+a.slack-edge.com, slack-imgs.com with ECH outer-SNI mode: all TLS 1.3, 0
+errors. The bridge works for prompt ClientHellos. Likely live failure: Relay
+allowed only 8 concurrent tunnels for 30 s, and the broker waited only 3 s for
+a ClientHello after `200` while Chromium preconnects tunnels. Fixed: hello wait
+20 s, Relay 115 s / 16 active (configurable, bounded), `relayRefused` and
+per-stage error categories reported. Regression test covers a 4 s late hello.
+Hypothesis is unverified until a live repeat (separate one-shot approval).

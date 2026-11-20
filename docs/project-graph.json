@@ -101,7 +101,7 @@
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
     "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-BOOTSTRAP-PROBE.md": "fb6c110d01a8535bbf513723d4722b101e332453d6095d3e41f21c1712ecb297",
+    "docs/SLACK-BOOTSTRAP-PROBE.md": "7f7b66edb058d29e91a614b5eb02178d5b9ee854b4bcba5c1ec27e5b99f02368",
     "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
@@ -265,7 +265,7 @@
     "tests/rasklad_tests.pro": "cf722af2a1505215934fec8fc9be7ab834368a1967a6b8738e1a2451fff8f2b3",
     "tests/router/router_tests.cpp": "e3c992892a9b67025cccfdb0536440320ba946e51d5f21de5e8433828f2d97d4",
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
-    "tests/slack_probe/test_bootstrap_probe.py": "229802e9d8aeddf463e421c8cdd51662088ef8420f543ceab6850d237519f3fb",
+    "tests/slack_probe/test_bootstrap_probe.py": "57b5370a804a83200035c80db5dee542893c559edfba7253ebee92e0dcc6d126",
     "tests/slack_probe/test_editor_metadata.py": "ac0885d87584a8169f8707f399fe3a558d008607de52b61cddf77c89ba0ae5a9",
     "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4",
     "tests/slack_probe/test_launch_probe.py": "04146e700c784d4584cd398add80cd6c03466dec0c339f4fbc70e6c5589ef774",
@@ -413,8 +413,8 @@
     "tools/server_route_witness.pro": "c511218b82373455101d1ebfaef5e58b186ced5feefcf5f1ffd69848b6e7e445",
     "tools/server_route_witness_guard.py": "cd448c4e9a2cdacfc695208616639bb6de10cb54a9177a309ad162ea22efc77c",
     "tools/slack_accessibility_probe.py": "d94dab22f12dfd2c68f9debf2fe9ba0783d71a9082ae1af8df62830fe64b23cb",
-    "tools/slack_bootstrap_probe.py": "0a9c191587db7f93eb96571df7fd2bc628c7ee6aae59e16b9c2c3660ae8d2049",
-    "tools/slack_https_bridge.py": "c35e63b9183f472bf8ae2d0198eff1bf688d7a75ce3aa5cc5d47a5cd90b9434e",
+    "tools/slack_bootstrap_probe.py": "60ae7660afd8b53e59e03144fad3cdcdf3af887b5083169911450881b4634819",
+    "tools/slack_https_bridge.py": "df5dc7a57e6af7a89ade04b498c06156e2baa552ae8ee59e6a8e330fc8b1fe50",
     "tools/slack_launch_probe.py": "bb01b2da3ff03124a0174ca3d6a6ca052046d7c42280bd1eea639623478bd826",
     "tools/slack_status_trial.py": "63f729bc3b7f3e0d98904daea3e43df0f1691d244832635038ae557536eb6582",
     "tools/summarize_technical_evaluation.py": "318f8a15c6519a0c895d0aa6acbc973ba4e8ce52cd001b36131ff70489bd069e",
@@ -2676,18 +2676,23 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_accept_hello_is_offline_only",
+          "name": "test_late_client_hello_after_preconnect_is_accepted",
           "line": 140,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_accept_hello_is_offline_only",
+          "line": 162,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_bounds_validated",
-          "line": 145,
+          "line": 167,
           "kind": "FunctionDef"
         },
         {
           "name": "test_rejected_domain_counted_and_refused",
-          "line": 150,
+          "line": 172,
           "kind": "FunctionDef"
         }
       ]
@@ -6398,82 +6403,82 @@
       "symbols": [
         {
           "name": "load",
-          "line": 37,
+          "line": 38,
           "kind": "FunctionDef"
         },
         {
           "name": "scan",
-          "line": 44,
+          "line": 45,
           "kind": "FunctionDef"
         },
         {
           "name": "slack_pids",
-          "line": 63,
+          "line": 64,
           "kind": "FunctionDef"
         },
         {
           "name": "reap_sandboxed",
-          "line": 76,
+          "line": 77,
           "kind": "FunctionDef"
         },
         {
           "name": "profile_dir",
-          "line": 92,
+          "line": 93,
           "kind": "FunctionDef"
         },
         {
           "name": "host_bus_address",
-          "line": 107,
+          "line": 108,
           "kind": "FunctionDef"
         },
         {
           "name": "proxy_command",
-          "line": 114,
+          "line": 115,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 119,
+          "line": 120,
           "kind": "FunctionDef"
         },
         {
           "name": "private_context",
-          "line": 146,
+          "line": 147,
           "kind": "FunctionDef"
         },
         {
           "name": "stop",
-          "line": 154,
+          "line": 155,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 167,
+          "line": 168,
           "kind": "FunctionDef"
         },
         {
           "name": "limits",
-          "line": 242,
+          "line": 244,
           "kind": "FunctionDef"
         },
         {
           "name": "plan",
-          "line": 248,
+          "line": 250,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 260,
+          "line": 262,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 359,
+          "line": 361,
           "kind": "FunctionDef"
         },
         {
           "name": "collect",
-          "line": 205,
+          "line": 206,
           "kind": "FunctionDef"
         }
       ]
@@ -6483,107 +6488,107 @@
       "symbols": [
         {
           "name": "destination",
-          "line": 7,
+          "line": 8,
           "kind": "FunctionDef"
         },
         {
           "name": "rejected_suffix",
-          "line": 24,
+          "line": 25,
           "kind": "FunctionDef"
         },
         {
           "name": "public_addresses",
-          "line": 36,
+          "line": 37,
           "kind": "FunctionDef"
         },
         {
           "name": "client_name",
-          "line": 47,
+          "line": 48,
           "kind": "FunctionDef"
         },
         {
           "name": "tls_hello",
-          "line": 75,
+          "line": 76,
           "kind": "FunctionDef"
         },
         {
           "name": "error_kind",
-          "line": 93,
+          "line": 94,
           "kind": "FunctionDef"
         },
         {
           "name": "resolve_ipv4",
-          "line": 103,
+          "line": 104,
           "kind": "FunctionDef"
         },
         {
           "name": "pump",
-          "line": 111,
+          "line": 112,
           "kind": "FunctionDef"
         },
         {
           "name": "Broker",
-          "line": 119,
+          "line": 120,
           "kind": "ClassDef"
         },
         {
           "name": "Relay",
-          "line": 234,
+          "line": 237,
           "kind": "ClassDef"
         },
         {
           "name": "vector",
-          "line": 53,
+          "line": 54,
           "kind": "FunctionDef"
         },
         {
           "name": "take",
-          "line": 77,
+          "line": 78,
           "kind": "FunctionDef"
         },
         {
           "name": "__init__",
-          "line": 120,
+          "line": 121,
           "kind": "FunctionDef"
         },
         {
           "name": "_serve",
-          "line": 135,
+          "line": 136,
           "kind": "FunctionDef"
         },
         {
           "name": "_allow",
-          "line": 146,
+          "line": 147,
           "kind": "FunctionDef"
         },
         {
           "name": "_client",
-          "line": 150,
+          "line": 151,
           "kind": "FunctionDef"
         },
         {
           "name": "close",
-          "line": 223,
+          "line": 226,
           "kind": "FunctionDef"
         },
         {
           "name": "__init__",
-          "line": 236,
+          "line": 239,
           "kind": "FunctionDef"
         },
         {
           "name": "_serve",
-          "line": 242,
+          "line": 247,
           "kind": "FunctionDef"
         },
         {
           "name": "_client",
-          "line": 250,
+          "line": 257,
           "kind": "FunctionDef"
         },
         {
           "name": "close",
-          "line": 262,
+          "line": 269,
           "kind": "FunctionDef"
         }
       ]
