@@ -41,11 +41,32 @@ def bounded(name,upper):
  value=(p/name).read_text().strip()
  return value.isdigit() and 0<int(value)<=upper
 cpu=(p/'cpu.max').read_text().split()
-ok=bounded('memory.max',1610612736) and bounded('pids.max',96) and (p/'memory.swap.max').read_text().strip()=='0'
+ok=bounded('memory.max',MEMORY_MAX) and bounded('pids.max',TASKS_MAX) and (p/'memory.swap.max').read_text().strip()=='0'
 ok=ok and len(cpu)==2 and all(v.isdigit() for v in cpu) and 0<int(cpu[0])<=int(cpu[1])
 if not ok: raise SystemExit(72)
 os.execv(sys.argv[1],sys.argv[1:])
 '''
+
+
+# Mapping probe defaults stay unchanged; other closed sessions may only tighten
+# or use their own reviewed ceilings below.
+MAPPING_LIMITS = dict(prefix='rasklad-mapping-', memory_mib=1536, tasks=96, cpu_percent=100, runtime_seconds=27)
+CEILINGS = dict(memory_mib=4096, tasks=512, cpu_percent=200, runtime_seconds=660)
+PREFIXES = ('rasklad-mapping-', 'rasklad-slack-')
+
+
+def scope_guard(memory_mib, tasks):
+    return SCOPE_GUARD.replace('MEMORY_MAX', str(memory_mib << 20)).replace('TASKS_MAX', str(tasks))
+
+
+def checked_limits(limits_):
+    if set(limits_) != set(MAPPING_LIMITS) or limits_['prefix'] not in PREFIXES:
+        raise base.Refused('scope-limits')
+    for key, ceiling in CEILINGS.items():
+        value = limits_[key]
+        if type(value) is not int or not 0 < value <= ceiling:
+            raise base.Refused('scope-limits')
+    return limits_
 
 
 def limits():
@@ -64,13 +85,15 @@ def plan():
                 sharedGpuRisk=True)
 
 
-def scope_command(command, unit):
-    if not unit.startswith('rasklad-mapping-') or not unit.endswith('.scope') or not all(c.isalnum() or c in '-.' for c in unit):
+def scope_command(command, unit, limits_=MAPPING_LIMITS):
+    limits_ = checked_limits(limits_)
+    if not unit.startswith(limits_['prefix']) or not unit.endswith('.scope') or not all(c.isalnum() or c in '-.' for c in unit):
         raise base.Refused('scope-name')
     return ['/usr/bin/systemd-run', '--user', '--scope', '--collect', '--quiet', '--unit=' + unit,
-            '--property=MemoryMax=1536M', '--property=MemorySwapMax=0', '--property=TasksMax=96',
-            '--property=CPUQuota=100%', '--property=RuntimeMaxSec=27s', '--property=TimeoutStopSec=1s',
-            '--', '/usr/bin/python3', '-I', '-c', SCOPE_GUARD] + command
+            f"--property=MemoryMax={limits_['memory_mib']}M", '--property=MemorySwapMax=0',
+            f"--property=TasksMax={limits_['tasks']}", f"--property=CPUQuota={limits_['cpu_percent']}%",
+            f"--property=RuntimeMaxSec={limits_['runtime_seconds']}s", '--property=TimeoutStopSec=1s',
+            '--', '/usr/bin/python3', '-I', '-c', scope_guard(limits_['memory_mib'], limits_['tasks'])] + command
 
 
 def cleanup_scope(unit, env):
