@@ -171,7 +171,13 @@ try{
   // refuse and leave the field untouched (the success path needs a client with
   // surrounding text, e.g. Slack under Hyprland).
   phase='manual_after_space';await reset();await type('word');await type('space');await type('shift2');
-  report.manualAfterSpaceValue=await v();report.manualAfterSpaceUnknownRefused=report.manualAfterSpaceValue==='ghbdtn '&&await ev(`imeEvents.some(x=>x.type==='compositionstart')`);
+  report.manualAfterSpaceValue=await v();
+  // Safe outcomes only: untouched (no surrounding text) or exactly the other form.
+  report.manualAfterSpaceReplaced=report.manualAfterSpaceValue==='привет ';
+  await type('shift2');report.manualAfterSpaceSecondValue=await v();
+  report.manualAfterSpaceRestored=report.manualAfterSpaceReplaced&&report.manualAfterSpaceSecondValue==='ghbdtn ';
+  report.manualAfterSpaceUnknownRefused=['ghbdtn ','привет '].includes(report.manualAfterSpaceValue)&&
+    ['ghbdtn ','привет '].includes(report.manualAfterSpaceSecondValue)&&await ev(`imeEvents.some(x=>x.type==='compositionstart')`);
   phase='manual_after_space_dom_cleared';await reset();await type('word');await type('space');
   await ev(`prose.value=''`);await type('shift2');report.manualClearedFieldUntouched=await v()==='';
   phase='manual_after_space_key_between';await reset();await type('word');await type('space');await type('backspace');await type('shift2');

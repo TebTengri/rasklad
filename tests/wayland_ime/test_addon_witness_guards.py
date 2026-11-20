@@ -58,7 +58,7 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
-                    if module is REFERENCE and parameters[-1].name == 'manual_suite':
+                    if parameters[-1].name == 'manual_suite':
                         # SYS-225 keyword-only inert selector, never positional.
                         self.assertIs(parameters[-1].kind, inspect.Parameter.KEYWORD_ONLY)
                         self.assertIs(parameters[-1].default, False)
