@@ -248,11 +248,12 @@ def run_seat_probe(base,fcitx,gate,driver_env,children):
         report['submapActive']=hyprctl(base,'submap',raw=True)
         report['lockedSupervisorKeyboard']=delta(supervisor_kb)
         report['lockedStrayKeyboard']=delta(stray)
+        # Runtime per-device setting: does it take effect without a config reload?
+        report['strayKeywordResult']=hyprctl(base,'keyword','device[hl-virtual-keyboard-unknown-1]:keybinds','false',raw=True)
+        report['lockedStrayAfterKeyword']=delta(stray)
         report['submapReset']=hyprctl(base,'dispatch','submap','reset',raw=True)
         report['afterResetSupervisorKeyboard']=delta(supervisor_kb)
-        # Per-device setting at runtime (documented as config; runtime form unverified).
-        report['deviceKeywordResult']=hyprctl(base,'keyword','device[virtual-keyboard]:enabled','false',raw=True) if report['keyboardNames'] else None
-        report['afterDeviceKeywordSupervisorKeyboard']=delta(supervisor_kb)
+        report['afterResetStrayKeyboard']=delta(stray)
         report['compositorAlive']=hyprctl(base,'version',raw=True)!=''
         link.ask('done');driver.stdin.close()
         rest=b'';end=time.monotonic()+10

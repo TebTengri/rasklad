@@ -51,7 +51,11 @@ def validate_frontend(variant):
 
 
 # Measurement submap: F12 leaves, every other key re-enters the same submap (swallowed).
-SEAT_PROBE_SUBMAP = '''submap = rasklad_lock
+SEAT_PROBE_SUBMAP = '''device {
+ name = hl-virtual-keyboard-unknown
+ keybinds = false
+}
+submap = rasklad_lock
 bind = , F12, submap, reset
 bind = , catchall, submap, rasklad_lock
 submap = reset
