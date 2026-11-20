@@ -213,6 +213,16 @@ uint32_t codeFor(char c)
     case 'v': return KEY_V;
     case 'x': return KEY_X;
     case '1': return KEY_1;
+    case 'f': return KEY_F;
+    case 'i': return KEY_I;
+    case 'j': return KEY_J;
+    case 'k': return KEY_K;
+    case 'r': return KEY_R;
+    case 'y': return KEY_Y;
+    case ';': return KEY_SEMICOLON;
+    case '[': return KEY_LEFTBRACE;
+    case '`': return KEY_GRAVE;
+    case ',': return KEY_COMMA;
     case ' ': return KEY_SPACE;
     default: return 0;
     }
@@ -227,7 +237,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, Zhurnal, Khorosho, Yolka, HelloComma, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -250,6 +260,10 @@ Cmd parse(std::string_view line)
         if (line == "shift2") return Cmd::Shift2;
         if (line == "shiftslow") return Cmd::ShiftSlow;
         if (line == "shifta") return Cmd::ShiftA;
+        if (line == "zhurnal") return Cmd::Zhurnal;
+        if (line == "khorosho") return Cmd::Khorosho;
+        if (line == "yolka") return Cmd::Yolka;
+        if (line == "hellocomma") return Cmd::HelloComma;
     }
     return Cmd::Unknown;
 }
@@ -280,6 +294,10 @@ bool run(Session &s, Cmd cmd)
         return s.tap(KEY_LEFTSHIFT);
     }
     case Cmd::ShiftA: return s.chord(KEY_LEFTSHIFT, KEY_A);
+    case Cmd::Zhurnal: return typeFixed(s, ";ehyfk");
+    case Cmd::Khorosho: return typeFixed(s, "[jhjij");
+    case Cmd::Yolka: return typeFixed(s, "`krf");
+    case Cmd::HelloComma: return typeFixed(s, "hello, ");
     case Cmd::Unknown: break;
     }
     return false;

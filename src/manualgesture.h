@@ -18,14 +18,25 @@ inline constexpr std::array<std::string_view, 26> kUsToRu{
     "ф", "и", "с", "в", "у", "а", "п", "р", "ш", "о", "л", "д", "ь",
     "т", "щ", "з", "й", "к", "ы", "е", "г", "м", "ц", "ч", "н", "я"};
 
-// Converts a word of lowercase ASCII letters. Anything else returns "" (the
-// caller keeps the original; fail closed).
+// The seven unshifted punctuation keys that carry Russian letters (same physical key).
+inline std::string_view punctToRu(char c) {
+    switch (c) {
+    case ',': return "б"; case '.': return "ю"; case ';': return "ж"; case '\'': return "э";
+    case '[': return "х"; case ']': return "ъ"; case '`': return "ё";
+    default: return {};
+    }
+}
+inline bool wordChar(char c) { return (c >= 'a' && c <= 'z') || !punctToRu(c).empty(); }
+
+// Converts a word of lowercase ASCII letters and the seven keys above. Anything
+// else returns "" (the caller keeps the original; fail closed).
 inline std::string usToRu(std::string_view word) {
     std::string out;
     out.reserve(word.size() * 2);
     for (const char c : word) {
-        if (c < 'a' || c > 'z') return {};
-        out.append(kUsToRu[static_cast<std::size_t>(c - 'a')]);
+        if (c >= 'a' && c <= 'z') out.append(kUsToRu[static_cast<std::size_t>(c - 'a')]);
+        else if (const auto r = punctToRu(c); !r.empty()) out.append(r);
+        else return {};
     }
     return out;
 }

@@ -19,6 +19,17 @@ int main() {
         CHECK(QString::fromStdString(rasklad::manual::usToRu(one)) == expected);
     }
     CHECK(rasklad::manual::usToRu("ghbdtn") == "привет");
+    for (const char c : std::string(",.;'[]`")) {
+        const std::string one(1, c);
+        const QString expected = rasklad::convertLayout(QString::fromLatin1(one.c_str()), rasklad::LayoutDirection::UsToRu);
+        CHECK(QString::fromStdString(rasklad::manual::usToRu(one)) == expected);
+        CHECK(rasklad::manual::wordChar(c));
+    }
+    CHECK(rasklad::manual::usToRu(";ehyfk") == "журнал");
+    CHECK(rasklad::manual::usToRu("[jhjij") == "хорошо");
+    CHECK(rasklad::manual::usToRu("`krf") == "ёлка");
+    CHECK(!rasklad::manual::wordChar('/'));
+    CHECK(!rasklad::manual::wordChar('1'));
     CHECK(rasklad::manual::usToRu("gh1").empty());
     CHECK(rasklad::manual::usToRu("A").empty());
 

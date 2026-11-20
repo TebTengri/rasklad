@@ -1222,7 +1222,23 @@ private:
         }
 #endif
 
+#ifdef RASKLAD_MANUAL_LAB
+        char manualChar = 0; // , . ; ' [ ] ` carry б ю ж э х ъ ё on the same keys
+        switch (sym) {
+        case FcitxKey_comma: manualChar = ','; break;
+        case FcitxKey_period: manualChar = '.'; break;
+        case FcitxKey_semicolon: manualChar = ';'; break;
+        case FcitxKey_apostrophe: manualChar = '\''; break;
+        case FcitxKey_bracketleft: manualChar = '['; break;
+        case FcitxKey_bracketright: manualChar = ']'; break;
+        case FcitxKey_grave: manualChar = '`'; break;
+        default: break;
+        }
+        if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z) manualChar = static_cast<char>('a' + (sym - FcitxKey_a));
+        if (plain && manualChar && !s->full()) {
+#else
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
+#endif
             if (s->empty()) {
                 const auto context = fixtureContext(ic, *s);
                 const auto generation = s->disable->bind(kFixtureRegistry,
@@ -1232,7 +1248,11 @@ private:
                 s->lease = policy::authorizeCapture(kFixtureRegistry,
                     currentPermission(context), context).lease;
             }
+#ifdef RASKLAD_MANUAL_LAB
+            acceptLetter(ic, *s, event, manualChar);
+#else
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
+#endif
             return;
         }
 
