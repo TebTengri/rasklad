@@ -92,7 +92,7 @@ def build():
         contained(vault/(key+'.md')).write_text('\n'.join(lines))
     lines=['# rasklad — карта заметок','','Откройте именно `docs/knowledge` как существующее хранилище Obsidian.','Здесь только производные публичные заметки; build/, профили и корпуса сюда не входят.','Исходный индекс и команды — в репозитории rasklad, а не в настройках Obsidian.','','## Компоненты','']
     lines += [f'- [{n["title"]}]({n["id"]}.md)' for n in curated['nodes']]
-    lines+=['','Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;','решения и статусы изменять в `docs/project-map.json`, затем обновить карту.','Obsidian не установлен и sync/plugins не включены этим генератором.','']
+    lines+=['','Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;','решения и статусы изменять в `docs/project-map.json`, затем обновить карту.','Генератор не включает sync и plugins Obsidian; настройки хранилища (.obsidian/) не коммитятся.','']
     contained(vault/'Start.md').write_text('\n'.join(lines))
     value['vaultSha256']={str(p.relative_to(ROOT)):digest(contained(p).read_bytes()) for p in sorted(vault.glob('*.md'))}
     INDEX.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')

@@ -3,9 +3,10 @@
 - Worktree /home/mvn/Work/rasklad-message-adapter, branch SYS-246/slack-status-observation.
 - Publish draft PR17 via HEAD:SYS-242/message-adapter; Linear SYS-246 In Progress.
 - Main /home/mvn/Work/rasklad and neighboring/private projects untouched.
-- User priority: Claude implements; Codex coordinates/accepts. Grok through Cursor
-  and Gemini through Antigravity provide targeted parallel criticism. Compact
-  prompts, one executor, no repeated green tests without changed paths.
+- Roles since 2026-11-20 (docs/AGENT_SETUP.md): Claude leads/implements/accepts;
+  ecc subagents execute scoped tasks; Grok (Cursor) and Gemini (Antigravity) give
+  independent criticism; Codex is reserve reviewer. Author never self-approves.
+  Compact prompts, one executor, no repeated green tests without changed paths.
 - Normal Claude CLI authenticated and working. --bare cannot use OAuth; do not
   infer account logout from bare mode. Antigravity CLI authenticated normally.
 

@@ -33,8 +33,9 @@ no interference in excluded applications and no expansion of desktop privileges.
 
 ## Current execution roles and next authorized work
 
-Codex coordinates on behalf of the owner and accepts changes. Claude implements;
-Gemini/Grok provide scoped criticism where available. Do not claim a model ran
+Since 2026-11-20 Claude coordinates on behalf of the owner and accepts changes;
+ecc subagents execute, Gemini/Grok provide scoped criticism, Codex is reserve
+reviewer (docs/AGENT_SETUP.md). Entries below predate this change. Do not claim a model ran
 if authentication/network/limits prevented it.
 
 - Three individually approved trials executed/restored; all approvals consumed.
