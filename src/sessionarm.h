@@ -8,7 +8,9 @@
 //
 // Contract for the launcher/supervisor: the write end is held only by the
 // supervisor (O_CLOEXEC, never inherited by Fcitx or its children); only the
-// read end is passed to Fcitx. Fcitx event handling is single-threaded; the
+// read end is passed to Fcitx. Revoke writes one byte AND closes, so a leaked
+// write end still cannot keep the gate open; the launcher test checks that the
+// write end is absent from /proc/<fcitx>/fd. Fcitx event handling is single-threaded; the
 // latch is not designed for concurrent callers.
 //
 // safeCommitText: last check before commitString(); allowlist — one word of

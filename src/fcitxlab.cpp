@@ -91,7 +91,8 @@
 #include "compositiondisable.h"
 #ifdef RASKLAD_SLACK_SESSION_LAB
 #if defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
-    defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST)
+    defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST) || \
+    defined(RASKLAD_DISABLE_REENTRY_TEST)
 #error "RASKLAD_SLACK_SESSION_LAB is a separate artifact"
 #endif
 #include "sessionarm.h"
@@ -161,7 +162,9 @@ rasklad::sessionarm::SessionArm &sessionArm() {
     static auto arm = rasklad::sessionarm::SessionArm::fromEnvironment();
     return arm;
 }
-bool sessionArmed() { return sessionArm().armed(); }
+// Set when the revoke watcher could not be installed: then nothing is armed.
+bool sessionWatchFailed = false;
+bool sessionArmed() { return !sessionWatchFailed && sessionArm().armed(); }
 #endif
 // Fixed fixture labels only: these do not authenticate a process or namespace.
 bool fixtureScope() {
@@ -383,6 +386,7 @@ public:
                     return true;
                 });
         }
+        if (!armWatch_) sessionWatchFailed = true; // no immediate revoke path: fail closed
 #endif
 #ifdef RASKLAD_WITNESS_LAB
         // Only after profile.ready() and successful property registration.
@@ -796,22 +800,33 @@ private:
     }
 
 #ifdef RASKLAD_SLACK_SESSION_LAB
+    // Two passes: discard() notifies clients, so never call it inside foreach.
+    // (discard's stopping() early return is unreachable here: the Off paths
+    // exist only in the test labs excluded by #error above.)
     void revokeAll() {
-        manager_->foreach([this](fcitx::InputContext *ic) {
-            if (auto *s = state(ic, false)) discard(ic, *s);
+        using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
+        std::vector<Watch> targets;
+        manager_->foreach([&](fcitx::InputContext *ic) {
+            if (state(ic, false)) targets.push_back(ic->watch());
             return true;
         });
+        for (auto &target : targets) {
+            if (auto *ic = target.get()) {
+                if (auto *s = state(ic, false)) discard(ic, *s);
+            }
+        }
     }
 #endif
 
     void handleKey(fcitx::KeyEvent &event) {
 #ifdef RASKLAD_SLACK_SESSION_LAB
         // After revoke nothing may type through this private Fcitx: no engine
-        // pass-through, compose or forward. Discard and swallow every key.
+        // pass-through, compose or forward. Presses are swallowed; releases
+        // pass so a key already down before revoke cannot stay stuck/repeat.
         if (!sessionArmed()) {
             auto *revoked = event.inputContext();
             if (auto *s = state(revoked, false)) discard(revoked, *s);
-            event.filterAndAccept();
+            if (!event.isRelease()) event.filterAndAccept();
             return;
         }
 #endif

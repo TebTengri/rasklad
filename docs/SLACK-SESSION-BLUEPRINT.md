@@ -152,3 +152,12 @@ tests/slack_session/raskladslacklab.conf). Contract recorded: the supervisor
 holds the write end O_CLOEXEC; Fcitx gets only the read end; single-threaded
 event loop. Still to verify in the composed dry run: Slack does not commit its
 own preedit on focus loss; revoke HUP reaches the real Fcitx process.
+
+Re-review of b1ee1b6 (ecc:cpp-reviewer FIX-FIRST; earlier fixes verified:
+watcher lifetime, level-triggered HUP, re-entrancy, default builds
+unaffected). Closed: unarmed swallows presses only, releases pass (no stuck
+keys/autorepeat); revokeAll collects context references first, discards in a
+second pass; a missing revoke watcher fails closed; #error also excludes the
+disable-reentry test build; stopping() early return documented as unreachable.
+Launcher requirement (composition step): revoke writes one byte and closes the
+write end; test that the write end is absent from /proc/<fcitx>/fd.
