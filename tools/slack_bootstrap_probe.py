@@ -5,7 +5,7 @@ inside a closed headless Sway with network only through the Slack CONNECT
 bridge? Plan by default. --run-approved needs a separate one-shot owner approval.
 No IME, input, text reading, screenshots or profile copies. Output is fixed
 booleans/counts; the Wayland debug stream is scanned in memory and discarded."""
-import argparse, importlib.util, json, os, re, resource, select, shutil, signal, stat, subprocess, sys, tempfile, threading, time
+import argparse, importlib.util, json, os, re, resource, shutil, signal, stat, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 
 INSIDE = Path(__file__) == Path('/lab/runner.py')
@@ -185,7 +185,7 @@ def sandbox_args(home, profile, uid, user, work, snapshots, lang='C.UTF-8'):
          '--ro-bind', str(ROOT / 'tools/slack_https_bridge.py'), '/lab/slack_https_bridge.py',
          '--dir', '/lab/wayland-runtime', '--chdir', str(home)]
     for name, fd in sorted(snapshots.items()):
-        a += ['--perms', '0755' if name in ('sway', 'rasklad-wayland-keys') else '0444', '--ro-bind-data', str(fd), '/lab/wayland-runtime/' + name]
+        a += ['--perms', '0755' if name == 'sway' else '0444', '--ro-bind-data', str(fd), '/lab/wayland-runtime/' + name]
     env = {'PATH': '/usr/bin', 'LANG': lang, 'HOME': str(home), 'USER': user, 'LOGNAME': user,
            'XDG_RUNTIME_DIR': runtime, 'XDG_CURRENT_DESKTOP': 'Hyprland', 'XDG_SESSION_TYPE': 'wayland',
            'DBUS_SESSION_BUS_ADDRESS': f'unix:path={runtime}/bus', 'LD_LIBRARY_PATH': '/lab/wayland-runtime',
@@ -235,15 +235,6 @@ def stop(process, seconds):
         process.kill()
         process.wait(timeout=2)
         return 'killed'
-
-
-def seed_keyboard(children, env):
-    # Keep stdin open and send nothing: the helper only creates the seat keyboard and keymap.
-    child = subprocess.Popen(['/lab/wayland-runtime/rasklad-wayland-keys'], stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env)
-    children.append(child)
-    ready, _, _ = select.select([child.stdout], [], [], 3)
-    return bool(ready) and os.read(child.stdout.fileno(), 32) == b'{"ready":true}\n'
 
 
 def start_fcitx(children, env):
@@ -297,7 +288,6 @@ def inside():
             if ime not in IME_TARGETS:
                 raise RuntimeError('ime-target')
             lab_env = dict(os.environ, WAYLAND_DISPLAY=sockets[0].name)
-            report['seatKeyboard'] = seed_keyboard(children, lab_env)
             report['fcitxUp'] = start_fcitx(children, lab_env)
         control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
         diag = os.environ.get('RASKLAD_BOOTSTRAP_DIAG')
@@ -436,9 +426,6 @@ def run(dry=False, control=False, hello=False, diag=None, ime=None):
             profile = profile_dir(home)
         for name in ('sway', 'libwlroots-0.20.so', 'libliftoff.so.0'):
             snapshots[name] = base.sealed_snapshot(ROOT / 'build/wayland-ime/runtime' / name, lock['runtimeFiles'][name])
-        if ime:
-            # Own virtual keyboard gives the closed seat a keyboard, so text-input focus exists; it sends no keys.
-            snapshots['rasklad-wayland-keys'] = base.sealed_snapshot(ROOT / 'build/wayland-ime/keys/rasklad-wayland-keys')
         (work / 'passwd').write_text(f'{entry.pw_name}:x:{os.getuid()}:{os.getgid()}::{home}:/usr/bin/nologin\n')
         (work / 'group').write_text(f'{entry.pw_name}:x:{os.getgid()}:\n')
         bus_command = (['/usr/bin/dbus-daemon', '--nofork', '--config-file=' + str(ROOT / 'tests/fcitx_transport/session-bus.conf'),

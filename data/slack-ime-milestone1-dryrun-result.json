@@ -8,7 +8,6 @@
   ],
   "chromium": {
     "fcitxUp": true,
-    "seatKeyboardReady": false,
     "windowMapped": false,
     "attachCount": 1,
     "textInputManagerBound": true,
@@ -20,7 +19,6 @@
   },
   "slack": {
     "fcitxUp": true,
-    "seatKeyboardReady": false,
     "windowMapped": false,
     "attachCount": 6,
     "textInputManagerBound": true,
@@ -30,10 +28,11 @@
     "safeStorageHints": [],
     "slackProcessesRemaining": 0
   },
-  "conclusion": "Text-input-v3 path works under the closed compositor: Chromium focuses a field and enables IME; Slack binds text-input-v3 and gets text-input focus. Slack offline shows an error page without an input field, so enable() is expected only after login (live). seatKeyboardReady=false: the helper ready line was not read within 3 s, yet focus events arrived; to recheck before step 2. Slack logs name no safeStorage backend in the empty profile.",
+  "conclusion": "Text-input-v3 path works under the closed compositor: Chromium focuses a field and enables IME; Slack binds text-input-v3 and gets text-input focus. Slack offline shows an error page without an input field, so enable() is expected only after login (live). Slack logs name no safeStorage backend in the empty profile.",
   "notCovered": [
     "LAB addon",
     "nested Hyprland",
     "Slack composer field (needs login)"
-  ]
+  ],
+  "seatKeyboard": "The virtual-keyboard helper refuses outside its own lab (HOME/fixture guards) and was not needed: Sway grants text-input focus without it. Removed from the sandbox; rerun confirmed the same markers."
 }

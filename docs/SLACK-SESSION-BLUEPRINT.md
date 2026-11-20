@@ -73,6 +73,6 @@ own Fcitx up on the private bus; both clients bind zwp_text_input_manager_v3
 and create a text input; Chromium's autofocus field gets `enter` and
 `enable()`; offline Slack gets `enter` (no field on its error page, so no
 `enable()` until login). Scope parameterization done (rasklad-slack- prefix,
-capped ceilings). Open: helper ready line not confirmed; safeStorage backend
+capped ceilings). The virtual-keyboard helper was not needed (Sway grants focus) and was removed. Open: safeStorage backend
 not named in logs; LAB addon and nested Hyprland next.
 Evidence: data/slack-ime-milestone1-dryrun-result.json.
