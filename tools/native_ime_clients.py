@@ -277,6 +277,36 @@ def run_seat_probe(base,fcitx,gate,driver_env,children):
             driver.stdout.close()
 
 
+class HyprSeat:
+    """Lock the nested seat for the supervisor: exempt only its own virtual keyboard
+    from keybinds, then enter the catch-all submap (F12 leaves)."""
+    PREFIX='hl-virtual-keyboard-unknown'
+    def __init__(self,base):
+        self.base,self.exempt,self.names=base,None,None
+    def keyboards(self):
+        devices=json.loads(hyprctl(self.base,'-j','devices').stdout or b'{}')
+        return sorted(k['name'] for k in devices.get('keyboards',[]) if type(k) is dict and type(k.get('name')) is str)
+    def lock(self):
+        names=self.keyboards()
+        candidates=[n for n in names if n.startswith(self.PREFIX)]
+        if candidates!=[self.PREFIX]:return False  # exactly one helper: ours
+        if hyprctl(self.base,'keyword',f'device[{self.PREFIX}]:keybinds','false',raw=True)!='ok':return False
+        self.exempt=self.PREFIX
+        if hyprctl(self.base,'dispatch','submap','rasklad_lock',raw=True)!='ok':return False
+        self.names=names
+        return self.intact()
+    def intact(self):
+        return (self.names is not None and hyprctl(self.base,'submap',raw=True)=='rasklad_lock'
+                and self.keyboards()==self.names)
+    def unlock(self):
+        try:
+            hyprctl(self.base,'dispatch','submap','reset')
+            if self.exempt:hyprctl(self.base,'keyword',f'device[{self.exempt}]:keybinds','true')
+        except (self.base.Refused,OSError,subprocess.SubprocessError):
+            pass
+        self.exempt=self.names=None
+
+
 def compositor_binding(base):
     """Nested Hyprland only: the focused window as the compositor reports it.
     Returns (pid, window generation = window address), or None."""
@@ -337,6 +367,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
     addon_end.close()  # only Fcitx keeps its receipt end
     report={}
     os.close(read_end);read_end=None
+    hyprland_seat_holder={}
     helper=subprocess.Popen(['/lab/rasklad-wayland-keys'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
     children.append(helper)
     driver=None
@@ -394,13 +425,23 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
             if not hyprland:return binding
             try:
                 now=compositor_binding(base)
-            except (base.Refused,OSError,subprocess.SubprocessError):
+                if now and not seat.intact():
+                    sv.event('seat-lost')
+                    if sv is s:stop_helper()
+                    return (0,0,0,'none')
+            except (base.Refused,OSError,subprocess.SubprocessError,ValueError):
                 now=None
             if not now:
                 sv.event('surface-change');return (0,0,0,'none')
             return (now[0],now[1],epoch,purpose)
         s=sup.Supervisor([binding[0]],'correction')
-        if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
+        if not s.arm(*binding):raise base.Refused('supervisor_arm')
+        seat=None
+        if hyprland:
+            seat=HyprSeat(base);hyprland_seat_holder['seat']=seat
+            report['seatLocked']=seat.lock()
+            if not report['seatLocked']:s.revoke('seat-lost');raise base.Refused('seat_lock')
+        if not s.seat_locked():raise base.Refused('supervisor_seat')
         def pending_receipt(timeout=0):
             end=time.monotonic()+timeout
             while not records.commits:
@@ -446,19 +487,37 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         records.poll(.2)
         report['passwordFocusReported']=any(r[:1]==b'i' and r[1:2]==b'p' for r in records.contexts[seen:])
         link.ask('focus-prose');records.poll(.3)
+        if hyprland:
+            # A new keyboard during the session (stand-in for any other input source):
+            # the submap must swallow its keys and the supervisor must revoke.
+            stray=subprocess.Popen(['/lab/rasklad-wayland-keys'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+            children.append(stray)
+            try:
+                ready,_,_=select.select([stray.stdout],[],[],3)
+                if not ready or os.read(stray.stdout.fileno(),32)!=b'{"ready":true}\n':raise base.Refused('stray_ready')
+                before_stray=link.ask('observe').get('events')
+                stray.stdin.write(b'hello\n');stray.stdin.flush();helper_ack(base,stray);time.sleep(.4)
+                report['strayBlockedDuringLock']=link.ask('observe').get('events')==before_stray
+                report['newDeviceRevokes']=current()==(0,0,0,'none') and s.state=='REVOKED'
+            finally:
+                stray.stdin.close();stray.kill();stray.wait()
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
         before=link.ask('observe')
         report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
         s.event('f12')
         os.write(write_end,b'x');os.close(write_end);write_end=None
         stop_helper()
+        if hyprland:
+            seat.unlock()
+            report['seatReleasedAfterRevoke']=hyprctl(base,'submap',raw=True)!='rasklad_lock'
         report['supervisedRevokedRefusesNext']=s.issue('backspace',*binding) is None and s.state=='REVOKED'
         if hyprland:
             # A changed surface generation must be refused (fresh supervisor, no key sent).
             check=sup.Supervisor([binding[0]],'correction')
             check.arm(*binding);check.seat_locked()
             report['bindingChangeRefused']=check.issue('word',binding[0],binding[1]+1,0,'normal') is None and check.state=='REVOKED'
-            report['compositorFocusUnchanged']=current()==binding
+            now=compositor_binding(base)
+            report['compositorFocusUnchanged']=bool(now) and (now[0],now[1])==binding[:2]
         time.sleep(.3)
         after=link.ask('observe')
         report['supervisedNothingAfterRevoke']=(after.get('value')==before.get('value') and after.get('events')==before.get('events')
@@ -479,6 +538,7 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         driver.wait(timeout=5)
         return subprocess.CompletedProcess(driver.args,driver.returncode,out+rest,None),report
     finally:
+        if hyprland_seat_holder.get('seat'):hyprland_seat_holder['seat'].unlock()
         receipts.close()
         if not helper.stdin.closed:helper.stdin.close()
         if helper.poll() is None:helper.kill();helper.wait()
@@ -556,7 +616,7 @@ def run(base, children):
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1':supervised=False;control=True  # measurement: only require completion
-        hypr_required=['bindingFromCompositor','bindingChangeRefused','compositorFocusUnchanged'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
+        hypr_required=['bindingFromCompositor','bindingChangeRefused','seatLocked','strayBlockedDuringLock','newDeviceRevokes','seatReleasedAfterRevoke'] if os.environ.get('RASKLAD_HYPRLAND_IME_LAB')=='1' else []
         required=(['seatProbeComplete'] if os.environ.get('RASKLAD_SEAT_PROBE_LAB')=='1' else ['armWriteEndOnlyInSupervisor'] if control else
                   ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedReceiptFromAddon','observerSawExpectedText','receiptQueueEmptyBeforeTyping','noReceiptAfterCleanup','contextFromAddon','purposeCheckArmed','passwordFocusReported','passwordFocusRefused','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor']+hypr_required if supervised else

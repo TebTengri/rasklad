@@ -51,6 +51,11 @@ def validate_frontend(variant):
 
 
 # Measurement submap: F12 leaves, every other key re-enters the same submap (swallowed).
+LOCK_SUBMAP = '''submap = rasklad_lock
+bind = , F12, submap, reset
+bind = , catchall, submap, rasklad_lock
+submap = reset
+'''
 SEAT_PROBE_SUBMAP = '''device {
  name = hl-virtual-keyboard-unknown
  keybinds = false
@@ -346,7 +351,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         if server_route_witness:
             snapshots['/lab/raskladserverroute.so'] = base.sealed_snapshot(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
         snapshots['/lab/rasklad-wayland-keys'] = base.sealed_snapshot(keys)
-        (directory/'hypr.conf').write_text(probe.CONFIG+(SEAT_PROBE_SUBMAP if seat_probe else ''))
+        (directory/'hypr.conf').write_text(probe.CONFIG+(SEAT_PROBE_SUBMAP if seat_probe else LOCK_SUBMAP if slack_supervised else ''))
         (directory/'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
         (directory/'group').write_text(f'lab:x:{os.getgid()}:\n')
         (directory/'machine-id').write_text('00000000000000000000000000000007\n')
