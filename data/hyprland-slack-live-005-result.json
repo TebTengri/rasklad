@@ -1,0 +1,56 @@
+{
+ "approval": "owner one-shot, consumed",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch --slack-live --owner-empty-composer",
+ "commit": "d574809",
+ "conclusion": "Slack does send surrounding text (field state known). Refused at arm with composer_not_empty although the owner confirmed an empty composer: the empty Slack editor reports non-empty surrounding text (most likely a newline / zero-width char). No key injected. Fix: whitespace/zero-width-only surrounding text counts as empty.",
+ "date": "2026-11-21",
+ "result": {
+  "bindingFromCompositor": true,
+  "bridgeStats": {
+   "accepted": 14,
+   "blocked": 10,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 121748,
+   "opened": 4,
+   "rejectedDomains": {
+    "slackb.com": 10
+   },
+   "tlsDenied": 0
+  },
+  "compositorStayedAlive": true,
+  "contextFromAddon": true,
+  "contextRecordsBeforeArm": 5,
+  "dbusInputFrontendAbsent": true,
+  "enterNeverSent": true,
+  "exactCompositor": "installed nested Hyprland",
+  "fcitxAliveAfterGate": true,
+  "fieldStateAtArm": "text",
+  "finishErrors": [],
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "keyboardsAddedBeforeArm": [
+   "hl-virtual-keyboard-fcitx5"
+  ],
+  "keyboardsRemovedBeforeArm": [],
+  "maxTrialSeconds": 320,
+  "outerClean": true,
+  "ownerConfirmedEmptyComposer": true,
+  "ownerSignalSeconds": 9.8,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "reason": "composer_not_empty",
+  "renderNodeGranted": true,
+  "seatIntactAtArm": true,
+  "seatLockedBeforeSlack": true,
+  "singletonLockLeft": false,
+  "slackConnected": true,
+  "slackLive": true,
+  "slackProcessesRemaining": 0,
+  "textRead": false,
+  "windowMappedSeconds": 1.8
+ },
+ "schema": 1
+}

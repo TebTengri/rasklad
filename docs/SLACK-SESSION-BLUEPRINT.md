@@ -423,3 +423,12 @@ only with `--owner-empty-composer`; after a case `text` fails the run, and if
 the field was visible at arm it must be empty again. Grok FIX-FIRST items 2–3
 fixed; 1 and 4 (extra BackSpace if Slack drops the raw space; a stale `e`)
 are bounded by the empty-composer rule and recorded as residuals.
+
+### Live runs 003–005 (2026-11-21, each owner-approved, consumed; no key injected)
+003: Fcitx removed its own virtual keyboard before F10 → non-helper removals
+are accepted before F10. 004: the owner could not find the test channel
+(keyboard search is blocked by design) → owner opens the channel in host Slack
+first; Slack reopens on it. 005: Slack sends surrounding text (field state is
+known, not `unknown`), but the empty composer was reported as `text` →
+`blankText()` treats whitespace / zero-width-only surrounding text as empty;
+malformed UTF-8 counts as content.

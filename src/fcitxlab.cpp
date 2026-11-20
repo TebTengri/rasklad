@@ -879,7 +879,7 @@ private:
         if (!ic->capabilityFlags().test(fcitx::CapabilityFlag::SurroundingText)) return 'u';
         const auto &surrounding = ic->surroundingText();
         if (!surrounding.isValid()) return 'u';
-        return surrounding.text().empty() ? 'e' : 't';
+        return rasklad::sessionarm::blankText(surrounding.text()) ? 'e' : 't';
     }
 
     void reportField(fcitx::InputContext *ic) {

@@ -161,6 +161,12 @@ int main() {
         CHECK(sink.sendField('t', 1012));
         CHECK(read(sp[1], buf, sizeof buf) == 6 && std::string(buf, 6) == "ft012\n");
         CHECK(!sink.sendField('x', 1));
+        CHECK(rasklad::sessionarm::blankText(""));
+        CHECK(rasklad::sessionarm::blankText("\n"));
+        CHECK(rasklad::sessionarm::blankText(" \u200b\ufeff\n"));
+        CHECK(!rasklad::sessionarm::blankText("a"));
+        CHECK(!rasklad::sessionarm::blankText("\n\u043f"));
+        CHECK(!rasklad::sessionarm::blankText("\xe2\x80"));  // truncated UTF-8 counts as content
         CHECK(!sink.sendContext('f', 'n', 1));  // field records are not context events
         CHECK(!sink.send(true, 0));
         CHECK(!sink.send(true, 100));

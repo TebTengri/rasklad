@@ -208,6 +208,32 @@ private:
     unsigned sequence_ = 0;
 };
 
+// True if the text holds only whitespace or zero-width/format characters: what an empty
+// rich-text editor reports as its surrounding text (live run 005: Slack's empty composer
+// was not ""). Decodes UTF-8 locally; malformed input counts as content (fail closed).
+inline bool blankText(std::string_view text) {
+    for (std::size_t i = 0; i < text.size();) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        std::uint32_t cp; std::size_t len;
+        if (c < 0x80) { cp = c; len = 1; }
+        else if ((c & 0xe0) == 0xc0) { cp = c & 0x1f; len = 2; }
+        else if ((c & 0xf0) == 0xe0) { cp = c & 0x0f; len = 3; }
+        else if ((c & 0xf8) == 0xf0) { cp = c & 0x07; len = 4; }
+        else return false;
+        if (i + len > text.size()) return false;
+        for (std::size_t k = 1; k < len; ++k) {
+            const unsigned char d = static_cast<unsigned char>(text[i + k]);
+            if ((d & 0xc0) != 0x80) return false;
+            cp = (cp << 6) | (d & 0x3f);
+        }
+        const bool blank = cp == ' ' || cp == '\t' || cp == '\n' || cp == '\r' || cp == 0xa0
+            || cp == 0x200b || cp == 0x200c || cp == 0x200d || cp == 0x2060 || cp == 0xfeff;
+        if (!blank) return false;
+        i += len;
+    }
+    return true;
+}
+
 inline std::size_t codePoints(std::string_view text) {
     std::size_t n = 0;
     for (unsigned char c : text) n += (c & 0xc0) != 0x80;
