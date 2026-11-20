@@ -58,12 +58,13 @@ try{
   const next=()=>lines.length?Promise.resolve(lines.shift()):new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('supervisor timeout')),20000);waiter=()=>{clearTimeout(t);resolve(lines.shift());};});
   let observations=0;
   for(;;){const command=await next();
-   if(command==='observe'){observations++;process.stdout.write(JSON.stringify({value:await ev('prose.value'),events:await ev('imeEvents.length')})+'\n');}
+   if(command==='observe'){observations++;const bounded=e=>Promise.race([ev(e),new Promise((_,reject)=>setTimeout(()=>reject(Error('observe timeout')),2000))]);process.stdout.write(JSON.stringify({value:await bounded('prose.value'),events:await bounded('imeEvents.length')})+'\n');}
    else if(command==='done'){process.stdout.write(JSON.stringify({done:true})+'\n');break;}
    else throw Error('unknown supervisor command');}
   process.stdin.pause();
   report.supervisedObservations=observations;report.supervisedFieldFocused=await ev('document.activeElement===prose');
-  report.checks=1;report.passed=report.supervisedFieldFocused===true;
+  // Observer-side check only; the security properties are required by the Python supervisor report.
+  report.observerChecks=1;report.passed=report.supervisedFieldFocused===true;
  }else if(process.env.RASKLAD_SLACK_GATE_LAB==='1'){
   // Offline Slack-session gate test (owned Chromium fixture, gate-test addon).
   // The Python parent plays the supervisor and alone holds the arm write end;

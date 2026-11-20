@@ -212,7 +212,16 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         if not ready or os.read(helper.stdout.fileno(),32)!=b'{"ready":true}\n':raise base.Refused('helper_ready')
         os.set_blocking(helper.stdin.fileno(),False)  # Supervisor contract: write must not block
         def write(data):
+            # Non-blocking contract: wait briefly for room, never block, never write partially.
+            _,writable,_=select.select([],[helper.stdin],[],1)
+            if not writable:raise OSError('helper stdin full')
             if os.write(helper.stdin.fileno(),data)!=len(data):raise OSError('short helper write')
+        def stop_helper():
+            if not helper.stdin.closed:helper.stdin.close()  # no further command can be written
+            if helper.poll() is None:
+                helper.terminate()
+                try:helper.wait(timeout=1)
+                except subprocess.TimeoutExpired:helper.kill();helper.wait()
         driver=subprocess.Popen(['/usr/bin/node','/lab/driver.mjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=driver_env)
         link=DriverLink(base,driver,time.monotonic()+50)
         hello=link.line()
@@ -221,16 +230,21 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         binding=(pid,0,0,'normal')  # lab binding; the real one comes from the compositor
         s=sup.Supervisor([pid],'correction')
         if not (s.arm(*binding) and s.seat_locked()):raise base.Refused('supervisor_arm')
-        for command in inj.script('correction'):
+        script=inj.script('correction')
+        report['supervisedReceiptChecked']=False
+        for command in script:
             if command=='backspace' and not s._receipt_ok:
+                # LAB ONLY: the observer reports the owned fixture field. Live sessions must
+                # take the receipt from the addon/compositor, never from an observer.
                 observed=link.ask('observe')
+                report['supervisedReceiptChecked']=True
                 report['supervisedReceiptMatched']=s.commit_receipt(observed.get('value'))
                 if not report['supervisedReceiptMatched']:break
             token=s.issue(command,*binding)
             if token is None or not s.send(token,command,*binding,write):raise base.Refused('supervisor_send')
             helper_ack(base,helper)
             time.sleep(.05)
-        report['supervisedScriptCompleted']=s.done()
+        report['supervisedScriptCompleted']=s.done() and s.sent==len(script) and report['supervisedReceiptChecked']
         report['supervisedFieldCleaned']=link.ask('observe').get('value')==''
         report['helperStdinOnlyInSupervisor']=not write_end_holders(helper.stdin.fileno())
         # F12: revoke the supervisor and the addon arm pipe (byte + close).
@@ -238,10 +252,12 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         report['armWriteEndOnlyInSupervisor']=not write_end_holders(write_end)
         s.event('f12')
         os.write(write_end,b'x');os.close(write_end);write_end=None
+        stop_helper()
         report['supervisedRevokedRefusesNext']=s.issue('backspace',*binding) is None and s.state=='REVOKED'
         time.sleep(.3)
         after=link.ask('observe')
-        report['supervisedNothingAfterRevoke']=after.get('value')==before.get('value') and after.get('events')==before.get('events')
+        report['supervisedNothingAfterRevoke']=(after.get('value')==before.get('value') and after.get('events')==before.get('events')
+                                                and helper.stdin.closed and helper.poll() is not None and s.sent==len(script))
         report['supervisorSent']=s.sent
         link.ask('done')
         out=link.buffer
@@ -258,6 +274,8 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
         driver.wait(timeout=5)
         return subprocess.CompletedProcess(driver.args,driver.returncode,out+rest,None),report
     finally:
+        if not helper.stdin.closed:helper.stdin.close()
+        if helper.poll() is None:helper.kill();helper.wait()
         if driver is not None:
             if driver.poll() is None:driver.kill();driver.wait()
             if not driver.stdin.closed:driver.stdin.close()
@@ -330,7 +348,7 @@ def run(base, children):
         control=os.environ.get('RASKLAD_SLACK_GATE_CONTROL')=='1'
         supervised=os.environ.get('RASKLAD_SLACK_SUPERVISED_LAB')=='1'
         required=(['armWriteEndOnlyInSupervisor'] if control else
-                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptMatched','supervisedFieldCleaned',
+                  ['armWriteEndOnlyInSupervisor','supervisedScriptCompleted','supervisedReceiptChecked','supervisedReceiptMatched','supervisedFieldCleaned',
                    'supervisedRevokedRefusesNext','supervisedNothingAfterRevoke','helperStdinOnlyInSupervisor'] if supervised else
                   ['armWriteEndOnlyInSupervisor','revokeServed'])
         if not r['fcitxAliveAfterGate'] or not all(r.get(k) is True for k in required):r['passed']=False

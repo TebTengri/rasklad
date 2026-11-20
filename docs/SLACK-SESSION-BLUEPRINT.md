@@ -192,3 +192,12 @@ matched before cleanup; field empty after; F12 revokes, next command refused,
 nothing reaches the field; no other process held the helper stdin or the arm
 write end. Remaining before live: compositor-sourced binding and seat grab in
 nested Hyprland, then the owner-approved session.
+
+Grok review of 7e4aeda (FIX-FIRST; confirmed no key path outside
+Supervisor.send). Closed: helper stdin closed and helper stopped on F12 and on
+every exit path; `supervisedScriptCompleted` requires sent == script length and
+an explicit receipt step; post-revoke check also requires the helper stdin
+closed and the helper gone; non-blocking write waits ≤ 1 s for room, then
+refuses; observer evaluation bounded to 2 s. LIVE REQUIREMENTS (not lab): the
+commit receipt must come from the addon/compositor, never from an observer; the
+binding (pid, surface generation, IC epoch, purpose) must be compositor-issued.
