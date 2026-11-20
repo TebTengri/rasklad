@@ -256,3 +256,16 @@ helper before a focus change can still be delivered to the newly focused
 field; the window is one key (≤ one 50 ms step). Closing it needs the seat
 grab in the compositor — the next owner-approved Hyprland step. Not yet tested:
 a focus change in the middle of the script.
+
+## Seat probe in nested Hyprland (2026-11-20, owner-approved)
+
+Measurement, not a fix (data/hyprland-seat-probe-001-result.json). A catch-all
+submap (`bind = , catchall, submap, rasklad_lock`, F12 leaves) blocks every
+keyboard, virtual ones included: supervisor helper and stray helper 20 → 0
+input events; `submap reset` restores 20. So keybinds run before the IM grab,
+and a plain submap would also block the injection. Hyprland names devices
+`wl_keyboard` (physical seat), `hl-virtual-keyboard-fcitx5`,
+`hl-virtual-keyboard-unknown[-N]` (helpers). Candidate isolation: submap +
+per-device `keybinds = false` for the supervisor helper only — to be measured
+next. The first approved run did not measure (seat_probe not forwarded; fixed
+in 1b1fa9b with an AST test).

@@ -106,7 +106,7 @@
     "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
     "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
     "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "540bb7d3e61ab22b6088dae23031e920edeada9bbc97bff1ad313bad8d82ac58",
+    "docs/SLACK-SESSION-BLUEPRINT.md": "546d19d67c03504cd1176a05247f67c9661a5b23b9c6dd522005b93a8036dfa7",
     "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
     "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
     "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
@@ -183,7 +183,7 @@
     "tests/browser/spell.test.mjs": "1a9572b8c18f20208c194c6b8b2132ba1702b2da933af658a29b1aea93d3c496",
     "tests/chromium_ime/addon-witness.mjs": "56072c4e030eabd8c3c75d312cb6c83877df0fe5de330d5b1e625b11bad710f9",
     "tests/chromium_ime/adversarial-focus.mjs": "1c36e6a1a2d5e75079e43273fa451b6adc8a32f516667c63e795b5671d241543",
-    "tests/chromium_ime/driver.mjs": "72a5cbbb0250aa5d3cabe87b42c41415fbcefe6eaa88d38ab8e187950747aa7c",
+    "tests/chromium_ime/driver.mjs": "f58b5109bb09e1ab6b9166d21b6e664410f15c1ed6b3a4f4d2ee1493daf871f1",
     "tests/chromium_ime/focus-policy.mjs": "ec91c86c2494688e98361fd217c4bd3e708a45d4526ed206fc46892a93c33ad2",
     "tests/chromium_ime/keys.py": "93693dd61cb687266cd613c648d1248b7d3291061fa26aacd01aa8fde6f6a42f",
     "tests/chromium_ime/server-route-witness.mjs": "1ec0bfa5ab927cba1cdc31eb328f0786585dcbf002327dd07476a2eff6064d6a",
@@ -279,7 +279,7 @@
     "tests/slack_probe/test_status_trial.py": "1fd537ed769d68a66d163dd75ac0d85bfa01a08128d429517d0e44922358952d",
     "tests/slack_probe/test_trial_plan.py": "e508b5ef5de5ab108c8e69f52bf2848b8e995a06b6a515e80b64d31a01f25dfc",
     "tests/slack_session/sessionarm_tests.cpp": "d11a7423e04390e3064ac5eee2c462f15113759d1cbe0cb9ac246ad57e07ebd9",
-    "tests/slack_session/test_gate_lab.py": "253ad282dd38ec2113e148c6bedb897498da5e2703ab4011422a34a547821ffe",
+    "tests/slack_session/test_gate_lab.py": "ce09fcd02bef99cf9d1c5e3e3072df0dce231b327521f2ecf86d97b90c2121ad",
     "tests/slack_session/test_injector_supervisor.py": "57ece34121d2767576019bc6c4c8e3742fd43318558fc543db8d97d5fd6d4f16",
     "tests/technical/test_preparation.py": "9762b41fffaf694d2e30febcdc2b4ef9af9e9f210f934c6967d491cff18f8f49",
     "tests/technical/test_scoring.py": "fb3bc44159af6e2c1e947f5348bdce2b31ad9482799890a5aa80c7e2d9867ecb",
@@ -296,7 +296,7 @@
     "tests/wayland_ime/keys.pro": "458e3410f8e67fdf735d1bcdb63070170fddcdd0f7ebdcd9ba510a50873e1faf",
     "tests/wayland_ime/server_route_witness_tests.mjs": "cc2ac97af439e9be23f57b94a95581eddef3229e6ead83c5ba01ad9fa34f4bfb",
     "tests/wayland_ime/space_telemetry_tests.mjs": "587c5792186f69c379646a49d65634fbbb8f6cc0e9bcbc6facd9bc17d254f170",
-    "tests/wayland_ime/test_addon_witness_guards.py": "07d849f3fc3da4694bff6391a26ecb9bc5b9e987408316862862a284bfed1e8b",
+    "tests/wayland_ime/test_addon_witness_guards.py": "bda193c9cd4d2ae77311a195314ae1c0893e99fd7309b8245ada2faa22773b9d",
     "tests/wayland_ime/test_core_entry_witness_guards.py": "89124219b7d4fb7f7f1d91ba6ee705191a838a173cfc201016d7ebc5e89a4d47",
     "tests/wayland_ime/test_disable_suite_guards.py": "d5ab888b745a6d4819fb2bbeb7aaf41c542110ba9c139326fef386e1d7e81129",
     "tests/wayland_ime/test_drm_discovery.py": "964c693539f0f09c0b80598073743b2408b3d42f59e080e8a6f4cc8b79cc6046",
@@ -390,7 +390,7 @@
     "tools/hunspellengine.h": "8775b784188781d8da57890e2ccdfd5368bcb70a2a0090a5d1608581fab78b10",
     "tools/hyprland_fake_parent.py": "c0e63cfab91b6134379404c738607f1925386b9291ba309bab6b3d1161bfd23b",
     "tools/hyprland_feedback_parent.py": "18c72b48fa1455043ea85cb0236e0be251be2192eff0cef90e5113ce6d51dd6c",
-    "tools/hyprland_ime_lab.py": "5e65c0e766516a4822164ef008186ce4bc740811eeba4fa00edfdb1650c4e0e7",
+    "tools/hyprland_ime_lab.py": "7b553ca59b85d1361e12a52eb2cf3f8e9318474715b5d53c65eef79105aea43b",
     "tools/hyprland_mapping_probe.py": "4c3bd3c881683e48eb98d0dbb2b8e7a839f309651a5f88501aa79ec88a8f7b25",
     "tools/hyprland_nested_probe.py": "356454306e71a1d18a8424beaa70178bb076a0f9d0b56a9dc38ee23619bb482e",
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
@@ -401,7 +401,7 @@
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
-    "tools/native_ime_clients.py": "337de4e12e491d0df068da9bf72d6356ffc1ae56619e8d10899701603c097f6f",
+    "tools/native_ime_clients.py": "ab33d9e42da547511ffbf0aa34e34150b139800fa873de2a2e35272ec67917ee",
     "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
     "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
@@ -3489,12 +3489,12 @@
         },
         {
           "name": "AddonRecordParsing",
-          "line": 140,
+          "line": 149,
           "kind": "ClassDef"
         },
         {
           "name": "LabSelection",
-          "line": 159,
+          "line": 168,
           "kind": "ClassDef"
         },
         {
@@ -3553,33 +3553,38 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "test_descends_from",
+          "name": "test_run_forwards_every_selector_to_sandbox_args",
           "line": 134,
           "kind": "FunctionDef"
         },
         {
+          "name": "test_descends_from",
+          "line": 143,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "test_records",
-          "line": 141,
+          "line": 150,
           "kind": "FunctionDef"
         },
         {
           "name": "test_slack_gate_is_exclusive",
-          "line": 160,
+          "line": 169,
           "kind": "FunctionDef"
         },
         {
           "name": "test_sandbox_sets_gate_env_and_addon",
-          "line": 170,
+          "line": 179,
           "kind": "FunctionDef"
         },
         {
           "name": "test_gate_mode_values",
-          "line": 177,
+          "line": 186,
           "kind": "FunctionDef"
         },
         {
           "name": "test_gate_flags_require_plain_run",
-          "line": 183,
+          "line": 192,
           "kind": "FunctionDef"
         }
       ]
@@ -4058,47 +4063,47 @@
         },
         {
           "name": "test_invalid_combinations_refuse_before_endpoint_files_or_process",
-          "line": 83,
+          "line": 86,
           "kind": "FunctionDef"
         },
         {
           "name": "test_invalid_sandbox_combinations_refuse_before_base_plan",
-          "line": 100,
+          "line": 103,
           "kind": "FunctionDef"
         },
         {
           "name": "test_witness_selects_fixed_binary_config_and_module_without_new_rights",
-          "line": 110,
+          "line": 113,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_adds_only_one_environment_marker",
-          "line": 137,
+          "line": 140,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_requires_witness_before_files_endpoint_or_base_plan",
-          "line": 149,
+          "line": 152,
           "kind": "FunctionDef"
         },
         {
           "name": "test_no_query_cli_is_inert_and_dependency_checked",
-          "line": 168,
+          "line": 171,
           "kind": "FunctionDef"
         },
         {
           "name": "test_selected_module_must_pass_regular_file_guard",
-          "line": 187,
+          "line": 190,
           "kind": "FunctionDef"
         },
         {
           "name": "test_default_and_valid_witness_plans_are_inert",
-          "line": 193,
+          "line": 196,
           "kind": "FunctionDef"
         },
         {
           "name": "test_cli_invalid_selection_does_not_start_run",
-          "line": 206,
+          "line": 209,
           "kind": "FunctionDef"
         }
       ]
@@ -6028,32 +6033,32 @@
         },
         {
           "name": "supervised_selection",
-          "line": 56,
+          "line": 62,
           "kind": "FunctionDef"
         },
         {
           "name": "sandbox_args",
-          "line": 64,
+          "line": 70,
           "kind": "FunctionDef"
         },
         {
           "name": "start_bus",
-          "line": 157,
+          "line": 165,
           "kind": "FunctionDef"
         },
         {
           "name": "inside",
-          "line": 184,
+          "line": 192,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 257,
+          "line": 265,
           "kind": "FunctionDef"
         },
         {
           "name": "main",
-          "line": 391,
+          "line": 399,
           "kind": "FunctionDef"
         }
       ]
@@ -6460,38 +6465,48 @@
           "kind": "FunctionDef"
         },
         {
-          "name": "compositor_binding",
+          "name": "hyprctl",
           "line": 203,
           "kind": "FunctionDef"
         },
         {
+          "name": "run_seat_probe",
+          "line": 212,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "compositor_binding",
+          "line": 279,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "descends_from",
-          "line": 220,
+          "line": 296,
           "kind": "FunctionDef"
         },
         {
           "name": "AddonRecords",
-          "line": 233,
+          "line": 309,
           "kind": "ClassDef"
         },
         {
           "name": "run_supervised_driver",
-          "line": 253,
+          "line": 329,
           "kind": "FunctionDef"
         },
         {
           "name": "load_lab_module",
-          "line": 416,
+          "line": 492,
           "kind": "FunctionDef"
         },
         {
           "name": "fd_present",
-          "line": 424,
+          "line": 500,
           "kind": "FunctionDef"
         },
         {
           "name": "run",
-          "line": 438,
+          "line": 514,
           "kind": "FunctionDef"
         },
         {
@@ -6510,33 +6525,48 @@
           "kind": "FunctionDef"
         },
         {
+          "name": "spawn",
+          "line": 220,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "key",
+          "line": 226,
+          "kind": "FunctionDef"
+        },
+        {
           "name": "__init__",
-          "line": 236,
+          "line": 312,
           "kind": "FunctionDef"
         },
         {
           "name": "poll",
-          "line": 238,
+          "line": 314,
+          "kind": "FunctionDef"
+        },
+        {
+          "name": "delta",
+          "line": 235,
           "kind": "FunctionDef"
         },
         {
           "name": "write",
-          "line": 270,
+          "line": 346,
           "kind": "FunctionDef"
         },
         {
           "name": "stop_helper",
-          "line": 275,
+          "line": 351,
           "kind": "FunctionDef"
         },
         {
           "name": "current",
-          "line": 307,
+          "line": 383,
           "kind": "FunctionDef"
         },
         {
           "name": "pending_receipt",
-          "line": 327,
+          "line": 403,
           "kind": "FunctionDef"
         }
       ]

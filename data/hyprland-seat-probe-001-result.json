@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-supervised --seat-probe",
+  "approval": "owner one-shot approval for a repeat run (2026-11-20); the first approved run did not measure (seat_probe not forwarded, fixed in 1b1fa9b)",
+  "commit": "1b1fa9b",
+  "result": {
+    "afterDeviceKeywordSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "afterResetSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "baselineStrayKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "baselineSupervisorKeyboard": {
+      "acked": true,
+      "events": 20
+    },
+    "compositorAlive": true,
+    "compositorStayedAlive": true,
+    "deviceKeywordResult": "ok",
+    "exactCompositor": "installed nested Hyprland",
+    "fcitxAliveAfterGate": true,
+    "keyboardNames": [
+      "wl_keyboard",
+      "hl-virtual-keyboard-fcitx5",
+      "hl-virtual-keyboard-unknown",
+      "hl-virtual-keyboard-unknown-1"
+    ],
+    "lockedStrayKeyboard": {
+      "acked": true,
+      "events": 0
+    },
+    "lockedSupervisorKeyboard": {
+      "acked": true,
+      "events": 0
+    },
+    "passed": true,
+    "seatProbe": true,
+    "seatProbeComplete": true,
+    "submapActive": "rasklad_lock",
+    "submapEnter": "ok",
+    "submapReset": "ok"
+  },
+  "findings": [
+    "A catch-all submap swallows keys from virtual keyboards too: both the supervisor helper and the stray helper went from 20 events to 0; keybinds are evaluated before the input-method grab.",
+    "Leaving the submap restores delivery (20 events).",
+    "Device names: wl_keyboard (the nested seat keyboard = physical input from the host), hl-virtual-keyboard-fcitx5 (Fcitx), hl-virtual-keyboard-unknown and -unknown-1 (the two helpers, in spawn order).",
+    "hyprctl keyword device[virtual-keyboard]:enabled false answered ok but changed nothing (no such device name) — inconclusive."
+  ],
+  "nextMeasurement": "submap catch-all plus per-device keybinds=false for the supervisor helper only: helper should pass, the stray keyboard stay blocked."
+}
