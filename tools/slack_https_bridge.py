@@ -90,6 +90,16 @@ def tls_hello(client,initial=b'',allow_ech=False):
             if len(handshake)>=needed:return bytes(wire)+bytes(pending),client_name(bytes(handshake[:needed]),allow_ech)
     raise ValueError('tls-fragments')
 
+def error_kind(exc,stage):
+    # Fixed categories only; no hostnames, addresses or payloads.
+    if isinstance(exc,socket.timeout):kind='timeout'
+    elif isinstance(exc,(ConnectionResetError,BrokenPipeError,ConnectionAbortedError)):kind='reset'
+    elif type(exc) is OSError and str(exc) in ('dns','connect'):kind=str(exc)
+    elif isinstance(exc,subprocess.TimeoutExpired):kind='dns-timeout'
+    elif isinstance(exc,OSError):kind='os'
+    else:kind={'IndexError':'index','KeyError':'key','TypeError':'type','AttributeError':'attribute'}.get(type(exc).__name__,'other')
+    return stage+':'+kind
+
 def resolve_ipv4(host,port,**unused):
     # Bounded resolver subprocess; no shell, environment secrets or payload logs.
     result=subprocess.run(['/usr/bin/getent','ahostsv4',host],stdout=subprocess.PIPE,
@@ -107,12 +117,16 @@ def pump(left,right,deadline,allow_bytes):
             (right if source is left else left).sendall(data)
 
 class Broker:
-    def __init__(self,path,online=False,allow_ech=False,seconds=30,max_requests=64,max_bytes=64*1024*1024,max_active=8):
+    def __init__(self,path,online=False,allow_ech=False,seconds=30,max_requests=64,max_bytes=64*1024*1024,max_active=8,accept_hello=False):
+        # accept_hello: offline diagnostic. Answer 200, parse the ClientHello, record the outcome, close.
+        # Never opens an outbound connection; incompatible with online.
+        if accept_hello and online:raise ValueError('accept-hello-offline-only')
+        self.accept_hello=accept_hello
         if not (1<=seconds<=120 and 1<=max_requests<=512 and 1<=max_bytes<=512*1024*1024 and 1<=max_active<=32):raise ValueError('broker-bounds')
         self.path=str(path);self.online=online;self.allow_ech=allow_ech;self.deadline=time.monotonic()+seconds
         self.max_requests=max_requests;self.max_bytes=max_bytes
         self.lock=threading.Lock();self.active=threading.BoundedSemaphore(max_active)
-        self.stats={'accepted':0,'blocked':0,'tlsDenied':0,'tlsRejectReasons':{},'rejectedDomains':{},'opened':0,'errors':0,'forwardedBytes':0}
+        self.stats={'accepted':0,'blocked':0,'tlsDenied':0,'tlsRejectReasons':{},'rejectedDomains':{},'opened':0,'errors':0,'errorKinds':{},'helloParsed':0,'forwardedBytes':0}
         self.listener=socket.socket(socket.AF_UNIX);self.listener.bind(self.path)
         import os
         os.chmod(self.path,0o600);self.listener.listen(8);self.listener.settimeout(.2)
@@ -134,7 +148,7 @@ class Broker:
             if self.stats['forwardedBytes']+count>self.max_bytes:return False
             self.stats['forwardedBytes']+=count;return True
     def _client(self,client):
-        remote=None;established=False
+        remote=None;established=False;stage='header'
         with self.lock:
             if self.stopped:client.close();self.active.release();return
             self.sockets.add(client)
@@ -154,11 +168,14 @@ class Broker:
                         if suffix in counts or len(counts)<32:counts[suffix]=counts.get(suffix,0)+1
                         else:counts['other']=counts.get('other',0)+1
                 raise
-            if not self.online:raise ValueError('offline-check')
-            client.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n');established=True
+            if not self.online and not self.accept_hello:raise ValueError('offline-check')
+            client.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n');established=True;stage='hello'
             try:
                 initial,name=tls_hello(client,tail,self.allow_ech)
                 if name!=host:raise ValueError('sni-mismatch')
+                if self.accept_hello:
+                    with self.lock:self.stats['helloParsed']+=1
+                    return
             except (ValueError,UnicodeError) as exc:
                 reasons={'hello','vector','extension','name','encrypted-name','tls-eof','tls-record','hello-size','tls-fragments','sni-mismatch'}
                 reason=str(exc) if type(exc) is ValueError and str(exc) in reasons else 'malformed'
@@ -167,6 +184,7 @@ class Broker:
                     counts=self.stats['tlsRejectReasons'];counts[reason]=counts.get(reason,0)+1
                 raise
             # Resolve once, reject private/loopback results, connect to pinned IP.
+            stage='resolve'
             if self.stopped or time.monotonic()>=self.deadline:return
             answers=public_addresses(host,resolve_ipv4)
             for family,kind,proto,address in answers:
@@ -179,9 +197,11 @@ class Broker:
                 except OSError:
                     with self.lock:self.sockets.discard(candidate)
                     candidate.close()
+            stage='connect'
             if remote is None:raise OSError('connect')
             with self.lock:self.sockets.add(remote);self.stats['opened']+=1
             if not self._allow(len(initial)):return
+            stage='pump'
             remote.sendall(initial)
             pump(client,remote,self.deadline,self._allow)
         except (ValueError,UnicodeError):
@@ -189,8 +209,11 @@ class Broker:
             try:
                 if not established:client.sendall(b'HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n')
             except OSError:pass
-        except Exception:
-            with self.lock:self.stats['errors']+=1
+        except Exception as exc:
+            kind=error_kind(exc,stage)
+            with self.lock:
+                self.stats['errors']+=1
+                kinds=self.stats['errorKinds'];kinds[kind]=kinds.get(kind,0)+1
         finally:
             for peer in (client,remote):
                 if peer:

@@ -192,9 +192,11 @@ def inside():
         proxy = 'http://127.0.0.1:' + str(relay.port)
         env.update(HTTPS_PROXY=proxy, HTTP_PROXY=proxy, https_proxy=proxy, http_proxy=proxy, NO_PROXY='')
         started = time.monotonic()
-        control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL') == 'chromium'
-        target = ([CHROMIUM, '--ozone-platform=wayland', '--disable-gpu', '--no-first-run', '--user-data-dir=/tmp/control', 'about:blank']
-                  if control else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'])
+        control = os.environ.get('RASKLAD_BOOTSTRAP_CONTROL')
+        chromium = [CHROMIUM, '--ozone-platform=wayland', '--disable-gpu', '--no-first-run', '--user-data-dir=/tmp/control']
+        target = (chromium + ['about:blank'] if control == 'chromium'
+                  else chromium + ['--proxy-server=' + proxy, 'https://app.slack.com/'] if control == 'chromium-hello'
+                  else [SLACK, '--ozone-platform=wayland', '--proxy-server=' + proxy, '--disable-gpu'])
         slack = subprocess.Popen(target,
                                  env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         children.append(slack)
@@ -255,8 +257,8 @@ def plan():
             'output': 'fixed marker booleans, first-seen seconds, stop mode, bridge counts, rejected-domain suffixes'}
 
 
-def run(dry=False, control=False):
-    if control and not dry:
+def run(dry=False, control=False, hello=False):
+    if (control or hello) and not dry:
         raise RuntimeError('control-dry-only')
     """dry=True: empty temporary profile, private bus, offline bridge; no owner data or network."""
     if os.geteuid() == 0:
@@ -303,12 +305,12 @@ def run(dry=False, control=False):
             if proxy.poll() is not None or time.monotonic() > end:
                 raise RuntimeError('secrets-proxy')
             time.sleep(.04)
-        broker = bridge.Broker(work / 'https.sock', online=not dry, allow_ech=not dry, **BROKER)
+        broker = bridge.Broker(work / 'https.sock', online=not dry, allow_ech=not dry or hello, accept_hello=hello, **BROKER)
         command = sandbox_args(home, profile, os.getuid(), entry.pw_name, work, snapshots, os.environ.get('LANG', 'C.UTF-8'))
-        if control:
+        if control or hello:
             at = command.index('--')
-            command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_CONTROL', 'chromium']
-        report['positiveControl'] = 'chromium' if control else None
+            command[at:at] = ['--setenv', 'RASKLAD_BOOTSTRAP_CONTROL', 'chromium-hello' if hello else 'chromium']
+        report['positiveControl'] = 'chromium-hello' if hello else 'chromium' if control else None
         if slack_pids():
             raise RuntimeError('host-slack-running')
         if not dry:
@@ -360,10 +362,11 @@ def main():
     group.add_argument('--run-approved', action='store_true')
     group.add_argument('--dry-run-empty-profile', action='store_true')
     group.add_argument('--dry-run-chromium-control', action='store_true')
+    group.add_argument('--dry-run-hello-capture', action='store_true')
     group.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
-        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else plan()
+        report = inside() if args.inside else run() if args.run_approved else run(dry=True) if args.dry_run_empty_profile else run(dry=True, control=True) if args.dry_run_chromium_control else run(dry=True, hello=True) if args.dry_run_hello_capture else plan()
     except Exception as exc:
         text = str(exc)
         known = (type(exc) is RuntimeError and text in CODES) or (type(exc) is ValueError and text in REASONS)

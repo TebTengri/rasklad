@@ -63,3 +63,16 @@ path finishes first.
 After fixes: 67 slack_probe tests PASS; Chromium control windowMapped true
 (21 attaches, graceful); empty-profile Slack windowMapped false (0 attaches,
 graceful), 0 remaining processes.
+
+## Live run 001 (owner one-shot approval, consumed)
+
+First attempt refused at preflight (stale SingletonLock from an earlier
+experiment, pid dead); nothing launched. Owner cleared it by starting and
+quitting Slack normally. Run: registry bound at 0.4 s, no toplevel in 75 s,
+graceful stop, no remaining processes, no lock left, no Slack error markers.
+Bridge: 8 accepted, 0 opened, 8 errors, 0 bytes — Slack effectively had no
+network, so the result is inconclusive. Offline hello capture
+(`--dry-run-hello-capture`) then parsed 8/8 Chromium ClientHellos to Slack
+domains with 0 errors, so parsing is not the cause. The bridge now records
+fixed error categories by stage (header/hello/resolve/connect/pump). Evidence:
+data/slack-bootstrap-live-001-result.json.

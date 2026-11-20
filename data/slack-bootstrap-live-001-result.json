@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "approval": "owner one-shot, consumed",
+  "firstAttempt": "refused at preflight: stale SingletonLock (pid dead) from an earlier experiment; nothing launched; owner cleared it by starting and quitting Slack",
+  "result": {
+    "passed": true,
+    "windowMapped": false,
+    "registryBoundSeconds": 0.4,
+    "toplevelCreated": false,
+    "attachCount": 0,
+    "observedSeconds": 75.1,
+    "slackStop": "graceful",
+    "slackProcessesRemaining": 0,
+    "singletonLockLeft": false,
+    "markers": {
+      "secretServiceError": false,
+      "singletonFailure": false,
+      "connectionFailure": false,
+      "fatal": false,
+      "displayInit": false
+    },
+    "bridge": {
+      "accepted": 8,
+      "opened": 0,
+      "blocked": 0,
+      "errors": 8,
+      "forwardedBytes": 0,
+      "rejectedDomains": {},
+      "tlsDenied": 0
+    }
+  },
+  "interpretation": "Inconclusive: every Slack connection failed inside the bridge before an outbound connection opened, so Slack effectively had no network. Error stage was not recorded by the bridge at the time.",
+  "followUp": {
+    "offlineHelloCapture": {
+      "chromiumHellosToSlackParsed": 8,
+      "errors": 0
+    },
+    "conclusion": "ClientHello parsing is not the cause; failure is in resolve/connect/pump and needs an online diagnostic."
+  }
+}

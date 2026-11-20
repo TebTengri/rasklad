@@ -128,6 +128,20 @@ class BridgeRejectedDomains(unittest.TestCase):
         self.assertEqual(bridge.rejected_suffix(b'CONNECT \xff:443 HTTP/1.1'), 'malformed')
         self.assertEqual(bridge.rejected_suffix(b'GARBAGE'), 'malformed')
 
+    def test_error_kinds_are_fixed_categories(self):
+        import socket as so, subprocess as sp
+        self.assertEqual(bridge.error_kind(so.timeout(), 'hello'), 'hello:timeout')
+        self.assertEqual(bridge.error_kind(OSError('dns'), 'resolve'), 'resolve:dns')
+        self.assertEqual(bridge.error_kind(OSError('connect'), 'connect'), 'connect:connect')
+        self.assertEqual(bridge.error_kind(ConnectionResetError(), 'pump'), 'pump:reset')
+        self.assertEqual(bridge.error_kind(sp.TimeoutExpired('x', 1), 'resolve'), 'resolve:dns-timeout')
+        self.assertEqual(bridge.error_kind(RuntimeError('secret.example'), 'pump'), 'pump:other')
+
+    def test_accept_hello_is_offline_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ValueError, 'accept-hello-offline-only'):
+                bridge.Broker(Path(d) / 's', online=True, accept_hello=True)
+
     def test_bounds_validated(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaisesRegex(ValueError, 'broker-bounds'):
