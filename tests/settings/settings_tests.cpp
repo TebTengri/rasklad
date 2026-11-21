@@ -23,6 +23,8 @@ class FakeFcitx final : public FcitxSource
 public:
     bool up = true;
     bool failWrites = false;
+    bool dropSound = false; // accepts the call but keeps Sound on
+    bool broken = false;    // returns a config without a readable list
     int writes = 0;
     QVariantMap stored = fcitxMap({QStringLiteral("slack"), QStringLiteral("chromium")}, true);
     QStringList group{QStringLiteral("keyboard-us"), QStringLiteral("keyboard-ru")};
@@ -32,13 +34,15 @@ public:
     std::optional<QVariantMap> readConfig() override
     {
         if (!up) return std::nullopt;
+        if (broken) return QVariantMap{{QStringLiteral("Sound"), QStringLiteral("True")}};
         return stored;
     }
     bool writeConfig(const QVariantMap &config) override
     {
         ++writes;
         if (!up || failWrites) return false;
-        stored = mapFromConfig(configFromMap(config));
+        stored = mapFromConfig(*configFromMap(config));
+        if (dropSound) stored.insert(QStringLiteral("Sound"), QStringLiteral("True"));
         return true;
     }
 };
@@ -85,15 +89,22 @@ private Q_SLOTS:
                          {QStringLiteral("3"), QStringLiteral("bad id")},
                          {QStringLiteral("4"), QStringLiteral("slack")},
                          {QStringLiteral("x"), QStringLiteral("ignored")}};
-        const AddonConfig c = configFromMap({{QStringLiteral("Applications"), apps},
-                                             {QStringLiteral("Sound"), QStringLiteral("False")}});
+        const AddonConfig c = *configFromMap({{QStringLiteral("Applications"), apps},
+                                              {QStringLiteral("Sound"), QStringLiteral("False")}});
         QCOMPARE(c.apps, (QStringList{QStringLiteral("slack"), QStringLiteral("chromium")}));
         QVERIFY(!c.sound);
         const QVariantMap back = mapFromConfig(c);
         QCOMPARE(back.value(QStringLiteral("Sound")).toString(), QStringLiteral("False"));
         QCOMPARE(back.value(QStringLiteral("Applications")).toMap().value(QStringLiteral("1")).toString(),
                  QStringLiteral("chromium"));
-        QVERIFY(configFromMap({}).sound); // default on, like the addon
+        // Fcitx sends an empty list as ""; a missing or odd-shaped list is a failed read.
+        const auto empty = configFromMap({{QStringLiteral("Applications"), QString()}});
+        QVERIFY(empty && empty->apps.isEmpty() && empty->sound);
+        QVERIFY(!configFromMap({}));
+        QVERIFY(!configFromMap({{QStringLiteral("Applications"), QStringLiteral("slack")}}));
+        QVERIFY(!configFromMap({{QStringLiteral("Applications"), QVariant()}}));
+        QVERIFY(isTerminal(QStringLiteral("org.gnome.Ptyxis")));
+        QVERIFY(isTerminal(QStringLiteral("xfce4-terminal")));
     }
     void clientsParseOnlyClasses()
     {
@@ -130,16 +141,16 @@ private Q_SLOTS:
         SettingsBackend b(&f, &w);
         b.setAppEnabled(QStringLiteral("chatgpt"), true);
         QCOMPARE(b.error(), QString());
-        QVERIFY(configFromMap(f.stored).apps.contains(QStringLiteral("chatgpt")));
+        QVERIFY(configFromMap(f.stored)->apps.contains(QStringLiteral("chatgpt")));
         QVERIFY(entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("enabled")).toBool());
         b.setAppEnabled(QStringLiteral("chromium"), false);
-        QVERIFY(!configFromMap(f.stored).apps.contains(QStringLiteral("chromium")));
+        QVERIFY(!configFromMap(f.stored)->apps.contains(QStringLiteral("chromium")));
         QVERIFY(!entry(b, QStringLiteral("chromium")).isEmpty()); // still listed to switch back on
         w.open.clear();
         b.refresh();
         QVERIFY(!entry(b, QStringLiteral("chromium")).isEmpty());
         b.setSound(false);
-        QVERIFY(!configFromMap(f.stored).sound);
+        QVERIFY(!configFromMap(f.stored)->sound);
         QVERIFY(!b.sound());
     }
     void terminalsAndBadIdsRefused()
@@ -156,7 +167,7 @@ private Q_SLOTS:
         QCOMPARE(b.error(), QStringLiteral("invalid"));
         QCOMPARE(f.writes, before);
         QVERIFY(b.addApp(QStringLiteral("  org.telegram.desktop ")));
-        QVERIFY(configFromMap(f.stored).apps.contains(QStringLiteral("org.telegram.desktop")));
+        QVERIFY(configFromMap(f.stored)->apps.contains(QStringLiteral("org.telegram.desktop")));
     }
     void failuresShowTruth()
     {
@@ -174,6 +185,27 @@ private Q_SLOTS:
         const int before = f.writes;
         b.setAppEnabled(QStringLiteral("chatgpt"), true);
         QCOMPARE(f.writes, before); // never writes a config it could not read
+    }
+    void unreadableListNeverOverwritten()
+    {
+        FakeFcitx f;
+        f.broken = true;
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(!b.configLoaded());
+        b.setSound(false);
+        b.setAppEnabled(QStringLiteral("chatgpt"), true);
+        QCOMPARE(f.writes, 0);
+    }
+    void readBackMismatchIsReported()
+    {
+        FakeFcitx f;
+        f.dropSound = true;
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        b.setSound(false);
+        QCOMPARE(b.error(), QStringLiteral("write"));
+        QVERIFY(b.sound()); // shows what Fcitx kept
     }
     void capAt64()
     {

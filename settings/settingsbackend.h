@@ -6,6 +6,7 @@
 #include "settingscore.h"
 #include "sources.h"
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QStringList>
 #include <QVariantList>
@@ -38,6 +39,7 @@ public:
     QString error() const { return m_error; }
 
     Q_INVOKABLE void refresh();
+    Q_INVOKABLE void refreshIfStale();
     Q_INVOKABLE void setAppEnabled(const QString &id, bool enabled);
     Q_INVOKABLE bool addApp(const QString &id);
     Q_INVOKABLE void setSound(bool on);
@@ -61,6 +63,7 @@ private:
     QStringList m_seen; // switched off in this session: stay visible to switch back on
     QVariantList m_apps;
     QString m_error;
+    QElapsedTimer m_lastRefresh;
 };
 
 } // namespace rasklad::settings

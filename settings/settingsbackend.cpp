@@ -14,12 +14,21 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, WindowSource *windows, QObj
 void SettingsBackend::reloadConfig()
 {
     const auto map = m_running ? m_fcitx->readConfig() : std::nullopt;
-    m_loaded = map.has_value();
-    if (map) m_config = configFromMap(*map);
+    const auto parsed = map ? configFromMap(*map) : std::nullopt;
+    m_loaded = parsed.has_value();
+    if (parsed) m_config = *parsed;
+}
+
+void SettingsBackend::refreshIfStale()
+{
+    // Window focus calls this: at most one full refresh every 3 s.
+    if (m_lastRefresh.isValid() && m_lastRefresh.elapsed() < 3000) return;
+    refresh();
 }
 
 void SettingsBackend::refresh()
 {
+    m_lastRefresh.start();
     m_error.clear();
     m_running = m_fcitx->running();
     m_addon = m_running && m_fcitx->addonEnabled();
@@ -41,8 +50,9 @@ bool SettingsBackend::commit(const AddonConfig &next)
     // Show what the addon actually holds now, not what was asked for.
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
+    else if (m_config.apps != next.apps || m_config.sound != next.sound) m_error = QStringLiteral("write");
     rebuildApps();
-    return true;
+    return m_error.isEmpty();
 }
 
 void SettingsBackend::setAppEnabled(const QString &id, bool enabled)

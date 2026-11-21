@@ -11,11 +11,14 @@
 
 namespace rasklad {
 
-inline constexpr std::array<std::string_view, 22> kTerminalApps{
+inline constexpr std::array<std::string_view, 40> kTerminalApps{
     "foot", "footclient", "kitty", "alacritty", "com.mitchellh.ghostty", "ghostty",
     "org.wezfurlong.wezterm", "wezterm", "xterm", "uxterm", "urxvt", "st", "konsole",
     "org.kde.konsole", "gnome-terminal", "gnome-terminal-server", "org.gnome.terminal",
-    "org.gnome.console", "kgx", "terminator", "tilix", "com.gexperts.tilix"};
+    "org.gnome.console", "kgx", "terminator", "tilix", "com.gexperts.tilix", "org.gnome.ptyxis",
+    "ptyxis", "xfce4-terminal", "yakuake", "guake", "rio", "dev.warp.warp", "warp", "qterminal",
+    "lxterminal", "terminology", "sakura", "cool-retro-term", "contour", "org.contourterminal.contour",
+    "com.raggesilver.blackbox", "wezterm-gui", "kitty-quick-access"};
 
 inline bool terminalApp(std::string_view id)
 {

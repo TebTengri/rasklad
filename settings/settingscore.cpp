@@ -35,10 +35,16 @@ bool isTested(const QString &id)
            id == QLatin1String("chromium-browser");
 }
 
-AddonConfig configFromMap(const QVariantMap &map)
+std::optional<AddonConfig> configFromMap(const QVariantMap &map)
 {
     AddonConfig out;
-    const QVariantMap apps = map.value(QStringLiteral("Applications")).toMap();
+    const QVariant raw = map.value(QStringLiteral("Applications"));
+    if (raw.metaType() == QMetaType::fromType<QString>() && raw.toString().isEmpty()) {
+        // Fcitx sends an empty list as an empty string.
+    } else if (raw.metaType() != QMetaType::fromType<QVariantMap>()) {
+        return std::nullopt;
+    }
+    const QVariantMap apps = raw.toMap();
     // Fcitx lists are keyed "0", "1", …: keep their numeric order.
     QList<int> keys;
     for (auto it = apps.cbegin(); it != apps.cend(); ++it) {

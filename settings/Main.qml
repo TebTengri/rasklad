@@ -51,7 +51,7 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+N"; context: Qt.ApplicationShortcut; onActivated: addField.forceActiveFocus() }
 
     // Open windows change while the settings are open: look again on focus.
-    onActiveChanged: if (active) backend.refresh()
+    onActiveChanged: if (active) backend.refreshIfStale()
 
     component StatusLine: RowLayout {
         id: line
@@ -222,7 +222,11 @@ ApplicationWindow {
                     Switch {
                         checked: row.modelData.enabled
                         enabled: !row.modelData.terminal && backend.configLoaded
-                        onToggled: backend.setAppEnabled(row.modelData.id, checked)
+                        // A toggle overwrites `checked`; bind it back so a refused change shows the truth.
+                        onToggled: {
+                            backend.setAppEnabled(row.modelData.id, checked)
+                            checked = Qt.binding(() => row.modelData.enabled)
+                        }
                         Accessible.name: window.appName(row.modelData.id)
                     }
                 }
@@ -273,7 +277,10 @@ ApplicationWindow {
             Switch {
                 checked: backend.sound
                 enabled: backend.configLoaded
-                onToggled: backend.setSound(checked)
+                onToggled: {
+                    backend.setSound(checked)
+                    checked = Qt.binding(() => backend.sound)
+                }
                 Accessible.name: qsTr("Sound on layout switch")
             }
         }

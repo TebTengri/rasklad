@@ -16,7 +16,7 @@ namespace rasklad::settings {
 
 namespace {
 
-constexpr int kTimeoutMs = 1500;
+constexpr int kTimeoutMs = 800; // the UI waits on these calls; Fcitx answers in milliseconds
 const QString kService = QStringLiteral("org.fcitx.Fcitx5");
 const QString kUri = QStringLiteral("fcitx://config/addon/rasklad");
 
@@ -35,7 +35,7 @@ QVariant plain(const QVariant &v)
         return plain(qvariant_cast<QDBusVariant>(v).variant());
     if (v.metaType() == QMetaType::fromType<QDBusArgument>()) {
         const QDBusArgument arg = qvariant_cast<QDBusArgument>(v);
-        if (arg.currentType() != QDBusArgument::MapType) return {};
+        if (arg.currentType() != QDBusArgument::MapType) return {}; // invalid: caller fails closed
         QVariantMap map;
         arg.beginMap();
         while (!arg.atEnd()) {
@@ -63,8 +63,11 @@ bool DBusFcitx::running()
 bool DBusFcitx::addonEnabled()
 {
     const QDBusMessage r = call(QStringLiteral("GetAddonsV2"));
-    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty()) return false;
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty() ||
+        r.arguments().constFirst().metaType() != QMetaType::fromType<QDBusArgument>())
+        return false;
     const QDBusArgument arg = qvariant_cast<QDBusArgument>(r.arguments().constFirst());
+    if (arg.currentType() != QDBusArgument::ArrayType) return false;
     bool found = false;
     arg.beginArray();
     while (!arg.atEnd()) {
@@ -86,9 +89,12 @@ QStringList DBusFcitx::groupMethods()
     const QDBusMessage g = call(QStringLiteral("CurrentInputMethodGroup"));
     if (g.type() != QDBusMessage::ReplyMessage || g.arguments().isEmpty()) return {};
     const QDBusMessage r = call(QStringLiteral("InputMethodGroupInfo"), {g.arguments().constFirst()});
-    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().size() < 2) return {};
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().size() < 2 ||
+        r.arguments().at(1).metaType() != QMetaType::fromType<QDBusArgument>())
+        return {};
     QStringList out;
     const QDBusArgument arg = qvariant_cast<QDBusArgument>(r.arguments().at(1));
+    if (arg.currentType() != QDBusArgument::ArrayType) return {};
     arg.beginArray();
     while (!arg.atEnd()) {
         QString im, layout;

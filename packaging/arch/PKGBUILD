@@ -12,7 +12,8 @@ arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
 license=('MIT')
 depends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib')
-optdepends=('fcitx5-configtool: generic Fcitx settings')
+optdepends=('fcitx5-configtool: generic Fcitx settings'
+            'hyprland: list open windows in rasklad-settings')
 makedepends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib')
 source=("rasklad-${pkgver}.tar.gz" "rasklad-profile-${pkgver}.tar.gz")
 sha256sums=('@SHA256@' '@PROFILE_SHA256@')
