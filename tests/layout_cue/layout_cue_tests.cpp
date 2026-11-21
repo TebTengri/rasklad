@@ -2,7 +2,9 @@
 // SYS-226: the synthesized cue equals SOUND-001 (70 ms, click-free, bounded level).
 #include "layoutcue.h"
 
+#include <chrono>
 #include <cstdio>
+#include <thread>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
@@ -22,6 +24,19 @@ int main(int argc, char **argv)
     int qpeak = 0;
     for (const auto v : quiet) qpeak = std::max(qpeak, std::abs(static_cast<int>(v)));
     CHECK(qpeak < peak / 2);
+    // Worker on the silent ALSA null device: play() returns at once, a second
+    // request while busy is a no-op, destruction stops it within the bound.
+    {
+        const auto t0 = std::chrono::steady_clock::now();
+        {
+            rasklad::cue::LayoutCue cue("null");
+            cue.play();
+            cue.play();
+            CHECK(std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        CHECK(std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(600));
+    }
     // Optional: compare with the SOUND-001 WAV (44-byte header, S16LE mono).
     if (argc > 1) {
         std::ifstream f(argv[1], std::ios::binary);

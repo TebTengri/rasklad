@@ -2,7 +2,8 @@
 // SYS-226: the project's own short retro cue (docs/SOUND-001.md: 70 ms, two
 // chip-like tones 1174.66/783.99 Hz) played when the Fcitx layout changes. The
 // samples are synthesised here, no audio file. Playback uses ALSA "default" on a
-// short worker thread so key handling never waits; at most one cue at a time and
+// short worker thread so key handling never waits (non-blocking device, bounded
+// wait, stopped on unload); at most one cue at a time and
 // at least 180 ms apart. No recording, volume changes or retries.
 #pragma once
 
@@ -20,8 +21,8 @@ std::vector<std::int16_t> synthesize(double gain);
 class LayoutCue final
 {
 public:
-    LayoutCue();
-    ~LayoutCue(); // waits for a cue in flight (at most its 70 ms plus device latency)
+    explicit LayoutCue(const char *device = "default"); // tests use the silent "null"
+    ~LayoutCue(); // stops a cue in flight; the worker gives up within ~400 ms
     LayoutCue(const LayoutCue &) = delete;
     LayoutCue &operator=(const LayoutCue &) = delete;
 
@@ -29,9 +30,11 @@ public:
     void play();
 
 private:
+    const char *m_device;
     std::vector<std::int16_t> m_samples;
     std::thread m_worker;
     std::atomic<bool> m_busy{false};
+    std::atomic<bool> m_stop{false};
     std::chrono::steady_clock::time_point m_last{};
 };
 

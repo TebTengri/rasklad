@@ -31,34 +31,44 @@ std::vector<std::int16_t> synthesize(double gain)
     return out;
 }
 
-LayoutCue::LayoutCue() : m_samples(synthesize(0.45)) {}
+LayoutCue::LayoutCue(const char *device) : m_device(device), m_samples(synthesize(0.45)) {}
 
 LayoutCue::~LayoutCue()
 {
+    m_stop.store(true);
     if (m_worker.joinable()) m_worker.join();
 }
 
 void LayoutCue::play()
 {
+    // Main (Fcitx) thread only. The previous worker is joined only once it has
+    // finished (m_busy false), so this never waits on audio.
     const auto now = std::chrono::steady_clock::now();
     if (m_busy.load() || (m_last != std::chrono::steady_clock::time_point{} && now - m_last < kMinGap)) return;
-    if (m_worker.joinable()) m_worker.join(); // finished: m_busy is false
-    m_last = now;
+    if (m_worker.joinable()) m_worker.join();
     m_busy.store(true);
     try {
         m_worker = std::thread([this] {
             snd_pcm_t *pcm = nullptr;
-            if (snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0) == 0) {
+            // Non-blocking: a busy or hung sound server never stalls this worker.
+            if (snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
                 if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, kRate, 1,
-                                       100000) == 0) {
-                    snd_pcm_sframes_t n = snd_pcm_writei(pcm, m_samples.data(), m_samples.size());
-                    if (n < 0) n = snd_pcm_recover(pcm, static_cast<int>(n), 1);
-                    if (n >= 0) snd_pcm_drain(pcm);
+                                       200000) == 0 &&
+                    snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
+                    // 70 ms is below the default start threshold: start explicitly.
+                    if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED) snd_pcm_start(pcm);
+                    // Let it play: at most ~400 ms, or until stopped on unload.
+                    for (int i = 0; i < 40 && !m_stop.load(); ++i) {
+                        if (snd_pcm_state(pcm) != SND_PCM_STATE_RUNNING) break;
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    }
                 }
+                snd_pcm_drop(pcm);
                 snd_pcm_close(pcm);
             }
             m_busy.store(false);
         });
+        m_last = now;
     } catch (...) {
         m_busy.store(false);
     }
