@@ -4,30 +4,32 @@
 # Installs only an Fcitx addon: no service, autostart, setuid, udev or user
 # configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.3.0
+pkgver=0.3.1
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
 license=('MIT')
-depends=('fcitx5' 'qt6-base' 'hunspell')
+depends=('fcitx5' 'qt6-base' 'hunspell' 'alsa-lib')
 optdepends=('fcitx5-configtool: edit the list of applications')
-makedepends=('fcitx5' 'qt6-base' 'hunspell')
+makedepends=('fcitx5' 'qt6-base' 'hunspell' 'alsa-lib')
 source=("rasklad-${pkgver}.tar.gz" "rasklad-profile-${pkgver}.tar.gz")
 sha256sums=('@SHA256@' '@PROFILE_SHA256@')
 
 build() {
   cd "rasklad-${pkgver}"
-  mkdir -p build/addon build/policy build/permissions
+  mkdir -p build/addon build/policy build/permissions build/cue
   (cd build/addon && qmake6 ../../tools/fcitx_product.pro && make)
   (cd build/policy && qmake6 ../../tests/application_policy/application_policy.pro && make)
   (cd build/permissions && qmake6 ../../tests/application_permissions/application_permissions.pro && make)
+  (cd build/cue && qmake6 ../../tests/layout_cue/layout_cue.pro && make)
 }
 
 check() {
   cd "rasklad-${pkgver}"
   ./build/policy/application_policy_tests
   ./build/permissions/application_permissions_tests
+  ./build/cue/layout_cue_tests
   # The addon must not read the environment, load code, or use D-Bus, sockets or processes.
   local imports
   imports=$(nm -D --undefined-only build/addon/rasklad.so) || return 1
