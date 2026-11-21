@@ -10,7 +10,7 @@ CONFIG += plugin c++20 link_pkgconfig warn_on
 CONFIG += qt
 CONFIG -= app_bundle
 QT = core
-PKGCONFIG += Fcitx5Core Fcitx5Utils Fcitx5Config hunspell
+PKGCONFIG += Fcitx5Core Fcitx5Utils Fcitx5Config hunspell alsa
 INCLUDEPATH += $$PWD/../src $$PWD/../tools
 
 DESTDIR = $$OUT_PWD
@@ -21,6 +21,7 @@ SOURCES += $$PWD/../src/fcitxlab.cpp \
     $$PWD/../src/applicationpermissions.cpp \
     $$PWD/../src/compositiondisable.cpp \
     $$PWD/../src/fcitxlabprofile.cpp \
+    $$PWD/../src/layoutcue.cpp \
     $$PWD/../src/layoutconverter.cpp \
     $$PWD/../src/ngramdetector.cpp \
     $$PWD/../src/decisionrouter.cpp \
@@ -28,7 +29,7 @@ SOURCES += $$PWD/../src/fcitxlab.cpp \
     $$PWD/../src/localprofile.cpp \
     $$PWD/../src/spellengine.cpp \
     $$PWD/../tools/frontcodedlexicon.cpp
-LIBS += -ldl
+LIBS += -ldl -lpthread
 HEADERS += $$PWD/../src/manualgesture.h
 
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden

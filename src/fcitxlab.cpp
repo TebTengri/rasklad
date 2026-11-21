@@ -132,6 +132,7 @@
 #include <fcitx-config/option.h>
 #include "fcitxlabprofile.h"
 #include "frequentwords.h"
+#include "layoutcue.h"
 #include <fcitx-utils/standardpaths.h>
 #endif
 
@@ -241,7 +242,8 @@ constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
 // Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
 FCITX_CONFIGURATION(RaskladConfig,
     fcitx::Option<std::vector<std::string>> applications{this, "Applications",
-        "Applications (window app ids)", {"slack", "chromium", "chromium-browser"}};);
+        "Applications (window app ids)", {"slack", "chromium", "chromium-browser"}};
+    fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 constexpr std::size_t kMaxApps = 64;
 // Same character rules as the policy registry; anything else is dropped.
@@ -552,6 +554,23 @@ public:
 #endif
                 }));
         }
+#ifdef RASKLAD_PRODUCT
+        // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
+        // keyboard-ru, whoever switched it (Alt+Alt, a correction or an undo).
+        watchers_.emplace_back(instance_->watchEvent(
+            fcitx::EventType::InputContextSwitchInputMethod, fcitx::EventWatcherPhase::Default,
+            [this](fcitx::Event &event) {
+                if (!*config_.sound) return;
+                auto &e = static_cast<fcitx::InputContextSwitchInputMethodEvent &>(event);
+                auto *ic = e.inputContext();
+                const auto *entry = ic ? instance_->inputMethodEntry(ic) : nullptr;
+                if (!entry || !ic->hasFocus()) return;
+                const std::string &now = entry->uniqueName();
+                const std::string &old = e.oldInputMethod();
+                const auto known = [](const std::string &n) { return n == kLabEntry || n == kRuEntry; };
+                if (known(now) && known(old) && now != old) cue_.play();
+            }));
+#endif
 #ifdef RASKLAD_MANUAL_LAB
         watchers_.emplace_back(instance_->watchEvent(
             fcitx::EventType::InputContextSurroundingTextUpdated, fcitx::EventWatcherPhase::PreInputMethod,
@@ -1703,6 +1722,7 @@ private:
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
     std::unique_ptr<fcitx::EventSource> switchEvent_;
     bool selfSwitch_ = false;
+    rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
     // layout becomes the current Fcitx input method, so the owner keeps typing in it.
     // Only between keyboard-us and keyboard-ru, only if both are in the current group,
