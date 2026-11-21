@@ -63,6 +63,7 @@ class LayoutConverterTest : public QObject
 private Q_SLOTS:
     void oracleCoversAllPrintableAscii();
     void oracleRuSideIsUnique();
+    void allUtf16CodeUnitsFollowIndependentOracle();
 
     void exampleWord();
 
@@ -101,6 +102,38 @@ private Q_SLOTS:
     void roundTrip();
     void unknownDirectionUnchanged();
 };
+
+// Независимые ряды клавиатуры задают отображение. Проверяем и все остальные
+// UTF-16 единицы: пропуски индекса должны сохранять неизвестные символы,
+// управляющие коды и одиночные суррогаты.
+void LayoutConverterTest::allUtf16CodeUnitsFollowIndependentOracle()
+{
+    const auto rows = expectedRows();
+    for (const auto direction : {LayoutDirection::UsToRu, LayoutDirection::RuToUs}) {
+        for (uint value = 0; value <= 0xffff; ++value) {
+            const QChar input{ushort(value)};
+            QChar expected = input;
+            for (const KeyRow &row : rows) {
+                const QString &from = direction == LayoutDirection::UsToRu ? row.us : row.ru;
+                const QString &to = direction == LayoutDirection::UsToRu ? row.ru : row.us;
+                const qsizetype index = from.indexOf(input);
+                if (index >= 0) {
+                    expected = to.at(index);
+                    break;
+                }
+            }
+            const auto failContext = [value, direction](const QString &variant) {
+                return QStringLiteral("UTF-16 U+%1 direction=%2 variant=%3")
+                    .arg(value, 4, 16, QChar(u'0')).arg(static_cast<int>(direction)).arg(variant);
+            };
+            if (convertLayout(QString(1, input), direction) != QString(1, expected))
+                QFAIL(qPrintable(failContext(QStringLiteral("single"))));
+            const QString marked = QString(1, input) + QChar(0x0301);
+            if (convertLayout(marked, direction) != marked)
+                QFAIL(qPrintable(failContext(QStringLiteral("combining"))));
+        }
+    }
+}
 
 void LayoutConverterTest::oracleCoversAllPrintableAscii()
 {
@@ -266,11 +299,11 @@ void LayoutConverterTest::unmappedUnicodeUnchanged_data()
     QTest::newRow("typographic-us-to-ru") << QStringLiteral("«»—…“”") << usToRu;
     QTest::newRow("emoji-us-to-ru") << QStringLiteral("🙂👍🏽🇰🇿") << usToRu;
     QTest::newRow("emoji-ru-to-us") << QStringLiteral("🙂👍🏽🇰🇿") << ruToUs;
-    QTest::newRow("emoji-zwj-us-to-ru") << QStringLiteral("👩‍💻") << usToRu;
+    QTest::newRow("emoji-zwj-us-to-ru") << QStringLiteral("👩\u200D💻") << usToRu;
     QTest::newRow("non-bmp-letter-ru-to-us") << QStringLiteral("\U0001D400\U00010330")
                                              << ruToUs;
     const QString controls = QString(QChar(char16_t(0x01))) + QChar(char16_t(0x7F))
-                             + QStringLiteral("‍﻿");
+                             + QStringLiteral("\u200D\uFEFF");
     QTest::newRow("controls-us-to-ru") << controls << usToRu;
     QTest::newRow("controls-ru-to-us") << controls << ruToUs;
 }
@@ -301,27 +334,27 @@ void LayoutConverterTest::combiningMarks_data()
 
     // Символ раскладки перед combining mark образует кластер, которого нет
     // на клавиатуре: кластер остаётся как есть.
-    QTest::newRow("latin-acute") << QStringLiteral("é") << usToRu
-                                 << QStringLiteral("é");
-    QTest::newRow("latin-two-marks") << QStringLiteral("é̂") << usToRu
-                                     << QStringLiteral("é̂");
-    QTest::newRow("cyrillic-decomposed-yo") << QStringLiteral("ё") << ruToUs
-                                            << QStringLiteral("ё");
-    QTest::newRow("keycap-hash") << QStringLiteral("#️⃣") << usToRu
-                                 << QStringLiteral("#️⃣");
-    QTest::newRow("keycap-hash-ru-to-us") << QStringLiteral("#️⃣") << ruToUs
-                                          << QStringLiteral("#️⃣");
+    QTest::newRow("latin-acute") << QStringLiteral("e\u0301") << usToRu
+                                 << QStringLiteral("e\u0301");
+    QTest::newRow("latin-two-marks") << QStringLiteral("e\u0301\u0302") << usToRu
+                                     << QStringLiteral("e\u0301\u0302");
+    QTest::newRow("cyrillic-decomposed-yo") << QStringLiteral("е\u0308") << ruToUs
+                                            << QStringLiteral("е\u0308");
+    QTest::newRow("keycap-hash") << QStringLiteral("#\uFE0F\u20E3") << usToRu
+                                 << QStringLiteral("#\uFE0F\u20E3");
+    QTest::newRow("keycap-hash-ru-to-us") << QStringLiteral("#\uFE0F\u20E3") << ruToUs
+                                          << QStringLiteral("#\uFE0F\u20E3");
     QTest::newRow("non-bmp-mark") << QStringLiteral("a\U0001D167") << usToRu
                                   << QStringLiteral("a\U0001D167");
-    QTest::newRow("standalone-mark") << QStringLiteral("́") << usToRu
-                                     << QStringLiteral("́");
-    QTest::newRow("mark-before-key") << QStringLiteral("́e") << usToRu
-                                     << QStringLiteral("́у");
+    QTest::newRow("standalone-mark") << QStringLiteral("\u0301") << usToRu
+                                     << QStringLiteral("\u0301");
+    QTest::newRow("mark-before-key") << QStringLiteral("\u0301e") << usToRu
+                                     << QStringLiteral("\u0301у");
     // Соседние символы без марок преобразуются.
-    QTest::newRow("only-marked-key-kept") << QStringLiteral("ab́c") << usToRu
-                                          << QStringLiteral("фb́с");
-    QTest::newRow("only-marked-key-kept-ru") << QStringLiteral("фи́с") << ruToUs
-                                             << QStringLiteral("aи́c");
+    QTest::newRow("only-marked-key-kept") << QStringLiteral("ab\u0301c") << usToRu
+                                          << QStringLiteral("фb\u0301с");
+    QTest::newRow("only-marked-key-kept-ru") << QStringLiteral("фи\u0301с") << ruToUs
+                                             << QStringLiteral("aи\u0301c");
 }
 
 void LayoutConverterTest::combiningMarks()
@@ -357,8 +390,8 @@ void LayoutConverterTest::mixedStrings_data()
                                << QStringLiteral("привет\n\tмир\r\n");
     QTest::newRow("emoji-between") << QStringLiteral("rjn🐈rjn") << usToRu
                                    << QStringLiteral("кот🐈кот");
-    QTest::newRow("nbsp-between") << QStringLiteral("rjn vbh") << usToRu
-                                  << QStringLiteral("кот мир");
+    QTest::newRow("nbsp-between") << QStringLiteral("rjn\u00A0vbh") << usToRu
+                                  << QStringLiteral("кот\u00A0мир");
 }
 
 void LayoutConverterTest::mixedStrings()
@@ -376,7 +409,7 @@ void LayoutConverterTest::emptyAndWhitespace_data()
     QTest::newRow("empty") << QStringLiteral("");
     QTest::newRow("spaces") << QStringLiteral("   ");
     QTest::newRow("tabs-newlines") << QStringLiteral(" \t\n\r\v\f");
-    QTest::newRow("unicode-spaces") << QStringLiteral("  　 ");
+    QTest::newRow("unicode-spaces") << QStringLiteral("\u00A0\u2003\u3000\u2028");
 }
 
 void LayoutConverterTest::emptyAndWhitespace()
