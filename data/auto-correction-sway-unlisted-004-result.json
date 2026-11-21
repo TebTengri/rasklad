@@ -1,0 +1,23 @@
+{
+ "application": "installed Chromium native Wayland IM",
+ "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+ "browserVersion": "Chrome/155.0.8059.84",
+ "cdpTyping": false,
+ "checks": 3,
+ "dbusInputFrontendAbsent": true,
+ "driverExitCode": 0,
+ "exitCode": 0,
+ "frontendVariant": "system",
+ "hostConfigurationChanged": false,
+ "hostInput": false,
+ "hyprlandSupport": false,
+ "passed": true,
+ "productUnlistedAfterSpace": true,
+ "productUnlistedNoPreedit": true,
+ "productUnlistedTyped": true,
+ "referenceCompositor": "Sway/wlroots software only",
+ "sandboxed": true,
+ "schema": 1,
+ "slackSupport": false,
+ "syntheticInputOnly": true
+}
