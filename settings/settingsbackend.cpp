@@ -28,7 +28,6 @@ void SettingsBackend::refreshIfStale()
 
 void SettingsBackend::refresh()
 {
-    m_lastRefresh.start();
     m_error.clear();
     m_running = m_fcitx->running();
     m_addon = m_running && m_fcitx->addonEnabled();
@@ -36,6 +35,9 @@ void SettingsBackend::refresh()
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_open = m_windows->openApps();
+    // Only a good refresh pauses the focus refresh, so recovery is retried at once.
+    if (m_loaded) m_lastRefresh.start();
+    else m_lastRefresh.invalidate();
     rebuildApps();
 }
 
