@@ -164,7 +164,14 @@ try{
   await settle();await type('hello');
   report.layoutFourthValue=await v();report.layoutFourthTypedInUs=report.layoutFourthValue==='привет привет ч hello hello ';
   await type('xspace');report.layoutLetterUsValue=await v();report.layoutLetterIsUs=report.layoutLetterUsValue==='привет привет ч hello hello x ';
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs'];
+  // Owner decision 2026-11-22: two quick Alt taps switch the layout; one Alt, or Alt
+  // with another key between the taps, do not.
+  phase='alt_taps';const base='привет привет ч hello hello x ';
+  await type('alt1');await settle();await type('xspace');report.altSingleValue=await v();report.altSingleKeepsUs=report.altSingleValue===base+'x ';
+  await type('alttab');await settle();await type('xspace');report.altTabValue=await v();report.altTabKeepsUs=report.altTabValue===base+'x x ';
+  await type('alt2');await settle();await type('xspace');report.altDoubleValue=await v();report.altDoubleToRu=report.altDoubleValue===base+'x x ч ';
+  await type('altr2');await settle();await type('xspace');report.altRightValue=await v();report.altRightToUs=report.altRightValue===base+'x x ч x ';
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','altSingleKeepsUs','altTabKeepsUs','altDoubleToRu','altRightToUs'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='listed'){
   // SYS-226 product addon: automatic correction on Space by the reviewed profile, both
