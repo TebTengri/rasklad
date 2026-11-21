@@ -133,6 +133,7 @@
 #include "fcitxlabprofile.h"
 #include "frequentwords.h"
 #include "layoutcue.h"
+#include "terminalapps.h"
 #include <fcitx-utils/standardpaths.h>
 #endif
 
@@ -658,7 +659,7 @@ private:
         apps.ids.clear();
         for (const auto &id : *config_.applications) {
             if (apps.ids.size() == kMaxApps) break;
-            if (!appIdentifier(id)) continue;
+            if (!appIdentifier(id) || rasklad::terminalApp(id)) continue; // never terminals
             bool seen = false;
             for (const auto &have : apps.ids) seen = seen || have == id;
             if (!seen) apps.ids.push_back(id);

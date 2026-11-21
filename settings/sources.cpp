@@ -1,0 +1,136 @@
+// SPDX-License-Identifier: MIT
+#include "sources.h"
+
+#include "settingscore.h"
+
+#include <QDBusArgument>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDBusInterface>
+#include <QDBusMessage>
+#include <QDBusVariant>
+#include <QProcess>
+#include <QStandardPaths>
+
+namespace rasklad::settings {
+
+namespace {
+
+constexpr int kTimeoutMs = 1500;
+const QString kService = QStringLiteral("org.fcitx.Fcitx5");
+const QString kUri = QStringLiteral("fcitx://config/addon/rasklad");
+
+QDBusMessage call(const QString &method, const QVariantList &args = {})
+{
+    QDBusMessage m = QDBusMessage::createMethodCall(kService, QStringLiteral("/controller"),
+                                                    QStringLiteral("org.fcitx.Fcitx.Controller1"), method);
+    m.setArguments(args);
+    return QDBusConnection::sessionBus().call(m, QDBus::Block, kTimeoutMs);
+}
+
+// Nested a{sv} as QVariantMap, string leaves as QString.
+QVariant plain(const QVariant &v)
+{
+    if (v.metaType() == QMetaType::fromType<QDBusVariant>())
+        return plain(qvariant_cast<QDBusVariant>(v).variant());
+    if (v.metaType() == QMetaType::fromType<QDBusArgument>()) {
+        const QDBusArgument arg = qvariant_cast<QDBusArgument>(v);
+        if (arg.currentType() != QDBusArgument::MapType) return {};
+        QVariantMap map;
+        arg.beginMap();
+        while (!arg.atEnd()) {
+            QString key;
+            QDBusVariant value;
+            arg.beginMapEntry();
+            arg >> key >> value;
+            arg.endMapEntry();
+            map.insert(key, plain(value.variant()));
+        }
+        arg.endMap();
+        return map;
+    }
+    return v;
+}
+
+} // namespace
+
+bool DBusFcitx::running()
+{
+    const auto *bus = QDBusConnection::sessionBus().interface();
+    return bus && bus->isServiceRegistered(kService).value();
+}
+
+bool DBusFcitx::addonEnabled()
+{
+    const QDBusMessage r = call(QStringLiteral("GetAddonsV2"));
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty()) return false;
+    const QDBusArgument arg = qvariant_cast<QDBusArgument>(r.arguments().constFirst());
+    bool found = false;
+    arg.beginArray();
+    while (!arg.atEnd()) {
+        QString unique, name, comment;
+        int category = 0;
+        bool configurable = false, enabled = false, onDemand = false;
+        QStringList deps, optDeps;
+        arg.beginStructure();
+        arg >> unique >> name >> comment >> category >> configurable >> enabled >> onDemand >> deps >> optDeps;
+        arg.endStructure();
+        if (unique == QLatin1String("rasklad")) found = enabled;
+    }
+    arg.endArray();
+    return found;
+}
+
+QStringList DBusFcitx::groupMethods()
+{
+    const QDBusMessage g = call(QStringLiteral("CurrentInputMethodGroup"));
+    if (g.type() != QDBusMessage::ReplyMessage || g.arguments().isEmpty()) return {};
+    const QDBusMessage r = call(QStringLiteral("InputMethodGroupInfo"), {g.arguments().constFirst()});
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().size() < 2) return {};
+    QStringList out;
+    const QDBusArgument arg = qvariant_cast<QDBusArgument>(r.arguments().at(1));
+    arg.beginArray();
+    while (!arg.atEnd()) {
+        QString im, layout;
+        arg.beginStructure();
+        arg >> im >> layout;
+        arg.endStructure();
+        out.append(im);
+    }
+    arg.endArray();
+    return out;
+}
+
+std::optional<QVariantMap> DBusFcitx::readConfig()
+{
+    const QDBusMessage r = call(QStringLiteral("GetConfig"), {kUri});
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty()) return std::nullopt;
+    const QVariant v = plain(r.arguments().constFirst());
+    if (v.metaType() != QMetaType::fromType<QVariantMap>()) return std::nullopt;
+    return v.toMap();
+}
+
+bool DBusFcitx::writeConfig(const QVariantMap &config)
+{
+    const QDBusMessage r = call(QStringLiteral("SetConfig"), {kUri, QVariant::fromValue(QDBusVariant(config))});
+    return r.type() == QDBusMessage::ReplyMessage;
+}
+
+QStringList HyprlandWindows::openApps()
+{
+    const QString hyprctl = QStandardPaths::findExecutable(QStringLiteral("hyprctl"));
+    if (hyprctl.isEmpty()) return {};
+    QProcess p;
+    p.setProcessChannelMode(QProcess::SeparateChannels);
+    p.setStandardErrorFile(QProcess::nullDevice());
+    p.start(hyprctl, {QStringLiteral("-j"), QStringLiteral("clients")});
+    if (!p.waitForFinished(kTimeoutMs)) {
+        p.kill();
+        p.waitForFinished(200);
+        return {};
+    }
+    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) return {};
+    return classesFromClients(p.readAllStandardOutput()); // titles are parsed out and dropped here
+}
+
+} // namespace rasklad::settings

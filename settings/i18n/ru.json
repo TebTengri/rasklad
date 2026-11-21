@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "language": "ru",
+  "messages": {
+    "%1 (web app)": "%1 (веб-приложение)",
+    "%n on": "включено: %n",
+    "A short retro cue when the layout changes": "Короткий ретро-сигнал при смене раскладки",
+    "A window id has only Latin letters, digits, dot, dash and underscore.": "Идентификатор окна — только латиница, цифры, точка, дефис и подчёркивание.",
+    "Add": "Добавить",
+    "Applications": "Приложения",
+    "At most 64 applications.": "Не больше 64 приложений.",
+    "Correction works only in the applications switched on here. Password fields and terminals are never touched.": "Исправление работает только во включённых здесь приложениях. Поля паролей и терминалы не трогаются никогда.",
+    "Ctrl+R refresh · Ctrl+N add · Esc close": "Ctrl+R обновить · Ctrl+N добавить · Esc закрыть",
+    "English and Russian layouts in Fcitx": "Английская и русская раскладки в Fcitx",
+    "Fcitx did not accept the change. Nothing was changed.": "Fcitx не принял изменение. Ничего не изменилось.",
+    "Fcitx is not running or the Rasklad addon is not loaded. Start Fcitx (fcitx5 -rd) and press Refresh.": "Fcitx не запущен или аддон Rasklad не загружен. Запустите Fcitx (fcitx5 -rd) и нажмите «Обновить».",
+    "Fcitx or the addon is not running": "Fcitx или аддон не запущен",
+    "Fixes words typed in the wrong layout (ghbdtn → привет). Double Shift right after a correction undoes it.": "Исправляет слова, набранные не в той раскладке (ghbdtn → привет). Двойной Shift сразу после исправления отменяет его.",
+    "Not working": "Не работает",
+    "Open the application first: it appears in the list by itself.": "Откройте приложение — оно само появится в списке.",
+    "Rasklad settings": "Настройки Rasklad",
+    "Refresh": "Обновить",
+    "Sound on layout switch": "Звук при смене раскладки",
+    "Terminals are never corrected: they hold commands and passwords.": "Терминалы не исправляются никогда: там команды и пароли.",
+    "Window id, e.g. org.telegram.desktop": "Идентификатор окна, например org.telegram.desktop",
+    "Working": "Работает",
+    "add keyboard-us and keyboard-ru to the Fcitx group": "добавьте keyboard-us и keyboard-ru в группу Fcitx",
+    "not tested": "не проверено",
+    "open": "открыто",
+    "terminal": "терминал",
+    "tested": "проверено"
+  }
+}
