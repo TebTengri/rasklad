@@ -139,3 +139,10 @@ data/hyprland-manual-gesture-001-result.json: 17/17. Chromium под Hyprland
   `hyprland_ime_lab.py --run-approved --slack-supervised --manual-gesture`;
   живой Slack `--run-approved --slack-launch --slack-live --manual-gesture`.
   Каждый — только по отдельному разрешению владельца.
+
+### Закрытый Hyprland под надзором (2026-11-21, одобрено, израсходовано): PASS
+data/hyprland-supervised-manual-001-result.json. Оба сценария: квитанции от
+аддона (`c0701`; `o0702` + `w0703`), наблюдатель видел ожидаемый текст, поле
+очищено, аддон сообщил «пусто» до и после; замок, отказ на пароль, смена
+привязки, новое устройство, F12 — как в прежних прогонах. Живой Slack — далее,
+по отдельному разрешению.
