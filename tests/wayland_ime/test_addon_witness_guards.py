@@ -58,10 +58,10 @@ class WitnessGuards(unittest.TestCase):
             for function in (module.run, module.sandbox_args):
                 with self.subTest(module=module.__name__, function=function.__name__):
                     parameters = list(inspect.signature(function).parameters.values())
-                    while parameters[-1].name in ('manual_suite', 'manual_gesture'):
+                    while parameters[-1].name in ('manual_suite', 'manual_gesture', 'product_suite'):
                         # SYS-225 keyword-only inert selectors, never positional.
                         self.assertIs(parameters[-1].kind, inspect.Parameter.KEYWORD_ONLY)
-                        self.assertIs(parameters[-1].default, False)
+                        self.assertIs(parameters[-1].default, None if parameters[-1].name == 'product_suite' else False)
                         parameters = parameters[:-1]
                     if module is REFERENCE:
                         # Appended inert selector for the offline Slack gate test.

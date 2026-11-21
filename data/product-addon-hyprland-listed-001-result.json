@@ -1,0 +1,27 @@
+{
+  "application": "installed Chromium native Wayland IM",
+  "browserExit": {
+    "code": null,
+    "signal": "SIGKILL"
+  },
+  "cdpTyping": false,
+  "compositorStayedAlive": true,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 1,
+  "exactCompositor": "installed nested Hyprland",
+  "failedPhase": "start",
+  "failure": "browser exited",
+  "frontendVariant": "system",
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "maxTrialSeconds": 75,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "renderNodeGranted": true,
+  "schema": 1,
+  "slackConnected": false,
+  "slackSupport": false,
+  "syntheticInputOnly": true
+}

@@ -31,7 +31,7 @@ int main() {
     require(!authorizeCapture(f.registry(),Permission{},f.context).allowed(),"default off");
     auto p=f.permission;p.globalEnabled=false;
     require(authorizeCapture({nullptr,65,0},p,f.context).reason==Reason::Disabled,"off skips invalid registry");
-    for (Mode mode : {Mode::Off,Mode::ManualDoubleSuper,static_cast<Mode>(99)}) {
+    for (Mode mode : {Mode::Off,Mode::Manual,static_cast<Mode>(99)}) {
         p=f.permission;p.mode=mode;
         require(!authorizeCapture(f.registry(),p,f.context).allowed(),"no auto fallback from manual/invalid/off");
     }
@@ -46,7 +46,7 @@ int main() {
         require(!revalidateCorrection(f.registry(),f.permission,c,initial.lease).allowed(),"non-prose no correction");
         require(disableDisposition(f.registry(),c,initial.lease,true)==DisableAction::DeferUntilIdle,"no protected original write");
     }
-    for (Identity identity : {Identity::Unknown,Identity::DeclaredOnly,Identity::VerifiedAdapter,static_cast<Identity>(99)}) {
+    for (Identity identity : {Identity::Unknown,Identity::DeclaredOnly,Identity::VerifiedAdapter,Identity::CompositorAppId,static_cast<Identity>(99)}) {
         auto c=f.context;c.identity=identity;
         require(!authorizeCapture(f.registry(),f.permission,c).allowed(),"declared/spoofed/incorrect scope identity");
     }
@@ -105,6 +105,45 @@ int main() {
     require(!authorizeCapture(f.registry(),p,regular).allowed(),"fixture contract cannot authorize regular app");
     regular.identity=Identity::DeclaredOnly;
     require(!authorizeCapture(f.registry(),p,regular).allowed(),"app-id alone never enough");
+    // Manual (user-initiated per-word gesture): a compositor app-id claim is enough,
+    // only for an adapter that declares manual support; never for Automatic.
+    {
+        std::array<Adapter,1> apps{{{"slack","slack",Domain::RegularApplication,false,false,true}}};
+        const Registry r{apps.data(),apps.size(),3};
+        Context c{"slack","slack","slack",Domain::RegularApplication,Identity::CompositorAppId,
+                  Field::Unknown,true,21,23,25};
+        const Permission manual{true,"slack",Mode::Manual,4};
+        const auto d=authorizeCapture(r,manual,c);
+        require(d.allowed(),"manual: compositor app-id, unknown field");
+        require(revalidateCorrection(r,manual,c,d.lease).allowed(),"manual: same context revalidates");
+        auto pc=c;pc.field=Field::Prose;require(authorizeCapture(r,manual,pc).allowed(),"manual: prose");
+        for (Field field : {Field::Password,Field::Code,Field::Url,Field::Command,Field::Mention,
+                            Field::Protected,static_cast<Field>(99)}) {
+            auto x=c;x.field=field;require(!authorizeCapture(r,manual,x).allowed(),"manual: protected field refused");
+        }
+        for (Identity identity : {Identity::Unknown,Identity::DeclaredOnly,Identity::OwnedFixtureContract,static_cast<Identity>(99)}) {
+            auto x=c;x.identity=identity;require(!authorizeCapture(r,manual,x).allowed(),"manual: weaker identity refused");
+        }
+        auto automatic=manual;automatic.mode=Mode::Automatic;
+        require(!authorizeCapture(r,automatic,c).allowed(),"automatic never from compositor app-id");
+        apps[0].automatic=true;
+        require(!authorizeCapture(r,automatic,c).allowed(),"automatic needs verified adapter and prose");
+        apps[0].manual=false;
+        require(!authorizeCapture(r,manual,c).allowed(),"manual needs adapter manual support");
+        apps[0].manual=true;
+        auto other=c;other.verifiedApplicationId=other.declaredApplicationId="spoofed";
+        require(!authorizeCapture(r,manual,other).allowed(),"manual: other app id refused");
+        auto unfocused=c;unfocused.focused=false;
+        require(!authorizeCapture(r,manual,unfocused).allowed(),"manual: unfocused refused");
+        auto po=manual;po.applicationId="chromium";
+        require(!authorizeCapture(r,po,c).allowed(),"manual: permission for another app");
+        auto fixture=f.context;
+        require(!authorizeCapture(f.registry(),manual,fixture).allowed(),"manual permission does not open fixture");
+        require(disableDisposition(r,c,d.lease,true,Mode::Manual)==DisableAction::DeferUntilIdle,
+                "manual adapter without original finish defers");
+        require(disableDisposition(r,c,d.lease,true)==DisableAction::DeferUntilIdle,
+                "default (automatic) disposition stays strict");
+    }
     std::cout << "{\"passed\":true,\"assertions\":" << checks
               << ",\"realApplicationEnabled\":false,\"textOperations\":false}\n";
 }

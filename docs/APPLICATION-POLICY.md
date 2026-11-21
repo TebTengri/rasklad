@@ -284,3 +284,5 @@ Off fast path теперь делает noncreating bookkeeping lookup: raw pres
 Profile/capability/evidence queries и allocation при обычном Off press отсутствуют.
 Другой key не меняет ожидание старого. Новые тесты проверяют именно пары и
 реальное двустороннее callback reentry, без ложного определения отправителя.
+
+Рабочий аддон с ручным двойным Shift: docs/SYS-246-PRODUCT-ADDON.md.

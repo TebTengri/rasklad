@@ -18,7 +18,7 @@ bool validDomain(Domain domain) noexcept
     return domain == Domain::RegularApplication || domain == Domain::OwnedFixture;
 }
 struct Match { Reason reason; std::size_t index = 0; };
-Match inspect(Registry registry, const Context &context) noexcept
+Match inspect(Registry registry, const Context &context, Mode mode) noexcept
 {
     if (!registry.revision || registry.size > kMaxAdapters ||
         (registry.size && !registry.entries)) return {Reason::InvalidRegistry};
@@ -36,13 +36,20 @@ Match inspect(Registry registry, const Context &context) noexcept
     // An owned-fixture contract is never an authenticated ordinary application.
     const bool identity =
         (entry.domain == Domain::OwnedFixture && context.identity == Identity::OwnedFixtureContract) ||
-        (entry.domain == Domain::RegularApplication && context.identity == Identity::VerifiedAdapter);
+        (entry.domain == Domain::RegularApplication && context.identity == Identity::VerifiedAdapter) ||
+        // A compositor app-id claim is enough only for the user's own per-word gesture.
+        (entry.domain == Domain::RegularApplication && mode == Mode::Manual && entry.manual &&
+         context.identity == Identity::CompositorAppId);
     if (!identity || !validDomain(context.domain) || context.domain != entry.domain ||
         context.declaredApplicationId != entry.applicationId ||
         context.verifiedApplicationId != entry.applicationId || !context.identityBinding)
         return {Reason::IdentityUnproved};
     // Absence of a password flag is insufficient; only explicit prose qualifies.
-    if (context.field != Field::Prose) return {Reason::ProtectedContext};
+    // Fcitx cannot tell prose from other text in a regular application; the manual
+    // gesture accepts Unknown, never a field known to be protected/code/etc.
+    const bool field = context.field == Field::Prose ||
+        (mode == Mode::Manual && context.field == Field::Unknown);
+    if (!field) return {Reason::ProtectedContext};
     if (!context.focused || !context.id || !context.epoch) return {Reason::ContextUnready};
     return {Reason::Allowed, index};
 }
@@ -61,12 +68,14 @@ Decision authorizeCapture(Registry registry, const Permission &permission,
     // Off has no need to inspect adapter records or invoke any adapter operation.
     if (!permission.globalEnabled || permission.mode == Mode::Off || !permission.revision)
         return {Reason::Disabled, {}};
-    if (permission.mode != Mode::Automatic) return {Reason::UnsupportedMode, {}};
-    const auto match = inspect(registry, context);
+    if (permission.mode != Mode::Automatic && permission.mode != Mode::Manual)
+        return {Reason::UnsupportedMode, {}};
+    const auto match = inspect(registry, context, permission.mode);
     if (match.reason != Reason::Allowed) return {match.reason, {}};
     const auto &entry = registry.entries[match.index];
     if (permission.applicationId != entry.applicationId) return {Reason::IdentityUnproved, {}};
-    if (!entry.automatic) return {Reason::UnsupportedMode, {}};
+    if (permission.mode == Mode::Automatic ? !entry.automatic : !entry.manual)
+        return {Reason::UnsupportedMode, {}};
     Lease lease{true, match.index, registry.revision, permission.revision,
                 context.id, context.epoch, context.identityBinding};
     return {Reason::Allowed, lease};
@@ -83,10 +92,11 @@ Decision revalidateCorrection(Registry registry, const Permission &permission,
 }
 
 DisableAction disableDisposition(Registry registry, const Context &context,
-                                 const Lease &lease, bool composing) noexcept
+                                 const Lease &lease, bool composing, Mode mode) noexcept
 {
     if (!composing) return DisableAction::DisableNow;
-    const auto match = inspect(registry, context);
+    if (mode != Mode::Automatic && mode != Mode::Manual) return DisableAction::DeferUntilIdle;
+    const auto match = inspect(registry, context, mode);
     if (match.reason != Reason::Allowed ||
         !sameContext(registry, context, lease, match.index) ||
         !registry.entries[match.index].canFinishOriginal) return DisableAction::DeferUntilIdle;

@@ -138,6 +138,16 @@ try{
   report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
   const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo','onMidTokenPreserved','onNewWordCorrected','offAgainPassthrough'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='unlisted'){
+  // SYS-246 product addon whose configuration does not list this app: fully inert.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');
+  phase='product_unlisted';await reset();await type('word');await type('shift2');await type('space');
+  report.productUnlistedNoPreedit=await ev(`!imeEvents.some(x=>x.type==='compositionstart')`);
+  report.productUnlistedTyped=await v()==='ghbdtn ';
+  await type('shift2');report.productUnlistedAfterSpace=await v()==='ghbdtn ';
+  const required=['productUnlistedNoPreedit','productUnlistedTyped','productUnlistedAfterSpace'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
   // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.
   if(!nativeWayland)throw Error('native manual suite required');

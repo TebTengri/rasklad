@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MIT
+# SYS-246 product Fcitx5 addon (docs/SYS-246-PRODUCT-ADDON.md): manual double-Shift
+# gesture only, applications from the addon configuration. Produces
+# $$OUT_PWD/rasklad.so (Library=rasklad in addon/rasklad.conf). The build never
+# installs anything; installation is packaging (SYS-228) with owner approval.
+
+TEMPLATE = lib
+TARGET = rasklad
+CONFIG += plugin c++20 link_pkgconfig warn_on
+CONFIG -= qt app_bundle
+QT -= gui core
+PKGCONFIG += Fcitx5Core Fcitx5Utils Fcitx5Config
+
+DESTDIR = $$OUT_PWD
+DEFINES += RASKLAD_PRODUCT RASKLAD_MANUAL_LAB
+
+SOURCES += $$PWD/../src/fcitxlab.cpp \
+    $$PWD/../src/applicationpolicy.cpp \
+    $$PWD/../src/applicationpermissions.cpp \
+    $$PWD/../src/compositiondisable.cpp
+HEADERS += $$PWD/../src/manualgesture.h
+
+QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
+QMAKE_LFLAGS += -Wl,--no-undefined
+
+QMAKE_PREFIX_PLUGIN =
+CONFIG += no_plugin_name_prefix

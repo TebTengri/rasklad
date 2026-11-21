@@ -20,7 +20,8 @@ public:
     ApplicationPermissions &operator=(const ApplicationPermissions &) = delete;
     bool ready() const noexcept { return ready_; }
     Permission snapshot(std::string_view applicationId) const noexcept;
-    bool enable(std::string_view applicationId) noexcept;
+    // Mode::Automatic or Mode::Manual; anything else is refused.
+    bool enable(std::string_view applicationId, Mode mode = Mode::Automatic) noexcept;
     bool revoke(std::string_view applicationId) noexcept;
     bool revokeAll() noexcept;
 private:
