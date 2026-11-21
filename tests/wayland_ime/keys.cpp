@@ -252,7 +252,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -284,6 +284,9 @@ Cmd parse(std::string_view line)
         if (line == "hellocomma") return Cmd::HelloComma;
         if (line == "rugroup") return Cmd::RuGroup;
         if (line == "usgroup") return Cmd::UsGroup;
+        if (line == "wordcomma") return Cmd::WordComma;
+        if (line == "exclaim") return Cmd::Exclaim;
+        if (line == "enter") return Cmd::Enter;
     }
     return Cmd::Unknown;
 }
@@ -332,6 +335,9 @@ bool run(Session &s, Cmd cmd)
     case Cmd::HelloComma: return typeFixed(s, "hello, ");
     case Cmd::RuGroup: return s.setGroup(1);
     case Cmd::UsGroup: return s.setGroup(0);
+    case Cmd::WordComma: return typeFixed(s, "ghbdtn, ");
+    case Cmd::Exclaim: return s.chord(KEY_LEFTSHIFT, KEY_1);
+    case Cmd::Enter: return s.tap(KEY_ENTER);
     case Cmd::Unknown: break;
     }
     return false;

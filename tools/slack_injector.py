@@ -12,7 +12,7 @@ WIRE = {'word': b'word\n', 'space': b'space\n', 'hello': b'hello\n', 'backspace'
         'shift2': b'shift2\n'}  # SYS-225 double Shift; the helper accepts it only with RASKLAD_MANUAL_LAB=1
 ALLOWED = frozenset(WIRE)
 # Helper commands that must never be sent live.
-FORBIDDEN = frozenset({'rugroup', 'usgroup', 'undo', 'escape', 'lab-off', 'lab-on', 'xspace', 'sample2', 'mixed', 'long',
+FORBIDDEN = frozenset({'rugroup', 'usgroup', 'wordcomma', 'exclaim', 'enter', 'undo', 'escape', 'lab-off', 'lab-on', 'xspace', 'sample2', 'mixed', 'long',
                        'shiftslow', 'shifta', 'shiftr2', 'ctrlshift2', 'shiftlr2', 'zhurnal', 'khorosho', 'yolka', 'hellocomma'})  # SYS-225 offline manual suite only
 # EXPECTED: field content after typing (cleanup removes exactly this many characters).
 # COMMIT: the addon's single commit (its receipt carries this length).

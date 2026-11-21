@@ -1036,6 +1036,51 @@ private:
     }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
     // release, depending on the frontend on the press) is ignored.
+#ifdef RASKLAD_PRODUCT
+    // Enter, Tab or a punctuation character (with at most Shift): the word is over.
+    static bool wordEnd(const fcitx::Key &key) {
+        if (key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
+                                                  fcitx::KeyState::Super, fcitx::KeyState::Hyper}))
+            return false;
+        const auto sym = key.sym();
+        if (sym == FcitxKey_Return || sym == FcitxKey_KP_Enter || sym == FcitxKey_Tab) return true;
+        const std::uint32_t u = fcitx::Key::keySymToUnicode(sym);
+        if (u == 0x2116) return true; // №
+        return u > 0x20 && u < 0x7f && !((u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z'));
+    }
+    // SYS-226 automatic correction of the current word, unless the owner chose a form
+    // with the gesture. Only the reviewed profile's Correct that equals the word's
+    // other-layout form is used. whole: the entire word converted (s.converted is set,
+    // so the Space undo can restore it). Otherwise a us-typed word ending in keys that
+    // carry Russian letters (",", ".", ";", ...) is tried without them, and those keys
+    // stay as typed: "ckjdj," -> "слово,".
+    std::optional<std::string> autoText(LabState &s, bool &whole) {
+        whole = false;
+        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
+        std::string w = s.word();
+        std::optional<std::string> result;
+        std::size_t cut = w.size();
+        for (int pass = 0; pass < 2 && !result; ++pass) {
+            if (pass == 1) {
+                if (s.typedRu) break;
+                while (cut > 0 && !(w[cut - 1] >= 'a' && w[cut - 1] <= 'z')) --cut;
+                if (cut == 0 || cut == w.size()) break;
+            }
+            std::string keys = w.substr(0, cut);
+            std::string typed = LabState::form(keys, s.typedRu);
+            std::string other = LabState::form(keys, !s.typedRu);
+            auto fix = profile_->correctTyped(typed, s.typedRu);
+            if (fix && *fix == other && other != typed) {
+                if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
+                else result = other + w.substr(cut);
+            }
+            if (fix) wipeString(*fix);
+            wipeString(keys); wipeString(typed); wipeString(other);
+        }
+        wipeString(w);
+        return result;
+    }
+#endif
     static bool isShift(const fcitx::Key &key) {
         if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
         return !fcitx::Key(key.sym(), key.states().unset(fcitx::KeyState::Shift)).hasModifier();
@@ -1498,17 +1543,17 @@ private:
                 // with the gesture, and only on the reviewed profile's Correct, which
                 // must equal this word's other-layout form. Double Shift right after
                 // the Space restores the original (replaceLast).
-                if (!s->chosen && !s->converted && profile_ && profile_->ready()) {
-                    std::string typed = s->shown();
-                    std::string other = LabState::form(w, !s->typedRu);
-                    auto fix = profile_->correctTyped(typed, s->typedRu);
-                    if (fix && *fix == other && other != typed) s->converted = true;
-                    if (fix) wipeString(*fix);
-                    wipeString(typed); wipeString(other);
-                }
-#endif
-                std::string out = s->shown(); // what the owner sees or the reviewed correction
+                bool whole = false;
+                auto fixed = autoText(*s, whole);
+                const bool undoable = !fixed || whole;
+                std::string out = fixed ? std::move(*fixed) : s->shown();
                 s->forgetLast();
+                if (undoable) {
+#else
+                std::string out = s->shown(); // only what the owner chose to see
+                s->forgetLast();
+                {
+#endif
                 s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu;
                 s->lastValid = true; // Pending
                 {
@@ -1516,6 +1561,7 @@ private:
                     const bool known = pre.isValid() && pre.cursor() == pre.anchor();
                     s->lastRule = known ? LabState::Confirm::AfterCommit : LabState::Confirm::Never;
                     s->lastPreCursor = known ? pre.cursor() : 0;
+                }
                 }
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
@@ -1553,7 +1599,14 @@ private:
                 discard(ic, *s);
                 return;
             }
-#ifdef RASKLAD_MANUAL_LAB
+#if defined(RASKLAD_PRODUCT)
+            // SYS-226: a punctuation key, Enter or Tab also ends the word: the same
+            // automatic correction as Space (no undo), then the key passes.
+            bool whole = false;
+            std::optional<std::string> fixed;
+            if (wordEnd(key)) fixed = autoText(*s, whole);
+            commitAndClear(ic, *s, fixed ? std::move(*fixed) : s->shown());
+#elif defined(RASKLAD_MANUAL_LAB)
             commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
 #else
             commitAndClear(ic, *s, s->word());
