@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "sourceCommit": "27cca6e0239938b2d53937061d0980c087856b22",
+  "files": {
+    "src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.h": "aa9cb924f309ec6b1858607096b28bb966c73cc53ac079bda188b200a6ff24a4",
+    "src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.cpp": "56b5bec301a3f719c204c28ef66c74168cdcc4680aff1234501feb49aaa62f19"
+  },
+  "patchSha256": "e50fea779d930ba3c99bd23308c2caeb3702215f46a7062c33ab2b39b736ed33",
+  "scope": "unused wrapper primitive; no backend integration"
+}

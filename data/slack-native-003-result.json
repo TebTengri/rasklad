@@ -1,0 +1,31 @@
+{
+  "a11yBusAvailable": true,
+  "a11yStatus": {
+    "errors": 1,
+    "isEnabled": false,
+    "screenReaderEnabled": null
+  },
+  "focusedEditableObjects": [],
+  "inspectedNodes": 0,
+  "pidLookupErrors": 0,
+  "pidLookups": 8,
+  "safeAutoCorrection": false,
+  "schema": 1,
+  "slackA11yConnections": 0,
+  "targetProcesses": 8,
+  "textRead": false,
+  "truncated": false,
+  "writes": false,
+  "scope": "read-only existing bus/system booleans and Slack metadata; snapshot only",
+  "slackPackage": "slack-desktop 4.53.287-1",
+  "atspiPackage": "at-spi2-core 2.62.1-1",
+  "binaryLinksAtkBridge": true,
+  "launchContextNoAtBridgeSet": false,
+  "slackProcessEnvironmentRead": false,
+  "slackRestarted": false,
+  "systemSettingsChanged": false,
+  "causeProven": false,
+  "guardTests": 13,
+  "independentDiffReview": "two fixed system property reads approved; app node allowlist unchanged",
+  "probeSha256": "921be7f01cfe35cfd7f1c356aac114079a370fec55355f65383c7e15f23b9395"
+}

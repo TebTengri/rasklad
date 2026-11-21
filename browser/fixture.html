@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><title>Rasklad — проверка адаптера</title>
+<style>body{background:#191b24;color:#c8d0e0;font:18px monospace;max-width:850px;margin:30px auto;padding:16px}textarea{display:block;width:95%;height:80px;background:#242735;color:inherit;font:inherit;margin:12px 0;border:1px solid #8299d8}small{color:#aeb8ce}label{display:block;margin-top:24px}</style>
+<h1>Rasklad · браузерный адаптер</h1>
+<p>Тест механизма, не готовое распознавание языка.</p>
+<small>В первом поле наберите ghbdtn и пробел: тестовая подстановка даст «привет». Штатная отмена браузера сохранена. Двойной Super остаётся запланированным ручным действием. Следующая буква должна сохраниться.</small>
+<label>Собственное поле сообщения<textarea id="prose" spellcheck="true"></textarea></label>
+<label>Неизвестное поле — без обработки<textarea id="unknown"></textarea></label>
+<label>Код — без обработки<textarea id="code" spellcheck="false"></textarea></label>
+<form><input type="password" aria-label="Тестовый пароль"><label>Поле рядом с паролем — без обработки<textarea id="protected"></textarea></label></form>
+<script src="converter.js"></script><script src="policy.js"></script><script src="router.js"></script><script src="scorer.js"></script><script src="evidence.js"></script><script src="synthetic-model.js"></script><script src="lexicon.js"></script><script src="synthetic-stems.js"></script><script src="adapter.js"></script><script src="fixture.js"></script></html>

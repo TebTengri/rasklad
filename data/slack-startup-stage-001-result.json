@@ -1,0 +1,362 @@
+{
+  "schema": 1,
+  "baseline15Seconds": {
+    "backend": "wayland",
+    "comparisonOutcome": "no-peers-in-either",
+    "echPolicy": "deny",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": false,
+    "target": "slack",
+    "textRead": false,
+    "trials": [
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "observationSeconds": 15.02,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "startupStages": [
+          {
+            "afterSeconds": 5,
+            "processKinds": {
+              "gpu": 0,
+              "main": 1,
+              "network": 0,
+              "other": 0,
+              "renderer": 0,
+              "unknown": 7
+            },
+            "targetPeers": 0
+          }
+        ],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      },
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": true,
+        "mode": "enabled",
+        "observationSeconds": 15.01,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "startupStages": [
+          {
+            "afterSeconds": 5,
+            "processKinds": {
+              "gpu": 0,
+              "main": 1,
+              "network": 0,
+              "other": 0,
+              "renderer": 0,
+              "unknown": 7
+            },
+            "targetPeers": 0
+          }
+        ],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  },
+  "slackProtocol": {
+    "backend": "wayland",
+    "comparisonOutcome": "no-peers-in-either",
+    "echPolicy": "deny",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": false,
+    "target": "slack",
+    "textRead": false,
+    "trials": [
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "observationSeconds": 15.08,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "startupStages": [
+          {
+            "afterSeconds": 5,
+            "processKinds": {
+              "gpu": 0,
+              "main": 1,
+              "network": 0,
+              "other": 0,
+              "renderer": 0,
+              "unknown": 7
+            },
+            "targetPeers": 0
+          }
+        ],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false,
+          "waylandRegistry": true,
+          "waylandSurface": true,
+          "waylandToplevel": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      },
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": true,
+        "mode": "enabled",
+        "observationSeconds": 15.07,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "startupStages": [
+          {
+            "afterSeconds": 5,
+            "processKinds": {
+              "gpu": 0,
+              "main": 1,
+              "network": 0,
+              "other": 0,
+              "renderer": 0,
+              "unknown": 7
+            },
+            "targetPeers": 0
+          }
+        ],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false,
+          "waylandRegistry": true,
+          "waylandSurface": true,
+          "waylandToplevel": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  },
+  "chromiumProtocolControl": {
+    "backend": "wayland",
+    "comparisonOutcome": "enabled-only-peers",
+    "echPolicy": "deny",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": true,
+    "target": "chromium",
+    "textRead": false,
+    "trials": [
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "observationSeconds": 15.08,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 11
+        },
+        "startupStages": [
+          {
+            "afterSeconds": 5,
+            "processKinds": {
+              "gpu": 0,
+              "main": 1,
+              "network": 0,
+              "other": 0,
+              "renderer": 0,
+              "unknown": 11
+            },
+            "targetPeers": 0
+          }
+        ],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false,
+          "waylandRegistry": true,
+          "waylandSurface": true,
+          "waylandToplevel": true
+        },
+        "target": "chromium",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      },
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 64,
+        "isEnabled": true,
+        "mode": "enabled",
+        "observationSeconds": 0.72,
+        "outputStreams": "merged-fixed-categories",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 11
+        },
+        "startupStages": [],
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "connectionFailure": false,
+          "displayInit": false,
+          "fatal": false,
+          "missingResource": false,
+          "permissionDenied": false,
+          "secretService": false,
+          "singletonFailure": false,
+          "waylandRegistry": true,
+          "waylandSurface": true,
+          "waylandToplevel": true
+        },
+        "target": "chromium",
+        "targetPeers": 1,
+        "textRead": false,
+        "visibleWindows": null
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  }
+}

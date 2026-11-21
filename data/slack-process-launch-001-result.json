@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "approvalConsumed": true,
+  "quitRequested": true,
+  "quitFullyExited": true,
+  "quitSignal": "SIGTERM",
+  "sigkillUsed": false,
+  "result": {
+    "accessibilityEnvironment": "process-only until Slack exits",
+    "editorSupportVerified": false,
+    "launched": true,
+    "measurementCompleted": true,
+    "messagesSent": false,
+    "normalSlackProfileUsed": true,
+    "probe": {
+      "a11yBusAvailable": true,
+      "a11yStatus": {
+        "errors": 1,
+        "isEnabled": false,
+        "screenReaderEnabled": null
+      },
+      "discoveryScans": 3,
+      "discoverySeconds": 0.571,
+      "focusedEditableObjects": [],
+      "inspectedNodes": 23,
+      "pidLookupErrors": 0,
+      "pidLookups": 10,
+      "safeAutoCorrection": false,
+      "schema": 1,
+      "slackA11yConnections": 1,
+      "targetProcesses": 7,
+      "textRead": false,
+      "truncated": false,
+      "writes": false
+    },
+    "profileCopied": false,
+    "schema": 1,
+    "systemStatusWritten": false,
+    "targetPresentAtProbe": true,
+    "textRead": false,
+    "toolEditsConfigurationFiles": false,
+    "toolTerminatedSlack": false,
+    "writesToApps": false
+  }
+}

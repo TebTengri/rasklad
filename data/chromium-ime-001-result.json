@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "passed": true,
+  "application": "Chromium 155.0.8059.84 via private X11 GTK IM module",
+  "slackSupport": false,
+  "syntheticInputOnly": true,
+  "cdpTyping": false,
+  "hostInput": false,
+  "hostConfigurationChanged": false,
+  "sandboxed": true,
+  "checks": {
+    "preeditObserved": true,
+    "compositionActiveBeforeSpace": true,
+    "correctedOnce": true,
+    "compositionEnded": true,
+    "nextWordPreserved": true,
+    "nativeUndoRestoresPreviousCommit": true,
+    "mixedTokenPreserved": true,
+    "longTokenPreserved": true,
+    "passwordPassthrough": true,
+    "focusDoesNotLeak": true,
+    "focusOriginalWordPreserved": true
+  },
+  "beforeSpaceDomLength": 6,
+  "guardTests": 6,
+  "source_sha256": {
+    "tools/chromium_ime_lab.py": "280422b1edec9f931f878237cc4b3fbdc5b7565341ef804ff854c6484bff7074",
+    "bin/test-chromium-ime": "d29bf2433c6138643e6f708aa3989d86ca25ba055a15c6318a13034ec86907a0",
+    "bin/prepare-xvfb-lab": "cc1e7b71f0cab6241ecef03e373b584abb4ecbdb8a4f5a9860c93a9942b48cda",
+    "tests/chromium_ime/driver.mjs": "c9535e6d6b10b28d61c0f63386136e41d86f87fc9b9896f8dc01cd185f76b268",
+    "tests/chromium_ime/keys.py": "2e8b6d0c50a2a37cb805e164e33d63b4221f92b924d1dc5048f30f2a8790f82b",
+    "tests/chromium_ime/fixture.html": "57d2e1d414e890489ca0b2c8570f1f4e47abf2d113791849c59482cd04837b6f",
+    "tests/chromium_ime/test_guards.py": "4cfc458dd69a4c78fe7611ef253e6029418c04d554388ee4efaed42058add6e1",
+    "tools/fcitx_chromium_lab.pro": "e8bddb23e6e66e101b1d2c31ded48e9a09a49f59c78055e49fd6b961195bee3a",
+    "src/fcitxlab.cpp": "2ab47445a6c64e5bc43194d49ba4ec3a96c1a7d854a594aa645cd1b124f1a80f"
+  },
+  "limitations": [
+    "Synthetic one-rule lab addon only; detector not integrated",
+    "Private X11/GTK transport, not native Wayland/compositor integration",
+    "No physical keyboard or Slack profile/account/message access",
+    "Native Undo observed for these exact composition commits, not arbitrary application history",
+    "Password hints depend on client implementation; no generic code/mention semantic classifier"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "authorization": "Owner confirmed connecting checked packages to the detector in a test editor. New scoped local integration, not reuse of the earlier raw-smoke permission. Four raw inputs plus existing pinned model/stem and metadata/notices; no corpus, retraining, personal/live input or installation.",
+  "result": {
+    "passed": true,
+    "browser": "Chrome/155.0.8059.84",
+    "cases": 12,
+    "checks": 16,
+    "hashAndInitMs": 421.4,
+    "heapBytes": 20185088,
+    "modelBytes": 88290,
+    "stemBytes": 1200379,
+    "engineCount": 4,
+    "networkAttempts": 0,
+    "undoPassed": true,
+    "disposePassed": true,
+    "integrityRejectionPassed": true,
+    "realEditorSupport": false,
+    "inputMode": "reviewed-local-profile",
+    "modelLoaded": true,
+    "profileBytes": 5860597,
+    "scope": "fixed editor functional cases; not a language accuracy benchmark",
+    "releaseApproved": false,
+    "packages": [
+      {
+        "locale": "en-US",
+        "files": 5,
+        "bytes": 575517,
+        "distribution": false
+      },
+      {
+        "locale": "ru-RU",
+        "files": 5,
+        "bytes": 3551131,
+        "distribution": false
+      }
+    ]
+  },
+  "test_source_sha256": {
+    "browser/session.js": "9323ae81de1d7f0be587253375d5c881ce725a46bf94f1f44b3a1219317d7a30",
+    "browser/adapter.js": "83c6c972a0545f3aa00b6f082fe42180dd965d4cbf03238f3d424ba856792e60",
+    "browser/router.js": "096cd6a4f4fe9ba4e87128c7bdd3fda6e511e89dcc60cbc662cce2445879becd",
+    "browser/scorer.js": "05a081b58bbf7252885031f4f2acdf32befd4dcc3c4ea9acc0fee9bacbec94f4",
+    "browser/evidence.js": "9616e5a0bd601341ab40b1f5e92c17b59024fa5a367e2a9d7887572984cdfaae",
+    "browser/lexicon.js": "905025ac3142b12392e929a33a784e6fd57d4fe19a7b561750c464dc2ce45f9b",
+    "browser/spell.js": "b8f065bdfbf0c90de2aa341719214426cb2498c3ee3aeede349823955b8d0223",
+    "tools/editor_profile.py": "df630ee07239701c331f11611556b554befc9a6538d4bf88ec7dddba37c0a3ed",
+    "tools/dictionary_smoke.py": "1b83bd836a86017c98bbca78f3738150621b9798fc7e4b5461da4e341abf3a7a",
+    "bin/test-reviewed-dictionaries": "9baeca680059952fb49f9b9a8189dd7ba290efc3a0ec2e9d413774e269891ebc",
+    "tests/browser/editor-run.mjs": "5d15f78caea59748e789799aaa111924901b39968a7117ac1f752f0afbae3017",
+    "tests/browser/isolated-chromium.mjs": "531666a07308d4253dc810caa961e22459928e9f6b1cdb7a82afa1ec97a1dc49",
+    "data/browser-profile.json": "399641403c22af49c95f91de76ac1bf3c9a5fb4ac25a008778a2e1ba3f66a8e4",
+    "data/browser-editor-001-protocol.json": "78c2a9f53c74cb557eb79e4494105b65b370f90edd5e7bb1e3f09510ad6a8b3c",
+    "tools/browser_spell/source-lock.json": "198690f51a5ae9d168141c46414d5e8bed6304d126a3da87ebd7046c9c7c62b6"
+  },
+  "checks": {
+    "session_node_tests": 11,
+    "package_oracle_python_tests": 18,
+    "previous_browser_regressions": 32
+  },
+  "limits": [
+    "Fixed functional cases, no independent language accuracy claim.",
+    "Own registered textarea only; realEditorSupport=false means external mail/messenger/editor support is unverified.",
+    "Hash/init time is a single startup measurement; not keystroke latency.",
+    "WASM heap capacity excludes JS model/stem/copies and Chromium RSS.",
+    "Local development assets/notices only; no binary/data distribution approval.",
+    "No host browser profile, seat, GPU, network, system installation or double-Super bridge."
+  ]
+}

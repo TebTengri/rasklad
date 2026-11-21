@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "files": [
+    {
+      "file": "hyprland-toplevel-mapping-v1.xml",
+      "source": "https://raw.githubusercontent.com/hyprwm/hyprland-protocols/32a0b11b6fb1bbca4391e2f764f013394d4ff5a8/protocols/hyprland-toplevel-mapping-v1.xml",
+      "commit": "32a0b11b6fb1bbca4391e2f764f013394d4ff5a8",
+      "sha256": "05464521a13c96ed274a8545d84ac03980d94b32bd55a8467c7949ed1a1ee96e"
+    },
+    {
+      "file": "wlr-foreign-toplevel-management-unstable-v1.xml",
+      "source": "https://raw.githubusercontent.com/swaywm/wlr-protocols/b010a03648b88d143236de193bddbfea0c08bc84/unstable/wlr-foreign-toplevel-management-unstable-v1.xml",
+      "commit": "b010a03648b88d143236de193bddbfea0c08bc84",
+      "sha256": "ea1008781ec4af7a5ceb131914081405c71336fdd7e600103bcc940c15fc741f"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+--- a/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.h
++++ b/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.h
+@@ -26,6 +26,7 @@
+     // Lab-only ownership primitive. The owner must retain this whole wrapper
+     // until a sync callback on the same event queue has dispatched.
+     bool releaseForDrain();
++    bool inCallback() const { return callbackDepth_ != 0; }
+     auto actualVersion() const { return version_; }
+     void *userData() const { return userData_; }
+     void setUserData(void *userData) { userData_ = userData; }
+@@ -44,6 +45,14 @@
+         modifiersSignal_;
+     fcitx::Signal<void(int32_t, int32_t)> repeatInfoSignal_;
+ 
++    struct CallbackGuard {
++        ZwpInputMethodKeyboardGrabV2 &owner;
++        explicit CallbackGuard(ZwpInputMethodKeyboardGrabV2 &value) : owner(value) {
++            ++owner.callbackDepth_;
++        }
++        ~CallbackGuard() { --owner.callbackDepth_; }
++    };
++    unsigned callbackDepth_ = 0;
+     bool releasedForDrain_ = false;
+     uint32_t version_;
+     void *userData_ = nullptr;
+--- a/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.cpp
++++ b/src/lib/fcitx-wayland/input-method-v2/zwp_input_method_keyboard_grab_v2.cpp
+@@ -9,6 +9,7 @@
+             [](void *data, zwp_input_method_keyboard_grab_v2 *wldata,
+                uint32_t format, int32_t fd, uint32_t size) {
+                 auto *obj = static_cast<ZwpInputMethodKeyboardGrabV2 *>(data);
++                CallbackGuard guard(*obj);
+                 assert(*obj == wldata);
+                 {
+                     obj->keymap()(format, fd, size);
+@@ -18,6 +19,7 @@
+             [](void *data, zwp_input_method_keyboard_grab_v2 *wldata,
+                uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
+                 auto *obj = static_cast<ZwpInputMethodKeyboardGrabV2 *>(data);
++                CallbackGuard guard(*obj);
+                 assert(*obj == wldata);
+                 {
+                     obj->key()(serial, time, key, state);
+@@ -28,6 +30,7 @@
+                uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched,
+                uint32_t modsLocked, uint32_t group) {
+                 auto *obj = static_cast<ZwpInputMethodKeyboardGrabV2 *>(data);
++                CallbackGuard guard(*obj);
+                 assert(*obj == wldata);
+                 {
+                     obj->modifiers()(serial, modsDepressed, modsLatched,
+@@ -38,6 +41,7 @@
+             [](void *data, zwp_input_method_keyboard_grab_v2 *wldata,
+                int32_t rate, int32_t delay) {
+                 auto *obj = static_cast<ZwpInputMethodKeyboardGrabV2 *>(data);
++                CallbackGuard guard(*obj);
+                 assert(*obj == wldata);
+                 {
+                     obj->repeatInfo()(rate, delay);

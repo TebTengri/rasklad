@@ -1,0 +1,98 @@
+{
+  "acceptedDeliveryCases": 3,
+  "cases": [
+    {
+      "acceptedDelivery": false,
+      "case": "missing_ack_pending",
+      "deliveredPresses": 0,
+      "deliveredReleases": 0,
+      "outcome": "awaiting_ack"
+    },
+    {
+      "acceptedDelivery": true,
+      "case": "same_target_race_pair",
+      "deliveredPresses": 1,
+      "deliveredReleases": 1,
+      "outcome": "active"
+    },
+    {
+      "acceptedDelivery": true,
+      "case": "stale_ack",
+      "deliveredPresses": 1,
+      "deliveredReleases": 1,
+      "outcome": "active"
+    },
+    {
+      "acceptedDelivery": true,
+      "case": "persistent_rebind",
+      "deliveredPresses": 1,
+      "deliveredReleases": 1,
+      "outcome": "active"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "target_switch_queued_press",
+      "deliveredPresses": 0,
+      "deliveredReleases": 0,
+      "outcome": "unresolved_unsupported_queued_target_switch"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "held_key_target_switch",
+      "deliveredPresses": 1,
+      "deliveredReleases": 0,
+      "outcome": "unresolved_unsupported_held_key_target_switch"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "held_grab_transfer",
+      "deliveredPresses": 1,
+      "deliveredReleases": 0,
+      "outcome": "unresolved_unsupported_held_state_transfer"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "unmatched_release",
+      "deliveredPresses": 0,
+      "deliveredReleases": 0,
+      "outcome": "rejected_duplicate_or_unmatched_input"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "duplicate_release",
+      "deliveredPresses": 1,
+      "deliveredReleases": 1,
+      "outcome": "rejected_duplicate_or_unmatched_input"
+    },
+    {
+      "acceptedDelivery": false,
+      "case": "overflow",
+      "deliveredPresses": 0,
+      "deliveredReleases": 0,
+      "outcome": "rejected_queue_overflow"
+    }
+  ],
+  "compositorStarted": false,
+  "expectedScreenOutcomesMatched": true,
+  "explicitRejectionCases": 6,
+  "fcitxStarted": false,
+  "functionalFix": false,
+  "missing": [
+    "timeouts",
+    "target incarnation reuse",
+    "keymap/modifier coherence",
+    "repeat",
+    "disconnect/shutdown",
+    "real protocol binding"
+  ],
+  "pendingCases": 1,
+  "realWire": false,
+  "schema": 1,
+  "scope": "pure cooperative symbolic contract screen; no protocol compatibility",
+  "unitTestsPassed": 12,
+  "enumeratedCommandPrefixes": 11110,
+  "maxPrefixLength": 4,
+  "enumerationLimit": "includes terminal no-op continuations; not distinct reachable states or unbounded proof",
+  "author": "Claude Opus5.5 model draft; Codex ownership corrections, tests and aggregate runner",
+  "review": "independent static contract and code review; no concrete counterexample found within stated scope; reporting limitations incorporated"
+}

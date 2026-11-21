@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "approvedDiagnosticRuns": 3,
+  "executedDiagnosticRuns": 3,
+  "runs": [
+    {"number": 1, "passed": false, "debuggerSignal": "SIGSEGV", "limitation": "textual filter omitted long C++ symbols; Mesa worker stacks do not establish cause"},
+    {"number": 2, "passed": false, "debuggerSignal": "SIGSEGV", "faultThreadFrames": [
+      {"symbol": "??", "library": "libc.so.6"},
+      {"symbol": "Aquamarine::CGBMAllocator::CGBMAllocator(int, Hyprutils::Memory::CWeakPointer<Aquamarine::CBackend>)", "library": "libaquamarine.so.14"},
+      {"symbol": "Aquamarine::CGBMAllocator::create(int, Hyprutils::Memory::CWeakPointer<Aquamarine::CBackend>)", "library": "libaquamarine.so.14"},
+      {"symbol": "Aquamarine::CBackend::start()", "library": "libaquamarine.so.14"},
+      {"symbol": "CCompositor::initServer(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int)", "library": null},
+      {"symbol": "main", "library": null}
+    ]},
+    {"number": 3, "passed": true, "phase": "private_socket_ready", "socketStableSeconds": 1,
+     "change": "generated node-level uevent DEVNAME from validated node basename"}
+  ],
+  "noGpuNullReturnControl": {
+    "sameHarmlessNode": true,
+    "discoveryWithPciMetadata": 0,
+    "deviceNameWithoutNodeUevent": false,
+    "deviceNameWithGeneratedDevname": true,
+    "deviceNameMatchesExpected": true,
+    "realGpu": false,
+    "displayConnected": false
+  },
+  "gpuMetadataSnapshotUsed": true,
+  "primaryStatOnly": true,
+  "hostSysfsBound": false,
+  "hostConfigurationWritten": false,
+  "debuggerFrameArguments": false,
+  "debuggerNetwork": false,
+  "coreFilesWritten": false,
+  "typingTested": false,
+  "slackConnected": false,
+  "slackSupport": false,
+  "fullHyprlandInputSupport": false,
+  "readyForLiveUse": false,
+  "limitation": "bounded nested compositor socket/liveness smoke only, not IME/focus/serial/Slack compatibility"
+}

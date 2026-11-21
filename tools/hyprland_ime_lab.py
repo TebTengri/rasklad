@@ -1,0 +1,565 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Prepared exact-Hyprland native IME trial. Default inert; live consent required."""
+import argparse
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import selectors
+import shutil
+import signal
+import socket
+import stat
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parent.parent
+INSIDE = Path(__file__) == Path('/lab/runner.py')
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+base = load('ime_base', Path('/lab/fcitx_lab_runner.py') if INSIDE else ROOT/'tools/fcitx_lab_runner.py')
+probe = load('hypr_probe', Path('/lab/probe.py') if INSIDE else ROOT/'tools/hyprland_nested_probe.py')
+chrome = None if INSIDE else load('chrome_lab', ROOT/'tools/chromium_ime_lab.py')
+core_guard = None if INSIDE else load('core_entry_guard', ROOT/'tools/core_entry_witness_guard.py')
+reference = None if INSIDE else load('reference_frontend', ROOT/'tools/wayland_ime_lab.py')
+
+
+def frontend_selection(variant):
+    try:
+        reference.frontend_selection(variant)
+    except reference.base.Refused as error:
+        raise base.Refused(str(error)) from error
+
+
+def validate_frontend(variant):
+    try:
+        return reference.validate_frontend(variant)
+    except reference.base.Refused as error:
+        raise base.Refused(str(error)) from error
+
+
+# Measurement submap: F12 leaves, every other key re-enters the same submap (swallowed).
+LOCK_SUBMAP = '''submap = rasklad_lock
+bind = , F12, submap, reset
+bind = , catchall, submap, rasklad_lock
+submap = reset
+'''
+SEAT_PROBE_SUBMAP = '''device {
+ name = hl-virtual-keyboard-unknown
+ keybinds = false
+}
+submap = rasklad_lock
+bind = , F12, submap, reset
+bind = , catchall, submap, rasklad_lock
+submap = reset
+'''
+def launch_lab():
+    return load('slack_launch_lab', ROOT/'tools/slack_launch_lab.py')
+
+
+SLACK_GATE_ADDON = ROOT/'build/chromium-ime/slack-gate-addon/raskladslackgatetest.so'
+
+
+def supervised_selection(slack_supervised, *others):
+    """The supervised Slack-session fixture runs alone: no witness, focus or frontend variant."""
+    if type(slack_supervised) is not bool:
+        raise base.Refused('slack_supervised_mode')
+    if slack_supervised and (others[:6] != (False,)*6 or others[6] != 1 or others[7:9] != (False, False) or others[9] != 'system'):
+        raise base.Refused('slack_supervised_incompatible_options')
+
+
+def launch_selection(slack_launch, slack_supervised, seat_probe, *others):
+    """The Slack launch trial runs alone: no supervised session, seat probe, witness or variant."""
+    if slack_launch is False:
+        return
+    if slack_launch is not True and type(slack_launch) is not dict:
+        raise base.Refused('slack_launch_mode')
+    if slack_supervised is not False or seat_probe is not False:
+        raise base.Refused('slack_launch_incompatible_options')
+    supervised_selection(True, *others)
+
+
+MANUAL_SUITE = False  # SYS-225 manual gesture suite; set only by run(manual_suite=True)
+def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False,slack_launch=False,slack_live=False):
+    frontend_selection(frontend_variant)
+    supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
+    launch_selection(slack_launch,slack_supervised,seat_probe,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
+    if slack_launch is True:
+        raise base.Refused('slack_launch_preflight_required')
+    if type(slack_live) is not bool or (slack_live != (type(slack_launch) is dict and slack_launch.get('mode') == 'live')):
+        raise base.Refused('slack_live_mode')  # sandbox_args needs the preflight dict
+    if grab_epoch_witness and not server_route_witness:
+        raise base.Refused('grab_epoch_requires_server_route_witness')
+    if server_route_witness and not grab_entry_witness:
+        raise base.Refused('server_route_requires_grab_entry_witness')
+    if type(focus_repeats) is not int or not 1<=focus_repeats<=5:
+        raise base.Refused('focus_repeats_bound')
+    if focus_repeats>1 and not focus_stress:
+        raise base.Refused('focus_repeats_requires_focus_suite')
+    if grab_entry_witness and not core_entry_witness:
+        raise base.Refused('grab_entry_witness_requires_core_entry_witness')
+    if core_entry_witness and (not addon_witness or witness_no_query):
+        raise base.Refused('core_entry_witness_requires_querying_addon_witness')
+    if witness_no_query and not addon_witness:
+        raise base.Refused('witness_no_query_requires_addon_witness')
+    if addon_witness and not (focus_stress and space_telemetry):
+        raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+    if core_entry_witness and '/lab/raskladcoreentry.so' not in snapshots:
+        raise base.Refused('core_entry_snapshot_required')
+    if addon_witness:
+        paths = dict(paths)
+        paths['addon'] = ROOT/('build/chromium-ime/grab-entry-addon/raskladlab.so' if grab_entry_witness else 'build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so')
+        paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladwitness.conf'
+        base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
+    if server_route_witness and '/lab/raskladserverroute.so' not in snapshots:
+        raise base.Refused('server_route_snapshot_required')
+    if frontend_variant!='system' and '/lab/addons/libwaylandim.so' not in snapshots:
+        raise base.Refused('private_frontend_snapshot_required')
+    args = probe.sandbox_args(directory, parent_fd, metadata_plan)
+    at = args.index('--')
+    extra = ['--ro-bind', '/etc/fonts', '/etc/fonts', '--dir', '/lab/addons']
+    if frontend_variant!='system':
+        extra += ['--perms','0755','--ro-bind-data',str(snapshots['/lab/addons/libwaylandim.so']),'/lab/addons/libwaylandim.so',
+                  '--setenv','RASKLAD_PRIVATE_FRONTEND_VARIANT',frontend_variant]
+    for key, path in paths.items():
+        destination = chrome.TARGETS[key]
+        if destination in snapshots:
+            extra += ['--perms', '0755', '--ro-bind-data', str(snapshots[destination]), destination]
+        else:
+            extra += ['--ro-bind', str(path), destination]
+    for name in ('native_ime_clients.py',):
+        extra += ['--ro-bind', str(ROOT/'tools'/name), '/lab/'+name]
+    if focus_stress:
+        for source, target in [('tests/chromium_ime/adversarial-focus.mjs','adversarial-focus.mjs'),
+                               ('tests/chromium_ime/focus-policy.mjs','focus-policy.mjs'),
+                               ('tests/chromium_ime/space-telemetry.mjs','space-telemetry.mjs'),
+                               ('data/focus-source-review-001.json','focus-source-review.json')]:
+            extra += ['--ro-bind', str(ROOT/source), '/lab/'+target]
+        extra += ['--setenv', 'RASKLAD_FOCUS_STRESS_LAB', '1']
+    if space_telemetry:
+        if not focus_stress:
+            raise base.Refused('space_telemetry_requires_focus_suite')
+        extra += ['--setenv', 'RASKLAD_SPACE_TELEMETRY_LAB', '1']
+    if addon_witness:
+        extra += ['--ro-bind', str(ROOT/'tests/chromium_ime/addon-witness.mjs'), '/lab/addon-witness.mjs',
+                  '--setenv', 'RASKLAD_ADDON_WITNESS_LAB', '1']
+    if witness_no_query:
+        extra += ['--setenv', 'RASKLAD_ADDON_WITNESS_NO_QUERY_LAB', '1']
+    if core_entry_witness:
+        extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/raskladcoreentry.so']), '/lab/raskladcoreentry.so',
+                  '--setenv', 'RASKLAD_CORE_ENTRY_WITNESS_LAB', '1']
+    if grab_entry_witness:
+        extra += ['--setenv', 'RASKLAD_GRAB_ENTRY_WITNESS_LAB', '1']
+    if server_route_witness:
+        extra += ['--perms','0755','--ro-bind-data',str(snapshots['/lab/raskladserverroute.so']),'/lab/raskladserverroute.so',
+                  '--ro-bind',str(ROOT/'tools/server_route_witness_guard.py'),'/lab/server_route_witness_guard.py',
+                  '--ro-bind',str(ROOT/'tests/chromium_ime/server-route-witness.mjs'),'/lab/server-route-witness.mjs',
+                  '--setenv','RASKLAD_SERVER_ROUTE_WITNESS_LAB','1']
+    if grab_epoch_witness:
+        extra += ['--setenv','RASKLAD_GRAB_EPOCH_WITNESS_LAB','1']
+    if focus_repeats>1:
+        extra += ['--setenv', 'RASKLAD_FOCUS_REPEATS_LAB', str(focus_repeats)]
+    extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
+    if MANUAL_SUITE:
+        extra += ['--setenv', 'RASKLAD_MANUAL_LAB', '1']
+    if slack_supervised:
+        if profile:
+            raise base.Refused('slack_supervised_profile')
+        extra += ['--ro-bind', str(ROOT/'tools/slack_supervisor.py'), '/lab/slack_supervisor.py',
+                  '--ro-bind', str(ROOT/'tools/slack_injector.py'), '/lab/slack_injector.py',
+                  '--setenv', 'RASKLAD_SLACK_SESSION_LAB', '1', '--setenv', 'RASKLAD_SLACK_GATE_LAB', '1',
+                  '--setenv', 'RASKLAD_SLACK_SUPERVISED_LAB', '1']
+        if seat_probe:
+            extra += ['--setenv', 'RASKLAD_SEAT_PROBE_LAB', '1']
+    if slack_launch:
+        if profile:
+            raise base.Refused('slack_launch_profile')
+        extra += launch_lab().sandbox_extra(directory, slack_launch)
+    for relative, path in profile.items():
+        extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
+    env = {'RASKLAD_HYPRLAND_IME_LAB': '1', 'RASKLAD_NATIVE_WAYLAND_LAB': '1',
+           'RASKLAD_CHROMIUM_IME_LAB': '1', 'RASKLAD_REVIEWED_PROFILE_LAB': '1',
+           'FCITX_ADDON_DIRS': '/lab/addons:/usr/lib/fcitx5', 'XDG_DATA_DIRS': '/usr/share',
+           'XDG_SESSION_DESKTOP': 'Hyprland', 'NO_AT_BRIDGE': '1'}
+    for key, value in env.items():
+        extra += ['--setenv', key, value]
+    return args[:at] + extra + ['--', '/usr/bin/python3', '-I', '/lab/runner.py', '--inside']
+
+
+def start_bus(children):
+    # Called after the parent FD has been closed. No host bus, activation dirs or shell.
+    if os.environ.get('RASKLAD_PARENT_FD') or os.environ.get('WAYLAND_SOCKET'):
+        raise base.Refused('parent_capability_not_released')
+    bus = subprocess.Popen(['/usr/bin/dbus-daemon', '--nofork', '--config-file=/lab/session-bus.conf',
+                            '--print-address=1'], stdin=subprocess.DEVNULL,
+                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    children.append(bus)
+    with selectors.DefaultSelector() as selector:
+        selector.register(bus.stdout, selectors.EVENT_READ)
+        raw = b''
+        deadline = time.monotonic()+2
+        while b'\n' not in raw and len(raw) <= 4096:
+            if not selector.select(max(0, deadline-time.monotonic())):
+                raise base.Refused('private_bus_timeout')
+            chunk = os.read(bus.stdout.fileno(), 4097-len(raw))
+            if not chunk:
+                raise base.Refused('private_bus_exited')
+            raw += chunk
+    if len(raw) > 4096 or b'\n' not in raw:
+        raise base.Refused('private_bus_address_bound')
+    address = raw.split(b'\n', 1)[0].decode('ascii')
+    if not re.fullmatch(r'unix:path=/run/lab/dbus-[A-Za-z0-9]+(?:,guid=[0-9a-f]{32})?', address):
+        raise base.Refused('private_bus_address')
+    os.environ['DBUS_SESSION_BUS_ADDRESS'] = address
+
+
+def inside():
+    if (not INSIDE or os.environ.get('RASKLAD_HYPRLAND_IME_LAB') != '1'
+            or os.environ.get('HOME') != '/home/lab'
+            or os.environ.get('XDG_RUNTIME_DIR') != '/run/lab'
+            or os.environ.get('DISPLAY') or os.environ.get('WAYLAND_SOCKET')
+            or os.environ.get('DBUS_SESSION_BUS_ADDRESS')):
+        raise base.Refused('private_hyprland_ime_required')
+    fd = int(os.environ.pop('RASKLAD_PARENT_FD'))
+    if fd < 3:
+        raise base.Refused('parent_fd_shape')
+    children = []
+    parent_open = True
+    phase = 'hyprland_start'
+    try:
+        primary = os.environ.pop('RASKLAD_STAT_ONLY_PRIMARY')
+        probe.require_stat_only_mounts(Path('/proc/self/mountinfo').read_text(), [primary])
+        os.chmod('/run/lab', 0o700)
+        server_env = load('server_route_child',Path('/lab/server_route_witness_guard.py')).child_env(base) if os.environ.get('RASKLAD_SERVER_ROUTE_WITNESS_LAB')=='1' else None
+        with open('/tmp/probe-startup.log', 'wb') as log:
+            hyprland = subprocess.Popen(['/usr/bin/Hyprland', '--config', '/lab/hypr.conf'],
+                                        env=dict(os.environ if server_env is None else server_env, WAYLAND_SOCKET=str(fd)), pass_fds=(fd,),
+                                        stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
+        children.append(hyprland)
+        os.close(fd)
+        parent_open = False
+        deadline = time.monotonic()+6
+        while time.monotonic() < deadline:
+            if hyprland.poll() is not None:
+                return {'schema': 1, 'passed': False, 'phase': phase,
+                        'compositorExitCode': hyprland.returncode, 'startupReason': probe.startup_reason()}
+            sockets = [p for p in Path('/run/lab').glob('wayland-*') if p.is_socket()]
+            if sockets:
+                break
+            time.sleep(.03)
+        else:
+            raise base.Refused('private_display_timeout')
+        if len(sockets) != 1:
+            raise base.Refused('ambiguous_private_display')
+        Path('/run/lab/wayland-lab').symlink_to(sockets[0].name)
+        os.environ['WAYLAND_DISPLAY'] = 'wayland-lab'
+        phase = 'private_bus'
+        start_bus(children)
+        config = Path('/home/lab/.config/fcitx5')
+        config.mkdir(parents=True)
+        (config/'profile').write_text(base.PROFILE)
+        addons = Path('/home/lab/.local/share/fcitx5/addon')
+        addons.mkdir(parents=True)
+        (addons/'raskladlab.conf').write_bytes(Path('/lab/addon.conf').read_bytes())
+        phase = 'native_ime_clients'
+        clients = load('native_clients', Path('/lab/native_ime_clients.py'))
+        report = clients.run(base, children)
+        report['compositorStayedAlive'] = hyprland.poll() is None
+        report['passed'] = report.get('passed') is True and report['compositorStayedAlive']
+        return report
+    except (base.Refused, ValueError, KeyError, subprocess.SubprocessError) as error:
+        reason = str(error) if isinstance(error, base.Refused) else type(error).__name__
+        if isinstance(error, ValueError) and re.fullmatch(r'[a-z_]{1,64}', str(error)):
+            reason = str(error)
+        return {'schema': 1, 'passed': False, 'phase': phase,
+                'reason': reason}
+    finally:
+        if parent_open:
+            os.close(fd)
+        for child in reversed(children):
+            if child.poll() is None:
+                child.terminate()
+                try:
+                    child.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    child.kill()
+                    child.wait(timeout=1)
+
+
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False,slack_launch=False,slack_live=False,*,manual_suite=False):
+    frontend_selection(frontend_variant)
+    if manual_suite and (slack_supervised or slack_launch or slack_live or seat_probe or focus_stress or space_telemetry or addon_witness or server_route_witness or frontend_variant!='system'):
+        raise base.Refused('manual_suite_alone_only')
+    global MANUAL_SUITE
+    MANUAL_SUITE = manual_suite is True
+    supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
+    if grab_epoch_witness and not server_route_witness:
+        raise base.Refused('grab_epoch_requires_server_route_witness')
+    if server_route_witness and not grab_entry_witness:
+        raise base.Refused('server_route_requires_grab_entry_witness')
+    if type(focus_repeats) is not int or not 1<=focus_repeats<=5:
+        raise base.Refused('focus_repeats_bound')
+    if focus_repeats>1 and not focus_stress:
+        raise base.Refused('focus_repeats_requires_focus_suite')
+    if grab_entry_witness and not core_entry_witness:
+        raise base.Refused('grab_entry_witness_requires_core_entry_witness')
+    if core_entry_witness and (not addon_witness or witness_no_query):
+        raise base.Refused('core_entry_witness_requires_querying_addon_witness')
+    if witness_no_query and not addon_witness:
+        raise base.Refused('witness_no_query_requires_addon_witness')
+    if addon_witness and not (focus_stress and space_telemetry):
+        raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+    launch_selection(slack_launch,slack_supervised,seat_probe,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
+    frontend = validate_frontend(frontend_variant)
+    if core_entry_witness:
+        core_guard.validate_core_entry(base, ROOT)
+    if server_route_witness:
+        load('server_route_guard',ROOT/'tools/server_route_witness_guard.py').validate(base,ROOT,exact=True)
+        base.regular_file(ROOT/'tests/chromium_ime/server-route-witness.mjs')
+        base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
+    if os.geteuid() == 0:
+        raise base.Refused('root_not_admitted')
+    if input_root is None and not slack_supervised and not slack_launch and not manual_suite:
+        raise base.Refused('explicit_input_root_required')
+    if space_telemetry and not focus_stress:
+        raise base.Refused('space_telemetry_requires_focus_suite')
+    base.regular_file(Path('/usr/bin/bwrap'), True)
+    meta = Path('/usr/bin/bwrap').stat()
+    if meta.st_uid != 0 or meta.st_mode & 0o6022:
+        raise base.Refused('unsafe_bwrap')
+    base.regular_file(Path('/usr/bin/Hyprland'), True)
+    paths = chrome.files()
+    paths.pop('xvfb')
+    paths.pop('keys')
+    paths['runner'] = ROOT/'tools/hyprland_ime_lab.py'
+    paths['addon'] = ROOT/('build/chromium-ime/grab-entry-addon/raskladlab.so' if grab_entry_witness else 'build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so' if addon_witness else 'build/chromium-ime/profile-addon/raskladlab.so')
+    if addon_witness:
+        paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladwitness.conf'
+        base.regular_file(ROOT/'tests/chromium_ime/addon-witness.mjs')
+    if slack_supervised:
+        paths['addon'] = SLACK_GATE_ADDON
+    if manual_suite:
+        paths['addon'] = ROOT/'build/chromium-ime/manual-addon/raskladlab.so'  # SYS-225, no profile
+    if slack_supervised and os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1':
+        paths['addon'] = ROOT/'build/chromium-ime/slack-manual-gate-addon/raskladslackmanualgatetest.so'
+        MANUAL_SUITE = True  # the helper accepts shift2; the driver runs the manual cases
+        paths['addon_conf'] = ROOT/'tests/slack_session/raskladslackgatetest.conf'
+        for name in ('slack_supervisor.py', 'slack_injector.py'):
+            base.regular_file(ROOT/'tools'/name)
+    launch = pre = None
+    if type(slack_live) is not bool or (slack_live and slack_launch is not True):
+        raise base.Refused('slack_live_requires_launch_mode')
+    if slack_launch:
+        launch = launch_lab()
+        paths['addon'] = launch.ADDON
+        paths['addon_conf'] = launch.ADDON_CONF
+        pre = launch.preflight(base)
+        pre['mode'] = 'live' if slack_live else 'launch'
+        pre['owner_empty'] = os.environ.get('RASKLAD_OWNER_EMPTY_COMPOSER_CLI') == '1' and slack_live
+        pre['manual'] = os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1' and slack_live
+        if pre['manual']:
+            paths['addon'] = launch.MANUAL_ADDON  # SYS-225 manual double-Shift Slack artifact
+    shim = ROOT/('build/chromium-ime/grab-entry-shim/raskladcoreentry.so' if grab_entry_witness else 'build/chromium-ime/core-entry-shim/raskladcoreentry.so')
+    if core_entry_witness:
+        base.regular_file(shim)
+    for path in [*paths.values(), ROOT/'tools/native_ime_clients.py']:
+        base.regular_file(path)
+    if focus_stress:
+        for source in ['tests/chromium_ime/adversarial-focus.mjs','tests/chromium_ime/focus-policy.mjs','tests/chromium_ime/space-telemetry.mjs','data/focus-source-review-001.json']:
+            base.regular_file(ROOT/source)
+    keys = ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'
+    base.regular_file(keys, True)
+    profile = {} if slack_supervised or slack_launch or manual_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
+               for relative in chrome.PROFILE_PATHS}
+    for path in profile.values():
+        base.regular_file(path)
+    collector = load('metadata_snapshot', ROOT/'tools/drm_metadata_snapshot.py')
+    metadata = collector.collect_metadata()
+    address = probe.endpoint(os.environ)
+    directory = Path(tempfile.mkdtemp(prefix='hyprland-ime-', dir=base.ensure_private_base(ROOT)))
+    child = None
+    snapshots = {}
+    ctx = {}
+    result = None
+    try:
+        if frontend:
+            snapshots['/lab/addons/libwaylandim.so'] = base.sealed_snapshot(frontend[0],frontend[1])
+        plan = collector.write_snapshot(metadata, directory/'gpu-metadata')
+        snapshots['/lab/addons/raskladlab.so'] = base.sealed_snapshot(paths['addon'])
+        if core_entry_witness:
+            snapshots['/lab/raskladcoreentry.so'] = base.sealed_snapshot(shim)
+        if server_route_witness:
+            snapshots['/lab/raskladserverroute.so'] = base.sealed_snapshot(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
+        snapshots['/lab/rasklad-wayland-keys'] = base.sealed_snapshot(keys)
+        (directory/'hypr.conf').write_text(probe.CONFIG+(SEAT_PROBE_SUBMAP if seat_probe else LOCK_SUBMAP if slack_supervised else launch.LIVE_SUBMAP if slack_live else ''))
+        (directory/'passwd').write_text(f'lab:x:{os.getuid()}:{os.getgid()}:Lab:/home/lab:/usr/bin/nologin\n')
+        (directory/'group').write_text(f'lab:x:{os.getgid()}:\n')
+        (directory/'machine-id').write_text('00000000000000000000000000000007\n')
+        if launch:
+            launch.identity_files(directory, pre)
+            launch.start(base, directory, pre, ctx)
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as parent:
+            parent.settimeout(2)
+            parent.connect(str(address))
+            _, uid, _ = struct.unpack('3i', parent.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i')))
+            if uid != os.getuid():
+                raise base.Refused('parent_peer_owner')
+            parent.settimeout(None)
+            with (directory/'result').open('w+b') as output:
+                for node in metadata['nodes']:
+                    path = Path('/dev/dri')/node['name']
+                    current = path.stat()
+                    if (path.is_symlink() or not stat.S_ISCHR(current.st_mode)
+                            or current.st_rdev != os.makedev(node['major'], node['minor'])):
+                        raise base.Refused('changed_gpu_identity')
+                if not os.access('/dev/dri/renderD128', os.R_OK | os.W_OK):
+                    raise base.Refused('render_node_not_admitted')
+                child = subprocess.Popen(sandbox_args(directory, parent.fileno(), plan, paths, profile, snapshots, focus_stress, space_telemetry, addon_witness, witness_no_query, core_entry_witness, grab_entry_witness, focus_repeats, server_route_witness, grab_epoch_witness, frontend_variant,slack_supervised=slack_supervised,seat_probe=seat_probe,slack_launch=pre if launch else False,slack_live=slack_live),
+                                         pass_fds=(parent.fileno(), *snapshots.values()), env={'PATH': '/usr/bin'},
+                                         stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.DEVNULL,
+                                         start_new_session=True, preexec_fn=launch.limits if launch else chrome.limits)
+                parent.close()
+                child.wait(timeout=(launch.LIVE_OUTER_SECONDS if slack_live else launch.OUTER_SECONDS) if launch else 68)
+                output.seek(0)
+                raw = output.read(32769)
+                if len(raw) > 32768:
+                    raise base.Refused('report_bound')
+                result = json.loads(raw)
+                try:
+                    reference.extract_private_browser_diagnostic(result,frontend_variant)
+                except reference.base.Refused as error:
+                    raise base.Refused(str(error)) from error
+                result.update(exactCompositor='installed nested Hyprland', parentDisplayConnection=True,
+                              primaryStatOnly=True, renderNodeGranted=True, hostSysfsBound=False,
+                              hostConfigurationWritten=False, slackConnected=bool(launch),
+                              readyForLiveUse=False, maxTrialSeconds=(launch.LIVE_OUTER_SECONDS if slack_live else launch.OUTER_SECONDS) if launch else 75)
+                result['passed'] = child.returncode == 0 and result.get('passed') is True
+                return result
+    finally:
+        if child and child.poll() is None:
+            os.killpg(child.pid, signal.SIGTERM)
+            try:
+                child.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.wait(timeout=1)
+        after = {}
+        try:
+            if launch:
+                # Bridge, proxy, leftover-process and profile-lock checks after the sandbox is gone (never raises).
+                after = launch.finish(ctx, pre)
+                if result is not None:
+                    result.update(after)
+                    result['passed'] = result.get('passed') is True and after['outerClean']
+        finally:
+            for fd in snapshots.values():
+                os.close(fd)
+            shutil.rmtree(directory)
+        if launch and result is None and after.get('singletonLockLeft'):
+            raise base.Refused('singleton_lock_left_owner_recovery')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--run-approved', action='store_true')
+    modes.add_argument('--inside', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--input-root')
+    parser.add_argument('--focus-stress', action='store_true')
+    parser.add_argument('--space-telemetry', action='store_true')
+    parser.add_argument('--addon-witness', action='store_true')
+    parser.add_argument('--witness-no-query', action='store_true')
+    parser.add_argument('--core-entry-witness', action='store_true')
+    parser.add_argument('--grab-entry-witness', action='store_true')
+    parser.add_argument('--grab-epoch-witness',action='store_true')
+    parser.add_argument('--server-route-witness',action='store_true')
+    parser.add_argument('--focus-repeats', type=int, choices=range(1,6), default=1)
+    parser.add_argument('--slack-supervised', action='store_true')
+    parser.add_argument('--seat-probe', action='store_true')
+    parser.add_argument('--slack-launch', action='store_true')
+    parser.add_argument('--slack-live', action='store_true')
+    parser.add_argument('--manual-gesture', action='store_true', help='live only: SYS-225 manual double-Shift cases')
+    parser.add_argument('--manual-suite', action='store_true', help='SYS-225 owned Chromium fixture suite (with --run-approved)')
+    parser.add_argument('--owner-empty-composer', action='store_true',
+                        help='live only: the owner confirms the test-channel composer is empty (used if Slack reports no field state)')
+    parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
+    args = parser.parse_args()
+    try:
+        if args.grab_epoch_witness and not args.server_route_witness:
+            raise base.Refused('grab_epoch_requires_server_route_witness')
+        if args.server_route_witness and not args.grab_entry_witness:
+            raise base.Refused('server_route_requires_grab_entry_witness')
+        if type(args.focus_repeats) is not int or not 1<=args.focus_repeats<=5:
+            raise base.Refused('focus_repeats_bound')
+        if args.focus_repeats>1 and not args.focus_stress:
+            raise base.Refused('focus_repeats_requires_focus_suite')
+        if args.grab_entry_witness and not args.core_entry_witness:
+            raise base.Refused('grab_entry_witness_requires_core_entry_witness')
+        if args.core_entry_witness and (not args.addon_witness or args.witness_no_query):
+            raise base.Refused('core_entry_witness_requires_querying_addon_witness')
+        if args.witness_no_query and not args.addon_witness:
+            raise base.Refused('witness_no_query_requires_addon_witness')
+        if args.addon_witness and not (args.focus_stress and args.space_telemetry):
+            raise base.Refused('addon_witness_requires_focus_and_space_telemetry')
+        if args.seat_probe and not args.slack_supervised:
+            raise base.Refused('seat_probe_requires_slack_supervised')
+        if args.owner_empty_composer and not args.slack_live:
+            raise base.Refused('owner_empty_composer_requires_slack_live')
+        # Only this invocation's flags may select these modes; never an inherited env.
+        os.environ.pop('RASKLAD_OWNER_EMPTY_COMPOSER_CLI', None)
+        os.environ.pop('RASKLAD_MANUAL_GESTURE_CLI', None)
+        if args.owner_empty_composer:
+            os.environ['RASKLAD_OWNER_EMPTY_COMPOSER_CLI'] = '1'
+        if args.manual_gesture and (not (args.slack_live or args.slack_supervised) or args.seat_probe):
+            raise base.Refused('manual_gesture_requires_slack_live_or_supervised')
+        if args.manual_gesture:
+            os.environ['RASKLAD_MANUAL_GESTURE_CLI'] = '1'
+        if args.slack_live and not (args.run_approved and args.slack_launch):
+            raise base.Refused('slack_live_requires_run_approved_slack_launch')
+        if args.slack_launch and not args.run_approved:
+            raise base.Refused('slack_launch_requires_run_approved')
+        if args.slack_launch and (args.slack_supervised or args.seat_probe):
+            raise base.Refused('slack_launch_incompatible_options')
+        if args.slack_supervised and not args.run_approved:
+            raise base.Refused('slack_supervised_requires_run_approved')
+        if args.inside and args.focus_stress:
+            raise base.Refused('focus_suite_outer_native_only')
+        if args.space_telemetry and not args.focus_stress:
+            raise base.Refused('space_telemetry_requires_focus_suite')
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised, args.seat_probe, args.slack_launch, args.slack_live, manual_suite=args.manual_suite) if args.run_approved else {
+            'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
+            'frontendVariant': args.frontend_variant,
+            'requiresOwnerApproval': True, 'maxTrialSeconds': 75,
+            'focusStressPlanned': args.focus_stress,
+            'spaceTelemetryPlanned': args.space_telemetry,
+            'addonWitnessPlanned': args.addon_witness,
+            'witnessNoQueryPlanned': args.witness_no_query,
+            'coreEntryWitnessPlanned': args.core_entry_witness,
+            'grabEntryWitnessPlanned': args.grab_entry_witness,
+            'focusRepeatCount': args.focus_repeats,
+            'serverRouteWitnessPlanned':args.server_route_witness,
+            'grabEpochWitnessPlanned':args.grab_epoch_witness,
+            'slackSupervisedPlanned':args.slack_supervised,
+            'scope': 'fixed native Chromium/Fcitx fixture in nested Hyprland; no Slack/host IME/config changes'}
+        print(json.dumps(report, sort_keys=True))
+        return 0 if report.get('passed', True) else 1
+    except (base.Refused, OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        print(json.dumps({'schema': 1, 'passed': False,
+                          'reason': str(error) if isinstance(error, base.Refused) else type(error).__name__}))
+        return 2
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "scope": "owned fixture internal On and synthetic Off/On/Off cycle only",
+  "sdkOffOnModes": 5,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "fullCycle": {
+    "application": "installed Chromium native Wayland IM",
+    "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+    "browserVersion": "Chrome/155.0.8059.84",
+    "cdpTyping": false,
+    "checks": 8,
+    "dbusInputFrontendAbsent": true,
+    "disableCompositionStarted": true,
+    "disableEventClasses": [
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "compositionupdate"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "beforeinput"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "input"
+      },
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": false,
+        "type": "compositionend"
+      }
+    ],
+    "disableNoDuplicateOriginal": true,
+    "disableOriginalSettled": true,
+    "disableOriginalUndo": true,
+    "disableRawPassthrough": true,
+    "driverExitCode": 0,
+    "exitCode": 0,
+    "frontendVariant": "keep-grab",
+    "hostConfigurationChanged": false,
+    "hostInput": false,
+    "hyprlandSupport": false,
+    "nativeDeliveryGuarantee": false,
+    "offAgainPassthrough": true,
+    "onMidTokenPreserved": true,
+    "onNewWordCorrected": true,
+    "passed": true,
+    "privateFrontendArtifactSha256": "ec05519adddcff42f31d0af09f8634a62896cb7a3a7a3c3c70b556e3efdc8de7",
+    "privateFrontendMapped": true,
+    "privateSeedKeyboard": true,
+    "referenceCompositor": "Sway/wlroots software only",
+    "sandboxed": true,
+    "schema": 1,
+    "slackSupport": false,
+    "submissionOnly": true,
+    "syntheticInputOnly": true,
+    "syntheticOffTrigger": true
+  },
+  "normalRegression": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "runnerGuardTests": 60,
+  "reviewFix": "resume waits safe delimiter to avoid correcting raw-token suffix, including after reset and in newly created contexts",
+  "independentSourceReview": "controlled On and final synthetic cycle approved after fix",
+  "runtimeUserTrigger": false,
+  "watcherRetirementImplemented": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "a4cc3ac7db38791669e21b326dd030e94dbaaf3a6f2ff0c6248d1e9da915f180",
+    "tests/fcitx_transport/application_off_tests.cpp": "94911d08abdb6c5f8a424f85b0c46b7b0053273d4efd48d09b0e0b10c68c0956",
+    "tests/chromium_ime/driver.mjs": "1db8f73a796b380d3d8372c86dad19842bb1ad5516935c593e87cbba08787f8b",
+    "tests/wayland_ime/keys.cpp": "10a11655ffaad5db565520f038ce4b7a29d0648bd79349bd7a92ba05e370f03d"
+  }
+}

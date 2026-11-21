@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "nativeBuild": true,
+  "binarySha256": "0414a554a01ec42e91f381aac09321dbde292168bf963f5e373f7cfa24ac1035",
+  "existingGuardsPassed": 8,
+  "newBoundaryGuardsPassed": 4,
+  "normalSoftwareSwayRegression": {
+    "passed": true,
+    "iterations": 5,
+    "mappingMode": false
+  },
+  "syntheticScopeControl": {
+    "fdPassed": true,
+    "effectiveLimitsVerified": true,
+    "inactiveCleanupVerified": true,
+    "gpu": false,
+    "wayland": false
+  },
+  "staticIndependentReview": "Codex; initial blockers fixed and re-reviewed",
+  "claudeReview": false,
+  "actualHyprlandMappingTested": false,
+  "fieldBindingVerified": false
+}

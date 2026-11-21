@@ -1,0 +1,29 @@
+{
+ "command": "python3 -I tools/wayland_ime_lab.py --run --manual-suite",
+ "date": "2026-11-21",
+ "result": {
+  "checks": 14,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 0,
+  "frontendVariant": "system",
+  "manualBackspaceCommit": true,
+  "manualBackspaceConverted": true,
+  "manualBackspaceValue": "\u043f\u0440\u0438\u0432\u0435",
+  "manualConvertedCommit": true,
+  "manualEmptyNothing": true,
+  "manualFlushCommitsShown": true,
+  "manualFocusNoLeak": true,
+  "manualNoAutoCorrection": true,
+  "manualPasswordUntouched": true,
+  "manualPreeditConverted": true,
+  "manualShiftBeforeWord": true,
+  "manualShiftLetterOriginal": true,
+  "manualSlowIgnored": true,
+  "manualUndoCommit": true,
+  "manualUndoPreedit": true,
+  "passed": true
+ },
+ "schema": 1,
+ "scope": "private headless Sway/pixman, owned Chromium fixture, synthetic text only; no host input, no Slack",
+ "task": "SYS-225 slice 1"
+}

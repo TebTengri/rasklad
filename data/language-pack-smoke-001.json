@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "authorization": "Owner continued after explicit one-shot question; four pinned aff/dic only. Initial attempts failed at native stdin framing; corrected within the same authorized operation. Authorization consumed; no further real-data run implied.",
+  "catalog_sha256": "e0a1c3477062678ff71a6d2c295f1b8f628c27d41e54dd59eab60e8273490c22",
+  "engine_lock_sha256": "198690f51a5ae9d168141c46414d5e8bed6304d126a3da87ebd7046c9c7c62b6",
+  "result": {
+    "scope": "dictionary compatibility and resource smoke; not language accuracy or editor integration",
+    "passed": true,
+    "nativeVersion": "1.7.5",
+    "browser": "Chrome/155.0.8059.84",
+    "spellCases": 83,
+    "controlMatches": 2,
+    "fullHits": 60,
+    "affixOnly": 9,
+    "mismatches": 0,
+    "heapBytes": 20185088,
+    "engineCount": 4,
+    "moduleInitMs": 81.3,
+    "dictionaryInitMs": 295,
+    "lookupBatchMeanP50Ms": 0.02,
+    "lookupBatchMeanP95Ms": 0.042,
+    "lookupCalls": 2000,
+    "networkAttempts": 0,
+    "releaseApproved": false,
+    "inputMode": "reviewed-raw-dictionaries",
+    "packages": [
+      {
+        "locale": "en-US",
+        "files": 5,
+        "bytes": 575517,
+        "distribution": false
+      },
+      {
+        "locale": "ru-RU",
+        "files": 5,
+        "bytes": 3551131,
+        "distribution": false
+      }
+    ],
+    "modelLoaded": false,
+    "referenceLibraryHashChecked": true
+  },
+  "limits": [
+    "Single-run measurement on this machine, no independent language accuracy claim.",
+    "WASM heap capacity excludes JS buffers, native reference process and Chromium RSS.",
+    "Lookup percentiles are of 50-call batch means, not per-keystroke latency.",
+    "No model, stem lexicon, corpus, real editor or user text loaded.",
+    "Raw packages stay ignored build/ with complete notices; distribution remains forbidden."
+  ],
+  "test_source_sha256": {
+    "bin/test-reviewed-dictionaries": "fcb04251aa6a4d2a7826fff851a6759041460c03bab73e202f7480a3aefccc65",
+    "tools/dictionary_smoke.py": "9803ccc637dc42a059cbf2f612d9d2650ac18a5d190da74d7e876e59aebc620c",
+    "tools/browser_spell/native.cpp": "7ee8169b50025a04e2aedd27279f71c102fef148034e77d83cc7aea032f2cfd4",
+    "tests/browser/dictionary-smoke.mjs": "7a4c58772463a0a90f2fbb16275bef57fdec5e510fbae9df97164698add51e51",
+    "browser/spell.js": "b8f065bdfbf0c90de2aa341719214426cb2498c3ee3aeede349823955b8d0223",
+    "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33"
+  }
+}

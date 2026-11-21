@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "hostDisplayConnected": false,
+  "gpuOpened": false,
+  "hostSysfsBound": false,
+  "fakeParent": {
+    "passed": true,
+    "getRegistryPerVariant": 1,
+    "syncPerVariant": 1,
+    "globalsAdvertised": 0,
+    "loggingDisabledReason": "backend_creation_failed",
+    "loggingEnabledReason": "parent_protocols_missing"
+  },
+  "syntheticDiscovery": {
+    "passed": true,
+    "sameStatOnlyNodeAllCases": true,
+    "absentSysfs": -22,
+    "fiveMetadataValues": 0,
+    "missingVendor": -19
+  },
+  "nodevBindControl": {
+    "characterDeviceStatPreserved": true,
+    "openAllowed": false,
+    "openErrno": 13,
+    "source": "harmless /dev/null"
+  },
+  "selectedGpuMetadataValidation": {
+    "passed": true,
+    "nodes": 2,
+    "pciAttributes": 4,
+    "selectedUeventValues": 1,
+    "allNodesStatOnlyDuringDiscovery": true,
+    "discoveryReturnCodes": [0, 0]
+  },
+  "guardTests": 31,
+  "exactLiveStartupCauseConfirmed": false,
+  "hyprlandStartupFixed": false,
+  "slackSupport": false,
+  "limitation": "metadata discovery blocker isolated and resolved; allocator and compositor startup still need bounded target test"
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "purpose": "Local developer transport proof, not product distribution approval",
+  "packages": {
+    "fcitx5": "5.1.23-1",
+    "fcitx5-qt": "5.1.16-2",
+    "qt6-base": "6.12.0-3"
+  },
+  "sha256": {
+    "/usr/bin/fcitx5": "2bd0aecd638daa9873a7525f7f53c82b405c3ac153781f03df9fefa6b22ff778",
+    "/usr/lib/qt6/plugins/platforminputcontexts/libfcitx5platforminputcontextplugin.so": "6d2745ee02c74040fa446940fff4fb658dd36b9e6fe0fb1ac5cef3106326d2ed",
+    "/usr/include/Fcitx5/Core/fcitx/instance.h": "8d5577497d18bfa09725e2136a8db236952ed71d71f90b7e49c5e809a416d9c1",
+    "/usr/include/Fcitx5/Core/fcitx/inputcontext.h": "07c2914b8a557b02ca29aacdd420b7e2a11ae4a9985e935054c7d76ed37d1734",
+    "/usr/include/Fcitx5/Core/fcitx/inputcontextproperty.h": "962235390bd4bcf0454a51bf1fd785378c6fdd6b40c615f9e2e8ca4415a1dce6",
+    "/usr/include/Fcitx5/Core/fcitx/addonfactory.h": "b464596f048f05ec372fd0d99d71d7860cf3d5e05278d4f082184fe35330f855",
+    "/usr/include/Fcitx5/Utils/fcitx-utils/capabilityflags.h": "21a3f1c779a3ef1c69ea2ed356e2c47a8844243a633fe2d70e7dc3eadb198a0d",
+    "/usr/include/qt6/QtGui/6.12.0/QtGui/qpa/qplatforminputcontext.h": "5f338e1c848b38b525b527c6683f92298976212291e8d5a54a60c52471f59c26"
+  },
+  "foreignCodeVendored": false,
+  "redistributionApproved": false,
+  "userTextRead": false
+}

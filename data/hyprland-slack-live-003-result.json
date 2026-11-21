@@ -1,0 +1,55 @@
+{
+ "approval": "owner one-shot, consumed",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch --slack-live --owner-empty-composer",
+ "commit": "0759be5",
+ "conclusion": "Refused before F10 at 64.6 s: Fcitx removed its own virtual keyboard (deactivate). No key injected; Slack stopped cleanly. Fix: non-helper keyboards may also go away before F10.",
+ "date": "2026-11-21",
+ "result": {
+  "bridgeStats": {
+   "accepted": 32,
+   "blocked": 22,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 386243,
+   "opened": 10,
+   "rejectedDomains": {
+    "slackb.com": 22
+   },
+   "tlsDenied": 0
+  },
+  "compositorStayedAlive": true,
+  "dbusInputFrontendAbsent": true,
+  "enterNeverSent": true,
+  "exactCompositor": "installed nested Hyprland",
+  "fcitxAliveAfterGate": true,
+  "finishErrors": [],
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "keyboardsAddedBeforeArm": [
+   "hl-virtual-keyboard-fcitx5"
+  ],
+  "maxTrialSeconds": 320,
+  "outerClean": true,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "reason": "seat_lost_before_arm",
+  "renderNodeGranted": true,
+  "seatLockedBeforeSlack": true,
+  "seatLostDetail": {
+   "added": [],
+   "removed": [
+    "hl-virtual-keyboard-fcitx5"
+   ],
+   "seconds": 64.6,
+   "submap": "rasklad_lock"
+  },
+  "singletonLockLeft": false,
+  "slackConnected": true,
+  "slackLive": true,
+  "slackProcessesRemaining": 0,
+  "textRead": false
+ },
+ "schema": 1
+}

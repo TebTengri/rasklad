@@ -1,0 +1,763 @@
+{
+  "schema": 1,
+  "snapshot_date": "2026-11-15",
+  "scope": "Curated own-project navigation; not a generated exhaustive call graph or live status service.",
+  "freshness": "Recheck source and current evidence before decisions; root maintains freshness tooling separately.",
+  "evidence_labels": {
+    "verified_source": "Relation checked against current source/contracts; not a claim of fresh runtime execution.",
+    "documented_evidence": "Historical result documented in project; bounded experiment only.",
+    "documented_contract": "Requirement, not automatic proof of enforcement.",
+    "planned": "Proposed integration, not shipped support.",
+    "inferred": "Hypothesis only; none used as a proven dependency here."
+  },
+  "nodes": [
+    {
+      "id": "policy",
+      "kind": "contract",
+      "paths": [
+        "AGENTS.md",
+        "SECURITY.md",
+        "docs/DATA_POLICY.md"
+      ],
+      "title": "Policy",
+      "notes": "Current project boundaries; read applicable instructions first.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "architecture",
+      "kind": "decision",
+      "paths": [
+        "docs/ADR-001-DETECTOR-ROUTING.md",
+        "docs/ADR-001-input-boundary.md"
+      ],
+      "title": "Architecture",
+      "notes": "Recognition and safe execution are separate.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "converter",
+      "kind": "implementation",
+      "paths": [
+        "src/layoutconverter.cpp",
+        "src/layoutconverter.h",
+        "tests/rasklad_tests.cpp"
+      ],
+      "title": "Converter",
+      "notes": "Bounded fixed US/RU mapping; explicit manual direction.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "router",
+      "kind": "implementation",
+      "paths": [
+        "src/decisionrouter.cpp",
+        "src/decisionrouter.h",
+        "docs/ADR-001-DETECTOR-ROUTING.md"
+      ],
+      "title": "Router",
+      "notes": "Keep/Correct/Suggest/Abstain; safeConfirmed decision rules.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "evidence",
+      "kind": "implementation",
+      "paths": [
+        "src/localprofile.cpp",
+        "src/localprofile.h",
+        "src/profileverify.cpp",
+        "src/ngramdetector.cpp"
+      ],
+      "title": "Evidence",
+      "notes": "Local verified Hunspell full/control, stem indices and frozen quantized n-gram evidence; single processing owner.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation",
+      "aliases": [
+        "dictionary",
+        "dictionaries",
+        "словарь",
+        "словари",
+        "model",
+        "модель"
+      ]
+    },
+    {
+      "id": "gui",
+      "kind": "implementation",
+      "paths": [
+        "src/main.cpp",
+        "src/uisetup.cpp",
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp",
+        "src/Main.qml",
+        "src/clipboardwriter.cpp"
+      ],
+      "title": "Gui",
+      "notes": "Owned Qt preview; explicit Apply/Copy/Undo, not arbitrary application injection.",
+      "tests": [
+        "bin/test -silent"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "browser",
+      "kind": "lab_adapter",
+      "paths": [
+        "browser/adapter.js",
+        "browser/session.js",
+        "browser/prosemirror.js",
+        "browser/README.md"
+      ],
+      "title": "Browser",
+      "notes": "Owned textarea/ProseMirror fixtures; not a deployed Slack integration.",
+      "tests": [
+        "node tests/browser/adapter.test.mjs",
+        "node tests/browser/router.test.mjs",
+        "node tests/browser/run.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "fcitx",
+      "kind": "lab_adapter",
+      "paths": [
+        "src/fcitxlab.cpp",
+        "src/fcitxlabprofile.cpp",
+        "tools/fcitx_profile_lab.pro"
+      ],
+      "title": "Fcitx",
+      "notes": "Developer Fcitx composition transport and full local core profile.",
+      "tests": [],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "fixture",
+      "kind": "test",
+      "paths": [
+        "tests/chromium_ime/driver.mjs",
+        "tests/chromium_ime/adversarial-focus.mjs",
+        "tests/wayland_ime/keys.cpp"
+      ],
+      "title": "Fixture",
+      "notes": "Fixed native Chromium fixture; CDP observes, private VK types.",
+      "tests": [
+        "node --test tests/wayland_ime/space_telemetry_tests.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "reference",
+      "kind": "test_runner",
+      "paths": [
+        "tools/wayland_ime_lab.py",
+        "bin/test-wayland-ime"
+      ],
+      "title": "Reference",
+      "notes": "Private software Sway reference; no host display/GPU.",
+      "tests": [
+        "bin/test-wayland-ime"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "exact",
+      "kind": "test_runner",
+      "paths": [
+        "tools/hyprland_ime_lab.py",
+        "bin/test-hyprland-ime"
+      ],
+      "title": "Exact",
+      "notes": "Nested installed Hyprland; parent display/render access requires scoped owner approval.",
+      "tests": [
+        "bin/test-hyprland-ime"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "witness",
+      "kind": "diagnostic",
+      "paths": [
+        "tests/chromium_ime/addon-witness.mjs",
+        "tools/fcitxlabwitness.h",
+        "tools/core_entry_witness.cpp"
+      ],
+      "title": "Witness",
+      "notes": "Bounded lab addon/Core/grab counters; separate artifacts, no production fix.",
+      "tests": [
+        "node --test tests/wayland_ime/addon_witness_tests.mjs"
+      ],
+      "status": "implemented_lab"
+    },
+    {
+      "id": "server",
+      "kind": "diagnostic",
+      "paths": [
+        "docs/SERVER-GRAB-EPOCH-001.md",
+        "tools/server_grab_epoch.h",
+        "tools/server_route_witness_guard.py",
+        "tests/chromium_ime/server-route-witness.mjs",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "title": "Server",
+      "notes": "Exact010: old-after-done press1, current release1, callback0/1. No current host approval. Next closed wire lifetime primitive, not another unchanged trial.",
+      "tests": [
+        "node --test tests/wayland_ime/server_route_witness_tests.mjs"
+      ],
+      "status": "exact010_split_generation_observed"
+    },
+    {
+      "id": "licensing",
+      "kind": "contract",
+      "paths": [
+        "LICENSE",
+        "THIRD_PARTY.md",
+        "docs/DATA_POLICY.md",
+        "data/fcitx-frontend-source-lock.json",
+        "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
+        "patches/fcitx5/README.md"
+      ],
+      "title": "Licensing",
+      "notes": "Own code MIT; dependency/data licenses and provenance remain separate.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "app_policy",
+      "kind": "planned_contract",
+      "paths": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "title": "App Policy",
+      "notes": "Per-app opt-in; unavailable adapters must not appear supported.",
+      "tests": [],
+      "status": "planned"
+    },
+    {
+      "id": "current008",
+      "kind": "evidence_summary",
+      "paths": [
+        "docs/INPUT-GRAB-RACE-001.md",
+        "data/hyprland-grab-epoch-010-result.json",
+        "data/hyprland-server-route-009-result.json",
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "title": "Current010",
+      "notes": "Exact010 split-generation pair observed. Real-wire toy contrast PASS: drop0/1 vsdrain1/1. ActualFcitx repair pending; no unused host approval.",
+      "tests": [],
+      "status": "historical_evidence"
+    },
+    {
+      "id": "lifecycle",
+      "kind": "implementation_test",
+      "title": "Wire lifecycle contrast",
+      "paths": [
+        "tests/wayland_lifecycle/run.py",
+        "tests/wayland_lifecycle/wire_client.cpp",
+        "tests/wayland_lifecycle/wire_lifecycle.cpp",
+        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+        "data/wayland-lifecycle-001-result.json"
+      ],
+      "tests": [
+        "python3 tests/wayland_lifecycle/run.py"
+      ],
+      "status": "closed_wire_pass_not_fcitx_fix",
+      "notes": "Private actual libwayland socketpair; expected drop0/1 vsdrain1/1; one-server-grab and async barrier. No Fcitx/compositor/host input."
+    },
+    {
+      "id": "fcitx-drain-fixture",
+      "kind": "component",
+      "title": "Fcitx handoff and retained-grab validation",
+      "paths": [
+        "tests/fcitx_drain_server/README.md",
+        "tests/fcitx_drain_server/run.py",
+        "tests/fcitx_drain_server/server.cpp",
+        "tests/fcitx_drain_server/test_runner.py",
+        "tools/fcitx_frontend_build.py",
+        "tools/fcitx_frontend_lab.pro",
+        "data/fcitx-frontend-source-lock.json",
+        "patches/fcitx5/README.md",
+        "patches/fcitx5/0001-lab-grab-release-without-local-destroy.patch",
+        "tests/fcitx_drain_server/check_wrapper.py",
+        "tests/fcitx_drain_server/wrapper_ownership.cpp",
+        "data/wrapper-ownership-001-result.json",
+        "patches/fcitx5/0002-lab-track-listener-depth.patch",
+        "patches/fcitx5/0003-lab-bounded-grab-retirement.patch",
+        "tools/fcitx_retirement_candidate.py",
+        "docs/FCITX-RETIREMENT-REVIEW-001.md",
+        "data/retirement-review-001-result.json",
+        "docs/ACTUAL-FCITX-HANDOFF-001.md",
+        "data/actual-fcitx-handoff-001-result.json",
+        "data/fcitx-frontend-baseline-build-001-result.json",
+        "patches/fcitx5/keep-grab-lab.patch",
+        "patches/fcitx5/keep-grab-cancellation.patch",
+        "patches/fcitx5/keep-grab-lock.json",
+        "docs/FCITX-KEEP-GRAB-001.md",
+        "data/fcitx-keep-grab-001-result.json",
+        "data/native-private-frontend-001-result.json",
+        "tests/wayland_ime/test_private_frontend.py",
+        "tests/wayland_ime/test_hyprland_private_frontend.py",
+        "data/fcitx-keep-grab-modifier-001-result.json",
+        "data/hyprland-keep-grab-011-result.json",
+        "docs/SLACK-DESKTOP-001.md",
+        "data/slack-native-002-result.json",
+        "data/slack-native-003-result.json",
+        "tools/a11y_bridge_lab.py",
+        "tests/slack_probe/test_private_bridge_lab.py",
+        "docs/A11Y-BRIDGE-CONTROL-001.md",
+        "data/a11y-bridge-control-001-result.json",
+        "tools/slack_https_bridge.py",
+        "tests/slack_probe/test_https_bridge.py",
+        "docs/SLACK-ISOLATED-001.md",
+        "data/slack-isolated-001-result.json"
+      ],
+      "tests": [
+        "python3 tests/fcitx_drain_server/test_runner.py",
+        "python3 tests/fcitx_drain_server/check_wrapper.py --run",
+        "python3 tests/fcitx_drain_server/check_wrapper.py --run --depth",
+        "python3 tools/fcitx_retirement_candidate.py --syntax"
+      ],
+      "status": "one_exact_nested_hyprland_preflight_pass_not_live_release",
+      "notes": "Retained Fcitx candidate samepeer0/1->1/1, knowncleanupfixed. ClosedSway18+focus4 and one owner-approved exactnestedHyprland01118+focus4 PASS. Approvalconsumed; noSlack/regular-session/releaseproof."
+    },
+    {
+      "id": "handoff-screen",
+      "kind": "component",
+      "title": "Cooperative IME handoff symbolic screen",
+      "paths": [
+        "tests/handoff_screen/README.md",
+        "tests/handoff_screen/model.py",
+        "tests/handoff_screen/test_model.py",
+        "tests/handoff_screen/run.py",
+        "data/handoff-screen-001-result.json",
+        "docs/HANDOFF-PROTOCOL-MAPPING-001.md"
+      ],
+      "tests": [
+        "python3 -m unittest discover -s tests/handoff_screen -v",
+        "python3 tests/handoff_screen/run.py --run"
+      ],
+      "status": "symbolic_contract_only_not_transport_fix",
+      "notes": "Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6 rejection cases plus1 pending case;11110 command prefixes include terminal no-ops. Explicit ack is hypothetical, not existing protocol. No runtime/focus/modifier/cleanup proof."
+    },
+    {
+      "id": "application-policy",
+      "kind": "component",
+      "paths": [
+        "src/applicationpolicy.h",
+        "src/applicationpolicy.cpp",
+        "tests/application_policy/application_policy_tests.cpp",
+        "tests/fcitx_transport/preedit_reentry_tests.cpp",
+        "docs/APPLICATION-POLICY.md",
+        "data/application-policy-001-result.json",
+        "src/compositiondisable.h",
+        "src/compositiondisable.cpp",
+        "tests/application_policy/disable_tests.cpp",
+        "data/composition-disable-001-result.json",
+        "tests/fcitx_transport/disable_reentry_tests.cpp",
+        "data/disable-adapter-001-result.json",
+        "data/disable-receipt-001-result.json",
+        "docs/ADR-003-OFF-SUBMISSION.md",
+        "data/disable-submission-001-result.json",
+        "tools/fcitx_disable_lab.pro",
+        "tests/wayland_ime/test_disable_suite_guards.py",
+        "src/applicationpermissions.h",
+        "src/applicationpermissions.cpp",
+        "tests/application_policy/permissions_tests.cpp",
+        "data/application-permissions-001-result.json",
+        "tests/fcitx_transport/application_off_tests.cpp",
+        "data/application-off-001-result.json",
+        "data/application-on-001-result.json",
+        "docs/ADR-004-CONTEXT-RESOURCES.md",
+        "data/context-resources-001-result.json"
+      ],
+      "title": "Default-deny application policy",
+      "notes": "Shared Off/On, safe resume, lazy holders and terminal Off cleanup verified in owned LAB; production identity/installation not enabled.",
+      "tests": [
+        "bin/test"
+      ],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "current-handoff",
+      "kind": "contract",
+      "title": "Current compact handoff",
+      "paths": [
+        "docs/NEXT.md"
+      ],
+      "notes": "Start here; archive is not normal entry context.",
+      "tests": [],
+      "status": "source_contract_or_implementation"
+    },
+    {
+      "id": "wayland-object-id-scope",
+      "kind": "experiment",
+      "title": "Wayland object ID scope",
+      "paths": [
+        "tests/wayland_identity/README.md",
+        "tests/wayland_identity/run.py",
+        "tests/wayland_identity/object_id_scope.cpp",
+        "data/wayland-object-id-scope-001-result.json"
+      ],
+      "notes": "Real private-socket core surface object IDs collide across connections; no native window/Fcitx proof.",
+      "tests": [
+        "python3 -m unittest discover -s tests/wayland_identity",
+        "python3 tests/wayland_identity/run.py --run"
+      ],
+      "status": "closed_wire_namespace_counterexample"
+    },
+    {
+      "id": "window-provenance",
+      "kind": "experiment",
+      "title": "Native window provenance",
+      "paths": [
+        "docs/WINDOW-PROVENANCE-001.md",
+        "tests/window_provenance/README.md",
+        "tests/window_provenance/run.py",
+        "tests/window_provenance/native_windows.cpp",
+        "data/window-provenance-001-result.json"
+      ],
+      "notes": "Two same-appid native windows on owned Sway; stable IDs agree across observer connections and change on recreation. No Fcitx/field binding.",
+      "tests": [
+        "python3 -m unittest discover -s tests/window_provenance",
+        "python3 tests/window_provenance/run.py --run"
+      ],
+      "status": "closed_native_window_identity_only"
+    },
+    {
+      "id": "closed-hyprland-mapping",
+      "kind": "experiment",
+      "title": "Closed Hyprland window mapping",
+      "paths": [
+        "tools/closed_hyprland_mapping.py",
+        "tests/closed_mapping/test_boundary.py",
+        "tests/window_provenance/MAPPING.md",
+        "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md",
+        "data/closed-mapping-preparation-001-result.json",
+        "vendor/wayland/sources.json",
+        "data/closed-mapping-001-result.json",
+        "data/closed-mapping-002-result.json",
+        "data/closed-mapping-003-result.json"
+      ],
+      "notes": "Three individually approved GPU trials consumed. Parent feedback resolves fixed render; Hyprland allocator fails before observed feedback. Timing hypothesis unproven; next noGPU actual-library control.",
+      "tests": [
+        "python3 -m unittest discover -s tests/closed_mapping"
+      ],
+      "status": "trial_failed_diagnostics_fixed_repeat_pending"
+    },
+    {
+      "id": "direct-hyprland-mapping",
+      "kind": "experiment",
+      "title": "Route B host-parent nested Hyprland mapping probe",
+      "paths": [
+        "tools/hyprland_mapping_probe.py",
+        "tests/closed_mapping/test_direct_mapping.py",
+        "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
+        "data/direct-mapping-fd-control-001-result.json",
+        "data/direct-hyprland-mapping-001-result.json"
+      ],
+      "notes": "One separately approved direct installedHyprland trial passed2windows/2observers/lifecycle; approval consumed. Field/Fcitx binding remains next gate.",
+      "tests": [
+        "python3 -m unittest discover -s tests/closed_mapping"
+      ],
+      "status": "actual_native_mapping_pass_field_binding_unproven"
+    },
+    {
+      "id": "aquamarine-readiness",
+      "kind": "experiment",
+      "title": "Aquamarine feedback readiness and parallel review",
+      "paths": [
+        "tools/aquamarine_readiness_patch.py",
+        "tools/hyprland_feedback_parent.py",
+        "tests/aquamarine_readiness/test_patch_confinement.py",
+        "docs/AQUAMARINE-READINESS-EXPERIMENT.md",
+        "docs/PARALLEL-REVIEW-001.md",
+        "data/parallel-review-001-result.json",
+        "data/hyprland-feedback-parent-001-result.json"
+      ],
+      "notes": "Actual noGPU baseline distinguishes immediate/deferred feedback; Claude patch prepared,8confinement tests pass. Grok/Gemini targeted review complete; patched build/runtime still pending.",
+      "tests": [
+        "python3 -I -m unittest discover -s tests/aquamarine_readiness -p 'test_*.py'"
+      ],
+      "status": "prepared_patch_unbuilt"
+    },
+    {
+      "id": "fcitx-field-seam",
+      "kind": "experiment",
+      "title": "Existing Fcitx field lifecycle seam",
+      "paths": [
+        "docs/FCITX-FIELD-SEAM-001.md",
+        "data/field-lifecycle-current-001-result.json",
+        "data/field-lifecycle-build-001-result.json",
+        "src/fcitxlab.cpp",
+        "tests/chromium_ime/adversarial-focus.mjs"
+      ],
+      "notes": "Current noGPU reference fixture18+4 PASS, existingfocus/caps lease invalidation. No newfrontendfieldpatch or liveSlack authority.",
+      "tests": [],
+      "status": "reference_field_lifecycle_pass_native_app_pending"
+    },
+    {
+      "id": "slack-bootstrap",
+      "kind": "experiment",
+      "title": "Real-profile Slack bootstrap feasibility (step 0)",
+      "paths": [
+        "docs/SLACK-BOOTSTRAP-PROBE.md",
+        "tools/slack_bootstrap_probe.py",
+        "tools/slack_https_bridge.py",
+        "tests/slack_probe/test_bootstrap_probe.py",
+        "data/slack-bootstrap-dryrun-001-result.json",
+        "docs/SLACK-SUPERVISED-SESSION-PLAN.md"
+      ],
+      "notes": "Dry runs PASS: Chromium control maps window 0.44s; empty-profile offline Slack registry only. Live real-profile run needs one-shot owner approval.",
+      "tests": [
+        "python3 -m unittest discover -s tests/slack_probe"
+      ],
+      "status": "prepared_dry_run_pass_live_not_run"
+    },
+    {
+      "id": "slack-session-blueprint",
+      "kind": "plan",
+      "title": "Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx",
+      "paths": [
+        "docs/SLACK-SESSION-BLUEPRINT.md",
+        "docs/SLACK-SUPERVISED-SESSION-PLAN.md",
+        "tools/slack_bootstrap_probe.py",
+        "tools/hyprland_ime_lab.py",
+        "tools/hyprland_mapping_probe.py",
+        "tools/closed_hyprland_mapping.py",
+        "tools/native_ime_clients.py",
+        "tools/slack_injector.py",
+        "tools/slack_supervisor.py",
+        "src/sessionarm.h",
+        "tools/fcitx_slack_lab.pro",
+        "tests/slack_session/sessionarm_tests.cpp",
+        "tools/fcitx_slack_gate_test.pro",
+        "tests/slack_session/raskladslackgatetest.conf",
+        "data/slack-gate-offline-001-result.json"
+      ],
+      "notes": "Steps 1-3 done offline incl. gate test 5/5 with negative control; next: supervisor+helper wiring, nested Hyprland (owner approval).",
+      "tests": [
+        "python3 -m unittest discover -s tests/slack_session",
+        "python3 -m unittest discover -s tests/slack_probe",
+        "python3 -m unittest discover -s tests/closed_mapping",
+        "python3 -I tools/wayland_ime_lab.py --run --slack-gate"
+      ],
+      "status": "in_progress"
+    }
+  ],
+  "edges": [
+    {
+      "from": "gui",
+      "to": "converter",
+      "relation": "explicit conversion",
+      "evidence": [
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "gui",
+      "to": "evidence",
+      "relation": "analysis worker local provider",
+      "evidence": [
+        "src/documentcontroller.cpp",
+        "src/analysisservice.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "evidence",
+      "to": "router",
+      "relation": "supplies dictionary/model evidence",
+      "evidence": [
+        "src/localprofile.cpp",
+        "src/localprofile.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "router",
+      "to": "architecture",
+      "relation": "implements safeConfirmed policy",
+      "evidence": [
+        "src/decisionrouter.cpp",
+        "src/decisionrouter.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "browser",
+      "to": "architecture",
+      "relation": "separate snapshot/execution boundary",
+      "evidence": [
+        "browser/adapter.js",
+        "browser/session.js"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "fcitx",
+      "to": "evidence",
+      "relation": "profile bridge reuses local decision core",
+      "evidence": [
+        "src/fcitxlab.cpp",
+        "src/fcitxlabprofile.cpp"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "fixture",
+      "to": "fcitx",
+      "relation": "native IME exercise",
+      "evidence": [
+        "tests/chromium_ime/driver.mjs",
+        "tests/chromium_ime/adversarial-focus.mjs"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "reference",
+      "to": "fixture",
+      "relation": "launches isolated reference fixture",
+      "evidence": [
+        "tools/wayland_ime_lab.py",
+        "bin/test-wayland-ime"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "exact",
+      "to": "fixture",
+      "relation": "launches exact nested fixture",
+      "evidence": [
+        "tools/hyprland_ime_lab.py",
+        "bin/test-hyprland-ime"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "witness",
+      "to": "fixture",
+      "relation": "case2 interval sampling",
+      "evidence": [
+        "tests/chromium_ime/addon-witness.mjs",
+        "tools/fcitxlabwitness.h"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "server",
+      "to": "exact",
+      "relation": "optional compositor-only preload",
+      "evidence": [
+        "tools/server_route_witness_guard.py",
+        "tests/chromium_ime/server-route-witness.mjs"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "verified_source"
+    },
+    {
+      "from": "current008",
+      "to": "server",
+      "relation": "motivates next boundary observation",
+      "evidence": [
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_evidence"
+    },
+    {
+      "from": "current008",
+      "to": "fcitx",
+      "relation": "missing press observed before callback; cause unresolved",
+      "evidence": [
+        "docs/GRAB-ENTRY-WITNESS-001.md",
+        "docs/SERVER-ROUTE-WITNESS-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_evidence"
+    },
+    {
+      "from": "app_policy",
+      "to": "browser",
+      "relation": "future product integration gate",
+      "evidence": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
+    },
+    {
+      "from": "app_policy",
+      "to": "fcitx",
+      "relation": "future product integration gate",
+      "evidence": [
+        "docs/APPLICATION-POLICY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
+    },
+    {
+      "from": "policy",
+      "to": "exact",
+      "relation": "scoped permission and isolation required",
+      "evidence": [
+        "AGENTS.md",
+        "SECURITY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_contract"
+    },
+    {
+      "from": "licensing",
+      "to": "evidence",
+      "relation": "asset provenance separate from own MIT code",
+      "evidence": [
+        "LICENSE",
+        "THIRD_PARTY.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "documented_contract"
+    },
+    {
+      "from": "lifecycle",
+      "to": "fcitx",
+      "relation": "candidate retirement primitive; actualfrontend repair not implemented",
+      "evidence": [
+        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "planned"
+    },
+    {
+      "from": "window-provenance",
+      "to": "application-policy",
+      "relation": "candidate lifecycle seam, production join unimplemented",
+      "evidence": [
+        "docs/WINDOW-PROVENANCE-001.md"
+      ],
+      "confidence": "explicit",
+      "evidence_kind": "design_requirement"
+    }
+  ]
+}

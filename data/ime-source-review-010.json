@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "sourceOnly": true,
+  "installedLibrariesChanged": false,
+  "files": [
+    {
+      "name": "fcitx5/5.1.23/waylandimserverv2.cpp",
+      "url": "https://github.com/fcitx/fcitx5/blob/5.1.23/src/frontend/waylandim/waylandimserverv2.cpp",
+      "sha256": "4c6bb63dac958b1cad6a9a4adf6629b0bf30f001c4d2844dff3d6459fe810b82"
+    },
+    {
+      "name": "hyprland/efb5099/InputMethodV2.cpp",
+      "url": "https://github.com/hyprwm/Hyprland/blob/efb50993780079460b0cbed1363e2166a2de1d9f/src/protocols/InputMethodV2.cpp",
+      "sha256": "a1f5f7827fa44cffac0352bdb2e5bacb01b83f6f2f984fc69b73ade12e89677f"
+    },
+    {
+      "name": "hyprland/efb5099/InputManager.cpp",
+      "url": "https://github.com/hyprwm/Hyprland/blob/efb50993780079460b0cbed1363e2166a2de1d9f/src/managers/input/InputManager.cpp",
+      "sha256": "feedf32e2e3d23aeaed7a02ef4ab94be2d66f4b22873b3166026da1e9ece4765"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "scope": "owned fixture per-context allocation/reclamation; no production enablement",
+  "emptyContextsTested": 32,
+  "offOnSdkModes": 5,
+  "resourceCaseGroups": [
+    "empty holders",
+    "InFlight and terminal reclamation",
+    "same-key supersession with different-key preservation"
+  ],
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "priorMemoryCompatibility": {
+    "offReceiptSubmission": 16,
+    "preedit": 6,
+    "outsideFixtureGuardPassed": true
+  },
+  "abiObjectSizesOnly": {
+    "LabProperty": 16,
+    "LabState": 256
+  },
+  "rssSavingsMeasured": false,
+  "stableHookCount": 7,
+  "profileCacheUnloaded": false,
+  "pollingAdded": false,
+  "closedCycle": {
+    "application": "installed Chromium native Wayland IM",
+    "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+    "browserVersion": "Chrome/155.0.8059.84",
+    "cdpTyping": false,
+    "checks": 8,
+    "dbusInputFrontendAbsent": true,
+    "disableCompositionStarted": true,
+    "disableEventClasses": [
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "compositionupdate"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "beforeinput"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "input"
+      },
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": false,
+        "type": "compositionend"
+      }
+    ],
+    "disableNoDuplicateOriginal": true,
+    "disableOriginalSettled": true,
+    "disableOriginalUndo": true,
+    "disableRawPassthrough": true,
+    "driverExitCode": 0,
+    "exitCode": 0,
+    "frontendVariant": "keep-grab",
+    "hostConfigurationChanged": false,
+    "hostInput": false,
+    "hyprlandSupport": false,
+    "nativeDeliveryGuarantee": false,
+    "offAgainPassthrough": true,
+    "onMidTokenPreserved": true,
+    "onNewWordCorrected": true,
+    "passed": true,
+    "privateFrontendArtifactSha256": "ec05519adddcff42f31d0af09f8634a62896cb7a3a7a3c3c70b556e3efdc8de7",
+    "privateFrontendMapped": true,
+    "privateSeedKeyboard": true,
+    "referenceCompositor": "Sway/wlroots software only",
+    "sandboxed": true,
+    "schema": 1,
+    "slackSupport": false,
+    "submissionOnly": true,
+    "syntheticInputOnly": true,
+    "syntheticOffTrigger": true
+  },
+  "normalRegression": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "independentReview": "lazy holders, narrow reclamation sites and superseded release fix approved; callback sender test corrected to true cross-context reentry",
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "893eb21f1035baa21de915b1a65d23057ac7de139b05a998fe6495471210f7d8",
+    "tests/fcitx_transport/application_off_tests.cpp": "ae28e1abfe9ca5b8deb82232d05b2e145bc2b1720ab0f7af04b3e0d229ebf1ec"
+  }
+}

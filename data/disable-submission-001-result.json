@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "scope": "owned Sway/Chromium; one context Off via synthetic trigger, not per-app UI",
+  "contract": "one native submission attempt; local ownership released; delivery unconfirmed",
+  "firstReceiptExperiment": {
+    "passed": false,
+    "freshTrustedReceiptObserved": false,
+    "reason": "no fresh owned-field commit evidence",
+    "eventClasses": [
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "compositionupdate"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "beforeinput"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "input"
+      },
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": false,
+        "type": "compositionend"
+      }
+    ]
+  },
+  "submissionExperiment": {
+    "application": "installed Chromium native Wayland IM",
+    "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+    "browserVersion": "Chrome/155.0.8059.84",
+    "cdpTyping": false,
+    "checks": 5,
+    "dbusInputFrontendAbsent": true,
+    "disableCompositionStarted": true,
+    "disableEventClasses": [
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "compositionupdate"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "beforeinput"
+      },
+      {
+        "inputType": "insertCompositionText",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": true,
+        "type": "input"
+      },
+      {
+        "inputType": "",
+        "length": 6,
+        "targetIndex": 0,
+        "trusted": false,
+        "type": "compositionend"
+      }
+    ],
+    "disableNoDuplicateOriginal": true,
+    "disableOriginalSettled": true,
+    "disableOriginalUndo": true,
+    "disableRawPassthrough": true,
+    "driverExitCode": 0,
+    "exitCode": 0,
+    "frontendVariant": "keep-grab",
+    "hostConfigurationChanged": false,
+    "hostInput": false,
+    "hyprlandSupport": false,
+    "nativeDeliveryGuarantee": false,
+    "passed": true,
+    "privateFrontendArtifactSha256": "ec05519adddcff42f31d0af09f8634a62896cb7a3a7a3c3c70b556e3efdc8de7",
+    "privateFrontendMapped": true,
+    "privateSeedKeyboard": true,
+    "referenceCompositor": "Sway/wlroots software only",
+    "sandboxed": true,
+    "schema": 1,
+    "slackSupport": false,
+    "submissionOnly": true,
+    "syntheticInputOnly": true,
+    "syntheticOffTrigger": true
+  },
+  "normalRegression": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "privateFrontendMapped": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "actualSdkMemoryScenarios": 16,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "fullSuite": {
+    "passed": 602,
+    "failed": 0,
+    "skipped": 1
+  },
+  "policyAssertions": 66,
+  "disableAssertions": 220,
+  "runnerGuardTests": 60,
+  "independentSourceReview": "architecture critique adopted; submission lifetime and final driver provenance approved",
+  "nativeDeliveryGuarantee": false,
+  "userOffEnabled": false,
+  "newHostTrial": false,
+  "readyForLiveUse": false,
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "3a4988bee6c1f474b0fa78abe560d6ce3a0cff306bd162eb4c9e94600b761330",
+    "src/compositiondisable.cpp": "2f1d4c5be6493d7f57b91da21933c61def8f7a04545e736a3af326202203f77b",
+    "src/compositiondisable.h": "c58519178bc94755038e50e030221ca6af5374b23306e19faca3b55b41300afb",
+    "tests/chromium_ime/driver.mjs": "c15f26af4f097ead609e4949d86c480b3e5fd9c140cabf92f87a824053baec07",
+    "tests/wayland_ime/keys.cpp": "a4cda40b87cae1e9b0ce5fd728a12bdc217518bd0d51ae5c1af6996eb6dfb9d4",
+    "tools/wayland_ime_lab.py": "0651197fe709dfd8a02aa72833cabd53460b845223b8448c53993a8b9c9d70f2",
+    "tools/fcitx_disable_lab.pro": "05daf48490bdccbb7a1d8d3381bab2e6a46884cb4e146e8bb52edb03b532499d"
+  },
+  "addonSha256": "412e5e1b0bcd6aee104d0d5bfaa85fe1f309db4c0f6e4a17e1328f7a860ee2db"
+}

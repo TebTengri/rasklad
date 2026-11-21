@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "slack": {
+    "backend": "wayland",
+    "comparisonOutcome": "no-peers-in-either",
+    "echPolicy": "deny",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": false,
+    "target": "slack",
+    "textRead": false,
+    "trials": [
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "displayInit": false,
+          "fatal": false,
+          "secretService": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      },
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": true,
+        "mode": "enabled",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 7
+        },
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "displayInit": false,
+          "fatal": false,
+          "secretService": false
+        },
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  },
+  "chromiumControl": {
+    "backend": "wayland",
+    "comparisonOutcome": "enabled-only-peers",
+    "echPolicy": "deny",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": true,
+    "target": "chromium",
+    "textRead": false,
+    "trials": [
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 11
+        },
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "displayInit": false,
+          "fatal": false,
+          "secretService": false
+        },
+        "target": "chromium",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": null
+      },
+      {
+        "backend": "wayland",
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 64,
+        "isEnabled": true,
+        "mode": "enabled",
+        "passed": true,
+        "privateCompositorReady": true,
+        "processKinds": {
+          "gpu": 0,
+          "main": 1,
+          "network": 0,
+          "other": 0,
+          "renderer": 0,
+          "unknown": 11
+        },
+        "stderrCategories": {
+          "busUnavailable": true,
+          "certificate": false,
+          "displayInit": false,
+          "fatal": false,
+          "secretService": false
+        },
+        "target": "chromium",
+        "targetPeers": 1,
+        "textRead": false,
+        "visibleWindows": null
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  },
+  "limitations": [
+    "Wayland window visibility not measured; null is not zero.",
+    "No editable text or correction exercised.",
+    "Unknown process roles cannot establish renderer absence.",
+    "Shared busUnavailable category is not proof of Slack failure cause."
+  ]
+}

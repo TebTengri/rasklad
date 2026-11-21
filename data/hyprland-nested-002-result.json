@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "runnerCommit": "e530367",
+  "passed": false,
+  "phase": "compositor_start",
+  "exitCode": -6,
+  "startupReason": "backend_creation_failed",
+  "parentDisplayConnection": true,
+  "renderNodeGranted": true,
+  "hostConfigurationWritten": false,
+  "slackConnected": false,
+  "typingTested": false,
+  "exactCauseConfirmed": false,
+  "separateReadOnlyDiscoveryProbe": {
+    "hostReturnCode": 0,
+    "privateWithoutSysfsOrGpuNodesReturnCode": -22,
+    "hostDisplayConnection": false,
+    "renderNodeOpenedByProbe": false,
+    "limitation": "different sysfs AND device visibility; does not isolate sysfs as sole cause"
+  }
+}

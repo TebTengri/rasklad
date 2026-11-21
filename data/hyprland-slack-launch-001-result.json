@@ -1,0 +1,94 @@
+{
+ "approval": "owner one-shot, consumed (first attempt refused at preflight: host Slack running, nothing launched)",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch",
+ "commit": "a76fcce",
+ "conclusion": "Real Slack runs in nested Hyprland with the session addon: window mapped (class slack), Fcitx program slack, addon context records delivered, zero commits, clean stop and profile. passed=false only because relayRefused=4 (relay max_active 16); raised to 32.",
+ "date": "2026-11-20",
+ "ownerNote": "owner did not click during the observation; the composer/search/composer check was not performed",
+ "result": {
+  "addonSawSlack": true,
+  "armLatchWrittenBeforeLaunch": true,
+  "bridgeStats": {
+   "accepted": 40,
+   "blocked": 20,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 9696623,
+   "opened": 20,
+   "rejectedDomains": {
+    "slackb.com": 20
+   },
+   "tlsDenied": 0
+  },
+  "commitRecords": 0,
+  "compositorStayedAlive": true,
+  "contextRecords": [
+   [
+    1.8,
+    "k",
+    "other",
+    1
+   ],
+   [
+    1.8,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    23.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    23.4,
+    "k",
+    "normal",
+    1
+   ],
+   [
+    23.4,
+    "i",
+    "normal",
+    1
+   ]
+  ],
+  "contextRecordsTruncated": false,
+  "dbusInputFrontendAbsent": true,
+  "exactCompositor": "installed nested Hyprland",
+  "fcitxAlive": true,
+  "fcitxAliveAfterGate": true,
+  "fcitxPrograms": [
+   "slack"
+  ],
+  "finishErrors": [],
+  "foreignWindowsMax": 0,
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "inputInjected": false,
+  "maxTrialSeconds": 150,
+  "observedSeconds": 90.2,
+  "outerClean": true,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "relayRefused": 4,
+  "renderNodeGranted": true,
+  "singletonLockLeft": false,
+  "singletonRelease": "released",
+  "slackConnected": true,
+  "slackExitedEarly": false,
+  "slackLaunch": true,
+  "slackProcessesRemaining": 0,
+  "slackStop": "graceful",
+  "slackWindowClasses": [
+   "slack"
+  ],
+  "textRead": false,
+  "windowMapped": true,
+  "windowMappedSeconds": 2.2
+ },
+ "schema": 1
+}

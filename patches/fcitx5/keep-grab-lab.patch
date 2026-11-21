@@ -1,0 +1,187 @@
+--- a/src/frontend/waylandim/waylandimserverv2.h
++++ b/src/frontend/waylandim/waylandimserverv2.h
+@@ -144,6 +144,16 @@
+     std::unique_ptr<EventSourceTime> timeEvent_;
+     std::unique_ptr<VirtualInputContextManager> virtualICManager_;
+ 
++    // Private keep-grab experiment; inactive keys deliberately fail the run.
++    bool labInactiveRaw_ = false;
++    void labForwardInactive(uint32_t time, uint32_t key, uint32_t state);
++    bool labActive_ = false;
++    unsigned labWorkDepth_ = 0;
++    struct LabWorkGuard {
++        unsigned &depth;
++        explicit LabWorkGuard(unsigned &value) : depth(value) { ++depth; }
++        ~LabWorkGuard() { --depth; }
++    };
+     bool pendingActivate_ = false;
+     bool pendingDeactivate_ = false;
+     bool vkReady_ = false;
+--- a/src/frontend/waylandim/waylandimserverv2.cpp
++++ b/src/frontend/waylandim/waylandimserverv2.cpp
+@@ -9,6 +9,7 @@
+ #include <sys/types.h>
+ #include <algorithm>
+ #include <cstdint>
++#include <cstdlib>
+ #include <cstring>
+ #include <ctime>
+ #include <memory>
+@@ -148,6 +149,8 @@
+     : VirtualInputContextGlue(inputContextManager), server_(server),
+       seat_(std::move(seat)),
+       ic_(server->inputMethodManagerV2()->getInputMethod(seat_.get())) {
++    const auto *raw = std::getenv("RASKLAD_KEEP_GRAB_INACTIVE_RAW");
++    labInactiveRaw_ = raw && std::strcmp(raw, "1") == 0;
+     if (server_->parent()->persistentVirtualKeyboard()) {
+         vk_.reset(server_->virtualKeyboardManagerV1()->createVirtualKeyboard(
+             seat_.get()));
+@@ -171,10 +174,11 @@
+     ic_->done().connect([this]() {
+         WAYLANDIM_DEBUG() << "DONE";
+         ++serial_;
++        if ((pendingDeactivate_ || pendingActivate_) && labWorkDepth_) { std::_Exit(125); }
+         if (pendingDeactivate_) {
+             pendingDeactivate_ = false;
+-            keyboardGrab_.reset();
+-            repeatInfo_.reset();
++            labActive_ = false;
++            // Keep grab + its repeat metadata; repeat timer is stopped below.
+             // This is the only place we update wayland xkb mask, so it is ok to
+             // reset it to 0. This breaks the caps lock or num lock. But we have
+             // no other option until we can listen to the mod change globally.
+@@ -204,6 +208,10 @@
+         }
+         if (pendingActivate_) {
+             pendingActivate_ = false;
++            labActive_ = true;
++            timeEvent_->setEnabled(false);
++            repeatKey_ = 0;
++            repeatSym_ = FcitxKey_None;
+             if (!server_->parent()->persistentVirtualKeyboard()) {
+                 vk_.reset();
+                 vkReady_ = false;
+@@ -211,15 +219,10 @@
+                     server_->virtualKeyboardManagerV1()->createVirtualKeyboard(
+                         seat_.get()));
+             }
+-            // There can be only one grab. Always release old grab first.
+-            // It is possible when switching between two client, there will be
+-            // two activate. In that case we will have already one grab. The
+-            // second request would fail and cause invalid object.
+-            keyboardGrab_.reset();
+-            keyboardGrab_.reset(ic_->grabKeyboard());
++            // Private experiment: connect once, retain the seat-wide grab.
+             if (!keyboardGrab_) {
+-                WAYLANDIM_DEBUG() << "Failed to grab keyboard";
+-            } else {
++                keyboardGrab_.reset(ic_->grabKeyboard());
++                if (!keyboardGrab_) { std::_Exit(125); }
+                 keyboardGrab_->keymap().connect(
+                     [this](uint32_t format, int32_t fd, uint32_t size) {
+                         keymapCallback(format, fd, size);
+@@ -240,9 +243,9 @@
+                     [this](int32_t rate, int32_t delay) {
+                         repeatInfoCallback(rate, delay);
+                     });
+-                focusInWrapper();
+-                updateSurroundingTextWrapper();
+-            }
++            }
++            focusInWrapper();
++            updateSurroundingTextWrapper();
+         }
+         // force some update in response to done.
+         // Some zwp_input_method_v2 implementation wants to synchronize the
+@@ -262,7 +265,7 @@
+     ic_->textChangeCause().connect([this](uint32_t cause) {
+         WAYLANDIM_DEBUG() << "TEXTCHANGECAUSE:" << cause << keyboardGrab_.get();
+     });
+-    ic_->unavailable().connect([]() { WAYLANDIM_DEBUG() << "UNAVAILABLE"; });
++    ic_->unavailable().connect([]() { std::_Exit(125); });
+     timeEvent_ = server_->instance()->eventLoop().addTimeEvent(
+         CLOCK_MONOTONIC, now(CLOCK_MONOTONIC), 1,
+         [this](EventSourceTime *, uint64_t) {
+@@ -280,11 +283,14 @@
+ }
+ 
+ WaylandIMInputContextV2::~WaylandIMInputContextV2() {
++    if (labWorkDepth_) { std::_Exit(125); }
+     server_->remove(seat_.get());
+     destroy();
+ }
+ 
+ void WaylandIMInputContextV2::repeat() {
++    if (!labActive_) { std::_Exit(125); }
++    LabWorkGuard work(labWorkDepth_);
+     if (!realFocus()) {
+         return;
+     }
+@@ -417,6 +423,7 @@
+ 
+ void WaylandIMInputContextV2::keymapCallback(uint32_t format, int32_t fd,
+                                              uint32_t size) {
++    vkReady_ = false;
+     WAYLANDIM_DEBUG() << "keymapCallback";
+     if (!server_->context_) {
+         server_->context_.reset(xkb_context_new(XKB_CONTEXT_NO_FLAGS));
+@@ -486,9 +493,27 @@
+     server_->parent_->wayland()->call<IWaylandModule::reloadXkbOption>();
+ }
+ 
++void WaylandIMInputContextV2::labForwardInactive(uint32_t time, uint32_t key,
++                                                uint32_t state) {
++    // Same live seat grab, immediate physical event. No Core/focus/text path.
++    if (!labInactiveRaw_ || !keyboardGrab_ || !vk_ || !vkReady_ ||
++        !server_->keymap_ || state > WL_KEYBOARD_KEY_STATE_PRESSED ||
++        key > UINT32_MAX - 8 ||
++        key + 8 < xkb_keymap_min_keycode(server_->keymap_.get()) ||
++        key + 8 > xkb_keymap_max_keycode(server_->keymap_.get())) {
++        std::_Exit(125);
++    }
++    vk_->key(time, key, state);
++}
++
+ void WaylandIMInputContextV2::keyCallback(uint32_t serial, uint32_t time,
+                                           uint32_t key, uint32_t state) {
+     FCITX_UNUSED(serial);
++    if (!labActive_) {
++        labForwardInactive(time, key, state);
++        return;
++    }
++    LabWorkGuard work(labWorkDepth_);
+     time_ = time;
+     if (!server_->state_) {
+         return;
+--- a/src/frontend/waylandim/waylandim.cpp
++++ b/src/frontend/waylandim/waylandim.cpp
+@@ -6,6 +6,8 @@
+  */
+ #include "waylandim.h"
+ #include <memory>
++#include <cstdlib>
++#include <cstring>
+ #include <string>
+ #include "fcitx-utils/log.h"
+ #include "fcitx-utils/misc_p.h"
+@@ -32,6 +34,20 @@
+ 
+ WaylandIMModule::WaylandIMModule(Instance *instance) : instance_(instance) {
+     reloadConfig();
++    auto labEquals = [](const char *name, const char *value) {
++        auto *actual = std::getenv(name);
++        return actual && std::strcmp(actual, value) == 0;
++    };
++    if (!labEquals("RASKLAD_FCITX_KEEP_GRAB_LAB", "1") ||
++        !labEquals("RASKLAD_NATIVE_WAYLAND_LAB", "1") ||
++        !labEquals("HOME", "/home/lab") ||
++        !labEquals("XDG_RUNTIME_DIR", "/run/lab") ||
++        !labEquals("WAYLAND_DISPLAY", "wayland-lab") ||
++        std::getenv("DISPLAY") || std::getenv("WAYLAND_SOCKET") ||
++        std::getenv("WAYLAND_DEBUG") || std::getenv("RASKLAD_PARENT_WAYLAND_FD") ||
++        !*config_.persistentVirtualKeyboard || !*config_.preferKeyEvent) {
++        std::_Exit(125);
++    }
+     persistentVirtualKeyboard_ = *config_.persistentVirtualKeyboard;
+     createdCallback_ =
+         wayland()->call<IWaylandModule::addConnectionCreatedCallback>(

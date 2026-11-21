@@ -1,0 +1,41 @@
+# rasklad — карта заметок
+
+Откройте именно `docs/knowledge` как существующее хранилище Obsidian.
+Здесь только производные публичные заметки; build/, профили и корпуса сюда не входят.
+Исходный индекс и команды — в репозитории rasklad, а не в настройках Obsidian.
+
+## Компоненты
+
+- [Policy](policy.md)
+- [Architecture](architecture.md)
+- [Converter](converter.md)
+- [Router](router.md)
+- [Evidence](evidence.md)
+- [Gui](gui.md)
+- [Browser](browser.md)
+- [Fcitx](fcitx.md)
+- [Fixture](fixture.md)
+- [Reference](reference.md)
+- [Exact](exact.md)
+- [Witness](witness.md)
+- [Server](server.md)
+- [Licensing](licensing.md)
+- [App Policy](app_policy.md)
+- [Current010](current008.md)
+- [Wire lifecycle contrast](lifecycle.md)
+- [Fcitx handoff and retained-grab validation](fcitx-drain-fixture.md)
+- [Cooperative IME handoff symbolic screen](handoff-screen.md)
+- [Default-deny application policy](application-policy.md)
+- [Current compact handoff](current-handoff.md)
+- [Wayland object ID scope](wayland-object-id-scope.md)
+- [Native window provenance](window-provenance.md)
+- [Closed Hyprland window mapping](closed-hyprland-mapping.md)
+- [Route B host-parent nested Hyprland mapping probe](direct-hyprland-mapping.md)
+- [Aquamarine feedback readiness and parallel review](aquamarine-readiness.md)
+- [Existing Fcitx field lifecycle seam](fcitx-field-seam.md)
+- [Real-profile Slack bootstrap feasibility (step 0)](slack-bootstrap.md)
+- [Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx](slack-session-blueprint.md)
+
+Обновление: `bin/project-map build`. Производные страницы не редактировать вручную;
+решения и статусы изменять в `docs/project-map.json`, затем обновить карту.
+Генератор не включает sync и plugins Obsidian; настройки хранилища (.obsidian/) не коммитятся.

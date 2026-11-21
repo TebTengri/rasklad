@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+import runpy
+from pathlib import Path
+runpy.run_path(str(Path(__file__).resolve().parent.parent/'tools/wayland_ime_lab.py'),run_name='__main__')

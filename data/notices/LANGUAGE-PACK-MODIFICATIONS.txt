@@ -1,0 +1,10 @@
+Rasklad local raw dictionary packages — 2026-11-13
+
+The pinned upstream .aff and .dic files are copied without modifications.
+Rasklad adds a manifest, integrity checks, this record and complete upstream notices.
+Packaging does not transfer ownership or change third-party licensing to MIT.
+No training, filtering, generated stem lexicon or model is included in this package.
+Full/control tests may remove PFX/SFX rows from an in-memory .aff copy; that
+modified control form is not an unchanged upstream dictionary and is not stored
+in the raw language package. All other affix directives and dictionary bytes remain.
+No author's name is used to endorse Rasklad.

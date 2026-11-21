@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "5.1.23",
+  "commit": "27cca6e0239938b2d53937061d0980c087856b22",
+  "tagObject": "409b8cfc70ff671a9af6b003d65e48e3939f2f9a",
+  "archiveUrl": "https://codeload.github.com/fcitx/fcitx5/tar.gz/refs/tags/5.1.23",
+  "archiveSha256": "adeeafdba468111573233fb09e5cabf2e2c240cdc85e74ead498c2d702c795b8",
+  "archiveBytes": 7837170,
+  "upstreamLicense": "LGPL-2.1-or-later",
+  "tagSignatureVerifiedLocally": false,
+  "skippedSymlinks": "seven icon aliases under data/icon; no source-code symlinks",
+  "licenseNoticePath": "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
+  "licenseNoticeSha256": "1ccf09bf2f598308df4bed9cd8e9657dc5cd0973d2800318f2e241486e2edf3f"
+}

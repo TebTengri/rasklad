@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "scope": "owned LAB bridge only; no user runtime Off trigger",
+  "actualSdkCommitHelperScenarios": 6,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "previousPreeditScenarios": 6,
+  "outsideFixtureGuardPassed": true,
+  "closedNormalInputRegression": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "privateFrontendMapped": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "regressionScope": "normal key path; build before named commit helper extraction, final helper covered in memory tests",
+  "nativeDeliveryProven": false,
+  "contextDestructionPreservesOriginalProven": false,
+  "readyForLiveUse": false,
+  "independentBridgeReview": "unavailable: delegate usage limit; pending",
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "4b41c1f43271186b1cab1a286507dcf7826b799d5ed67e8f46156ae42cfb3c43",
+    "src/compositiondisable.cpp": "315a92023d044b15d669ca95e322e9b20fa76356e6586aa39c5136dd0c4de323",
+    "tests/fcitx_transport/disable_reentry_tests.cpp": "493d976acbbaa38810eeb3623b483507f18037eec0a10e26f0bf3175db091971",
+    "tools/fcitx_lab.pro": "11826f32fe9d27475502f43f802ad82736b4d4635027ef9f816634f0644a7732"
+  }
+}

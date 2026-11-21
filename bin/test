@@ -37,9 +37,15 @@ app_dir="${build_dir}/tests/app"
 app_bin="${app_dir}/app_tests"
 ui_dir="${build_dir}/tests/ui"
 ui_bin="${ui_dir}/ui_tests"
+policy_dir="${build_dir}/tests/application_policy"
+policy_bin="${policy_dir}/application_policy_tests"
+disable_dir="${build_dir}/tests/composition_disable"
+disable_bin="${disable_dir}/composition_disable_tests"
+permissions_dir="${build_dir}/tests/application_permissions"
+permissions_bin="${permissions_dir}/application_permissions_tests"
 
 for bin in "${test_bin}" "${detector_bin}" "${benchmark_bin}" "${context_bin}" "${router_bin}" \
-    "${decision_bin}" "${app_bin}" "${ui_bin}"; do
+    "${decision_bin}" "${app_bin}" "${ui_bin}" "${policy_bin}" "${disable_bin}" "${permissions_bin}"; do
     if [[ ! -x "${bin}" ]]; then
         echo "bin/test: тестовый бинарник не найден: ${bin}" >&2
         exit 1
@@ -53,6 +59,10 @@ done
 (cd -- "${context_dir}" && "${context_bin}" "$@")
 (cd -- "${router_dir}" && "${router_bin}" "$@")
 (cd -- "${decision_dir}" && "${decision_bin}" "$@")
+# Standalone contract binary does not take QtTest function filters.
+(cd -- "${policy_dir}" && "${policy_bin}")
+(cd -- "${disable_dir}" && "${disable_bin}")
+(cd -- "${permissions_dir}" && "${permissions_bin}")
 (cd -- "${app_dir}" && "${app_bin}" "$@")
 # GUI-тест только offscreen и с программной отрисовкой: реальный рабочий стол не используется.
 (cd -- "${ui_dir}" && QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=generic QT_QUICK_BACKEND=software "${ui_bin}" "$@")

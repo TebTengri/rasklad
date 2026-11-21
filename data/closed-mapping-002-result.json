@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "ok": false,
+  "phase": "hyprland-start",
+  "reason": "private-compositor-unready",
+  "hyprlandExit": -6,
+  "hyprlandStartup": "gpu_allocator_unavailable",
+  "parentStartup": "unclassified_startup_failure",
+  "hostWaylandConnections": 0,
+  "network": false,
+  "realInput": false,
+  "fieldBindingVerified": false,
+  "scopeInactiveVerified": true,
+  "scopeLimitsVerified": true,
+  "binarySha256": "0414a554a01ec42e91f381aac09321dbde292168bf963f5e373f7cfa24ac1035",
+  "approvalConsumed": true,
+  "limitation": "tail classification establishes allocator failure category, not its upstream cause"
+}

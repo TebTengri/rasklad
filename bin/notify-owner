@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Development workflow only: no daemon, configuration edits or message contents.
+set -euo pipefail
+expiry=0
+case "${1:-}" in
+  --test)
+    title='rasklad: уведомления включены'
+    body='Тест: здесь появится уведомление, когда потребуется ваш ответ или задача будет закончена.' ;;
+  --needs-user)
+    title='rasklad: нужен ваш ответ'
+    body='Откройте чат проекта: требуется ваше действие или решение.' ;;
+  --done)
+    title='rasklad: задача завершена'
+    body='Результат и проверки сохранены. Подробности — в чате проекта.' ;;
+  '')
+    printf '%s\n' 'Plan only. Use --test, --needs-user or --done to send one desktop notification.'
+    exit 0 ;;
+  *) printf '%s\n' 'Expected --test, --needs-user or --done.' >&2; exit 2 ;;
+esac
+if [[ $# -ne 1 ]]; then
+  printf '%s\n' 'Exactly one mode is required.' >&2
+  exit 2
+fi
+/usr/bin/timeout 5s /usr/bin/notify-send --app-name=rasklad --urgency=critical --expire-time="$expiry" "$title" "$body"
+
+# Omarchy does not advertise notification sounds. Play the installed system
+# completion cue separately, only when its own DND state is explicitly off.
+# Per-stream attenuation; never unmute or alter persistent system volume.
+dnd=$(/usr/bin/timeout 2s /usr/share/omarchy/bin/omarchy-shell notifications isDnd 2>/dev/null) || dnd=unknown
+if [[ "$dnd" == off && -x /usr/bin/pw-play ]]; then
+  root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+  /usr/bin/timeout 5s /usr/bin/python3 "$root/tools/owner_alert_audio.py" --play >/dev/null || true
+fi

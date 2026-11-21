@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "status": "prepared_not_live",
+  "referenceAfterSharedFixtureRefactor": {"compositor": "Sway", "checks": 16, "passed": true},
+  "fakeParentNewRunner": {
+    "passed": true,
+    "getRegistryPerControl": 1,
+    "syncPerControl": 1,
+    "globalsAdvertised": 0,
+    "loggingDisabledReason": "backend_creation_failed",
+    "loggingEnabledReason": "parent_protocols_missing",
+    "gpuExposed": false,
+    "hostDisplayConnected": false
+  },
+  "privateBusControl": {
+    "passed": true,
+    "privateBusConnected": true,
+    "parentMarkerAbsent": true,
+    "gpuExposed": false,
+    "hostDisplayConnected": false
+  },
+  "waylandGuardChecks": 41,
+  "exactHyprlandImeRun": false,
+  "slackSupport": false,
+  "readyForLiveUse": false,
+  "requiresOwnerConsentForLiveTrial": true,
+  "maxTrialSeconds": 75
+}

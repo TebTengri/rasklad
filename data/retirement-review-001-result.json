@@ -1,0 +1,31 @@
+{
+  "frontendLoaded": false,
+  "functionalFix": false,
+  "installedChanges": false,
+  "patches": {
+    "0001-lab-grab-release-without-local-destroy.patch": "e50fea779d930ba3c99bd23308c2caeb3702215f46a7062c33ab2b39b736ed33",
+    "0002-lab-track-listener-depth.patch": "6a7a46e63182809aea6fee43f7bb0869097a62fe132b7306a52a91f95ff42392",
+    "0003-lab-bounded-grab-retirement.patch": "78f96d78a19cfb89be2c4be4ec766696b50648d6a0f2c436fc0f714b3f3705fd"
+  },
+  "retiredInputPolicy": "abort125",
+  "schema": 1,
+  "scope": "syntax-only against system SDK; not runtime ABI admission or delivery evidence",
+  "sourceArchiveSha256": "adeeafdba468111573233fb09e5cabf2e2c240cdc85e74ead498c2d702c795b8",
+  "syntaxPassed": true,
+  "translationUnits": 3,
+  "callbackDepthControlsPassed": true,
+  "launcherTests": 6,
+  "rawForwardingRejected": true,
+  "reentrantHandoffPolicy": "abort125 before retirement state changes during key/repeat work",
+  "review": "independent static review; specific scoped findings addressed; no runtime reviewer execution",
+  "claude": "65s timeout; no result counted",
+  "senderSourceReview": {
+    "commit": "efb50993780079460b0cbed1363e2166a2de1d9f",
+    "files": {
+      "InputMethodV2.cpp": "a1f5f7827fa44cffac0352bdb2e5bacb01b83f6f2f984fc69b73ade12e89677f",
+      "InputManager.cpp": "feedf32e2e3d23aeaed7a02ef4ab94be2d66f4b22873b3166026da1e9ece4765"
+    },
+    "executed": false,
+    "rootCauseConfirmed": false
+  }
+}

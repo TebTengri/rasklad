@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "scope": "isolated developer editor test; preserve upstream MIT notices",
+  "packages": [
+    {
+      "name": "prosemirror-model",
+      "version": "1.25.13",
+      "module": "dist/index.js",
+      "code_sha256": "ccf4899df18ecf346b1281d39fa8ed295470fa67bec9d87b909755d724094722",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "d7cb62718cc012c2eeda679512d3f409220ab15a782fe8a61bd08c010e015a0f",
+      "tarball_bytes": 130573,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-model/-/prosemirror-model-1.25.13.tgz",
+      "integrity": "sha512-MlDMWGjYXaYOeCiO17jcybntCOzPnN+97U0809ke2QsgPtxW3n5/sD6ZKyJONUgMw1iP93ohZTjeKjnRJ7L6kQ==",
+      "repository": "git+https://code.haverbeke.berlin/prosemirror/prosemirror-model.git",
+      "reported_git_head": "819b9869b1a1257182c9bbdbf908b4e782ae98b7"
+    },
+    {
+      "name": "prosemirror-transform",
+      "version": "1.12.5",
+      "module": "dist/index.js",
+      "code_sha256": "eea5c6eca492ce0de35100b16d10732f3a26269405a87fd76a4b298739e7493a",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "0b9b224a05fb67f8e44386f6daecbea46552dda075f4fd74a6daaa076d48e695",
+      "tarball_bytes": 78042,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-transform/-/prosemirror-transform-1.12.5.tgz",
+      "integrity": "sha512-3EBXZBM4h3MKuWvs9sQ7IA0/v6jCqCZ4wC08PIvzY1VSQWDL90KEyfg5C0Ex52UJesf/QVogxvuBsZdKmLc3NQ==",
+      "repository": "git+https://code.haverbeke.berlin/prosemirror/prosemirror-transform.git",
+      "reported_git_head": "240982c95fb03caf28452b5b27dd38f8a1a0cdd5"
+    },
+    {
+      "name": "prosemirror-state",
+      "version": "1.4.4",
+      "module": "dist/index.js",
+      "code_sha256": "d4bd4e98520abd0bb0150436d84a3832d856aa59636ea23a59409d35929730a3",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "ad3eb60bd6db8e74b2576dc0b7c2800d6def362e0e990c9fb108fc4b724ee651",
+      "tarball_bytes": 43710,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-state/-/prosemirror-state-1.4.4.tgz",
+      "integrity": "sha512-6jiYHH2CIGbCfnxdHbXZ12gySFY/fz/ulZE333G6bPqIZ4F+TXo9ifiR86nAHpWnfoNjOb3o5ESi7J8Uz1jXHw==",
+      "repository": "git://github.com/prosemirror/prosemirror-state.git",
+      "reported_git_head": "d6fdcd19c4f7f68206b0a8d49649860365672585"
+    },
+    {
+      "name": "prosemirror-view",
+      "version": "1.42.9",
+      "module": "dist/index.js",
+      "code_sha256": "f36a1b57d8826500027ef80324bb1fc19690e7b41e7c3e76f4eeaf0954b6ac5d",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "d92a5d70b1c9d20ffa582c710ba62f86a58cb8a7ec5c58b9abe402c8e9e5d403",
+      "tarball_bytes": 229943,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-view/-/prosemirror-view-1.42.9.tgz",
+      "integrity": "sha512-bKbfzeKZOu2H2JQU2TaJmYu6EBcor3VnGIR4jR31cbEt1ztUnfUB6bKGV1+fJzOJdrVWR+tRU0208zM3oQx4wA==",
+      "repository": "git+https://code.haverbeke.berlin/prosemirror/prosemirror-view.git",
+      "reported_git_head": "2a07ebc03ccfb526b43e60297465129a2cee8ca6"
+    },
+    {
+      "name": "prosemirror-history",
+      "version": "1.5.1",
+      "module": "dist/index.js",
+      "code_sha256": "e53bf72db3f4ade7011cd9e2bacdd00677523d969531bde6e26c9aa7d5e3e87f",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "ba3f0ac27eb586925b42e3acb840b7440ab6aaf9a368053874d9ece266df31b0",
+      "tarball_bytes": 17722,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-history/-/prosemirror-history-1.5.1.tgz",
+      "integrity": "sha512-onlwnqKvgtFg6srZOmDOAhlAy1FIHQpOExORybX0S+DvJepE5tPALrB9iGet/2sqqqrelSnB10OoiOJqAvu2DA==",
+      "repository": "git+https://code.haverbeke.berlin/prosemirror/prosemirror-history.git",
+      "reported_git_head": "44956b6a1929d7bc99aca9a8ec01c790260fa45f"
+    },
+    {
+      "name": "prosemirror-schema-basic",
+      "version": "1.2.5",
+      "module": "dist/index.js",
+      "code_sha256": "15680f881cd27700fd2cfd52e9e299ecb47b7bea9ab10429824de235910034ac",
+      "notice_sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8",
+      "tarball_sha256": "0b2479d8164fcdd480e11a929259da55099708b903e5e42d8c30b06521254b31",
+      "tarball_bytes": 7713,
+      "tarball_url": "https://registry.npmjs.org/prosemirror-schema-basic/-/prosemirror-schema-basic-1.2.5.tgz",
+      "integrity": "sha512-McBWhfgOfThyu3Nltbs8SOUbM4t/h0pxteibaaHd1QR4S+F1t0u7M1ETaCE6/cveFoF+2fowTIBNkJOyeZQjNg==",
+      "repository": "git+https://code.haverbeke.berlin/prosemirror/prosemirror-schema-basic.git",
+      "reported_git_head": "531f1cad1b8059616dbe68407ab4d446b6f882f4"
+    },
+    {
+      "name": "orderedmap",
+      "version": "2.1.1",
+      "module": "dist/index.js",
+      "code_sha256": "c7cbbd34481992a8cf81dfa8951567ad5a586ab3f69511c92bedbe2241fb8969",
+      "notice_sha256": "869c30f368eb08735e779027b9f4bc9fea2f39624351856aebe42741f0bc0884",
+      "tarball_sha256": "9ad98abe6ac4156daef2232d7c1d2c8b3681545604c54f7f3754e791f12c168d",
+      "tarball_bytes": 3308,
+      "tarball_url": "https://registry.npmjs.org/orderedmap/-/orderedmap-2.1.1.tgz",
+      "integrity": "sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==",
+      "repository": "git+https://github.com/marijnh/orderedmap.git",
+      "reported_git_head": "6a30ebbbecd30fed8bda884c7acf4ca9c6a02405"
+    },
+    {
+      "name": "rope-sequence",
+      "version": "1.3.4",
+      "module": "dist/index.js",
+      "code_sha256": "ffe69b2d14402b9048f5df072d1bc95515d4c7f0fdfc9b99749cf6734f2360a2",
+      "notice_sha256": "530424aebdd0e73f53238d1f89df250057bc8d8ce090cf5954197fadce5bf226",
+      "tarball_sha256": "2a483ee02e5a21b59b63a29bca162e6aa2cd8fafb474261040c3d8538a1f067c",
+      "tarball_bytes": 5305,
+      "tarball_url": "https://registry.npmjs.org/rope-sequence/-/rope-sequence-1.3.4.tgz",
+      "integrity": "sha512-UT5EDe2cu2E/6O4igUr5PSFs23nvvukicWHx6GnOPlHAiiYbzNuCRQCuiUdHJQcqKalLKlrYJnjY0ySGsXNQXQ==",
+      "repository": "git+https://github.com/marijnh/rope-sequence.git",
+      "reported_git_head": "11db1ba5aa2abf31ff8040bdf01fabdb9db34c7a"
+    }
+  ]
+}

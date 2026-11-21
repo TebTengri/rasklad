@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Requires pinned archives extracted under ignored build/hunspell-source-build. No downloads.
+from pathlib import Path
+import subprocess,concurrent.futures,hashlib,json,sys
+root=Path(__file__).resolve().parent.parent/'build/hunspell-source-build'
+lock=json.loads((Path(__file__).resolve().parent.parent/'tools/browser_spell/source-lock.json').read_text())
+for key,name in [('hunspell','hunspell.tar.gz'),('sdk','sdk.tar.xz')]:
+ h=hashlib.sha256()
+ with (root/name).open('rb') as archive:
+  while chunk:=archive.read(1024*1024):h.update(chunk)
+ if h.hexdigest()!=lock[key]['sha256']:raise SystemExit('Archive hash mismatch')
+sdk=root/'sdk/install';source=root/'hunspell/hunspell-e8342700b4dde06130cdbba75f7e6500ffa58864';out=root/(sys.argv[1] if len(sys.argv)>1 else 'out')
+
+if out.name not in ('out','repeat') or out.is_symlink():raise SystemExit('Use out or repeat only')
+if any(p.is_symlink() for p in out.rglob('*')) if out.exists() else False:raise SystemExit('Symlink output refused')
+out.mkdir(exist_ok=True);inc=out/'include';inc.mkdir(exist_ok=True)
+text=(source/'src/hunspell/hunversion.h.in').read_text()
+for old,new in {'@VERSION@':'1.7.5','@HUNSPELL_VERSION_MAJOR@':'1','@HUNSPELL_VERSION_MINOR@':'7','@HUNSPELL_VERSION_PATCH@':'5'}.items():text=text.replace(old,new)
+(inc/'hunversion.h').write_text(text)
+(inc/'hunvisapi.h').write_text((source/'src/hunspell/hunvisapi.h.in').read_text().replace('@HAVE_VISIBILITY@','0'))
+(out/'emscripten-config.py').write_text("LLVM_ROOT='/sdk/bin'\nBINARYEN_ROOT='/sdk'\nNODE_JS=['/usr/bin/node']\nCACHE='/sdk/emscripten/cache'\nFROZEN_CACHE=True\n")
+prefix=['bwrap','--unshare-all','--die-with-parent','--new-session','--ro-bind','/usr','/usr','--symlink','usr/lib','/lib','--symlink','usr/lib','/lib64','--proc','/proc','--dev','/dev','--tmpfs','/tmp','--ro-bind',str(sdk),'/sdk','--ro-bind',str(source),'/src','--bind',str(out),'/out','--chdir','/out','--clearenv','--setenv','PATH','/usr/bin','--setenv','HOME','/tmp','--setenv','EM_CONFIG','/out/emscripten-config.py','--setenv','EMCC_CORES','2','--setenv','BINARYEN_CORES','2','--setenv','PYTHONDONTWRITEBYTECODE','1','--setenv','SOURCE_DATE_EPOCH','0','--','python3','/sdk/emscripten/em++.py']
+flags=['-std=c++17','-DHUNSPELL_STATIC','-DBUILDING_LIBHUNSPELL','-I/out/include','-I/src/src/hunspell','-O2','-ffile-prefix-map=/src=hunspell-source']
+files=[source/'src/hunspell'/(name+'.cxx') for name in ['affentry','affixmgr','csutil','filemgr','hashmgr','hunspell','hunspelltrace','hunzip','phonet','replist','suggestmgr']]
+def compile_one(path):
+ name=path.stem
+ with (out/(name+'.log')).open('w') as log:
+  r=subprocess.run(prefix+flags+['-c','/src/src/hunspell/'+path.name,'-o','/out/'+name+'.o'],stdout=log,stderr=log,timeout=180)
+ if r.returncode:raise RuntimeError(name+' compile failed: '+(out/(name+'.log')).read_text()[-2200:])
+ print({'compiled':name},flush=True)
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:list(pool.map(compile_one,files))
+exports=['_malloc','_free','_Hunspell_create','_Hunspell_destroy','_Hunspell_spell','_Hunspell_get_dic_encoding','_Hunspell_get_library_version']
+link=['/out/'+p.stem+'.o' for p in files]+['-O2','-Wl,--threads=2','-sMODULARIZE=1','-sEXPORT_ES6=1','-sENVIRONMENT=web','-sFILESYSTEM=1','-sALLOW_MEMORY_GROWTH=1','-sINITIAL_MEMORY=16777216','-sMAXIMUM_MEMORY=134217728','-sEXPORTED_FUNCTIONS='+json.dumps(exports),'-sEXPORTED_RUNTIME_METHODS='+json.dumps(['FS','HEAPU8']),'-o','/out/hunspell.js']
+with (out/'link.log').open('w') as log:r=subprocess.run(prefix+link,stdout=log,stderr=log,timeout=180)
+if r.returncode:raise RuntimeError('link failed: '+(out/'link.log').read_text()[-3000:])
+result={name:{'sha256':hashlib.sha256((out/name).read_bytes()).hexdigest(),'bytes':(out/name).stat().st_size} for name in ['hunspell.js','hunspell.wasm']}
+(out/'artifacts.json').write_text(json.dumps(result,indent=2));print({'artifacts':result},flush=True)
+
+for key,name in [('loader','hunspell.js'),('wasm','hunspell.wasm')]:
+ if result[name]['sha256']!=lock[key+'_sha256']:raise SystemExit('Output differs from reviewed build; inspect before updating lock')

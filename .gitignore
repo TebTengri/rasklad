@@ -9,3 +9,5 @@ Makefile
 *.log
 __pycache__/
 *.py[cod]
+
+docs/knowledge/.obsidian/

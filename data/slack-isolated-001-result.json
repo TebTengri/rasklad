@@ -1,0 +1,242 @@
+{
+  "schema": 1,
+  "scope": "installed Slack in empty-profile private Xvfb/buses; no working account or host network namespace",
+  "offlineControls": [
+    {
+      "mode": "disabled",
+      "isEnabled": false,
+      "visibleWindows": 0,
+      "targetPeers": 0,
+      "inspectedNodes": 0,
+      "bridgeStats": null
+    },
+    {
+      "mode": "enabled",
+      "isEnabled": true,
+      "visibleWindows": 0,
+      "targetPeers": 0,
+      "inspectedNodes": 0,
+      "bridgeStats": null
+    }
+  ],
+  "offlineBridgeCheck": {
+    "hostNetworkShared": false,
+    "outboundNetworkEnabled": false,
+    "passed": true,
+    "schema": 1,
+    "target": "slack",
+    "trials": [
+      {
+        "bridgeCheck": true,
+        "bridgeStats": {
+          "accepted": 1,
+          "blocked": 1,
+          "cleanupComplete": true,
+          "errors": 0,
+          "forwardedBytes": 0,
+          "opened": 0,
+          "tlsDenied": 0
+        },
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": null,
+        "mode": "enabled",
+        "passed": true,
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false
+      }
+    ]
+  },
+  "defaultEchDenied": [
+    {
+      "mode": "disabled",
+      "isEnabled": false,
+      "visibleWindows": 0,
+      "targetPeers": 0,
+      "inspectedNodes": 0,
+      "bridgeStats": {
+        "accepted": 6,
+        "blocked": 6,
+        "cleanupComplete": true,
+        "errors": 0,
+        "forwardedBytes": 0,
+        "opened": 0,
+        "tlsDenied": 4,
+        "tlsRejectReasons": {
+          "encrypted-name": 4
+        }
+      }
+    },
+    {
+      "mode": "enabled",
+      "isEnabled": true,
+      "visibleWindows": 0,
+      "targetPeers": 0,
+      "inspectedNodes": 0,
+      "bridgeStats": {
+        "accepted": 6,
+        "blocked": 6,
+        "cleanupComplete": true,
+        "errors": 0,
+        "forwardedBytes": 0,
+        "opened": 0,
+        "tlsDenied": 4,
+        "tlsRejectReasons": {
+          "encrypted-name": 4
+        }
+      }
+    }
+  ],
+  "tls12Diagnostic": {
+    "trials": [
+      {
+        "mode": "disabled",
+        "isEnabled": false,
+        "visibleWindows": 0,
+        "targetPeers": 0,
+        "inspectedNodes": 0,
+        "bridgeStats": {
+          "accepted": 6,
+          "blocked": 6,
+          "cleanupComplete": true,
+          "errors": 0,
+          "forwardedBytes": 0,
+          "opened": 0,
+          "tlsDenied": 4,
+          "tlsRejectReasons": {
+            "encrypted-name": 4
+          }
+        }
+      },
+      {
+        "mode": "enabled",
+        "isEnabled": true,
+        "visibleWindows": 0,
+        "targetPeers": 0,
+        "inspectedNodes": 0,
+        "bridgeStats": {
+          "accepted": 6,
+          "blocked": 6,
+          "cleanupComplete": true,
+          "errors": 0,
+          "forwardedBytes": 0,
+          "opened": 0,
+          "tlsDenied": 4,
+          "tlsRejectReasons": {
+            "encrypted-name": 4
+          }
+        }
+      }
+    ],
+    "negotiatedVersionObserved": false,
+    "defaultChanged": false
+  },
+  "oneApprovedEchExperiment": {
+    "comparisonOutcome": "no-peers-in-either",
+    "echPolicy": "outer-sni-only",
+    "emptyProfileOnly": true,
+    "hostBusConnected": false,
+    "hostConfigurationChanged": false,
+    "hostNetworkShared": false,
+    "innerRoutingVerified": false,
+    "interpretation": "passed means measurement completed, not bridge behavior; compare counters, not Slack compatibility",
+    "outboundNetworkEnabled": true,
+    "passed": true,
+    "sandboxed": true,
+    "schema": 1,
+    "supportsStatusHypothesis": false,
+    "target": "slack",
+    "textRead": false,
+    "trials": [
+      {
+        "bridgeStats": {
+          "accepted": 4,
+          "blocked": 2,
+          "cleanupComplete": true,
+          "errors": 0,
+          "forwardedBytes": 18513,
+          "opened": 2,
+          "tlsDenied": 0,
+          "tlsRejectReasons": {}
+        },
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": false,
+        "mode": "disabled",
+        "passed": true,
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": 0
+      },
+      {
+        "bridgeStats": {
+          "accepted": 4,
+          "blocked": 2,
+          "cleanupComplete": true,
+          "errors": 0,
+          "forwardedBytes": 18486,
+          "opened": 2,
+          "tlsDenied": 0,
+          "tlsRejectReasons": {}
+        },
+        "documentNodes": 0,
+        "exitCode": 0,
+        "inspectedNodes": 0,
+        "isEnabled": true,
+        "mode": "enabled",
+        "passed": true,
+        "target": "slack",
+        "targetPeers": 0,
+        "textRead": false,
+        "visibleWindows": 0
+      }
+    ],
+    "workingSlackAccessed": false,
+    "writesToApps": false
+  },
+  "echConsentConsumed": true,
+  "futureEchApprovalRequired": true,
+  "uiReadinessReached": false,
+  "slackCauseProven": false,
+  "startupCategories": [
+    {
+      "mode": "disabled",
+      "targetProcessCount": 8,
+      "processRolesDetermined": false,
+      "stderrCategories": {
+        "busUnavailable": true,
+        "certificate": false,
+        "displayInit": false,
+        "fatal": false,
+        "secretService": false
+      }
+    },
+    {
+      "mode": "enabled",
+      "targetProcessCount": 8,
+      "processRolesDetermined": false,
+      "stderrCategories": {
+        "busUnavailable": true,
+        "certificate": false,
+        "displayInit": false,
+        "fatal": false,
+        "secretService": false
+      }
+    }
+  ],
+  "guardTests": 24,
+  "approvedNetworkPolicy": "no shared network; fixed Slack CONNECT and visible SNI, pinned public IPv4 port443; encrypted inner/backend routing not verified",
+  "outboundProxyReview": "review approved bounds/cleanup/policy; owner accepted opaque ECH only for one invocation",
+  "newTargetReview": "extra target review interrupted; not counted; root reviewed target isolation",
+  "readyForLiveUse": false,
+  "reviewedImplementationSha256": {
+    "tools/a11y_bridge_lab.py": "a01ead836bf69505df6d98c3504e78f702878131ac70f4ae5d32333b57b93910",
+    "tools/slack_https_bridge.py": "cb05d41ff9e4e3694e8b550581cde77d336e08e7748263ed2a749b02361d4043",
+    "tests/slack_probe/test_https_bridge.py": "b191363cb64b7259edcc20ac3f638a5cdc3d6516995530199c36b15c9b0565f4"
+  },
+  "runtimeReportsAreHistoricalWorkingTreeMeasurements": true
+}

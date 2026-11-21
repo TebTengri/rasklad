@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "date": "2026-11-14",
+  "scope": "private headless Sway/pixman reference; not exact Hyprland",
+  "instrumented": true,
+  "passed": true,
+  "baselinePredicatesPassed": 17,
+  "focusCasesPassed": 4,
+  "focusCasesTotal": 4,
+  "spaceTrace": {
+    "valid": true,
+    "armed": true,
+    "complete": true,
+    "dropped": 0,
+    "typeIndices": [
+      0,
+      2,
+      3,
+      1
+    ],
+    "targetIndices": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "allTrusted": true,
+    "valueClasses": [
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0
+      ]
+    ]
+  },
+  "traceLegend": {
+    "typeIndices": [
+      "keydown",
+      "keyup",
+      "beforeinput",
+      "input"
+    ],
+    "target0": "owned prose",
+    "valueClass2": "fixed synthetic original word",
+    "valueClass3": "fixed synthetic original word plus Space"
+  },
+  "tests": {
+    "pythonWaylandGuards": 45,
+    "nodeFocusOracle": 19,
+    "nodeSpaceTelemetry": 10
+  },
+  "independentReview": "focus_suite_critic reviewed current diff and five source hashes; no blocker; did not run tests",
+  "implementation": "Claude Opus5.5 telemetry; Codex integration, guards and validation",
+  "hostDisplay": false,
+  "hostGpu": false,
+  "network": false,
+  "liveReady": false,
+  "limitations": [
+    "instrumentation and extra CDP arm can perturb timing",
+    "missing Space-coded events do not prove upstream loss",
+    "exact Hyprland missing delimiter remains unresolved"
+  ],
+  "uninstrumentedSwayRegression": {
+    "passed": true,
+    "baselinePredicatesPassed": 17,
+    "focusCasesPassed": 4
+  }
+}

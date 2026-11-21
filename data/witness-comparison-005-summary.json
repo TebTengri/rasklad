@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "runnerCommit": "cea63fd",
+  "plannedArmsExecuted": [
+    "A",
+    "B",
+    "C"
+  ],
+  "approvedTrialCount": 3,
+  "usedTrialCount": 3,
+  "remainingTrialsAuthorized": 0,
+  "unexpectedStopCondition": false,
+  "results": {
+    "A": {
+      "passed": false,
+      "focusPasses": 3,
+      "failedCaseId": "word_other_back_prose_space",
+      "compositorStayedAlive": true
+    },
+    "B": {
+      "passed": false,
+      "focusPasses": 3,
+      "failedCaseId": "word_other_back_prose_space",
+      "compositorStayedAlive": true
+    },
+    "C": {
+      "passed": false,
+      "focusPasses": 3,
+      "failedCaseId": "word_other_back_prose_space",
+      "compositorStayedAlive": true
+    }
+  },
+  "CwitnessDelta": {
+    "after": [
+      10,
+      11,
+      10,
+      0,
+      10,
+      8,
+      4,
+      2,
+      2,
+      2,
+      2,
+      4,
+      0,
+      5,
+      11,
+      10,
+      0,
+      88,
+      0,
+      4
+    ],
+    "before": [
+      10,
+      10,
+      10,
+      0,
+      10,
+      8,
+      4,
+      2,
+      2,
+      2,
+      2,
+      4,
+      0,
+      5,
+      9,
+      8,
+      0,
+      72,
+      0,
+      4
+    ],
+    "complete": true,
+    "delta": [
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      0,
+      16,
+      0,
+      0
+    ],
+    "valid": true
+  },
+  "conclusion": "all arms reproduce; getter/witness is not a reliable fix; code65 press not observed in addon watcher, one release observed before getter",
+  "limitations": [
+    "count interval is not an event-pair identifier",
+    "raw code remapping and prior frontend/core filtering remain possible",
+    "absence before getter is not permanent absence",
+    "single trial per arm gives no reliable rate or causal attribution"
+  ],
+  "next": "exact Fcitx source review; proposed fixed all-press/release totals before any more invasive instrumentation"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "scope": "owned fixture only; not production deployment",
+  "policyAssertions": 66,
+  "fullSuite": {
+    "passed": 602,
+    "failed": 0,
+    "skipped": 1
+  },
+  "preeditReentryCases": 6,
+  "outsideFixtureInertness": true,
+  "addressSanitizerPassed": true,
+  "leakSanitizerPassed": true,
+  "closedNative": {
+    "passed": true,
+    "checks": 18,
+    "focusStressPassed": true,
+    "privateFrontendMapped": true,
+    "hostInput": false,
+    "hostConfigurationChanged": false
+  },
+  "focusCases": 4,
+  "realApplicationEnabled": false,
+  "newHostTrial": false,
+  "readyForLiveUse": false,
+  "independentStaticReview": "no blocking defects; runtime Off and real application identity not proven",
+  "claudeAttempt": "timeout; not counted as review",
+  "sourceSha256": {
+    "src/applicationpolicy.h": "06424bb9661211b3846eb20ea3bee9acfd87b9430ebbe212a7549078c82dae48",
+    "src/applicationpolicy.cpp": "b256cb8c709af1c4bc39e676bdd8e07a7c52034296a1928509b8bdbcada5b57e",
+    "src/fcitxlab.cpp": "891c86ebb63b62a1f422f508182ad8a94a0ab88bda4ccb3ce87fba18a58b106d",
+    "src/fcitxlabprofile.cpp": "4d2b737290d4cff7be8299685069d5e0dc97b990a03bb491bfb551e76fd36920",
+    "tests/application_policy/application_policy_tests.cpp": "454165b9f23f0d266d6020751d58ad1e2ca5f35edb69e3b3dd2727683c28d0dc",
+    "tests/fcitx_transport/preedit_reentry_tests.cpp": "3aa962a9552bcc70dcc6b6c872231f0dc5e11f49e9303ccffb6299c48128df69"
+  }
+}

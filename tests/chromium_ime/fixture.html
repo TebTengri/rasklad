@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>Rasklad isolated IME test</title>
+<style>textarea,input{display:block;width:500px;height:60px;margin:20px;font:24px monospace}</style>
+<label>Test prose<textarea id="prose" spellcheck="true"></textarea></label>
+<label>Second field<textarea id="other" spellcheck="true"></textarea></label>
+<label>Password<input id="secret" type="password"></label>
+<script>
+window.imeEvents=[];
+for(const type of ['compositionstart','compositionupdate','compositionend','beforeinput','input'])
+ document.addEventListener(type,e=>imeEvents.push({type,inputType:e.inputType||'',length:(e.data||'').length,
+  trusted:e.isTrusted===true,targetIndex:['prose','other','secret'].indexOf(e.target?.id)}),true);
+</script>

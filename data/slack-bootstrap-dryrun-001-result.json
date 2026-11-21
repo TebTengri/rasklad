@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "tool": "tools/slack_bootstrap_probe.py",
+  "ownerDataUsed": false,
+  "networkEnabled": false,
+  "hostBusConnected": false,
+  "runs": [
+    {
+      "mode": "dry-run-empty-profile",
+      "target": "installed Slack 4.53.287-1",
+      "passed": true,
+      "registryBoundSeconds": 0.4,
+      "toplevelCreated": false,
+      "bufferAttached": false,
+      "windowMapped": false,
+      "observedSeconds": 75,
+      "slackStop": "graceful",
+      "slackProcessesRemaining": 0,
+      "bridge": {
+        "accepted": 6,
+        "blocked": 6,
+        "opened": 0,
+        "rejectedDomains": {
+          "gvt1.com": 2
+        },
+        "cleanupComplete": true
+      }
+    },
+    {
+      "mode": "dry-run-chromium-control",
+      "target": "installed Chromium (positive control)",
+      "passed": true,
+      "registryBoundSeconds": 0.23,
+      "toplevelCreatedSeconds": 0.36,
+      "bufferAttachedSeconds": 0.44,
+      "windowMapped": true,
+      "observedSeconds": 15.62,
+      "slackStop": "graceful"
+    }
+  ],
+  "interpretation": "Instrumentation detects a mapped window (positive control). Empty-profile offline Slack binds the Wayland registry but maps no window in 75 s, matching earlier experiments; the cause (no network/login vs. sandbox) is what the approved real-profile run decides.",
+  "afterReviewFixes": {
+    "tests": "67 PASS",
+    "chromiumControl": {
+      "windowMapped": true,
+      "attachCount": 21,
+      "stop": "graceful"
+    },
+    "emptyProfileSlack": {
+      "windowMapped": false,
+      "attachCount": 0,
+      "stop": "graceful",
+      "remaining": 0,
+      "rejectedDomains": {
+        "gvt1.com": 2
+      }
+    }
+  },
+  "rootCause": {
+    "finding": "Slack boot reads /etc/os-release and an /etc/*-release file; missing in the sandbox -> unhandled \"No unique release file found!\" in the environment step, boot stalls before any window (seen in Slack's own browser.log of the empty dry-run profile).",
+    "ruledOut": {
+      "electronSandbox": "--no-sandbox and --no-zygote: same stall",
+      "network": "live 002 bridge OK, still stalled"
+    },
+    "fix": "bind /etc/os-release and /etc/arch-release read-only",
+    "afterFix": {
+      "mode": "dry-run-diag plain, empty offline profile",
+      "toplevelCreatedSeconds": 0.62,
+      "configureAckedSeconds": 0.62,
+      "attachCount": 6,
+      "windowMappedThreshold": "not met (needs 10)",
+      "behaviour": "offline error page ERR_TUNNEL_CONNECTION_FAILED, then window closed ~14 s later"
+    }
+  },
+  "docs": {
+    "electron": "Context7 /electron/electron: Electron 38 defaults --ozone-platform=auto (native Wayland when XDG_SESSION_TYPE=wayland); ELECTRON_OZONE_PLATFORM_HINT removed in 38",
+    "slack": "official Linux help covers install only (Ubuntu/RHEL), no Wayland/proxy/keyring guidance"
+  }
+}

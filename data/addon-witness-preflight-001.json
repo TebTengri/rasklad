@@ -1,0 +1,278 @@
+{
+  "application": "installed Chromium native Wayland IM",
+  "backspaceEditsComposition": true,
+  "beforeSpaceDomLength": 6,
+  "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "cdpTyping": false,
+  "checks": 18,
+  "compositionActiveBeforeSpace": true,
+  "compositionEnded": true,
+  "correctedOnce": true,
+  "crashDocumentLength": 12,
+  "daemonCpuSeconds": 0.46,
+  "daemonHighWaterKiB": 57364,
+  "daemonRssKiB": 57364,
+  "daemonStayedStopped": true,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 0,
+  "escapePreservesOriginal": true,
+  "exitCode": 0,
+  "focusDoesNotLeak": true,
+  "focusEventControl": {
+    "sourceEnds": 1,
+    "totalEnds": 1,
+    "totalStarts": 1,
+    "trustedSourceEnds": 0,
+    "trustedSourceStarts": 1,
+    "untrustedSourceEnds": 1
+  },
+  "focusOriginalWordPreserved": true,
+  "focusSourceReviewPassed": true,
+  "focusStress": {
+    "cases": [
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "addonWitness": {
+          "after": [
+            11,
+            11,
+            11,
+            0,
+            11,
+            9,
+            4,
+            2,
+            2,
+            2,
+            3,
+            4,
+            0,
+            5,
+            11,
+            10,
+            0,
+            88,
+            0,
+            4
+          ],
+          "before": [
+            10,
+            10,
+            10,
+            0,
+            10,
+            8,
+            4,
+            2,
+            2,
+            2,
+            2,
+            4,
+            0,
+            5,
+            9,
+            8,
+            0,
+            72,
+            0,
+            4
+          ],
+          "complete": true,
+          "delta": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            2,
+            2,
+            0,
+            16,
+            0,
+            0
+          ],
+          "valid": true
+        },
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_other_back_prose_space",
+        "passed": true,
+        "precondition": true,
+        "spaceTelemetry": {
+          "armed": true,
+          "complete": true,
+          "dropped": 0,
+          "records": [
+            {
+              "codeClassIndex": 0,
+              "defaultPrevented": false,
+              "inputTypeIndex": -1,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 0,
+              "valueClassIndex": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": -1,
+              "defaultPrevented": false,
+              "inputTypeIndex": 0,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 2,
+              "valueClassIndex": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": -1,
+              "defaultPrevented": false,
+              "inputTypeIndex": 0,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 3,
+              "valueClassIndex": [
+                3,
+                0,
+                0
+              ]
+            },
+            {
+              "codeClassIndex": 0,
+              "defaultPrevented": false,
+              "inputTypeIndex": -1,
+              "isComposing": false,
+              "isTrusted": true,
+              "keyCodeIs229": false,
+              "targetIndex": 0,
+              "typeIndex": 1,
+              "valueClassIndex": [
+                3,
+                0,
+                0
+              ]
+            }
+          ],
+          "valid": true
+        },
+        "witnessPostQuery": {
+          "matchesOriginalOracle": true,
+          "snapshotCode": 100
+        }
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 1,
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true
+      }
+    ],
+    "checks": 4,
+    "diagnostics": [],
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "executedCases": 4,
+    "instrumentedAddonTrial": true,
+    "instrumentedSpaceTrial": true,
+    "passed": true,
+    "provenance": "test_fixture_only_not_authentication",
+    "scope": "DOM_intra_surface_only"
+  },
+  "focusStressPassed": true,
+  "hostConfigurationChanged": false,
+  "hostInput": false,
+  "hyprlandSupport": false,
+  "knownEnglishPreserved": true,
+  "longTokenPreserved": true,
+  "mixedTokenPreserved": true,
+  "nativeUndoChangesDocument": true,
+  "nativeUndoRestoresPreviousCommit": true,
+  "nextWordPreserved": true,
+  "passed": true,
+  "passwordPassthrough": true,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "preeditObserved": true,
+  "profileVariant": true,
+  "referenceCompositor": "Sway/wlroots software only",
+  "sandboxed": true,
+  "schema": 1,
+  "secondWordCorrected": true,
+  "slackSupport": false,
+  "syntheticInputOnly": true,
+  "date": "2026-11-15",
+  "scope": "private headless Sway reference, not exact Hyprland witness trial",
+  "tests": {
+    "pythonWaylandGuards": 52,
+    "nodeOracle": 19,
+    "nodeTelemetry": 19,
+    "nodeWitness": 8
+  },
+  "environmentNegativeControlsPassed": true,
+  "defaultControl": {
+    "defaultPreprocessedIdentical": true,
+    "preprocessedSha256": "f5d53921afbfb01d114e929dddead609e6c29c5215137b4b6db47dc35f3c5491",
+    "normalArtifactContainsGetStats": false,
+    "witnessArtifactContainsGetStats": true
+  },
+  "witnessBinarySha256": "365565235d6a3fa229656a4cf9a6c2d8a5efe3930c6c3896fdba72f67fd28033",
+  "sourceSha256": {
+    "src/fcitxlab.cpp": "9ddb86fde641f794a6eb8593aab5cf1c08fb9b789d52223046478a9e01df4363",
+    "tools/fcitxlabwitness.h": "809d14a439d6ec50d63e7d23b37df68a6512960d9b59e6bae5c4f4261d55b3f7",
+    "tools/fcitx_witness_lab.pro": "e15e5be686e05bf15bb11b30045dfb684f89e2734d5d521a892c1d35058cb5f3",
+    "tests/chromium_ime/addon-witness.mjs": "74d6107ccaa645a068d678d061069a54f5e691cd7c865714d9a503e7d919f827",
+    "tests/fcitx_transport/raskladwitness.conf": "663461d31f695a99f37ac7594ef3cf7ab81ff099e0fcb7c6812cede6d8c345e1"
+  },
+  "independentReviews": {
+    "fcitx_addon_review": "C++ static review complete, no blocker; runtime dbus dependency verified by root",
+    "focus_suite_critic": "JS/static integration review complete, no blocker; reviewers did not run tests"
+  },
+  "limitations": [
+    "word-to-query interval includes lifecycle transitions, not just Space",
+    "saturation makes delta unknown (-1), never zero",
+    "monotonic counters alone do not prove unchanged process identity",
+    "getter may perturb timing; Sway PASS is not a Hyprland fix"
+  ]
+}

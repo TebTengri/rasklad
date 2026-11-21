@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Optional, separately approved SIGTERM for one verified Slack process-tree root.
+Default prints a plan. Never SIGKILL, killall, global signals or automatic launch.
+"""
+from pathlib import Path
+import argparse,json,os,signal,sys,time
+ROOT=Path(__file__).resolve().parent.parent
+sys.path.insert(0,str(ROOT/'tools'))
+from slack_accessibility_probe import slack_pids
+
+
+def identity(pid):
+    try:
+        p=Path('/proc')/str(pid)
+        if p.stat().st_uid!=os.getuid() or (p/'exe').resolve(strict=True)!=Path('/usr/lib/slack/slack'):return None
+        data=(p/'stat').read_text().rsplit(')',1)[1].split()
+        if data[0] in ('Z','X'):return None
+        return{'pid':pid,'ppid':int(data[1]),'start':int(data[19])}
+    except (OSError,ValueError,IndexError):return None
+
+
+def unique_root(pids,inspect):
+    records=[r for pid in pids if (r:=inspect(pid)) is not None]
+    owned={r['pid'] for r in records}
+    roots=[r for r in records if r['ppid'] not in owned]
+    return roots[0] if len(roots)==1 else None
+
+
+def request(root,inspect,open_fd,send,close_fd):
+    if not root or inspect(root['pid'])!=root:return False
+    fd=open_fd(root['pid'],0)
+    try:
+        # A pidfd pins the kernel process identity; repeating the executable/UID
+        # and birth-time check avoids acting on a reused or changed target.
+        if inspect(root['pid'])!=root:return False
+        send(fd,signal.SIGTERM,None,0)
+        return True
+    finally:close_fd(fd)
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run',action='store_true');args=p.parse_args()
+    if not args.run:
+        print(json.dumps({'mode':'plan','target':'one current-user /usr/lib/slack/slack process-tree root',
+            'signal':'SIGTERM','usesPidfd':True,'requiresSeparateApproval':True,'mayLoseUnsavedState':True,
+            'SIGKILL':False,'automaticLaunch':False,'profileOrTextRead':False}));return 0
+    if not hasattr(os,'pidfd_open') or not hasattr(signal,'pidfd_send_signal'):raise RuntimeError('unsupported')
+    root=unique_root(slack_pids(),identity)
+    if not root:print(json.dumps({'requested':False,'reason':'no-unique-verified-slack-root'}));return 1
+    sent=request(root,identity,os.pidfd_open,signal.pidfd_send_signal,os.close)
+    if not sent:print(json.dumps({'requested':False,'reason':'identity-changed'}));return 1
+    deadline=time.monotonic()+10
+    while slack_pids() and time.monotonic()<deadline:time.sleep(.2)
+    stopped=not slack_pids()
+    print(json.dumps({'requested':True,'signal':'SIGTERM','fullyExited':stopped,'SIGKILL':False,'automaticLaunch':False}))
+    return 0 if stopped else 1
+if __name__=='__main__':
+    try:sys.exit(main())
+    except Exception:print(json.dumps({'requested':False,'error':'slack-quit-request-unavailable'}),file=sys.stderr);sys.exit(1)

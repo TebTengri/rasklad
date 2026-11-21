@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "scope": "private headless Sway/pixman; v2 diagnostic preparation",
+  "passed": true,
+  "baselineRequiredChecks": 17,
+  "focusCasesPassed": 4,
+  "case2Trace": {
+    "armed": true,
+    "complete": true,
+    "dropped": 0,
+    "records": [
+      {
+        "codeClassIndex": 0,
+        "defaultPrevented": false,
+        "inputTypeIndex": -1,
+        "isComposing": false,
+        "isTrusted": true,
+        "keyCodeIs229": false,
+        "targetIndex": 0,
+        "typeIndex": 0,
+        "valueClassIndex": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "codeClassIndex": -1,
+        "defaultPrevented": false,
+        "inputTypeIndex": 0,
+        "isComposing": false,
+        "isTrusted": true,
+        "keyCodeIs229": false,
+        "targetIndex": 0,
+        "typeIndex": 2,
+        "valueClassIndex": [
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "codeClassIndex": -1,
+        "defaultPrevented": false,
+        "inputTypeIndex": 0,
+        "isComposing": false,
+        "isTrusted": true,
+        "keyCodeIs229": false,
+        "targetIndex": 0,
+        "typeIndex": 3,
+        "valueClassIndex": [
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "codeClassIndex": 0,
+        "defaultPrevented": false,
+        "inputTypeIndex": -1,
+        "isComposing": false,
+        "isTrusted": true,
+        "keyCodeIs229": false,
+        "targetIndex": 0,
+        "typeIndex": 1,
+        "valueClassIndex": [
+          3,
+          0,
+          0
+        ]
+      }
+    ],
+    "valid": true
+  },
+  "nativeLateWaitExercised": false,
+  "lateWaitProofScope": "unit fault tests only, not native end-to-end proof",
+  "tests": {
+    "pythonWaylandGuards": 45,
+    "nodeOracle": 19,
+    "nodeTelemetry": 19
+  },
+  "authors": {
+    "module": "Claude Opus5.5",
+    "integrationAndTests": "Codex",
+    "independentStaticReview": "focus_suite_critic; no blocker; reviewer did not run tests"
+  },
+  "hostDisplay": false,
+  "hostGpu": false,
+  "network": false,
+  "readyForLiveUse": false,
+  "limitations": [
+    "observedBeforeWait does not timestamp input relative to primary snapshot",
+    "500ms browser timer is not a hard wall time guarantee; outer deadlines retained",
+    "late exact match never rescues initial FAIL",
+    "exact Hyprland v2 not yet run; previous single trial approval consumed"
+  ]
+}

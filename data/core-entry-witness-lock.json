@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "arch": "x86_64",
+  "files": {
+    "/usr/lib/libFcitx5Core.so.5.1.23": {
+      "sha256": "cb9662fd5d817ed85832b3708e04f4263a14dc9f4caead59fc3790475d0eacc6"
+    },
+    "/usr/lib/fcitx5/libwaylandim.so": {
+      "sha256": "bac2cbaf958a8bfacae4d18dfbf6402306dc08c294df073646d9dde40bad30f5"
+    },
+    "/usr/lib/libwayland-client.so.0.26.0": {
+      "sha256": "39c83ae7b73d22f18b4f81da14749c4535c304b7e62910a2f1aae682f279cc9d"
+    }
+  }
+}

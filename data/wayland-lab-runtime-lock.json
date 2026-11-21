@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "runtime": "Sway1.12/wlroots0.20.2 reference only; not Hyprland proof",
+  "systemInstallation": false,
+  "distributionApproved": false,
+  "packages": [
+    {
+      "name": "sway",
+      "version": "1.12-4",
+      "url": "https://archive.archlinux.org/packages/s/sway/sway-1%3A1.12-4-x86_64.pkg.tar.zst",
+      "signatureVerified": true,
+      "signer": "35BAE1BF9A6B317021E690C26E7CE0B0A36DA2AE",
+      "packageSha256": "5704cfc9eba9804116c665cb4450352bf5a240c1a8300b36aca3218116648443",
+      "files": [
+        {
+          "path": "sway/usr/bin/sway",
+          "sha256": "7ba78b7531a3b3cb1852b3b1e464b4458cce1749c6c0fe3c6fb4b16ece9d5b9c",
+          "bytes": 616664
+        },
+        {
+          "path": "sway/usr/share/licenses/sway/LICENSE",
+          "sha256": "bd35722bff46327f5eded1d211207277bbe043d2a22048b282c42ef801593b8b",
+          "bytes": 1061
+        }
+      ],
+      "redistributionApproved": false,
+      "systemInstallation": false
+    },
+    {
+      "name": "wlroots0.20",
+      "version": "0.20.2-1",
+      "url": "https://archive.archlinux.org/packages/w/wlroots0.20/wlroots0.20-0.20.2-1-x86_64.pkg.tar.zst",
+      "signatureVerified": true,
+      "signer": "262A58EC6C51F7EA395B2E2DFDC3040B92ACA748",
+      "packageSha256": "8b1da3fbf29cc45908d8de771bd22a5813b298a9049462df5b8952f23c3ffb8f",
+      "files": [
+        {
+          "path": "wlroots0.20/usr/lib/libwlroots-0.20.so",
+          "sha256": "7edca9a7d65855addda68e29ba5db94d57c803eb5fa7d0f86db3136b90ca9837",
+          "bytes": 1378496
+        },
+        {
+          "path": "wlroots0.20/usr/share/licenses/wlroots0.20/LICENSE",
+          "sha256": "35d427c043dcafe8893b9e7247348f599847c81d9a067703587c80707f3d58df",
+          "bytes": 1140
+        }
+      ],
+      "redistributionApproved": false,
+      "systemInstallation": false
+    },
+    {
+      "name": "libliftoff",
+      "version": "0.5.0-1",
+      "url": "https://archive.archlinux.org/packages/l/libliftoff/libliftoff-0.5.0-1-x86_64.pkg.tar.zst",
+      "signatureVerified": true,
+      "signer": "95220BE99CE6FF778AE0DC670F65C7D881506130",
+      "packageSha256": "59cf08c21500673a14287b83b89b6db5389134cc24c97d9222c7cddefa639ccf",
+      "files": [
+        {
+          "path": "libliftoff/usr/lib/libliftoff.so.0.5.0",
+          "sha256": "f062e3f341937c84e40979406a494f35f00f20a3de208a39070dadba04cfe08f",
+          "bytes": 34704
+        },
+        {
+          "path": "libliftoff/usr/share/licenses/libliftoff/LICENSE",
+          "sha256": "9b230152f28fc7898665f40da7c311a1bf238a68b12cc39d9c83bbfc117a7b6b",
+          "bytes": 1066
+        }
+      ],
+      "redistributionApproved": false,
+      "systemInstallation": false
+    }
+  ],
+  "runtimeFiles": {
+    "sway": "7ba78b7531a3b3cb1852b3b1e464b4458cce1749c6c0fe3c6fb4b16ece9d5b9c",
+    "libwlroots-0.20.so": "7edca9a7d65855addda68e29ba5db94d57c803eb5fa7d0f86db3136b90ca9837",
+    "libliftoff.so.0": "f062e3f341937c84e40979406a494f35f00f20a3de208a39070dadba04cfe08f"
+  }
+}

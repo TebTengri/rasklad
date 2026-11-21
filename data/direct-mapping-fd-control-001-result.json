@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "hostWaylandConnections": 0,
+  "gpu": false,
+  "syntheticOnly": true,
+  "fdInherited": true,
+  "exitCode": 0,
+  "scopeInactiveVerified": true
+}

@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Prepare pinned MIT editor code for a CLOSED browser fixture, never npm install.
+No network by default; --fetch explicitly acquires the locked code archives.
+No package scripts, Node evaluation of third-party modules or OS changes.
+"""
+from pathlib import Path
+import argparse,base64,hashlib,io,json,re,tarfile,urllib.request
+ROOT=Path(__file__).resolve().parent.parent
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--fetch',action='store_true');args=parser.parse_args()
+lock=json.loads((ROOT/'tools/prosemirror/lock.json').read_text())
+cache=ROOT/'build/prosemirror-audit';output=ROOT/'build/prosemirror-fixture'
+for directory in [ROOT/'build',cache,output]:
+ if directory.is_symlink():raise SystemExit('symlink directory refused')
+ directory.mkdir(exist_ok=True)
+for p in output.rglob('*'):
+ if p.is_symlink():raise SystemExit('symlink output refused')
+source={};notices={};records={}
+for row in lock['packages']:
+ name=row['name'];target=cache/name
+ if target.is_symlink():raise SystemExit('symlink cache refused')
+ if args.fetch:
+  with urllib.request.urlopen(row['tarball_url'],timeout=30) as response:archive=response.read(2_000_001)
+  if len(archive)>2_000_000 or len(archive)!=row['tarball_bytes'] or hashlib.sha256(archive).hexdigest()!=row['tarball_sha256']:raise SystemExit('archive pin mismatch')
+  if 'sha512-'+base64.b64encode(hashlib.sha512(archive).digest()).decode()!=row['integrity']:raise SystemExit('archive integrity mismatch')
+  target.mkdir(exist_ok=True)
+  with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz') as tar:
+   members=tar.getmembers()
+   if len(members)>500 or sum(m.size for m in members)>8_000_000:raise SystemExit('archive limits')
+   if any(m.issym() or m.islnk() or not (m.name=='package' and m.isdir() or m.name.startswith('package/')) or '..' in Path(m.name).parts for m in members):raise SystemExit('archive entry refused')
+   # Existing cache components must not redirect extraction outside the cache.
+   if any(p.is_symlink() for p in target.rglob('*')):raise SystemExit('cache symlink refused')
+   tar.extractall(target,filter='data')
+ for rel,pin in [(row['module'],row['code_sha256']),('LICENSE',row['notice_sha256'])]:
+  p=target/'package'/rel
+  if p.resolve()!=p.absolute() or not p.is_file():raise SystemExit('missing or unsafe cached file; explicit --fetch required')
+  b=p.read_bytes()
+  if len(b)>2_000_000 or hashlib.sha256(b).hexdigest()!=pin:raise SystemExit('cached pin mismatch')
+  if rel=='LICENSE':notices[name]=b
+  else:source[name]=b.decode('utf-8')
+ records[name]=row
+pattern=re.compile(r'(^import\b[^;]+?\bfrom\s*)([\'"])([^\'"]+)\2',re.M)
+urls={};visiting=set()
+def module_url(name):
+ if name in urls:return urls[name]
+ if name in visiting or name not in source:raise SystemExit('unexpected dependency/cycle')
+ visiting.add(name)
+ def replace(match):return match[1]+json.dumps(module_url(match[3]))
+ text=pattern.sub(replace,source[name])
+ text=re.sub(r'^//# sourceMappingURL=.*$', '',text,flags=re.M)
+ url='data:text/javascript;base64,'+base64.b64encode(text.encode()).decode()
+ visiting.remove(name);urls[name]=url
+ return url
+for name in source:module_url(name)
+raw=json.dumps(urls,sort_keys=True).encode()
+if len(raw)>16_000_000:raise SystemExit('fixture module map too large')
+(output/'modules.json').write_bytes(raw)
+notices_dir=output/'notices';notices_dir.mkdir(exist_ok=True)
+for name,b in notices.items():(notices_dir/(name+'.LICENSE')).write_bytes(b)
+(output/'MODIFICATIONS.txt').write_text('Development fixture only. Original pinned upstream code is cached unchanged. ESM bare imports are rewritten to deterministic data URLs and sourceMappingURL comments removed for closed offline browser loading. All original MIT notices retained. No code or scripts execute during preparation. This module-map representation is not the product distribution format.\n')
+(output/'sources.json').write_text(json.dumps({'schema':1,'packages':lock['packages'],'modules_sha256':hashlib.sha256(raw).hexdigest()},indent=2)+'\n')
+print(json.dumps({'packages':len(source),'moduleMapBytes':len(raw),'modulesSha256':hashlib.sha256(raw).hexdigest(),'network':args.fetch,'npmScriptsExecuted':False}))

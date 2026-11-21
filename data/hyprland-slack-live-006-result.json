@@ -1,0 +1,94 @@
+{
+ "approval": "owner one-shot (\"\u0433\u043e\u0442\u043e\u0432\"), consumed",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch --slack-live",
+ "commit": "c81437c",
+ "conclusion": "PASS. First complete supervised live session in the owner test channel: addon-verified empty composer at arm (no owner flag), correction (c0701) and English (o0602) committed and cleaned, addon field empty after each case, no Enter, clean stop and profile. Follow-up: a context record after case 1 cleanup was consumed as case 1 end; case 2 should re-derive the binding from the latest addon record.",
+ "date": "2026-11-21",
+ "ownerBooleans": {
+  "composerEmpty": true,
+  "noNewMessageInChannel": true,
+  "nothingSent": true
+ },
+ "result": {
+  "armWriteEndOnlyInSupervisor": true,
+  "bindingFromCompositor": true,
+  "bridgeStats": {
+   "accepted": 25,
+   "blocked": 14,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 6899263,
+   "opened": 11,
+   "rejectedDomains": {
+    "slackb.com": 14
+   },
+   "tlsDenied": 0
+  },
+  "cases": [
+   {
+    "case": "correction",
+    "completed": true,
+    "fieldAfterCase": "empty",
+    "noReceiptAfterCleanup": true,
+    "receiptMatched": true,
+    "revokeReason": "focus-change",
+    "sent": 9,
+    "textMayRemain": false
+   },
+   {
+    "case": "english",
+    "completed": true,
+    "fieldAfterCase": "empty",
+    "noReceiptAfterCleanup": true,
+    "receiptMatched": true,
+    "revokeReason": "focus-change",
+    "sent": 9,
+    "textMayRemain": false
+   }
+  ],
+  "casesCompleted": [
+   "correction",
+   "english"
+  ],
+  "commitRecordsAfterRevoke": 0,
+  "compositorStayedAlive": true,
+  "contextFromAddon": true,
+  "contextRecordsBeforeArm": 5,
+  "dbusInputFrontendAbsent": true,
+  "enterNeverSent": true,
+  "exactCompositor": "installed nested Hyprland",
+  "fcitxAliveAfterGate": true,
+  "fieldStateAtArm": "empty",
+  "finishErrors": [],
+  "helperStdinOnlyInSupervisor": true,
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "keyboardsAddedBeforeArm": [
+   "hl-virtual-keyboard-fcitx5"
+  ],
+  "keyboardsRemovedBeforeArm": [],
+  "maxTrialSeconds": 320,
+  "outerClean": true,
+  "ownerConfirmedEmptyComposer": false,
+  "ownerSignalSeconds": 9.0,
+  "parentDisplayConnection": true,
+  "passed": true,
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "relayRefused": 0,
+  "renderNodeGranted": true,
+  "seatIntactAtArm": true,
+  "seatLockedBeforeSlack": true,
+  "seatReleasedAfterRevoke": true,
+  "singletonLockLeft": false,
+  "singletonRelease": "released",
+  "slackConnected": true,
+  "slackLive": true,
+  "slackProcessesRemaining": 0,
+  "slackStop": "graceful",
+  "textMayRemain": false,
+  "textRead": false,
+  "windowMappedSeconds": 1.7
+ },
+ "schema": 1
+}

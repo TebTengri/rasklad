@@ -1,0 +1,67 @@
+--- a/src/frontend/waylandim/waylandimserverv2.h
++++ b/src/frontend/waylandim/waylandimserverv2.h
+@@ -9,6 +9,7 @@
+ 
+ #include <cstdint>
+ #include <memory>
++#include <set>
+ #include <optional>
+ #include <string>
+ #include <tuple>
+@@ -145,6 +146,8 @@
+     std::unique_ptr<VirtualInputContextManager> virtualICManager_;
+ 
+     // Private keep-grab experiment; inactive keys deliberately fail the run.
++    bool labCleanup_ = false;
++    std::set<uint32_t> labCancelledKeys_;
+     bool labInactiveRaw_ = false;
+     void labForwardInactive(uint32_t time, uint32_t key, uint32_t state);
+     bool labActive_ = false;
+--- a/src/frontend/waylandim/waylandimserverv2.cpp
++++ b/src/frontend/waylandim/waylandimserverv2.cpp
+@@ -188,6 +188,7 @@
+             if (realFocus()) {
+                 if (vkReady_) {
+                     // If last key to vk is press, send a release.
++                    labCleanup_ = true;
+                     while (!pressedVKKey_.empty()) {
+                         auto [vkkey, vktime] = *pressedVKKey_.begin();
+                         // This is key release, so we don't need real sym and
+@@ -196,6 +197,7 @@
+                                     Key(FcitxKey_None, KeyStates(), vkkey + 8),
+                                     WL_KEYBOARD_KEY_STATE_RELEASED);
+                     }
++                    labCleanup_ = false;
+                 }
+                 focusOutWrapper();
+             }
+@@ -423,6 +425,7 @@
+ 
+ void WaylandIMInputContextV2::keymapCallback(uint32_t format, int32_t fd,
+                                              uint32_t size) {
++    if (!labCancelledKeys_.empty()) { std::_Exit(125); }
+     vkReady_ = false;
+     WAYLANDIM_DEBUG() << "keymapCallback";
+     if (!server_->context_) {
+@@ -509,6 +512,9 @@
+ void WaylandIMInputContextV2::keyCallback(uint32_t serial, uint32_t time,
+                                           uint32_t key, uint32_t state) {
+     FCITX_UNUSED(serial);
++    // Only known cleanup cancellations are consumed; unknown releases survive.
++    if (state == WL_KEYBOARD_KEY_STATE_RELEASED && labCancelledKeys_.erase(key)) { return; }
++    if (state == WL_KEYBOARD_KEY_STATE_PRESSED) { labCancelledKeys_.erase(key); }
+     if (!labActive_) {
+         labForwardInactive(time, key, state);
+         return;
+@@ -650,6 +656,11 @@
+         pressedVKKey_[code] = time;
+     }
+     vk_->key(time, code, state);
++    // Record after the actual VK release marshal, not at helper entry.
++    if (labCleanup_ && state == WL_KEYBOARD_KEY_STATE_RELEASED) {
++        if (labCancelledKeys_.size() >= 64) { std::_Exit(125); }
++        labCancelledKeys_.insert(code);
++    }
+ }
+ 
+ void WaylandIMInputContextV2::forwardKeyDelegate(InputContext * /*ic*/,

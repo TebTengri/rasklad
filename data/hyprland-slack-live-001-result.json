@@ -1,0 +1,39 @@
+{
+ "approval": "owner one-shot, consumed",
+ "command": "python3 -I tools/hyprland_ime_lab.py --run-approved --slack-launch --slack-live",
+ "commit": "157a07a",
+ "conclusion": "Refused before F10 (seat_lost_before_arm): no key injected, Slack stopped cleanly, profile clean. Cause not recorded (partial report was dropped upstream); diagnostics added: seatLostDetail with submap name and keyboard device names.",
+ "date": "2026-11-21",
+ "result": {
+  "bridgeStats": {
+   "accepted": 15,
+   "blocked": 10,
+   "cleanupComplete": true,
+   "errors": 0,
+   "forwardedBytes": 130522,
+   "opened": 5,
+   "rejectedDomains": {
+    "slackb.com": 10
+   },
+   "tlsDenied": 0
+  },
+  "exactCompositor": "installed nested Hyprland",
+  "finishErrors": [],
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "maxTrialSeconds": 320,
+  "outerClean": true,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "phase": "native_ime_clients",
+  "primaryStatOnly": true,
+  "readyForLiveUse": false,
+  "reason": "seat_lost_before_arm",
+  "renderNodeGranted": true,
+  "schema": 1,
+  "singletonLockLeft": false,
+  "slackConnected": true,
+  "slackProcessesRemaining": 0
+ },
+ "schema": 1
+}

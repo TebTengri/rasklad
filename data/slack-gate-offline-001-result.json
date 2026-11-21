@@ -1,0 +1,64 @@
+{
+  "schema": 2,
+  "date": "2026-11-20",
+  "commands": [
+    "python3 -I tools/wayland_ime_lab.py --run --slack-gate",
+    "python3 -I tools/wayland_ime_lab.py --run --slack-gate-control"
+  ],
+  "addon": "tools/fcitx_slack_gate_test.pro (Slack session gates, program chromium-browser, offline test only; loaded from the sealed snapshot)",
+  "supervisorRole": "lab Python parent holds the only arm write end; the driver requests revoke over stdout and gets the ack on stdin",
+  "gate": {
+    "passed": true,
+    "checks": 6,
+    "gateArmedCorrected": true,
+    "gatePreeditShownBeforeRevoke": true,
+    "gateRevokeClearedPreedit": true,
+    "gateRevokedNothingTyped": true,
+    "gateRevokedNoInputEvents": true,
+    "gateInputEventsAfter": 0,
+    "gateFieldStillFocused": true,
+    "armWriteEndOnlyInSupervisor": true,
+    "revokeServed": true,
+    "fcitxAliveAfterGate": true,
+    "note": "rerun after receipt sink: passed"
+  },
+  "control": {
+    "passed": true,
+    "checks": 5,
+    "note": "same steps without revoke; rerun after receipt sink: passed",
+    "gateControlTextAppeared": true,
+    "gateControlKeysReached": true,
+    "gateInputEventsAfter": 42,
+    "armWriteEndOnlyInSupervisor": true,
+    "fcitxAliveAfterGate": true
+  },
+  "conclusion": "With the arm pipe open the fixed rule corrects. Revoke (byte + close by the supervisor process) clears the shown preedit at once; afterwards no input/composition event reaches the field while the same keys in the control run produce 42 events and visible text; Fcitx stays alive and the field focused, so the block is the gate, not lost focus or a dead daemon. No process other than the supervisor held the write end at revoke time.",
+  "notCovered": [
+    "Slack itself (composer needs login)",
+    "nested Hyprland",
+    "compositor-sourced binding (pid, surface generation, IC epoch) and seat grab"
+  ],
+  "supervised": {
+    "command": "python3 -I tools/wayland_ime_lab.py --run --slack-supervised",
+    "passed": true,
+    "supervisorSent": 9,
+    "supervisedScriptCompleted": true,
+    "supervisedReceiptMatched": true,
+    "supervisedFieldCleaned": true,
+    "supervisedRevokedRefusesNext": true,
+    "supervisedNothingAfterRevoke": true,
+    "helperStdinOnlyInSupervisor": true,
+    "armWriteEndOnlyInSupervisor": true,
+    "fcitxAliveAfterGate": true,
+    "note": "Real Supervisor('correction') owns the helper stdin (non-blocking) and the arm write end; cleanup is gated by the addon receipt over a SOCK_SEQPACKET socket (Fcitx holds only its end); the driver only observes as a lab cross-check. Lab binding (chromium pid, 0, 0, normal).",
+    "supervisedReceiptFromAddon": true,
+    "observerSawExpectedText": true,
+    "receiptRecord": "c0701\\n (kind, code points, commit sequence; no text)",
+    "receiptQueueEmptyBeforeTyping": true,
+    "noReceiptAfterCleanup": true,
+    "contextFromAddon": true,
+    "addonPurpose": "normal",
+    "passwordFocusReported": true,
+    "passwordFocusRefused": true
+  }
+}

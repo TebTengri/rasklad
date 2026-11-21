@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "date": "2026-11-20",
+  "approval": "owner one-shot, consumed",
+  "result": {
+    "windowMapped": true,
+    "toplevelCreatedSeconds": 0.65,
+    "configureAckedSeconds": 0.73,
+    "attachCount": 141,
+    "observedSeconds": 15.81,
+    "slackStop": "graceful",
+    "slackProcessesRemaining": 0,
+    "markers": {
+      "secretServiceError": false,
+      "singletonFailure": false,
+      "connectionFailure": false,
+      "fatal": false
+    },
+    "bridge": {
+      "accepted": 26,
+      "opened": 16,
+      "blocked": 10,
+      "errors": 0,
+      "forwardedBytes": 906040,
+      "rejectedDomains": {
+        "slackb.com": 10
+      },
+      "relayRefused": 0
+    }
+  },
+  "issue": {
+    "singletonLockLeft": true,
+    "target": "<host>-7 (PID from the sandbox PID namespace; on the host PID 7 is a kernel worker)",
+    "recovery": "owner approved; verified no Slack process and exact target, removed SingletonLock/Cookie/Socket links",
+    "fix": "probe now releases singleton links only when the lock names exactly its in-namespace Slack PID; tests added"
+  },
+  "conclusion": "Step 0 feasibility answered YES: the owner's real Slack renders a window inside the closed sandbox with network only via the bridge. slackb.com (telemetry) stays blocked."
+}

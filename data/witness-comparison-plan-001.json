@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "date": "2026-11-15",
+  "status": "executed_once_approval_consumed",
+  "purpose": "separate ordinary configuration from witness bundle and query observations after instrumented PASS004",
+  "requiresFreshOwnerApproval": true,
+  "maxTrials": 3,
+  "maxSecondsEach": 75,
+  "maxSecondsTotal": 225,
+  "order": [
+    "A",
+    "B",
+    "C"
+  ],
+  "parallel": false,
+  "syntheticInputOnly": true,
+  "eachTrialFreshPrivateEnvironment": true,
+  "resourcesEach": "one parent Wayland connection/renderD128; primaryRO/NODEV; noSlack/hostIME/config/network",
+  "arms": [
+    {
+      "id": "A",
+      "variant": "ordinary profile/original config",
+      "argv": [
+        "bin/test-hyprland-ime",
+        "--run-approved",
+        "--focus-stress",
+        "--space-telemetry",
+        "--input-root",
+        "/home/mvn/Work/rasklad"
+      ],
+      "queryExpected": false
+    },
+    {
+      "id": "B",
+      "variant": "same witness binary/config/env, zero GetStats queries",
+      "argv": [
+        "bin/test-hyprland-ime",
+        "--run-approved",
+        "--focus-stress",
+        "--space-telemetry",
+        "--input-root",
+        "/home/mvn/Work/rasklad",
+        "--addon-witness",
+        "--witness-no-query"
+      ],
+      "queryExpected": false
+    },
+    {
+      "id": "C",
+      "variant": "same witness bundle as B, full readonly queries",
+      "argv": [
+        "bin/test-hyprland-ime",
+        "--run-approved",
+        "--focus-stress",
+        "--space-telemetry",
+        "--input-root",
+        "/home/mvn/Work/rasklad",
+        "--addon-witness"
+      ],
+      "queryExpected": true
+    }
+  ],
+  "artifactSha256": {
+    "build/chromium-ime/profile-addon/raskladlab.so": "64411840a46f23b4793666681a2bf302982da988a332dcadb28b3e7a5112bc66",
+    "build/chromium-ime/witness-addon/raskladlab.so": "365565235d6a3fa229656a4cf9a6c2d8a5efe3930c6c3896fdba72f67fd28033",
+    "build/wayland-ime/keys/rasklad-wayland-keys": "da7ecb0ba39363583253e3769c44f4962ad9c03ac17ed599bbe13f595fc3e452"
+  },
+  "stopOn": [
+    "compositor crash or unexpected runner failure",
+    "scope or artifact mismatch",
+    "malformed/bounded-output refusal"
+  ],
+  "ordinaryAssertionFailureIsRecordedNotRetried": true,
+  "interpretation": [
+    "A/B changes entire binary/config/startup bundle, not just counters",
+    "B/C changes query observations; final getter cannot cause earlier primary result",
+    "single run per arm is exploratory, no causality or failure-rate conclusion",
+    "allPASS is not a correction logic fix; no core behavior changed"
+  ],
+  "sourceSha256": {
+    "tests/chromium_ime/driver.mjs": "99f8f0ae895ede36e8a63186c7da5bdcb3e42b5016ca3625201f3f59f2f7a09b",
+    "tests/chromium_ime/addon-witness.mjs": "c833b9703844f76650d837f9aace41d0d081d0f312a677ef56121766241995a4",
+    "tests/chromium_ime/adversarial-focus.mjs": "1584046d788a59dcbef3ed3992566ce77848d2fe49995077f3fff277419385ea",
+    "tools/hyprland_ime_lab.py": "3f8691a3370f8c64cc9eab996ee5d0f68dcec031f7786247543a37f9affcae47",
+    "data/focus-source-review-001.json": "fceb1c6273c5834c5bd5fa2decdc0760a9ed501f8242e9f6411926a92e6e36dc"
+  },
+  "resultSummary": "data/witness-comparison-005-summary.json"
+}

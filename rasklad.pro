@@ -79,3 +79,16 @@ packagesExist(hunspell) {
 } else {
     message("rasklad: pkg-config hunspell not found; SYS-235/236 morphology and domain targets are skipped")
 }
+
+# SYS-246: pure per-application admission; no Qt/Fcitx runtime or dictionaries.
+SUBDIRS += application_policy_tests
+application_policy_tests.file = tests/application_policy/application_policy.pro
+application_policy_tests.depends = core
+
+SUBDIRS += composition_disable_tests
+composition_disable_tests.file = tests/composition_disable/composition_disable.pro
+composition_disable_tests.depends = core
+
+SUBDIRS += application_permissions_tests
+application_permissions_tests.file = tests/application_permissions/application_permissions.pro
+application_permissions_tests.depends = core

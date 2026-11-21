@@ -1,0 +1,157 @@
+{
+  "application": "installed Chromium native Wayland IM",
+  "backspaceEditsComposition": true,
+  "beforeSpaceDomLength": 6,
+  "browserVersion": "Chrome/155.0.8059.84",
+  "cdpTyping": false,
+  "checks": 18,
+  "compositionActiveBeforeSpace": true,
+  "compositionEnded": true,
+  "compositorStayedAlive": true,
+  "correctedOnce": true,
+  "crashDocumentLength": 12,
+  "daemonCpuSeconds": 0.21,
+  "daemonHighWaterKiB": 57608,
+  "daemonRssKiB": 57608,
+  "daemonStayedStopped": true,
+  "dbusInputFrontendAbsent": true,
+  "driverExitCode": 1,
+  "escapePreservesOriginal": true,
+  "exactCompositor": "installed nested Hyprland",
+  "focusDoesNotLeak": true,
+  "focusEventControl": {
+    "sourceEnds": 1,
+    "totalEnds": 1,
+    "totalStarts": 1,
+    "trustedSourceEnds": 0,
+    "trustedSourceStarts": 1,
+    "untrustedSourceEnds": 1
+  },
+  "focusOriginalWordPreserved": true,
+  "focusSourceReviewPassed": true,
+  "focusStress": {
+    "cases": [
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_focus_secret_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": "ASSERTION_FAILED",
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_other_back_prose_space",
+        "passed": false,
+        "precondition": true,
+        "spaceTelemetry": {
+          "armed": true,
+          "complete": true,
+          "dropped": 0,
+          "records": [],
+          "valid": true
+        }
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 0,
+        "id": "word_escape_other_space",
+        "passed": true,
+        "precondition": true
+      },
+      {
+        "cleanupPassed": true,
+        "errorCode": null,
+        "executed": true,
+        "hookHits": 1,
+        "id": "word_space_compositionend_hook_other",
+        "passed": true,
+        "precondition": true
+      }
+    ],
+    "checks": 4,
+    "diagnostics": [
+      {
+        "activeFieldIndex": 0,
+        "caseIndex": 1,
+        "documentCompositionEnds": 1,
+        "documentCompositionStarts": 1,
+        "documentEndTargets": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "documentTrustedEnds": 0,
+        "endMark": 0,
+        "ends": [
+          1,
+          0,
+          0
+        ],
+        "fieldValueClasses": [
+          2,
+          0,
+          0
+        ],
+        "hookHits": 0,
+        "proseIsOriginal": true,
+        "stage": "final_snapshot",
+        "starts": [
+          1,
+          0,
+          0
+        ],
+        "stateOwned": true,
+        "statePresent": true
+      }
+    ],
+    "endEventPolicy": "controlled_chromium_scoped_end",
+    "executedCases": 4,
+    "instrumentedSpaceTrial": true,
+    "passed": false,
+    "provenance": "test_fixture_only_not_authentication",
+    "scope": "DOM_intra_surface_only"
+  },
+  "focusStressPassed": false,
+  "hostConfigurationWritten": false,
+  "hostSysfsBound": false,
+  "knownEnglishPreserved": true,
+  "longTokenPreserved": true,
+  "maxTrialSeconds": 75,
+  "mixedTokenPreserved": true,
+  "nativeUndoChangesDocument": true,
+  "nativeUndoRestoresPreviousCommit": true,
+  "nextWordPreserved": true,
+  "parentDisplayConnection": true,
+  "passed": false,
+  "passwordPassthrough": true,
+  "pendingWordSurvivedCrash": true,
+  "postCrashInputContinues": true,
+  "preeditObserved": true,
+  "primaryStatOnly": true,
+  "profileVariant": true,
+  "readyForLiveUse": false,
+  "renderNodeGranted": true,
+  "schema": 1,
+  "secondWordCorrected": true,
+  "slackConnected": false,
+  "slackSupport": false,
+  "syntheticInputOnly": true,
+  "date": "2026-11-14",
+  "runnerCommit": "bed8364",
+  "singleTrialApprovalConsumed": true,
+  "baselineRequiredChecks": 17,
+  "sourceSha256": {
+    "tests/chromium_ime/driver.mjs": "ede0b9073054cc2aa85615e6ec6ddd6fe34c7efc05af9b46a050a5938a4dbf4c",
+    "tests/chromium_ime/space-telemetry.mjs": "ac00d233803c820a791764718569bcb33e095f30cc2e77027a00a089634ba384",
+    "tests/chromium_ime/adversarial-focus.mjs": "078ad0299ac5882e302f26630ac4fad2cad1c1b5592f2573e90073bc92b60ec8",
+    "src/fcitxlab.cpp": "81aed2cc3ee2477d4a5fb04c88399e9a33729a9e3e8e0f04b29858f9b28bb871"
+  }
+}
