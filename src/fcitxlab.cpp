@@ -131,6 +131,7 @@
 #include <fcitx-config/iniparser.h>
 #include <fcitx-config/option.h>
 #include "fcitxlabprofile.h"
+#include "frequentwords.h"
 #include <fcitx-utils/standardpaths.h>
 #endif
 
@@ -328,11 +329,13 @@ public:
     bool typedRu = false;
     bool chosen = false; // the owner used the gesture on this word: never auto-correct it
     // Text to show/commit; empty conversion (never for a..z) keeps the original.
-    std::string shown() const { return form(word(), typedRu != converted); }
-    static std::string form(const std::string &typed, bool asRu) {
-        if (!asRu) return typed;
-        std::string out = rasklad::manual::usToRu(typed);
-        return out.empty() ? typed : out;
+    // Bit i: the i-th key was typed as a capital letter (SYS-226). Keys are lowercase.
+    std::uint32_t upper = 0;
+    std::string shown() const { return form(word(), typedRu != converted, upper); }
+    static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
+        std::string out = asRu ? rasklad::manual::usToRu(typed) : typed;
+        if (out.empty()) out = typed;
+        return mask ? rasklad::manual::applyUpper(out, mask) : out;
     }
     // The last word this addon committed with Space, kept only until any other
     // key, lifecycle event or failed check. Only it may be replaced after Space.
@@ -343,6 +346,7 @@ public:
     std::string lastTyped;
     bool lastConverted = false;
     bool lastTypedRu = false;
+    std::uint32_t lastUpper = 0;
     bool lastValid = false;
     bool lastConfirmed = false;
     unsigned lastCursor = 0;
@@ -354,11 +358,11 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return form(lastTyped, lastTypedRu != lastConverted) + ' '; }
+    std::string lastText() const { return form(lastTyped, lastTypedRu != lastConverted, lastUpper) + ' '; }
     void forgetLast() {
         volatile char *p = lastTyped.data();
         for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
-        lastTyped.clear(); lastConverted = false; lastTypedRu = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
+        lastTyped.clear(); lastConverted = false; lastTypedRu = false; lastUpper = 0; lastValid = false; lastConfirmed = false; lastCursor = 0;
         lastRule = Confirm::Never; lastPreCursor = 0;
     }
 #endif
@@ -394,8 +398,12 @@ public:
     void pop() {
         if (len_ > 0) {
             buf_[--len_] = '\0';
+#ifdef RASKLAD_MANUAL_LAB
+            upper &= ~(std::uint32_t{1} << len_);
+#endif
         }
     }
+    std::size_t size() const { return len_; }
     std::string word() const { return std::string(buf_.data(), len_); }
 
     void clearBuffer() {
@@ -409,6 +417,7 @@ public:
         converted = false;
         typedRu = false;
         chosen = false;
+        upper = 0;
         gesture.reset();
 #endif
         // Normal local-buffer completion only. NEVER acknowledge a disabled
@@ -1007,7 +1016,7 @@ private:
     }
     static void replaceLast(fcitx::InputContext *ic, LabState &s) {
         const std::string oldText = s.lastText();
-        std::string newText = LabState::form(s.lastTyped, s.lastTypedRu == s.lastConverted) + ' ';
+        std::string newText = LabState::form(s.lastTyped, s.lastTypedRu == s.lastConverted, s.lastUpper) + ' ';
         const auto &st = ic->surroundingText();
         const long n = rasklad::manual::codePointCount(oldText);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
@@ -1057,6 +1066,9 @@ private:
     std::optional<std::string> autoText(LabState &s, bool &whole) {
         whole = false;
         if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
+        // Case: all lowercase, a capital first letter, or all capitals (letters only).
+        const std::uint32_t all = s.size() >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << s.size()) - 1;
+        if (s.upper != 0 && s.upper != 1 && s.upper != all) return std::nullopt;
         std::string w = s.word();
         std::optional<std::string> result;
         std::size_t cut = w.size();
@@ -1070,9 +1082,11 @@ private:
             std::string typed = LabState::form(keys, s.typedRu);
             std::string other = LabState::form(keys, !s.typedRu);
             auto fix = profile_->correctTyped(typed, s.typedRu);
-            if (fix && *fix == other && other != typed) {
+            const bool ok = (fix && *fix == other && other != typed) ||
+                            (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
+            if (ok) {
                 if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
-                else result = other + w.substr(cut);
+                else result = LabState::form(other + w.substr(cut), false, s.upper);
             }
             if (fix) wipeString(*fix);
             wipeString(keys); wipeString(typed); wipeString(other);
@@ -1501,9 +1515,29 @@ private:
             ruKey = manualChar != 0;
         }
         // A layout switch inside a word ends the word (flushed as typed below).
+        // SYS-226: a capital letter (Shift or Caps Lock, no other modifier) is kept as
+        // its lowercase key plus a case bit.
+        bool upperKey = false;
+        if (!manualChar && !key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
+                                                                 fcitx::KeyState::Super, fcitx::KeyState::Hyper})) {
+            if (sym >= FcitxKey_A && sym <= FcitxKey_Z) {
+                manualChar = static_cast<char>('a' + (sym - FcitxKey_A));
+                upperKey = true;
+            } else {
+                const char32_t u = static_cast<char32_t>(fcitx::Key::keySymToUnicode(static_cast<fcitx::KeySym>(sym)));
+                const char32_t lower = (u >= U'\u0410' && u <= U'\u042f') ? u + 0x20 : (u == U'\u0401' ? U'\u0451' : 0);
+                if (lower) {
+                    manualChar = rasklad::manual::ruToUsKey(lower);
+                    ruKey = upperKey = manualChar != 0;
+                }
+            }
+        }
         if (manualChar && !s->empty() && ruKey != s->typedRu) manualChar = 0;
+        const bool letterKey = plain || upperKey;
+#else
+        const bool letterKey = plain;
 #endif
-        if (plain && manualChar && !s->full()) {
+        if (letterKey && manualChar && !s->full()) {
 #else
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
 #endif
@@ -1518,6 +1552,9 @@ private:
             }
 #ifdef RASKLAD_MANUAL_LAB
             if (s->empty()) s->typedRu = ruKey;
+#ifdef RASKLAD_PRODUCT
+            if (upperKey) s->upper |= std::uint32_t{1} << s->size();
+#endif
             acceptLetter(ic, *s, event, manualChar);
 #else
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
@@ -1554,7 +1591,7 @@ private:
                 s->forgetLast();
                 {
 #endif
-                s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu;
+                s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu; s->lastUpper = s->upper;
                 s->lastValid = true; // Pending
                 {
                     const auto &pre = ic->surroundingText();
@@ -1587,7 +1624,12 @@ private:
 
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
         // same focused context, then let the key pass unfiltered.
+#ifdef RASKLAD_PRODUCT
+        // Punctuation ends a word and a new one may start right after it (куда-то).
+        if (!boundary && !wordEnd(key)) s->setBypass(true);
+#else
         if (!boundary) s->setBypass(true);
+#endif
 #ifdef RASKLAD_WITNESS_LAB
         if (wSpacePress) {
             lw::inc(s->empty() ? lw::Counter::passEmpty

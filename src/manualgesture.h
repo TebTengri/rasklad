@@ -60,6 +60,34 @@ inline std::string usToRu(std::string_view word) {
     return out;
 }
 
+// SYS-226: uppercases code point i of UTF-8 text when bit i of mask is set; only
+// a..z and Cyrillic а..я/ё change. Anything malformed returns the text unchanged.
+inline std::string applyUpper(const std::string &text, std::uint32_t mask) {
+    std::string out;
+    out.reserve(text.size());
+    std::size_t i = 0;
+    for (unsigned idx = 0; i < text.size(); ++idx) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        const bool up = idx < 32 && (mask >> idx) & 1u;
+        if (c < 0x80) {
+            out.push_back(up && c >= 'a' && c <= 'z' ? static_cast<char>(c - 32) : static_cast<char>(c));
+            ++i;
+        } else if ((c & 0xe0) == 0xc0 && i + 1 < text.size()) {
+            char32_t cp = (static_cast<char32_t>(c & 0x1f) << 6) | (static_cast<unsigned char>(text[i + 1]) & 0x3f);
+            if (up) {
+                if (cp >= U'\u0430' && cp <= U'\u044f') cp -= 0x20;
+                else if (cp == U'\u0451') cp = U'\u0401';
+            }
+            out.push_back(static_cast<char>(0xc0 | (cp >> 6)));
+            out.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
+            i += 2;
+        } else {
+            return text;
+        }
+    }
+    return out;
+}
+
 // Number of Unicode code points in valid UTF-8, or -1 if malformed.
 inline long codePointCount(std::string_view text) {
     long n = 0;

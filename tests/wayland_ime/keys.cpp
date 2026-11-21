@@ -238,6 +238,7 @@ uint32_t codeFor(char c)
     case '[': return KEY_LEFTBRACE;
     case '`': return KEY_GRAVE;
     case ',': return KEY_COMMA;
+    case '-': return KEY_MINUS;
     case ' ': return KEY_SPACE;
     default: return 0;
     }
@@ -252,7 +253,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -287,6 +288,9 @@ Cmd parse(std::string_view line)
         if (line == "wordcomma") return Cmd::WordComma;
         if (line == "exclaim") return Cmd::Exclaim;
         if (line == "enter") return Cmd::Enter;
+        if (line == "capword") return Cmd::CapWord;
+        if (line == "shortword") return Cmd::ShortWord;
+        if (line == "hyphen") return Cmd::Hyphen;
     }
     return Cmd::Unknown;
 }
@@ -338,6 +342,9 @@ bool run(Session &s, Cmd cmd)
     case Cmd::WordComma: return typeFixed(s, "ghbdtn, ");
     case Cmd::Exclaim: return s.chord(KEY_LEFTSHIFT, KEY_1);
     case Cmd::Enter: return s.tap(KEY_ENTER);
+    case Cmd::CapWord: return s.chord(KEY_LEFTSHIFT, KEY_G) && typeFixed(s, "hbdtn ");
+    case Cmd::ShortWord: return typeFixed(s, "rfr ");
+    case Cmd::Hyphen: return typeFixed(s, "relf-nj ");
     case Cmd::Unknown: break;
     }
     return false;

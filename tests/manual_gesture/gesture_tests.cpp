@@ -36,6 +36,10 @@ int main() {
         CHECK(rasklad::manual::ruToUsKey(ru.toUcs4().at(0)) == c);
     }
     CHECK(rasklad::manual::ruToUsKey(U'a') == 0);
+    CHECK(rasklad::manual::applyUpper("привет", 1) == "Привет");
+    CHECK(rasklad::manual::applyUpper("ёлка", 1) == "Ёлка");
+    CHECK(rasklad::manual::applyUpper("hello", 0x1f) == "HELLO");
+    CHECK(rasklad::manual::applyUpper("как,", 0xf) == "КАК,");
     CHECK(rasklad::manual::ruToUsKey(U'\u0410') == 0); // uppercase А is not a lowercase key
     CHECK(rasklad::manual::ruToUsKey(U'\u0400') == 0);
     CHECK(!rasklad::manual::wordChar('/'));
