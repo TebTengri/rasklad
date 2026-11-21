@@ -92,3 +92,14 @@ foreign-toplevel (AppMonitor) и отдаёт его как `InputContext::progr
   выполнялись (`...-listed-001-result.json`).
 - В списке, повтор 002: 26/26, включая замену и возврат после пробела
   (`data/product-addon-hyprland-listed-002-result.json`).
+
+## Пакет для Arch (SYS-228, 2026-11-21)
+
+`packaging/arch/PKGBUILD`, сборка `tools/build_arch_package.sh` (из
+закоммиченного HEAD, без установки), инструкция `packaging/arch/INSTALL.md`.
+Пакет `rasklad-fcitx5-0.1.0-1`: `/usr/lib/fcitx5/rasklad.so`,
+`/usr/share/fcitx5/addon/rasklad.conf`, документация и лицензия; зависимость
+только `fcitx5`. При сборке — тесты политики и разрешений, проверка импортов.
+Библиотека из пакета (флаги makepkg) на закрытом Sway: в списке 26/26, не в
+списке 3/3 (`data/arch-package-sway-*-001-result.json`).
+Установка на хост — только с отдельного разрешения владельца.
