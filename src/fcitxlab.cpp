@@ -265,16 +265,20 @@ public:
     bool lastValid = false;
     bool lastConfirmed = false;
     unsigned lastCursor = 0;
-    // Client cursor seen just before the Space commit. A confirming update must
-    // show a different cursor, so a stale pre-commit repeat never confirms.
-    bool lastPreKnown = false;
+    // How a Pending word may confirm. AfterCommit: the update's cursor must be the
+    // pre-commit cursor advanced by exactly the committed length (a stale pre-commit
+    // repeat, or a click onto the same text elsewhere, never confirms). AfterReplace:
+    // the old-form text cannot match the new form, and same-length forms keep the
+    // cursor in place, so no cursor rule. Never: the pre-commit cursor was unknown.
+    enum class Confirm { Never, AfterCommit, AfterReplace };
+    Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
     std::string lastText() const { return form(lastTyped, lastConverted) + ' '; }
     void forgetLast() {
         volatile char *p = lastTyped.data();
         for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
         lastTyped.clear(); lastConverted = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
-        lastPreKnown = false; lastPreCursor = 0;
+        lastRule = Confirm::Never; lastPreCursor = 0;
     }
 #endif
     const std::uint64_t id;
@@ -811,7 +815,13 @@ private:
         if (!s.lastConfirmed) {
             // Stale pre-commit updates may still arrive: they never confirm and never arm.
             // Fail closed when the pre-commit cursor was unknown.
-            if (match && s.lastPreKnown && ic->surroundingText().cursor() != s.lastPreCursor) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
+            const unsigned cursor = ic->surroundingText().cursor();
+            const long n = rasklad::manual::codePointCount(s.lastText());
+            const bool fresh =
+                (s.lastRule == LabState::Confirm::AfterReplace) ||
+                (s.lastRule == LabState::Confirm::AfterCommit && n > 0 &&
+                 static_cast<unsigned long>(cursor) == static_cast<unsigned long>(s.lastPreCursor) + static_cast<unsigned long>(n));
+            if (match && fresh) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
             return;
         }
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
@@ -833,9 +843,7 @@ private:
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
-        // The old-form update cannot match the new form, so no cursor-move rule here
-        // (same-length forms keep the cursor in place).
-        s.lastPreKnown = true; s.lastPreCursor = ~0u;
+        s.lastRule = LabState::Confirm::AfterReplace;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -1298,8 +1306,9 @@ private:
                 s->lastTyped = w; s->lastConverted = s->converted; s->lastValid = true; // Pending
                 {
                     const auto &pre = ic->surroundingText();
-                    s->lastPreKnown = pre.isValid() && pre.cursor() == pre.anchor();
-                    s->lastPreCursor = s->lastPreKnown ? pre.cursor() : 0;
+                    const bool known = pre.isValid() && pre.cursor() == pre.anchor();
+                    s->lastRule = known ? LabState::Confirm::AfterCommit : LabState::Confirm::Never;
+                    s->lastPreCursor = known ? pre.cursor() : 0;
                 }
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
