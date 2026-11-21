@@ -168,6 +168,7 @@ try{
   report.autoZhurnalValue=await v();report.autoZhurnal=report.autoZhurnalValue==='журнал ';
   phase='gesture_choice_kept';await reset();await type('word');await type('shift2');await type('shift2');await type('space');
   report.gestureChoiceKept=await v()==='ghbdtn ';
+  await type('word');await type('space');report.autoAfterGestureWord=await v()==='ghbdtn привет ';
   phase='gesture_convert';await reset();await type('word');await type('shift2');
   report.gesturePreedit=await v()==='привет';await type('space');report.gestureCommit=await v()==='привет ';
   phase='flush_no_auto';await reset();await type('word');await type('escape');
@@ -187,7 +188,7 @@ try{
   report.autoFocusNoLeak=await ev(`other.value===' '`);
   phase='auto_shift_letter';await reset();await type('word');await type('shifta');await type('space');
   report.autoShiftLetterOriginal=await v()==='ghbdtnA ';
-  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','gestureChoiceKept','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
+  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
   // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.

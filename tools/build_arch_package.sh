@@ -31,6 +31,7 @@ sum=$(sha256sum "$out/rasklad-${ver}.tar.gz" | cut -d' ' -f1)
 stage=$(mktemp -d "$out/profile.XXXXXX")
 while IFS= read -r rel; do
   [[ -z $rel || $rel == \#* ]] && continue
+  if [[ $rel == /* || /$rel/ == */../* || /$rel/ == */./* ]]; then echo 'unsafe profile path' >&2; exit 1; fi
   case "$rel" in
     data/*) git -C "$root" show "HEAD:$rel" > "$stage/tmp" ;;
     build/*) [[ -f "$profile_root/$rel" && ! -L "$profile_root/$rel" ]] || { echo "missing profile file" >&2; exit 1; }

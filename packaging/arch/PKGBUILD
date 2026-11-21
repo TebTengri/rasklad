@@ -44,6 +44,7 @@ package() {
   install -Dm644 addon/rasklad.conf "${pkgdir}/usr/share/fcitx5/addon/rasklad.conf"
   # Reviewed detector profile (dictionaries, model, notices) at its pinned paths.
   (cd "${srcdir}/profile" && find . -type f -print0 | while IFS= read -r -d '' f; do
+    [[ /$f/ != */../* ]] || return 1
     install -Dm644 "$f" "${pkgdir}/usr/share/fcitx5/rasklad/profile/${f#./}"
   done)
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
