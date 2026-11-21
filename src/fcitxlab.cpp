@@ -556,6 +556,10 @@ public:
                 }));
         }
 #ifdef RASKLAD_PRODUCT
+        // Two Alt taps belong to one window: a focus change between them ends the gesture.
+        for (const auto type : {fcitx::EventType::InputContextFocusIn, fcitx::EventType::InputContextFocusOut})
+            watchers_.emplace_back(instance_->watchEvent(type, fcitx::EventWatcherPhase::PreInputMethod,
+                                                         [this](fcitx::Event &) { altTap_.reset(); }));
         // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
         // keyboard-ru, whoever switched it (double Alt, a correction or an undo).
         watchers_.emplace_back(instance_->watchEvent(
@@ -1762,11 +1766,11 @@ private:
         if (auto *s = state(ic, false); s && !s->empty() && !s->stopping()) {
             auto ref = ic->watch();
             commitAndClear(ic, *s, s->shown());
-            if (auto *again = ref.get()) {
-                if (auto *after = state(again, false)) after->forgetLast();
-            } else {
-                return;
-            }
+            auto *again = ref.get(); // the client may drop the context while committing
+            if (!again) return;
+            if (auto *after = state(again, false)) after->forgetLast();
+            switchLayout(again->watch(), toRu);
+            return;
         }
         switchLayout(ic->watch(), toRu);
     }

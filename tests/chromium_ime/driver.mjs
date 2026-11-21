@@ -171,7 +171,11 @@ try{
   await type('alttab');await settle();await type('xspace');report.altTabValue=await v();report.altTabKeepsUs=report.altTabValue===base+'x x ';
   await type('alt2');await settle();await type('xspace');report.altDoubleValue=await v();report.altDoubleToRu=report.altDoubleValue===base+'x x ч ';
   await type('altr2');await settle();await type('xspace');report.altRightValue=await v();report.altRightToUs=report.altRightValue===base+'x x ч x ';
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','altSingleKeepsUs','altTabKeepsUs','altDoubleToRu','altRightToUs'];
+  const altBase=base+'x x ч x ';
+  await type('altslow');await settle();await type('xspace');report.altSlowValue=await v();report.altSlowKeepsUs=report.altSlowValue===altBase+'x ';
+  // A word being typed is kept as typed (not corrected, not lost), then the layout switches.
+  await type('word');await type('alt2');await settle();await type('xspace');report.altWordValue=await v();report.altWordKeptThenRu=report.altWordValue===altBase+'x ghbdtnч ';
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','altSingleKeepsUs','altTabKeepsUs','altDoubleToRu','altRightToUs','altSlowKeepsUs','altWordKeptThenRu'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='listed'){
   // SYS-226 product addon: automatic correction on Space by the reviewed profile, both
