@@ -28,6 +28,25 @@ inline std::string_view punctToRu(char c) {
 }
 inline bool wordChar(char c) { return (c >= 'a' && c <= 'z') || !punctToRu(c).empty(); }
 
+// SYS-226: the us key (a..z or one of the seven punctuation keys) that carries this
+// lowercase Russian letter in the default ru layout; 0 for anything else.
+inline char ruToUsKey(char32_t c) {
+    for (std::size_t i = 0; i < kUsToRu.size(); ++i) {
+        const auto r = kUsToRu[i];
+        // Every entry is one two-byte UTF-8 code point in U+0430..U+044F.
+        const char32_t cp = (static_cast<char32_t>(static_cast<unsigned char>(r[0]) & 0x1f) << 6) |
+                            (static_cast<unsigned char>(r[1]) & 0x3f);
+        if (cp == c) return static_cast<char>('a' + i);
+    }
+    for (const char k : {',', '.', ';', '\'', '[', ']', '`'}) {
+        const auto r = punctToRu(k);
+        const char32_t cp = (static_cast<char32_t>(static_cast<unsigned char>(r[0]) & 0x1f) << 6) |
+                            (static_cast<unsigned char>(r[1]) & 0x3f);
+        if (cp == c) return k;
+    }
+    return 0;
+}
+
 // Converts a word of lowercase ASCII letters and the seven keys above. Anything
 // else returns "" (the caller keeps the original; fail closed).
 inline std::string usToRu(std::string_view word) {

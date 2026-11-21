@@ -1,19 +1,20 @@
-# SYS-228: Arch package for the rasklad Fcitx5 addon (manual double-Shift).
+# SYS-228/SYS-226: Arch package for the rasklad Fcitx5 addon (automatic correction
+# by the reviewed local profile, double-Shift gesture).
 # Built locally by tools/build_arch_package.sh from a git archive of this repo.
 # Installs only an Fcitx addon: no service, autostart, setuid, udev or user
 # configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
-pkgdesc='Manual double-Shift keyboard layout correction (us->ru) for Fcitx5, in listed applications only'
+pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
 license=('MIT')
-depends=('fcitx5')
+depends=('fcitx5' 'qt6-base' 'hunspell')
 optdepends=('fcitx5-configtool: edit the list of applications')
-makedepends=('fcitx5' 'qt6-base')  # qmake6 only; the addon does not link Qt
-source=("rasklad-${pkgver}.tar.gz")
-sha256sums=('@SHA256@')
+makedepends=('fcitx5' 'qt6-base' 'hunspell')
+source=("rasklad-${pkgver}.tar.gz" "rasklad-profile-${pkgver}.tar.gz")
+sha256sums=('@SHA256@' '@PROFILE_SHA256@')
 
 build() {
   cd "rasklad-${pkgver}"
@@ -41,6 +42,10 @@ package() {
   cd "rasklad-${pkgver}"
   install -Dm755 build/addon/rasklad.so "${pkgdir}/usr/lib/fcitx5/rasklad.so"
   install -Dm644 addon/rasklad.conf "${pkgdir}/usr/share/fcitx5/addon/rasklad.conf"
+  # Reviewed detector profile (dictionaries, model, notices) at its pinned paths.
+  (cd "${srcdir}/profile" && find . -type f -print0 | while IFS= read -r -d '' f; do
+    install -Dm644 "$f" "${pkgdir}/usr/share/fcitx5/rasklad/profile/${f#./}"
+  done)
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm644 docs/SYS-246-PRODUCT-ADDON.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
   install -Dm644 packaging/arch/INSTALL.md "${pkgdir}/usr/share/doc/${pkgname}/INSTALL.md"

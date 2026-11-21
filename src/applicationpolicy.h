@@ -11,7 +11,8 @@ namespace rasklad::policy {
 enum class Mode { Off, Manual, Automatic };
 enum class Domain { RegularApplication, OwnedFixture };
 // CompositorAppId: the app id the compositor reports for the focused window (via
-// Fcitx). A claim, not authentication: accepted for Mode::Manual only.
+// Fcitx). A claim, not authentication. Owner decision 2026-11-21 (SYS-226): accepted
+// for Manual and, when the adapter opts in, Automatic, in applications the owner listed.
 enum class Identity { Unknown, DeclaredOnly, VerifiedAdapter, OwnedFixtureContract, CompositorAppId };
 enum class Field { Unknown, Prose, Password, Code, Url, Command, Mention, Protected };
 enum class Reason { Allowed, Disabled, UnsupportedMode, InvalidRegistry, UnknownAdapter,

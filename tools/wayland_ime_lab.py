@@ -102,7 +102,13 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
  if frontend_variant!='system' and (not snapshot_fds or '/lab/addons/libwaylandim.so' not in snapshot_fds):raise base.Refused('private_frontend_snapshot_required')
  if disable_suite:
   paths=dict(paths);paths['addon']=ROOT/'build/chromium-ime/disable-addon/raskladlab.so'
- a=chrome.argv(paths,identity,profile)
+ a=chrome.argv(paths,identity,{} if PRODUCT_SUITE else profile)
+ if PRODUCT_SUITE and profile:
+  # Product layout: <XDG_DATA_HOME>/fcitx5/rasklad/profile (the user data directory
+  # Fcitx searches first; /home is a private tmpfs here). No lab profile variable.
+  at=a.index('--');pre=['--dir','/home/lab/.local/share/fcitx5/rasklad/profile']
+  for relative,source in profile.items():pre+=['--ro-bind',str(source),'/home/lab/.local/share/fcitx5/rasklad/profile/'+relative]
+  a=a[:at]+pre+a[at:]
  # Drop X11/GTK routing; this test must use native text-input/input-method.
  clean=[];i=0
  while i<len(a):
@@ -180,7 +186,7 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
   base.regular_file(ROOT/'tests/chromium_ime/server-route-witness.mjs')
   base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
  if os.geteuid()==0:raise base.Refused('root_not_admitted')
- if input_root is None and not slack_gate and not manual_suite and not product_suite:raise base.Refused('explicit_input_root_required')
+ if input_root is None and not slack_gate and not manual_suite:raise base.Refused('explicit_input_root_required')
  if space_telemetry and not focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
  if product_suite not in (None,'listed','unlisted'):raise base.Refused('product_suite_mode')
  global MANUAL_SUITE,PRODUCT_SUITE;MANUAL_SUITE=bool(manual_suite or manual_gesture or product_suite);PRODUCT_SUITE=product_suite
@@ -217,7 +223,11 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
   if path.stat().st_size>5_000_000:raise base.Refused('runtime_size')
 
  # The gate test addon has no profile/dictionaries.
- profile={} if slack_gate or manual_suite or product_suite else {name:(ROOT if name.startswith('data/') else Path(input_root).absolute())/name for name in chrome.PROFILE_PATHS}
+ # SYS-226: the product addon finds the same pinned profile in its Fcitx data directory.
+ profile={} if slack_gate or manual_suite else {name:(ROOT if name.startswith('data/') else Path(input_root).absolute())/name for name in chrome.PROFILE_PATHS}
+ if product_suite and os.environ.get('RASKLAD_PRODUCT_PACKAGED_CLI')=='1':
+  # The profile files extracted from the built package, not the working copies.
+  profile={name:ROOT/'build/arch-package/x/usr/share/fcitx5/rasklad/profile'/name for name in chrome.PROFILE_PATHS}
  for p in profile.values():base.regular_file(p)
  d=Path(tempfile.mkdtemp(prefix='native-wayland-',dir=base.ensure_private_base(ROOT)));child=None;snapshots={}
  try:

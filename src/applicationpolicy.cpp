@@ -37,18 +37,20 @@ Match inspect(Registry registry, const Context &context, Mode mode) noexcept
     const bool identity =
         (entry.domain == Domain::OwnedFixture && context.identity == Identity::OwnedFixtureContract) ||
         (entry.domain == Domain::RegularApplication && context.identity == Identity::VerifiedAdapter) ||
-        // A compositor app-id claim is enough only for the user's own per-word gesture.
-        (entry.domain == Domain::RegularApplication && mode == Mode::Manual && entry.manual &&
-         context.identity == Identity::CompositorAppId);
+        // A compositor app-id claim: the owner's own list, for the per-word gesture and,
+        // where the adapter opts in, automatic correction (owner decision, SYS-226).
+        (entry.domain == Domain::RegularApplication && context.identity == Identity::CompositorAppId &&
+         ((mode == Mode::Manual && entry.manual) || (mode == Mode::Automatic && entry.automatic)));
     if (!identity || !validDomain(context.domain) || context.domain != entry.domain ||
         context.declaredApplicationId != entry.applicationId ||
         context.verifiedApplicationId != entry.applicationId || !context.identityBinding)
         return {Reason::IdentityUnproved};
     // Absence of a password flag is insufficient; only explicit prose qualifies.
-    // Fcitx cannot tell prose from other text in a regular application; the manual
-    // gesture accepts Unknown, never a field known to be protected/code/etc.
+    // Fcitx cannot tell prose from other text in a regular application: with a
+    // compositor app-id claim, Unknown is accepted; a field known to be protected,
+    // code, URL, command or mention never is. Verified adapters still need Prose.
     const bool field = context.field == Field::Prose ||
-        (mode == Mode::Manual && context.field == Field::Unknown);
+        (context.identity == Identity::CompositorAppId && context.field == Field::Unknown);
     if (!field) return {Reason::ProtectedContext};
     if (!context.focused || !context.id || !context.epoch) return {Reason::ContextUnready};
     return {Reason::Allowed, index};

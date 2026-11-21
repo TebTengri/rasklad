@@ -129,7 +129,8 @@ struct Session {
         ctx = xkb_context_new(static_cast<xkb_context_flags>(XKB_CONTEXT_NO_ENVIRONMENT_NAMES | XKB_CONTEXT_NO_DEFAULT_INCLUDES));
         if (!ctx) return false;
         if (!xkb_context_include_path_append_default(ctx)) return false;
-        const xkb_rule_names names = {"evdev", "pc105", "us", "", ""};
+        // Group 0 is us (all older sequences unchanged); group 1 is ru for SYS-226.
+        const xkb_rule_names names = {"evdev", "pc105", "us,ru", ",", ""};
         keymap = xkb_keymap_new_from_names(ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
         if (!keymap) return false;
         state = xkb_state_new(keymap);
@@ -191,6 +192,19 @@ struct Session {
 
     bool tap(uint32_t code) { return sendKey(code, true) && sendKey(code, false); }
 
+    // Locks the layout group (0 us, 1 ru) as a layout switch would, with no key.
+    bool setGroup(uint32_t group)
+    {
+        const uint32_t dep = xkb_state_serialize_mods(state, XKB_STATE_MODS_DEPRESSED);
+        const uint32_t lat = xkb_state_serialize_mods(state, XKB_STATE_MODS_LATCHED);
+        const uint32_t lock = xkb_state_serialize_mods(state, XKB_STATE_MODS_LOCKED);
+        xkb_state_update_mask(state, dep, lat, lock, 0, 0, group);
+        const uint32_t grp = xkb_state_serialize_layout(state, XKB_STATE_LAYOUT_EFFECTIVE);
+        zwp_virtual_keyboard_v1_modifiers(vk, dep, lat, lock, grp);
+        lastDep = dep; lastLat = lat; lastLock = lock; lastGroup = grp;
+        return wl_display_roundtrip(display) >= 0;
+    }
+
     bool chord(uint32_t mod, uint32_t code)
     {
         return sendKey(mod, true) && tap(code) && sendKey(mod, false);
@@ -238,7 +252,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -268,6 +282,8 @@ Cmd parse(std::string_view line)
         if (line == "khorosho") return Cmd::Khorosho;
         if (line == "yolka") return Cmd::Yolka;
         if (line == "hellocomma") return Cmd::HelloComma;
+        if (line == "rugroup") return Cmd::RuGroup;
+        if (line == "usgroup") return Cmd::UsGroup;
     }
     return Cmd::Unknown;
 }
@@ -314,6 +330,8 @@ bool run(Session &s, Cmd cmd)
     case Cmd::Khorosho: return typeFixed(s, "[jhjij");
     case Cmd::Yolka: return typeFixed(s, "`krf");
     case Cmd::HelloComma: return typeFixed(s, "hello, ");
+    case Cmd::RuGroup: return s.setGroup(1);
+    case Cmd::UsGroup: return s.setGroup(0);
     case Cmd::Unknown: break;
     }
     return false;

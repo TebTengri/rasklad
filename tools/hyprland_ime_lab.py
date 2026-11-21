@@ -190,8 +190,10 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
         if profile:
             raise base.Refused('slack_launch_profile')
         extra += launch_lab().sandbox_extra(directory, slack_launch)
+    # SYS-226: the product addon finds the pinned profile in its Fcitx user data directory.
+    target = '/home/lab/.local/share/fcitx5/rasklad/profile/' if PRODUCT_SUITE else '/lab/profile/'
     for relative, path in profile.items():
-        extra += ['--ro-bind', str(path), '/lab/profile/'+relative]
+        extra += ['--ro-bind', str(path), target+relative]
     env = {'RASKLAD_HYPRLAND_IME_LAB': '1', 'RASKLAD_NATIVE_WAYLAND_LAB': '1',
            'RASKLAD_CHROMIUM_IME_LAB': '1', 'RASKLAD_REVIEWED_PROFILE_LAB': '1',
            'FCITX_ADDON_DIRS': '/lab/addons:/usr/lib/fcitx5', 'XDG_DATA_DIRS': '/usr/share',
@@ -343,7 +345,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
-    if input_root is None and not slack_supervised and not slack_launch and not manual_suite and not product_suite:
+    if input_root is None and not slack_supervised and not slack_launch and not manual_suite:
         raise base.Refused('explicit_input_root_required')
     if space_telemetry and not focus_stress:
         raise base.Refused('space_telemetry_requires_focus_suite')
@@ -397,7 +399,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
             base.regular_file(ROOT/source)
     keys = ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'
     base.regular_file(keys, True)
-    profile = {} if slack_supervised or slack_launch or manual_suite or product_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
+    profile = {} if slack_supervised or slack_launch or manual_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
                for relative in chrome.PROFILE_PATHS}
     for path in profile.values():
         base.regular_file(path)

@@ -19,7 +19,8 @@ namespace rasklad::fcitxlab {
 class ProfileDecision final
 {
 public:
-    ProfileDecision() noexcept;
+    // root: directory holding the pinned profile files at their relative paths.
+    explicit ProfileDecision(const char *root = "/lab/profile") noexcept;
     ~ProfileDecision();
     ProfileDecision(const ProfileDecision &) = delete;
     ProfileDecision &operator=(const ProfileDecision &) = delete;
@@ -27,6 +28,10 @@ public:
     [[nodiscard]] bool ready() const noexcept;
     // Candidate only for RouteAction::Correct; nullopt keeps the original.
     [[nodiscard]] std::optional<std::string> correct(std::string_view word, policy::Field field) noexcept;
+    // SYS-226: typed is the exact UTF-8 text of one word as typed in the given layout
+    // (us keys, or their ru-layout Cyrillic). Only the safeConfirmed Correct yields a value.
+    // The caller has already refused protected fields; this asks for prose routing.
+    [[nodiscard]] std::optional<std::string> correctTyped(std::string_view typed, bool typedInRu) noexcept;
 
 private:
     struct Impl;

@@ -125,9 +125,15 @@ int main() {
             auto x=c;x.identity=identity;require(!authorizeCapture(r,manual,x).allowed(),"manual: weaker identity refused");
         }
         auto automatic=manual;automatic.mode=Mode::Automatic;
-        require(!authorizeCapture(r,automatic,c).allowed(),"automatic never from compositor app-id");
+        require(!authorizeCapture(r,automatic,c).allowed(),"automatic needs adapter opt-in");
         apps[0].automatic=true;
-        require(!authorizeCapture(r,automatic,c).allowed(),"automatic needs verified adapter and prose");
+        require(authorizeCapture(r,automatic,c).allowed(),"automatic: owner-listed app with opt-in (SYS-226)");
+        for (Field field : {Field::Password,Field::Code,Field::Url,Field::Command,Field::Mention,Field::Protected}) {
+            auto x=c;x.field=field;require(!authorizeCapture(r,automatic,x).allowed(),"automatic: protected field refused");
+        }
+        {auto x=c;x.identity=Identity::DeclaredOnly;require(!authorizeCapture(r,automatic,x).allowed(),"automatic: declared-only refused");}
+        {auto x=c;x.identity=Identity::VerifiedAdapter;x.field=Field::Unknown;require(!authorizeCapture(r,automatic,x).allowed(),"verified adapter still needs prose");}
+        apps[0].automatic=false;
         apps[0].manual=false;
         require(!authorizeCapture(r,manual,c).allowed(),"manual needs adapter manual support");
         apps[0].manual=true;

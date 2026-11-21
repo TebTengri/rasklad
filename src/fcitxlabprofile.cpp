@@ -6,6 +6,7 @@
 #include "profileverify.h"
 
 #include <QByteArray>
+#include <QList>
 #include <QString>
 #include <QStringView>
 
@@ -32,12 +33,12 @@ struct ProfileDecision::Impl {
     std::unique_ptr<profile::LocalEvidenceProvider> provider;
 };
 
-ProfileDecision::ProfileDecision() noexcept
+ProfileDecision::ProfileDecision(const char *root) noexcept
 {
     try {
         auto impl = std::make_unique<Impl>();
         profile::ProfileError error = profile::ProfileError::None;
-        impl->provider = profile::LocalEvidenceProvider::load(QStringLiteral("/lab/profile"),
+        impl->provider = profile::LocalEvidenceProvider::load(QString::fromUtf8(root ? root : ""),
                                                                profile::productionPins(), error);
         if (impl->provider && error == profile::ProfileError::None)
             m_impl = std::move(impl);
@@ -61,6 +62,36 @@ std::optional<std::string> ProfileDecision::correct(std::string_view word, polic
         const QString token = QString::fromLatin1(word.data(), static_cast<qsizetype>(word.size()));
         // The caller must supply its explicitly validated fixture field.
         const routing::RouteRequest request{routing::FieldContext::Prose, routing::InputLayout::KnownUs,
+                                            QStringView(token)};
+        const routing::RouteDecision decision =
+            routing::route(request, routing::RouteProfile::SafeConfirmed, m_impl->provider.get());
+        if (decision.action != routing::RouteAction::Correct || decision.candidate.isEmpty())
+            return std::nullopt;
+        const QByteArray utf8 = decision.candidate.toUtf8();
+        if (utf8.isEmpty() || utf8.size() > kMaxCandidateBytes)
+            return std::nullopt;
+        return std::string(utf8.constData(), static_cast<std::size_t>(utf8.size()));
+    } catch (...) {
+        m_impl->provider.reset();
+        return std::nullopt;
+    }
+}
+
+std::optional<std::string> ProfileDecision::correctTyped(std::string_view typed, bool typedInRu) noexcept
+{
+    if (!ready() || typed.empty() || typed.size() > static_cast<std::size_t>(kMaxCandidateBytes))
+        return std::nullopt;
+    try {
+        const QString token = QString::fromUtf8(typed.data(), static_cast<qsizetype>(typed.size()));
+        if (token.toUtf8() != QByteArray(typed.data(), static_cast<qsizetype>(typed.size())))
+            return std::nullopt; // not strict UTF-8
+        const QList<uint> ucs4 = token.toUcs4();
+        if (ucs4.size() < static_cast<qsizetype>(kMinWord) || ucs4.size() > static_cast<qsizetype>(kMaxWord))
+            return std::nullopt;
+        // The router converts by physical key and refuses anything outside the fixed
+        // us-basic/ru-default pair; only its safeConfirmed Correct is returned.
+        const routing::RouteRequest request{routing::FieldContext::Prose,
+                                            typedInRu ? routing::InputLayout::KnownRu : routing::InputLayout::KnownUs,
                                             QStringView(token)};
         const routing::RouteDecision decision =
             routing::route(request, routing::RouteProfile::SafeConfirmed, m_impl->provider.get());
