@@ -1,6 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x="4" y="10" width="56" height="44" rx="6" fill="#1a1b26" stroke="#ffd60a" stroke-width="3"/>
-  <text x="19" y="41" font-family="sans-serif" font-size="22" font-weight="700" fill="#c0caf5" text-anchor="middle">A</text>
-  <text x="45" y="41" font-family="sans-serif" font-size="22" font-weight="700" fill="#ffd60a" text-anchor="middle">Я</text>
-  <path d="M27 27h10l-3-3M37 37H27l3 3" fill="none" stroke="#c0caf5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Rasklad</title>
+  <desc>A keycap with the Latin A and the Cyrillic Ya and a swap between them, in one ink.</desc>
+  <rect width="64" height="64" rx="14" fill="#1c1c1e"/>
+  <g fill="none" stroke="#f2f2f2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="14" width="46" height="36" rx="6" stroke-width="3"/>
+    <path d="M15.5 41 L20.5 24 L25.5 41 M17.5 35 H23.5" stroke-width="3"/>
+    <path d="M48.5 41 V24 H43.5 A5 5 0 0 0 43.5 34 H48.5 M43.5 34 L38.5 41" stroke-width="3"/>
+    <path d="M29 29 H35 L33 27 M35 35 H29 L31 37" stroke-width="2"/>
+  </g>
 </svg>
