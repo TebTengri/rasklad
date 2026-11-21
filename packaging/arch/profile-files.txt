@@ -1,0 +1,22 @@
+# SYS-226: pinned profile files packaged under /usr/share/fcitx5/rasklad/profile.
+# Must equal tools/chromium_ime_lab.py PROFILE_PATHS (tests/packaging).
+data/morphology-003-sources.json
+data/sources.json
+data/experiment-002-protocol.json
+data/notices/MORPHOLOGY-003-REVIEW.md
+data/notices/Hunspell-COPYING.MPL.txt
+data/notices/Hunspell-license.myspell.txt
+data/notices/en_US.README.txt
+data/notices/ru_RU.README.txt
+build/experiment-data/en.dic
+build/experiment-data/ru.dic
+build/experiment-003-data/en.aff
+build/experiment-003-data/ru.aff
+build/experiment-003-data/control/en.aff
+build/experiment-003-data/control/ru.aff
+build/experiment-002-artifacts/detector-model.rskn
+build/experiment-002-artifacts/exact-full-lexicons.rskp
+build/experiment-002-artifacts/artifact-metadata.json
+build/experiment-002-artifacts/MODIFICATIONS.txt
+build/experiment-002-artifacts/en_US.NOTICE.txt
+build/experiment-002-artifacts/ru_RU.NOTICE.txt

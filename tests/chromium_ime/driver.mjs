@@ -148,6 +148,75 @@ try{
   await type('shift2');report.productUnlistedAfterSpace=await v()==='ghbdtn ';
   const required=['productUnlistedNoPreedit','productUnlistedTyped','productUnlistedAfterSpace'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
+  // SYS-226: keyboard-us and keyboard-ru in Fcitx. A correction makes the corrected
+  // word's layout current, so the next word is typed in it without correction.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');const settle=()=>new Promise(r=>setTimeout(r,250));
+  phase='layout_to_ru';await reset();await type('word');await type('space');
+  report.layoutFirstCorrected=await v()==='привет ';
+  await settle();await type('word');await type('space');
+  report.layoutSecondValue=await v();report.layoutSecondTypedInRu=report.layoutSecondValue==='привет привет ';
+  // A single letter is never corrected: only the switched layout makes x into ч.
+  await type('xspace');report.layoutLetterValue=await v();report.layoutLetterIsRu=report.layoutLetterValue==='привет привет ч ';
+  phase='layout_to_us';await settle();await type('hello');
+  report.layoutThirdValue=await v();report.layoutThirdCorrected=report.layoutThirdValue==='привет привет ч hello ';
+  await settle();await type('hello');
+  report.layoutFourthValue=await v();report.layoutFourthTypedInUs=report.layoutFourthValue==='привет привет ч hello hello ';
+  await type('xspace');report.layoutLetterUsValue=await v();report.layoutLetterIsUs=report.layoutLetterUsValue==='привет привет ч hello hello x ';
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='listed'){
+  // SYS-226 product addon: automatic correction on Space by the reviewed profile, both
+  // directions; double Shift right after the Space restores; the gesture still works.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');const settle=()=>new Promise(r=>setTimeout(r,150));
+  phase='auto_us_ru';await reset();await type('word');await type('space');
+  report.autoUsToRu=await v()==='привет ';
+  // Sway's Chromium never confirms the committed word (no fresh surrounding text), so
+  // there the replacement must only be refused; Hyprland must restore and redo.
+  const strictUndo=process.env.RASKLAD_HYPRLAND_IME_LAB==='1';report.strictUndo=strictUndo;
+  await settle();await type('shift2');report.autoUndoValue=await v();report.autoUndoRestored=report.autoUndoValue==='ghbdtn ';
+  await settle();await type('shift2');report.autoRedoValue=await v();
+  report.autoUndo=strictUndo?report.autoUndoRestored&&report.autoRedoValue==='привет ':
+    ['привет ','ghbdtn '].includes(report.autoUndoValue)&&['привет ','ghbdtn '].includes(report.autoRedoValue);
+  phase='auto_english_kept';await reset();await type('hello');report.autoEnglishKept=await v()==='hello ';
+  await reset();await type('hellocomma');report.autoEnglishCommaKept=await v()==='hello, ';
+  phase='auto_punct_key';await reset();await type('zhurnal');await type('space');
+  report.autoZhurnalValue=await v();report.autoZhurnal=report.autoZhurnalValue==='журнал ';
+  phase='auto_comma';await reset();await type('wordcomma');report.autoBeforeComma=await v()==='привет, ';
+  phase='auto_exclaim';await reset();await type('word');await type('exclaim');await type('space');
+  report.autoBeforeExclaimValue=await v();report.autoBeforeExclaim=report.autoBeforeExclaimValue==='привет! ';
+  phase='auto_enter';await reset();await type('word');await type('enter');report.autoBeforeEnter=await v()==='привет\n';
+  phase='auto_english_exclaim';await reset();await type('hello');await type('backspace');await type('exclaim');report.autoEnglishExclaimKept=await v()==='hello!';
+  // BackSpace on an empty word above latched bypass until a delimiter.
+  phase='auto_capital';await type('space');await reset();await type('capword');report.autoCapitalValue=await v();report.autoCapital=report.autoCapitalValue==='Привет ';
+  phase='auto_short';await reset();await type('shortword');report.autoShortValue=await v();report.autoShort=report.autoShortValue==='как ';
+  phase='auto_hyphen';await reset();await type('hyphen');report.autoHyphenValue=await v();report.autoHyphen=report.autoHyphenValue==='куда-то ';
+  phase='gesture_choice_kept';await reset();await type('word');await type('shift2');await type('shift2');await type('space');
+  report.gestureChoiceKept=await v()==='ghbdtn ';
+  await type('word');await type('space');report.autoAfterGestureWord=await v()==='ghbdtn привет ';
+  phase='gesture_convert';await reset();await type('word');await type('shift2');
+  report.gesturePreedit=await v()==='привет';await type('space');report.gestureCommit=await v()==='привет ';
+  phase='flush_no_auto';await reset();await type('word');await type('escape');
+  report.flushNoAuto=await v()==='ghbdtn';await type('space');
+  phase='ru_en';await reset();await type('rugroup');await type('hello');
+  report.autoRuToUsValue=await v();report.autoRuToUs=report.autoRuToUsValue==='hello ';
+  await settle();await type('shift2');report.autoRuUndoValue=await v();report.autoRuUndoRestored=report.autoRuUndoValue==='руддщ ';
+  report.autoRuUndo=strictUndo?report.autoRuUndoRestored:['hello ','руддщ '].includes(report.autoRuUndoValue);
+  phase='ru_kept';await reset();await type('word');await type('space');
+  report.autoRussianKept=await v()==='привет ';
+  phase='ru_gesture';await reset();await type('word');await type('shift2');
+  report.ruGesturePreedit=await v()==='ghbdtn';await type('space');report.ruGestureCommit=await v()==='ghbdtn ';
+  await type('usgroup');
+  phase='auto_password';await reset('secret');await type('word');await type('space');
+  report.autoPasswordUntouched=await ev(`secret.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
+  phase='auto_focus';await reset();await type('word');await ev(`other.focus();imeEvents=[]`);await settle();await type('space');
+  report.autoFocusNoLeak=await ev(`other.value===' '`);
+  phase='auto_shift_letter';await reset();await type('word');await type('shifta');await type('space');
+  report.autoShiftLetterOriginal=await v()==='ghbdtnA ';
+  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','autoBeforeComma','autoBeforeExclaim','autoBeforeEnter','autoEnglishExclaimKept','autoCapital','autoShort','autoHyphen','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
   // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.
   if(!nativeWayland)throw Error('native manual suite required');

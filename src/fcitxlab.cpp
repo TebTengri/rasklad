@@ -118,17 +118,21 @@
 
 #ifdef RASKLAD_PRODUCT
 // SYS-246 product build (docs/SYS-246-PRODUCT-ADDON.md): the manual double-Shift
-// gesture only, in applications listed in the addon configuration. No lab
-// environment, receipts, supervisor pipe, D-Bus, profile or Off/On keys.
+// gesture and (SYS-226) automatic correction on Space by the reviewed local profile,
+// in applications listed in the addon configuration. No lab environment, receipts,
+// supervisor pipe, D-Bus or Off/On keys.
 #if !defined(RASKLAD_MANUAL_LAB) || defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_CHROMIUM_LAB) || \
     defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
     defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST) || \
     defined(RASKLAD_DISABLE_REENTRY_TEST) || defined(RASKLAD_SLACK_GATE_TEST_PROGRAM)
-#error "RASKLAD_PRODUCT is the manual gesture only, without lab variants"
+#error "RASKLAD_PRODUCT is built without lab variants"
 #endif
 #include <fcitx-config/configuration.h>
 #include <fcitx-config/iniparser.h>
 #include <fcitx-config/option.h>
+#include "fcitxlabprofile.h"
+#include "frequentwords.h"
+#include <fcitx-utils/standardpaths.h>
 #endif
 
 #ifdef RASKLAD_WITNESS_LAB
@@ -152,6 +156,8 @@
 #include <fcitx/inputcontextmanager.h>
 #include <fcitx/inputcontextproperty.h>
 #include <fcitx/inputmethodentry.h>
+#include <fcitx/inputmethodgroup.h>
+#include <fcitx/inputmethodmanager.h>
 #include <fcitx/inputpanel.h>
 #include <fcitx/instance.h>
 #include <fcitx/text.h>
@@ -263,13 +269,31 @@ policy::Registry fixtureRegistry() {
     const auto &apps = productApps();
     return {apps.adapters.data(), apps.adapters.size(), apps.revision};
 }
-constexpr policy::Mode kGrantMode = policy::Mode::Manual;
+// Automatic grant (owner decision 2026-11-21, SYS-226); the gesture is checked
+// separately through Adapter::manual.
+constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
+// Profile files at their pinned relative paths under <PkgData>/rasklad/profile
+// (package: /usr/share/fcitx5/rasklad/profile). Every file is verified against the
+// built-in pins, so a copy found first in the user data directory must be identical.
+std::string profileRoot() {
+    try {
+        const auto marker = fcitx::StandardPaths::global().locate(
+            fcitx::StandardPathsType::PkgData, "rasklad/profile/data/sources.json");
+        if (marker.empty()) return {};
+        return marker.parent_path().parent_path().string();
+    } catch (...) {
+        return {};
+    }
+}
 #else
 constexpr const auto &fixtureAdapters() { return kFixtureAdapters; }
 constexpr policy::Registry fixtureRegistry() { return kFixtureRegistry; }
 constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
 #endif
 constexpr const char kLabEntry[] = "keyboard-us";
+#ifdef RASKLAD_PRODUCT
+constexpr const char kRuEntry[] = "keyboard-ru"; // SYS-226: switched to after a us->ru correction
+#endif
 constexpr const char kPropertyName[] = "raskladlabState";
 
 // Synthetic test rule only. No dictionaries, model or other strings.
@@ -304,13 +328,19 @@ public:
     }
 #ifdef RASKLAD_MANUAL_LAB
     rasklad::manual::DoubleShift gesture;
-    bool converted = false; // the preedit shows usToRu(word()) instead of word()
+    bool converted = false; // the preedit shows the other layout's form
+    // SYS-226: the word was typed in the ru layout. The buffer always holds the us
+    // keys; the Cyrillic text is their usToRu form. One word never mixes layouts.
+    bool typedRu = false;
+    bool chosen = false; // the owner used the gesture on this word: never auto-correct it
     // Text to show/commit; empty conversion (never for a..z) keeps the original.
-    std::string shown() const { return form(word(), converted); }
-    static std::string form(const std::string &typed, bool asRu) {
-        if (!asRu) return typed;
-        std::string out = rasklad::manual::usToRu(typed);
-        return out.empty() ? typed : out;
+    // Bit i: the i-th key was typed as a capital letter (SYS-226). Keys are lowercase.
+    std::uint32_t upper = 0;
+    std::string shown() const { return form(word(), typedRu != converted, upper); }
+    static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
+        std::string out = asRu ? rasklad::manual::usToRu(typed) : typed;
+        if (out.empty()) out = typed;
+        return mask ? rasklad::manual::applyUpper(out, mask) : out;
     }
     // The last word this addon committed with Space, kept only until any other
     // key, lifecycle event or failed check. Only it may be replaced after Space.
@@ -320,6 +350,8 @@ public:
     // (text or cursor, e.g. a mouse click) forgets it. Only Confirmed may replace.
     std::string lastTyped;
     bool lastConverted = false;
+    bool lastTypedRu = false;
+    std::uint32_t lastUpper = 0;
     bool lastValid = false;
     bool lastConfirmed = false;
     unsigned lastCursor = 0;
@@ -331,11 +363,11 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return form(lastTyped, lastConverted) + ' '; }
+    std::string lastText() const { return form(lastTyped, lastTypedRu != lastConverted, lastUpper) + ' '; }
     void forgetLast() {
         volatile char *p = lastTyped.data();
         for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
-        lastTyped.clear(); lastConverted = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
+        lastTyped.clear(); lastConverted = false; lastTypedRu = false; lastUpper = 0; lastValid = false; lastConfirmed = false; lastCursor = 0;
         lastRule = Confirm::Never; lastPreCursor = 0;
     }
 #endif
@@ -371,8 +403,12 @@ public:
     void pop() {
         if (len_ > 0) {
             buf_[--len_] = '\0';
+#ifdef RASKLAD_MANUAL_LAB
+            upper &= ~(std::uint32_t{1} << len_);
+#endif
         }
     }
+    std::size_t size() const { return len_; }
     std::string word() const { return std::string(buf_.data(), len_); }
 
     void clearBuffer() {
@@ -384,6 +420,9 @@ public:
         lease = {};
 #ifdef RASKLAD_MANUAL_LAB
         converted = false;
+        typedRu = false;
+        chosen = false;
+        upper = 0;
         gesture.reset();
 #endif
         // Normal local-buffer completion only. NEVER acknowledge a disabled
@@ -459,6 +498,8 @@ public:
 #ifdef RASKLAD_PRODUCT
         fcitx::readAsIni(config_, kConfigPath);
         rebuildApps();
+        // Missing/changed profile: no automatic correction; the gesture still works.
+        profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>(profileRoot().c_str());
 #endif
         enableFixturePermissions();
 #ifdef RASKLAD_PROFILE_LAB
@@ -497,6 +538,13 @@ public:
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
                     if (auto *s = state(ic, false)) {
+#ifdef RASKLAD_PRODUCT
+                        // Our own deferred layout switch happens only with an empty
+                        // word; the last committed word stays replaceable.
+                        if (selfSwitch_ && event.type() == fcitx::EventType::InputContextSwitchInputMethod &&
+                            s->empty())
+                            return;
+#endif
                         discard(ic, *s); // Invalidates even an idle context first.
                     }
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -598,7 +646,7 @@ private:
         }
         // ids is final before adapters take views into it.
         for (const auto &id : apps.ids)
-            apps.adapters.push_back({id, id, policy::Domain::RegularApplication, false, false, true});
+            apps.adapters.push_back({id, id, policy::Domain::RegularApplication, true, false, true});
         ++apps.revision;
         permissionStore_ = std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
     }
@@ -726,9 +774,15 @@ private:
             !ic->capabilityFlags().test(fcitx::CapabilityFlag::Disable);
 #endif
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
+#ifdef RASKLAD_PRODUCT
+        if (!entry || (entry->uniqueName() != kLabEntry && entry->uniqueName() != kRuEntry)) {
+            return false;
+        }
+#else
         if (!entry || entry->uniqueName() != kLabEntry) {
             return false;
         }
+#endif
         const auto caps = ic->capabilityFlags();
         using fcitx::CapabilityFlag;
         if (!caps.test(CapabilityFlag::Preedit)) {
@@ -978,9 +1032,9 @@ private:
         }
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
-    static void replaceLast(fcitx::InputContext *ic, LabState &s) {
+    static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
         const std::string oldText = s.lastText();
-        std::string newText = LabState::form(s.lastTyped, !s.lastConverted) + ' ';
+        std::string newText = LabState::form(s.lastTyped, s.lastTypedRu == s.lastConverted, s.lastUpper) + ' ';
         const auto &st = ic->surroundingText();
         const long n = rasklad::manual::codePointCount(oldText);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
@@ -991,7 +1045,7 @@ private:
 #else
         const bool gated = true;
 #endif
-        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return; }
+        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
@@ -1006,9 +1060,60 @@ private:
         }
 #endif
         wipeString(newText);
+        return true;
     }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
     // release, depending on the frontend on the press) is ignored.
+#ifdef RASKLAD_PRODUCT
+    // Enter, Tab or a punctuation character (with at most Shift): the word is over.
+    static bool wordEnd(const fcitx::Key &key) {
+        if (key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
+                                                  fcitx::KeyState::Super, fcitx::KeyState::Hyper}))
+            return false;
+        const auto sym = key.sym();
+        if (sym == FcitxKey_Return || sym == FcitxKey_KP_Enter || sym == FcitxKey_Tab) return true;
+        const std::uint32_t u = fcitx::Key::keySymToUnicode(sym);
+        if (u == 0x2116) return true; // №
+        return u > 0x20 && u < 0x7f && !((u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z'));
+    }
+    // SYS-226 automatic correction of the current word, unless the owner chose a form
+    // with the gesture. Only the reviewed profile's Correct that equals the word's
+    // other-layout form is used. whole: the entire word converted (s.converted is set,
+    // so the Space undo can restore it). Otherwise a us-typed word ending in keys that
+    // carry Russian letters (",", ".", ";", ...) is tried without them, and those keys
+    // stay as typed: "ckjdj," -> "слово,".
+    std::optional<std::string> autoText(LabState &s, bool &whole) {
+        whole = false;
+        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
+        // Case: all lowercase, a capital first letter, or all capitals (letters only).
+        const std::uint32_t all = s.size() >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << s.size()) - 1;
+        if (s.upper != 0 && s.upper != 1 && s.upper != all) return std::nullopt;
+        std::string w = s.word();
+        std::optional<std::string> result;
+        std::size_t cut = w.size();
+        for (int pass = 0; pass < 2 && !result; ++pass) {
+            if (pass == 1) {
+                if (s.typedRu) break;
+                while (cut > 0 && !(w[cut - 1] >= 'a' && w[cut - 1] <= 'z')) --cut;
+                if (cut == 0 || cut == w.size()) break;
+            }
+            std::string keys = w.substr(0, cut);
+            std::string typed = LabState::form(keys, s.typedRu);
+            std::string other = LabState::form(keys, !s.typedRu);
+            auto fix = profile_->correctTyped(typed, s.typedRu);
+            const bool ok = (fix && *fix == other && other != typed) ||
+                            (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
+            if (ok) {
+                if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
+                else result = LabState::form(other + w.substr(cut), false, s.upper);
+            }
+            if (fix) wipeString(*fix);
+            wipeString(keys); wipeString(typed); wipeString(other);
+        }
+        wipeString(w);
+        return result;
+    }
+#endif
     static bool isShift(const fcitx::Key &key) {
         if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
         return !fcitx::Key(key.sym(), key.states().unset(fcitx::KeyState::Shift)).hasModifier();
@@ -1257,8 +1362,16 @@ private:
                     return;
                 }
                 if (s->empty() && s->lastValid) {
-                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time()))
+                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
+#ifdef RASKLAD_PRODUCT
+                        // The restored form's layout becomes current (SYS-226).
+                        const bool toRu = s->lastTypedRu == s->lastConverted;
+                        auto ref = ic->watch();
+                        if (replaceLast(ic, *s)) switchLayout(ref, toRu);
+#else
                         replaceLast(ic, *s); // No state/event access after this call.
+#endif
+                    }
                     return;
                 }
                 if (s->empty() || !validate(ic, *s)) {
@@ -1267,6 +1380,7 @@ private:
                 }
                 if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
                     s->converted = !s->converted;
+                    s->chosen = true;
                     showPreedit(ic, *s); // No state/event access after this callback.
                 }
                 return;
@@ -1419,7 +1533,38 @@ private:
         default: break;
         }
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z) manualChar = static_cast<char>('a' + (sym - FcitxKey_a));
-        if (plain && manualChar && !s->full()) {
+        bool ruKey = false;
+#ifdef RASKLAD_PRODUCT
+        // SYS-226: a lowercase Russian letter (ru layout) is kept as its us key.
+        if (plain && !manualChar) {
+            manualChar = rasklad::manual::ruToUsKey(
+                static_cast<char32_t>(fcitx::Key::keySymToUnicode(static_cast<fcitx::KeySym>(sym))));
+            ruKey = manualChar != 0;
+        }
+        // A layout switch inside a word ends the word (flushed as typed below).
+        // SYS-226: a capital letter (Shift or Caps Lock, no other modifier) is kept as
+        // its lowercase key plus a case bit.
+        bool upperKey = false;
+        if (!manualChar && !key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
+                                                                 fcitx::KeyState::Super, fcitx::KeyState::Hyper})) {
+            if (sym >= FcitxKey_A && sym <= FcitxKey_Z) {
+                manualChar = static_cast<char>('a' + (sym - FcitxKey_A));
+                upperKey = true;
+            } else {
+                const char32_t u = static_cast<char32_t>(fcitx::Key::keySymToUnicode(static_cast<fcitx::KeySym>(sym)));
+                const char32_t lower = (u >= U'\u0410' && u <= U'\u042f') ? u + 0x20 : (u == U'\u0401' ? U'\u0451' : 0);
+                if (lower) {
+                    manualChar = rasklad::manual::ruToUsKey(lower);
+                    ruKey = upperKey = manualChar != 0;
+                }
+            }
+        }
+        if (manualChar && !s->empty() && ruKey != s->typedRu) manualChar = 0;
+        const bool letterKey = plain || upperKey;
+#else
+        const bool letterKey = plain;
+#endif
+        if (letterKey && manualChar && !s->full()) {
 #else
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
 #endif
@@ -1433,6 +1578,10 @@ private:
                     currentPermission(context), context).lease;
             }
 #ifdef RASKLAD_MANUAL_LAB
+            if (s->empty()) s->typedRu = ruKey;
+#ifdef RASKLAD_PRODUCT
+            if (upperKey) s->upper |= std::uint32_t{1} << s->size();
+#endif
             acceptLetter(ic, *s, event, manualChar);
 #else
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
@@ -1453,14 +1602,30 @@ private:
                 auto corrected = profile_->correct(w, context.field);
                 std::string out = corrected ? std::move(*corrected) : w;
 #elif defined(RASKLAD_MANUAL_LAB)
+#ifdef RASKLAD_PRODUCT
+                // SYS-226: automatic correction only if the owner did not choose a form
+                // with the gesture, and only on the reviewed profile's Correct, which
+                // must equal this word's other-layout form. Double Shift right after
+                // the Space restores the original (replaceLast).
+                bool whole = false;
+                auto fixed = autoText(*s, whole);
+                const bool undoable = !fixed || whole;
+                std::string out = fixed ? std::move(*fixed) : s->shown();
+                s->forgetLast();
+                if (undoable) {
+#else
                 std::string out = s->shown(); // only what the owner chose to see
                 s->forgetLast();
-                s->lastTyped = w; s->lastConverted = s->converted; s->lastValid = true; // Pending
+                {
+#endif
+                s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu; s->lastUpper = s->upper;
+                s->lastValid = true; // Pending
                 {
                     const auto &pre = ic->surroundingText();
                     const bool known = pre.isValid() && pre.cursor() == pre.anchor();
                     s->lastRule = known ? LabState::Confirm::AfterCommit : LabState::Confirm::Never;
                     s->lastPreCursor = known ? pre.cursor() : 0;
+                }
                 }
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
@@ -1475,7 +1640,15 @@ private:
                 // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
+#ifdef RASKLAD_PRODUCT
+                const bool switchAfter = fixed.has_value();
+                const bool toRu = !s->typedRu;
+                auto ref = ic->watch();
+#endif
                 commitAndClear(ic, *s, std::move(out));
+#ifdef RASKLAD_PRODUCT
+                if (switchAfter) switchLayout(ref, toRu); // the corrected word's layout
+#endif
                 return;
             }
             if (sym == FcitxKey_BackSpace) {
@@ -1486,7 +1659,12 @@ private:
 
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
         // same focused context, then let the key pass unfiltered.
+#ifdef RASKLAD_PRODUCT
+        // Punctuation ends a word and a new one may start right after it (куда-то).
+        if (!boundary && !wordEnd(key)) s->setBypass(true);
+#else
         if (!boundary) s->setBypass(true);
+#endif
 #ifdef RASKLAD_WITNESS_LAB
         if (wSpacePress) {
             lw::inc(s->empty() ? lw::Counter::passEmpty
@@ -1498,7 +1676,18 @@ private:
                 discard(ic, *s);
                 return;
             }
-#ifdef RASKLAD_MANUAL_LAB
+#if defined(RASKLAD_PRODUCT)
+            // SYS-226: a punctuation key, Enter or Tab also ends the word: the same
+            // automatic correction as Space (no undo), then the key passes.
+            bool whole = false;
+            std::optional<std::string> fixed;
+            if (wordEnd(key)) fixed = autoText(*s, whole);
+            const bool toRu = !s->typedRu;
+            auto ref = ic->watch();
+            const bool switchAfter = fixed.has_value();
+            commitAndClear(ic, *s, fixed ? std::move(*fixed) : s->shown());
+            if (switchAfter) switchLayout(ref, toRu);
+#elif defined(RASKLAD_MANUAL_LAB)
             commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
 #else
             commitAndClear(ic, *s, s->word());
@@ -1511,6 +1700,35 @@ private:
 #ifdef RASKLAD_PRODUCT
     RaskladConfig config_;
     bool applying_ = false;
+    std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
+    std::unique_ptr<fcitx::EventSource> switchEvent_;
+    bool selfSwitch_ = false;
+    // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
+    // layout becomes the current Fcitx input method, so the owner keeps typing in it.
+    // Only between keyboard-us and keyboard-ru, only if both are in the current group,
+    // deferred to the next loop turn, and only while that context is focused with no
+    // word in progress (never drops typed letters).
+    void switchLayout(fcitx::TrackableObjectReference<fcitx::InputContext> ref, bool toRu) {
+        if (!instance_) return;
+        const std::string target = toRu ? kRuEntry : kLabEntry;
+        bool us = false, ru = false;
+        for (const auto &item : instance_->inputMethodManager().currentGroup().inputMethodList()) {
+            us = us || item.name() == kLabEntry;
+            ru = ru || item.name() == kRuEntry;
+        }
+        if (!us || !ru) return;
+        switchEvent_ = instance_->eventLoop().addDeferEvent([this, ref, target](fcitx::EventSource *) {
+            auto *c = ref.get();
+            if (!c || !c->hasFocus()) return true;
+            if (auto *s = state(c, false); s && !s->empty()) return true;
+            const auto *entry = instance_->inputMethodEntry(c);
+            if (!entry || entry->uniqueName() == target) return true;
+            selfSwitch_ = true;
+            instance_->setCurrentInputMethod(c, target, false);
+            selfSwitch_ = false;
+            return true;
+        });
+    }
 #endif
     std::unique_ptr<policy::ApplicationPermissions> permissionStore_ =
         std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());

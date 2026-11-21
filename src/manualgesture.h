@@ -28,6 +28,25 @@ inline std::string_view punctToRu(char c) {
 }
 inline bool wordChar(char c) { return (c >= 'a' && c <= 'z') || !punctToRu(c).empty(); }
 
+// SYS-226: the us key (a..z or one of the seven punctuation keys) that carries this
+// lowercase Russian letter in the default ru layout; 0 for anything else.
+inline char ruToUsKey(char32_t c) {
+    for (std::size_t i = 0; i < kUsToRu.size(); ++i) {
+        const auto r = kUsToRu[i];
+        // Every entry is one two-byte UTF-8 code point in U+0430..U+044F.
+        const char32_t cp = (static_cast<char32_t>(static_cast<unsigned char>(r[0]) & 0x1f) << 6) |
+                            (static_cast<unsigned char>(r[1]) & 0x3f);
+        if (cp == c) return static_cast<char>('a' + i);
+    }
+    for (const char k : {',', '.', ';', '\'', '[', ']', '`'}) {
+        const auto r = punctToRu(k);
+        const char32_t cp = (static_cast<char32_t>(static_cast<unsigned char>(r[0]) & 0x1f) << 6) |
+                            (static_cast<unsigned char>(r[1]) & 0x3f);
+        if (cp == c) return k;
+    }
+    return 0;
+}
+
 // Converts a word of lowercase ASCII letters and the seven keys above. Anything
 // else returns "" (the caller keeps the original; fail closed).
 inline std::string usToRu(std::string_view word) {
@@ -37,6 +56,34 @@ inline std::string usToRu(std::string_view word) {
         if (c >= 'a' && c <= 'z') out.append(kUsToRu[static_cast<std::size_t>(c - 'a')]);
         else if (const auto r = punctToRu(c); !r.empty()) out.append(r);
         else return {};
+    }
+    return out;
+}
+
+// SYS-226: uppercases code point i of UTF-8 text when bit i of mask is set; only
+// a..z and Cyrillic а..я/ё change. Anything malformed returns the text unchanged.
+inline std::string applyUpper(const std::string &text, std::uint32_t mask) {
+    std::string out;
+    out.reserve(text.size());
+    std::size_t i = 0;
+    for (unsigned idx = 0; i < text.size(); ++idx) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        const bool up = idx < 32 && (mask >> idx) & 1u;
+        if (c < 0x80) {
+            out.push_back(up && c >= 'a' && c <= 'z' ? static_cast<char>(c - 32) : static_cast<char>(c));
+            ++i;
+        } else if ((c & 0xe0) == 0xc0 && i + 1 < text.size()) {
+            char32_t cp = (static_cast<char32_t>(c & 0x1f) << 6) | (static_cast<unsigned char>(text[i + 1]) & 0x3f);
+            if (up) {
+                if (cp >= U'\u0430' && cp <= U'\u044f') cp -= 0x20;
+                else if (cp == U'\u0451') cp = U'\u0401';
+            }
+            out.push_back(static_cast<char>(0xc0 | (cp >> 6)));
+            out.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
+            i += 2;
+        } else {
+            return text;
+        }
     }
     return out;
 }

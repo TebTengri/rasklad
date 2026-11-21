@@ -2,6 +2,7 @@
 #include "manualgesture.h"
 #include "layoutconverter.h"
 
+#include <QList>
 #include <QString>
 #include <cstdio>
 
@@ -28,6 +29,19 @@ int main() {
     CHECK(rasklad::manual::usToRu(";ehyfk") == "журнал");
     CHECK(rasklad::manual::usToRu("[jhjij") == "хорошо");
     CHECK(rasklad::manual::usToRu("`krf") == "ёлка");
+    // SYS-226: every Russian letter maps back to exactly its us key (round trip).
+    for (const char c : std::string("abcdefghijklmnopqrstuvwxyz,.;'[]`")) {
+        const QString ru = QString::fromStdString(rasklad::manual::usToRu(std::string(1, c)));
+        CHECK(ru.toUcs4().size() == 1);
+        CHECK(rasklad::manual::ruToUsKey(ru.toUcs4().at(0)) == c);
+    }
+    CHECK(rasklad::manual::ruToUsKey(U'a') == 0);
+    CHECK(rasklad::manual::applyUpper("привет", 1) == "Привет");
+    CHECK(rasklad::manual::applyUpper("ёлка", 1) == "Ёлка");
+    CHECK(rasklad::manual::applyUpper("hello", 0x1f) == "HELLO");
+    CHECK(rasklad::manual::applyUpper("как,", 0xf) == "КАК,");
+    CHECK(rasklad::manual::ruToUsKey(U'\u0410') == 0); // uppercase А is not a lowercase key
+    CHECK(rasklad::manual::ruToUsKey(U'\u0400') == 0);
     CHECK(!rasklad::manual::wordChar('/'));
     CHECK(!rasklad::manual::wordChar('1'));
     CHECK(rasklad::manual::usToRu("gh1").empty());
