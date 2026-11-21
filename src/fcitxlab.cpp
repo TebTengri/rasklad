@@ -541,8 +541,8 @@ public:
 #ifdef RASKLAD_PRODUCT
                         // Our own deferred layout switch happens only with an empty
                         // word; the last committed word stays replaceable.
-                        if (selfSwitch_ && event.type() == fcitx::EventType::InputContextSwitchInputMethod &&
-                            s->empty())
+                        // Any event emitted synchronously by that switch is ours too.
+                        if (selfSwitch_ && s->empty())
                             return;
 #endif
                         discard(ic, *s); // Invalidates even an idle context first.
