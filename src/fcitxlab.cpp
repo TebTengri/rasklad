@@ -265,11 +265,16 @@ public:
     bool lastValid = false;
     bool lastConfirmed = false;
     unsigned lastCursor = 0;
+    // Client cursor seen just before the Space commit. A confirming update must
+    // show a different cursor, so a stale pre-commit repeat never confirms.
+    bool lastPreKnown = false;
+    unsigned lastPreCursor = 0;
     std::string lastText() const { return form(lastTyped, lastConverted) + ' '; }
     void forgetLast() {
         volatile char *p = lastTyped.data();
         for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
         lastTyped.clear(); lastConverted = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
+        lastPreKnown = false; lastPreCursor = 0;
     }
 #endif
     const std::uint64_t id;
@@ -805,7 +810,8 @@ private:
         const bool match = lastMatches(ic, s);
         if (!s.lastConfirmed) {
             // Stale pre-commit updates may still arrive: they never confirm and never arm.
-            if (match) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
+            // Fail closed when the pre-commit cursor was unknown.
+            if (match && s.lastPreKnown && ic->surroundingText().cursor() != s.lastPreCursor) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
             return;
         }
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
@@ -827,6 +833,9 @@ private:
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
+        // The old-form update cannot match the new form, so no cursor-move rule here
+        // (same-length forms keep the cursor in place).
+        s.lastPreKnown = true; s.lastPreCursor = ~0u;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -929,6 +938,9 @@ private:
         // but the client still gets the empty preedit (no stale composition).
         if (!sessionArmed() || !rasklad::sessionarm::safeCommitText(text)) {
             wipeString(text);
+#ifdef RASKLAD_MANUAL_LAB
+            s.forgetLast(); // nothing committed: nothing of ours to replace later
+#endif
             if (hadPreedit && binding->alive && binding->epoch == epoch) {
                 if (auto *current = ref.get(); current && current->hasFocus()) current->updatePreedit();
             }
@@ -1284,6 +1296,11 @@ private:
                 std::string out = s->shown(); // only what the owner chose to see
                 s->forgetLast();
                 s->lastTyped = w; s->lastConverted = s->converted; s->lastValid = true; // Pending
+                {
+                    const auto &pre = ic->surroundingText();
+                    s->lastPreKnown = pre.isValid() && pre.cursor() == pre.anchor();
+                    s->lastPreCursor = s->lastPreKnown ? pre.cursor() : 0;
+                }
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
 #endif

@@ -517,9 +517,12 @@ def main():
             raise base.Refused('seat_probe_requires_slack_supervised')
         if args.owner_empty_composer and not args.slack_live:
             raise base.Refused('owner_empty_composer_requires_slack_live')
+        # Only this invocation's flags may select these modes; never an inherited env.
+        os.environ.pop('RASKLAD_OWNER_EMPTY_COMPOSER_CLI', None)
+        os.environ.pop('RASKLAD_MANUAL_GESTURE_CLI', None)
         if args.owner_empty_composer:
             os.environ['RASKLAD_OWNER_EMPTY_COMPOSER_CLI'] = '1'
-        if args.manual_gesture and not (args.slack_live or args.slack_supervised) or (args.manual_gesture and args.seat_probe):
+        if args.manual_gesture and (not (args.slack_live or args.slack_supervised) or args.seat_probe):
             raise base.Refused('manual_gesture_requires_slack_live_or_supervised')
         if args.manual_gesture:
             os.environ['RASKLAD_MANUAL_GESTURE_CLI'] = '1'

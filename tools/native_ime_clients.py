@@ -544,7 +544,11 @@ def run_supervised_driver(base,fcitx,gate,driver_env,children):
                 helper_ack(base,helper)
                 time.sleep(.05)
             sequence+=len(inj.receipts(case,sequence))
-            if not (matched and s.done() and s.sent==len(script)):break
+            if not (matched and s.done() and s.sent==len(script)):
+                # Stopped early (revoke): report what the addon says the field holds.
+                records.poll(.2)
+                report[case+'AddonFieldAfterStop']=field_state(records,epoch)
+                break
             report[case+'FieldCleaned']=link.ask('observe').get('value')==''
             records.poll(.2)
             report[case+'AddonFieldAfterCleanup']=field_state(records,epoch)
