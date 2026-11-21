@@ -586,6 +586,7 @@ private:
     // no lease from the previous list stays valid.
     void rebuildApps() {
         auto &apps = productApps();
+        permissionStore_.reset(); // nothing refers to the old list while it changes
         apps.adapters.clear();
         apps.ids.clear();
         for (const auto &id : *config_.applications) {
@@ -604,7 +605,16 @@ private:
     // A changed list: discard every composition (no commit, as on focus-out)
     // using the old list, then publish the new one.
     void applyApps() {
-        if (!registered_ || !manager_) return;
+        // discard() calls into clients; a nested config change must not rebuild
+        // the list underneath this walk. The outer call applies the latest config_.
+        if (applying_) return;
+        applying_ = true;
+        if (!registered_ || !manager_) {
+            rebuildApps();
+            enableFixturePermissions();
+            applying_ = false;
+            return;
+        }
         using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
         std::vector<Watch> targets;
         manager_->foreach([&](fcitx::InputContext *ic) {
@@ -618,6 +628,7 @@ private:
         }
         rebuildApps();
         enableFixturePermissions();
+        applying_ = false;
     }
 #endif
     void enableFixturePermissions() {
@@ -1499,6 +1510,7 @@ private:
     fcitx::InputContextManager *manager_;
 #ifdef RASKLAD_PRODUCT
     RaskladConfig config_;
+    bool applying_ = false;
 #endif
     std::unique_ptr<policy::ApplicationPermissions> permissionStore_ =
         std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
