@@ -8,9 +8,11 @@ namespace rasklad::policy {
 // No I/O, process authentication, context discovery or text operations here.
 // Registry snapshots are trusted immutable adapter records, NEVER user settings.
 // Context evidence must come from the adapter. Declared app-id alone cannot grant.
-enum class Mode { Off, ManualDoubleSuper, Automatic };
+enum class Mode { Off, Manual, Automatic };
 enum class Domain { RegularApplication, OwnedFixture };
-enum class Identity { Unknown, DeclaredOnly, VerifiedAdapter, OwnedFixtureContract };
+// CompositorAppId: the app id the compositor reports for the focused window (via
+// Fcitx). A claim, not authentication: accepted for Mode::Manual only.
+enum class Identity { Unknown, DeclaredOnly, VerifiedAdapter, OwnedFixtureContract, CompositorAppId };
 enum class Field { Unknown, Prose, Password, Code, Url, Command, Mention, Protected };
 enum class Reason { Allowed, Disabled, UnsupportedMode, InvalidRegistry, UnknownAdapter,
                     IdentityUnproved, ProtectedContext, ContextUnready, StaleLease };
@@ -21,6 +23,7 @@ struct Adapter {
     Domain domain = Domain::RegularApplication;
     bool automatic = false;
     bool canFinishOriginal = false;
+    bool manual = false; // supports the user-initiated per-word gesture
 };
 // Revision must change for each immutable registry snapshot; never reuse it.
 struct Registry {
@@ -71,5 +74,6 @@ Decision revalidateCorrection(Registry, const Permission &, const Context &, con
 // Turning Off forbids new capture/correction immediately. Existing composition
 // is finished as ORIGINAL only with a still-bound lease/capability, otherwise
 // defer adapter teardown until its native composition completion. No write here.
-DisableAction disableDisposition(Registry, const Context &, const Lease &, bool composing) noexcept;
+DisableAction disableDisposition(Registry, const Context &, const Lease &, bool composing,
+                                 Mode mode = Mode::Automatic) noexcept;
 } // namespace rasklad::policy

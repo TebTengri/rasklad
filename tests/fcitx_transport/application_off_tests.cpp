@@ -39,7 +39,7 @@ struct ApplicationOffTest {
     static void off(RaskladLab &lab, fcitx::InputContext *ic) { lab.requestLabOff(ic); }
     static auto context(fcitx::InputContext *ic, const LabState &s) { return RaskladLab::fixtureContext(ic, s); }
     static bool on(RaskladLab &lab) { return lab.requestLabOn(); }
-    static auto permission(RaskladLab &lab, const char *id) { return lab.permissions_.snapshot(id); }
+    static auto permission(RaskladLab &lab, const char *id) { return lab.permissionStore_->snapshot(id); }
 };
 class Context final : public fcitx::InputContext {
 public:

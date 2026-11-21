@@ -116,6 +116,21 @@
 #include "manualgesture.h"
 #endif
 
+#ifdef RASKLAD_PRODUCT
+// SYS-246 product build (docs/SYS-246-PRODUCT-ADDON.md): the manual double-Shift
+// gesture only, in applications listed in the addon configuration. No lab
+// environment, receipts, supervisor pipe, D-Bus, profile or Off/On keys.
+#if !defined(RASKLAD_MANUAL_LAB) || defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_CHROMIUM_LAB) || \
+    defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
+    defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST) || \
+    defined(RASKLAD_DISABLE_REENTRY_TEST) || defined(RASKLAD_SLACK_GATE_TEST_PROGRAM)
+#error "RASKLAD_PRODUCT is the manual gesture only, without lab variants"
+#endif
+#include <fcitx-config/configuration.h>
+#include <fcitx-config/iniparser.h>
+#include <fcitx-config/option.h>
+#endif
+
 #ifdef RASKLAD_WITNESS_LAB
 #ifndef RASKLAD_PROFILE_LAB
 #error "RASKLAD_WITNESS_LAB requires RASKLAD_PROFILE_LAB (use tools/fcitx_witness_lab.pro)"
@@ -188,6 +203,10 @@ rasklad::sessionarm::ReceiptSink &receiptSink() {
     return sink;
 }
 #endif
+#ifdef RASKLAD_PRODUCT
+// Product: no environment labels are read at all.
+bool fixtureScope() { return true; }
+#else
 // Fixed fixture labels only: these do not authenticate a process or namespace.
 bool fixtureScope() {
     const auto equal = [](const char *key, const char *value) {
@@ -203,6 +222,7 @@ bool fixtureScope() {
            equal("RASKLAD_PRIVATE_LAB", "1");
 #endif
 }
+#endif
 constexpr policy::Adapter kFixtureAdapters[] = {
     {kLabProgram, kLabProgram, policy::Domain::OwnedFixture, true, true},
 #ifdef RASKLAD_CHROMIUM_LAB
@@ -211,6 +231,44 @@ constexpr policy::Adapter kFixtureAdapters[] = {
 };
 constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
     sizeof(kFixtureAdapters) / sizeof(kFixtureAdapters[0]), 1};
+#ifdef RASKLAD_PRODUCT
+// Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
+FCITX_CONFIGURATION(RaskladConfig,
+    fcitx::Option<std::vector<std::string>> applications{this, "Applications",
+        "Applications (window app ids)", {"slack", "chromium", "chromium-browser"}};);
+constexpr const char kConfigPath[] = "conf/rasklad.conf";
+constexpr std::size_t kMaxApps = 64;
+// Same character rules as the policy registry; anything else is dropped.
+bool appIdentifier(const std::string &id) {
+    if (id.empty() || id.size() > 128) return false;
+    for (const unsigned char c : id)
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+              c == '.' || c == '_' || c == '-')) return false;
+    return true;
+}
+// Applications from the addon configuration (compositor app ids as Fcitx reports
+// them in InputContext::program()). Claims, not authentication: policy allows
+// them for the manual gesture only. Rebuilt only after every state is discarded.
+struct ProductApps {
+    std::vector<std::string> ids;
+    std::vector<policy::Adapter> adapters;
+    std::uint64_t revision = 1;
+};
+ProductApps &productApps() {
+    static ProductApps apps;
+    return apps;
+}
+const std::vector<policy::Adapter> &fixtureAdapters() { return productApps().adapters; }
+policy::Registry fixtureRegistry() {
+    const auto &apps = productApps();
+    return {apps.adapters.data(), apps.adapters.size(), apps.revision};
+}
+constexpr policy::Mode kGrantMode = policy::Mode::Manual;
+#else
+constexpr const auto &fixtureAdapters() { return kFixtureAdapters; }
+constexpr policy::Registry fixtureRegistry() { return kFixtureRegistry; }
+constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
+#endif
 constexpr const char kLabEntry[] = "keyboard-us";
 constexpr const char kPropertyName[] = "raskladlabState";
 
@@ -398,6 +456,10 @@ public:
     explicit RaskladLab(fcitx::Instance *instance) : instance_(instance),
         manager_(instance ? &instance->inputContextManager() : nullptr) {
         if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
+#ifdef RASKLAD_PRODUCT
+        fcitx::readAsIni(config_, kConfigPath);
+        rebuildApps();
+#endif
         enableFixturePermissions();
 #ifdef RASKLAD_PROFILE_LAB
         profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>();
@@ -496,6 +558,18 @@ public:
     ~RaskladLab() override = default;
 #endif
 
+#ifdef RASKLAD_PRODUCT
+    const fcitx::Configuration *getConfig() const override { return &config_; }
+    void setConfig(const fcitx::RawConfig &raw) override {
+        config_.load(raw, true);
+        fcitx::safeSaveAsIni(config_, kConfigPath);
+        applyApps();
+    }
+    void reloadConfig() override {
+        fcitx::readAsIni(config_, kConfigPath);
+        applyApps();
+    }
+#endif
 #ifdef RASKLAD_APPLICATION_OFF_TEST
     explicit RaskladLab(fcitx::InputContextManager &manager)
         : instance_(nullptr), manager_(&manager) {
@@ -507,14 +581,53 @@ private:
 #ifdef RASKLAD_APPLICATION_OFF_TEST
     friend struct ApplicationOffTest;
 #endif
+#ifdef RASKLAD_PRODUCT
+    // Rebuild the application list from config_; the revision always advances so
+    // no lease from the previous list stays valid.
+    void rebuildApps() {
+        auto &apps = productApps();
+        apps.adapters.clear();
+        apps.ids.clear();
+        for (const auto &id : *config_.applications) {
+            if (apps.ids.size() == kMaxApps) break;
+            if (!appIdentifier(id)) continue;
+            bool seen = false;
+            for (const auto &have : apps.ids) seen = seen || have == id;
+            if (!seen) apps.ids.push_back(id);
+        }
+        // ids is final before adapters take views into it.
+        for (const auto &id : apps.ids)
+            apps.adapters.push_back({id, id, policy::Domain::RegularApplication, false, false, true});
+        ++apps.revision;
+        permissionStore_ = std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
+    }
+    // A changed list: discard every composition (no commit, as on focus-out)
+    // using the old list, then publish the new one.
+    void applyApps() {
+        if (!registered_ || !manager_) return;
+        using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
+        std::vector<Watch> targets;
+        manager_->foreach([&](fcitx::InputContext *ic) {
+            if (state(ic, false)) targets.push_back(ic->watch());
+            return true;
+        });
+        for (auto &watch : targets) {
+            auto *ic = watch.get();
+            if (!ic) continue;
+            if (auto *s = state(ic, false)) discard(ic, *s);
+        }
+        rebuildApps();
+        enableFixturePermissions();
+    }
+#endif
     void enableFixturePermissions() {
         // Compile-time owned fixture contract only, never registry-as-authority
         // for a regular application or an inferred alias.
-        for (const auto &adapter : kFixtureAdapters)
-            permissions_.enable(adapter.applicationId);
+        for (const auto &adapter : fixtureAdapters())
+            permissionStore_->enable(adapter.applicationId, kGrantMode);
     }
     policy::Permission currentPermission(const policy::Context &context) const {
-        return permissions_.snapshot(context.verifiedApplicationId);
+        return permissionStore_->snapshot(context.verifiedApplicationId);
     }
 #ifdef RASKLAD_PREEDIT_REENTRY_TEST
     friend struct PreeditReentryTest;
@@ -547,7 +660,7 @@ private:
     LabState *state(fcitx::InputContext *ic, bool create = true) {
         if (!registered_ || !ic) return nullptr;
         bool matches = false;
-        for (const auto &adapter : kFixtureAdapters)
+        for (const auto &adapter : fixtureAdapters())
             if (ic->program() == adapter.id) matches = true;
         if (!matches) return nullptr;
         auto *holder = static_cast<LabProperty *>(ic->propertyFor(&factory_));
@@ -579,7 +692,9 @@ private:
         // Revoked or never armed: intercept nothing (buffer is discarded by the caller).
         if (!sessionArmed()) return false;
 #endif
-#ifdef RASKLAD_CHROMIUM_LAB
+#ifdef RASKLAD_PRODUCT
+        if (!productListed(ic->program())) return false;
+#elif defined(RASKLAD_CHROMIUM_LAB)
         // GTK/X11 supplies chromium; the observed native Wayland app-id is
         // chromium-browser. Both designate only this lab's controlled client.
         if (ic->program() != kLabProgram && ic->program() != "chromium-browser") {
@@ -620,6 +735,31 @@ private:
 
     // Called only after the existing profile, program, focus and caps gates.
     // Prose belongs to the explicit owned fixture contract, never real apps.
+#ifdef RASKLAD_PRODUCT
+    static bool productListed(const std::string &program) {
+        for (const auto &adapter : fixtureAdapters())
+            if (program == adapter.id) return true;
+        return false;
+    }
+    // Field kind from Fcitx capability hints only; the gate in eligible() refuses
+    // the same flags first. Fcitx cannot tell prose apart: everything else Unknown.
+    static policy::Field fieldFromCaps(const fcitx::CapabilityFlags caps) {
+        using fcitx::CapabilityFlag;
+        if (caps.test(CapabilityFlag::Password)) return policy::Field::Password;
+        if (caps.test(CapabilityFlag::Sensitive) || caps.test(CapabilityFlag::Disable))
+            return policy::Field::Protected;
+        if (caps.test(CapabilityFlag::Terminal)) return policy::Field::Command;
+        if (caps.test(CapabilityFlag::NoSpellCheck)) return policy::Field::Code;
+        return policy::Field::Unknown;
+    }
+    // A listed compositor app id, as Fcitx reports it; never an authentication.
+    static policy::Context fixtureContext(fcitx::InputContext *ic, const LabState &s) {
+        const std::string_view id = ic->program();
+        return {id, id, id, policy::Domain::RegularApplication,
+                policy::Identity::CompositorAppId, fieldFromCaps(ic->capabilityFlags()),
+                ic->hasFocus(), s.id, s.epoch, s.id};
+    }
+#else
     static policy::Context fixtureContext(fcitx::InputContext *ic, const LabState &s) {
         const char *label = kLabProgram;
 #ifdef RASKLAD_CHROMIUM_LAB
@@ -629,6 +769,7 @@ private:
                 policy::Identity::OwnedFixtureContract, policy::Field::Prose,
                 ic->hasFocus(), s.id, s.epoch, s.id};
     }
+#endif
     static policy::Permission fixturePermission(const policy::Context &context) {
         // Fixed lab permission only; no production preference or runtime mode UI.
         return {true, context.verifiedApplicationId, policy::Mode::Automatic, 1};
@@ -636,7 +777,7 @@ private:
     bool validate(fcitx::InputContext *ic, LabState &s) const {
         if (!eligible(ic)) return false;
         const auto context = fixtureContext(ic, s);
-        return s.disable->correction(kFixtureRegistry,
+        return s.disable->correction(fixtureRegistry(),
             currentPermission(context), context).allowed();
     }
 
@@ -650,10 +791,10 @@ private:
         auto operation = s.disable; // Survives destruction of property/context.
         operation->requestOff(); // Stops capture/correction before external code.
         if (!currentlyEligible || !ic || !ic->hasFocus()) {
-            operation->takeOriginal(kFixtureRegistry, {}); // Defer, never retry later.
+            operation->takeOriginal(fixtureRegistry(), {}); // Defer, never retry later.
             return;
         }
-        const auto ticket = operation->takeOriginal(kFixtureRegistry,
+        const auto ticket = operation->takeOriginal(fixtureRegistry(),
                                                     fixtureContext(ic, s));
         if (!ticket) return;
         struct Original {
@@ -681,7 +822,7 @@ private:
             !generation || generation != s.generation ||
             s.disable->state() != policy::CompositionDisable::State::Deferred)
             return false;
-        if (policy::disableDisposition(kFixtureRegistry, fixtureContext(ic, s),
+        if (policy::disableDisposition(fixtureRegistry(), fixtureContext(ic, s),
                 s.lease, true) != policy::DisableAction::FinishOriginalThenDisable)
             return false;
         if (!s.disable->nativeIdle(generation)) return false;
@@ -716,18 +857,18 @@ private:
         // Explicit family: both compile-time Chromium fixture aliases belong to
         // this one owned client. Program strings are not process authentication.
         bool target = false;
-        for (const auto &adapter : kFixtureAdapters)
+        for (const auto &adapter : fixtureAdapters())
             if (ic->program() == adapter.id) target = true;
         if (!target) return;
         // Publish EVERY alias before any callback can capture in another context.
         familyOff_ = true;
-        for (const auto &adapter : kFixtureAdapters)
-            permissions_.revoke(adapter.applicationId);
+        for (const auto &adapter : fixtureAdapters())
+            permissionStore_->revoke(adapter.applicationId);
         using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
         std::vector<Watch> targets;
         manager_->foreach([&](fcitx::InputContext *candidate) {
             bool matches = false;
-            for (const auto &adapter : kFixtureAdapters)
+            for (const auto &adapter : fixtureAdapters())
                 if (candidate->program() == adapter.id) matches = true;
             if (matches) {
                 if (auto *s = state(candidate, false)) {
@@ -753,13 +894,13 @@ private:
     // Inspect and stage on the event thread, with no client callbacks between
     // these phases. An uncertain original blocks the entire family.
     bool requestLabOn() {
-        if (!registered_ || !manager_ || !familyOff_ || !permissions_.ready())
+        if (!registered_ || !manager_ || !familyOff_ || !permissionStore_->ready())
             return false;
         std::vector<LabState *> targets;
         bool safe = true;
         manager_->foreach([&](fcitx::InputContext *candidate) {
             bool matches = false;
-            for (const auto &adapter : kFixtureAdapters)
+            for (const auto &adapter : fixtureAdapters())
                 if (candidate->program() == adapter.id) matches = true;
             if (matches) {
                 auto *s = state(candidate, false);
@@ -774,12 +915,12 @@ private:
         });
         if (!safe || resumeGeneration_ == std::numeric_limits<std::uint64_t>::max())
             return false; // Generation exhaustion keeps the family Off.
-        for (const auto &adapter : kFixtureAdapters) {
-            if (!permissions_.enable(adapter.applicationId)) {
+        for (const auto &adapter : fixtureAdapters()) {
+            if (!permissionStore_->enable(adapter.applicationId, kGrantMode)) {
                 // Revision exhaustion permanently fails closed. Never expose
                 // partially enabled aliases, even if publication fails midway.
-                for (const auto &alias : kFixtureAdapters)
-                    permissions_.revoke(alias.applicationId);
+                for (const auto &alias : fixtureAdapters())
+                    permissionStore_->revoke(alias.applicationId);
                 return false;
             }
         }
@@ -1273,11 +1414,11 @@ private:
 #endif
             if (s->empty()) {
                 const auto context = fixtureContext(ic, *s);
-                const auto generation = s->disable->bind(kFixtureRegistry,
+                const auto generation = s->disable->bind(fixtureRegistry(),
                     currentPermission(context), context);
                 if (!generation) return;
                 s->generation = generation;
-                s->lease = policy::authorizeCapture(kFixtureRegistry,
+                s->lease = policy::authorizeCapture(fixtureRegistry(),
                     currentPermission(context), context).lease;
             }
 #ifdef RASKLAD_MANUAL_LAB
@@ -1356,7 +1497,11 @@ private:
 
     fcitx::Instance *instance_;
     fcitx::InputContextManager *manager_;
-    policy::ApplicationPermissions permissions_{kFixtureRegistry};
+#ifdef RASKLAD_PRODUCT
+    RaskladConfig config_;
+#endif
+    std::unique_ptr<policy::ApplicationPermissions> permissionStore_ =
+        std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
     bool familyOff_ = false;
     std::uint64_t resumeGeneration_ = 0;
 #ifdef RASKLAD_PROFILE_LAB

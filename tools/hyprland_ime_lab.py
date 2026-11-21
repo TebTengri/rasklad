@@ -92,6 +92,7 @@ def launch_selection(slack_launch, slack_supervised, seat_probe, *others):
 
 
 MANUAL_SUITE = False  # SYS-225 manual gesture suite; set only by run(manual_suite=True)
+PRODUCT_SUITE = None  # SYS-246 product addon suite: 'listed' or 'unlisted'; set only by run()
 def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False,slack_launch=False,slack_live=False):
     frontend_selection(frontend_variant)
     supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
@@ -174,6 +175,8 @@ def sandbox_args(directory, parent_fd, metadata_plan, paths, profile, snapshots,
     extra += ['--perms', '0755', '--ro-bind-data', str(snapshots['/lab/rasklad-wayland-keys']), '/lab/rasklad-wayland-keys']
     if MANUAL_SUITE:
         extra += ['--setenv', 'RASKLAD_MANUAL_LAB', '1']
+    if PRODUCT_SUITE:
+        extra += ['--setenv', 'RASKLAD_PRODUCT_SUITE', PRODUCT_SUITE]
     if slack_supervised:
         if profile:
             raise base.Refused('slack_supervised_profile')
@@ -273,6 +276,10 @@ def inside():
         addons = Path('/home/lab/.local/share/fcitx5/addon')
         addons.mkdir(parents=True)
         (addons/'raskladlab.conf').write_bytes(Path('/lab/addon.conf').read_bytes())
+        if os.environ.get('RASKLAD_PRODUCT_SUITE') == 'unlisted':
+            # Product addon configured without the fixture's app id: it must stay inert.
+            (config/'conf').mkdir()
+            (config/'conf'/'rasklad.conf').write_text('[Applications]\n0=slack\n')
         phase = 'native_ime_clients'
         clients = load('native_clients', Path('/lab/native_ime_clients.py'))
         report = clients.run(base, children)
@@ -298,12 +305,17 @@ def inside():
                     child.wait(timeout=1)
 
 
-def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False,slack_launch=False,slack_live=False,*,manual_suite=False):
+def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=False, witness_no_query=False, core_entry_witness=False, grab_entry_witness=False, focus_repeats=1,server_route_witness=False,grab_epoch_witness=False,frontend_variant="system",slack_supervised=False,seat_probe=False,slack_launch=False,slack_live=False,*,manual_suite=False,product_suite=None):
     frontend_selection(frontend_variant)
     if manual_suite and (slack_supervised or slack_launch or slack_live or seat_probe or focus_stress or space_telemetry or addon_witness or server_route_witness or frontend_variant!='system'):
         raise base.Refused('manual_suite_alone_only')
-    global MANUAL_SUITE
-    MANUAL_SUITE = manual_suite is True
+    if product_suite not in (None, 'listed', 'unlisted'):
+        raise base.Refused('product_suite_mode')
+    if product_suite and (manual_suite or slack_supervised or slack_launch or slack_live or seat_probe or focus_stress or space_telemetry or addon_witness or server_route_witness or frontend_variant!='system'):
+        raise base.Refused('product_suite_alone_only')
+    global MANUAL_SUITE, PRODUCT_SUITE
+    MANUAL_SUITE = manual_suite is True or product_suite is not None
+    PRODUCT_SUITE = product_suite
     supervised_selection(slack_supervised,focus_stress,space_telemetry,addon_witness,witness_no_query,core_entry_witness,grab_entry_witness,focus_repeats,server_route_witness,grab_epoch_witness,frontend_variant)
     if grab_epoch_witness and not server_route_witness:
         raise base.Refused('grab_epoch_requires_server_route_witness')
@@ -331,7 +343,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         base.regular_file(ROOT/('build/chromium-ime/server-grab-epoch-shim/raskladserverroute.so' if grab_epoch_witness else 'build/chromium-ime/server-route-shim/raskladserverroute.so'))
     if os.geteuid() == 0:
         raise base.Refused('root_not_admitted')
-    if input_root is None and not slack_supervised and not slack_launch and not manual_suite:
+    if input_root is None and not slack_supervised and not slack_launch and not manual_suite and not product_suite:
         raise base.Refused('explicit_input_root_required')
     if space_telemetry and not focus_stress:
         raise base.Refused('space_telemetry_requires_focus_suite')
@@ -352,6 +364,10 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         paths['addon'] = SLACK_GATE_ADDON
     if manual_suite:
         paths['addon'] = ROOT/'build/chromium-ime/manual-addon/raskladlab.so'  # SYS-225, no profile
+    if product_suite:
+        # SYS-246 product addon (no lab environment), mounted under the lab library name.
+        paths['addon'] = ROOT/'build/product-addon/rasklad.so'
+        paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladproduct.conf'
     if slack_supervised and os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1':
         paths['addon'] = ROOT/'build/chromium-ime/slack-manual-gate-addon/raskladslackmanualgatetest.so'
         MANUAL_SUITE = True  # the helper accepts shift2; the driver runs the manual cases
@@ -381,7 +397,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
             base.regular_file(ROOT/source)
     keys = ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'
     base.regular_file(keys, True)
-    profile = {} if slack_supervised or slack_launch or manual_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
+    profile = {} if slack_supervised or slack_launch or manual_suite or product_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
                for relative in chrome.PROFILE_PATHS}
     for path in profile.values():
         base.regular_file(path)
@@ -492,6 +508,7 @@ def main():
     parser.add_argument('--slack-live', action='store_true')
     parser.add_argument('--manual-gesture', action='store_true', help='live only: SYS-225 manual double-Shift cases')
     parser.add_argument('--manual-suite', action='store_true', help='SYS-225 owned Chromium fixture suite (with --run-approved)')
+    parser.add_argument('--product-suite', choices=('listed', 'unlisted'), help='SYS-246 product addon in the owned fixture (with --run-approved)')
     parser.add_argument('--owner-empty-composer', action='store_true',
                         help='live only: the owner confirms the test-channel composer is empty (used if Slack reports no field state)')
     parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
@@ -538,7 +555,7 @@ def main():
             raise base.Refused('focus_suite_outer_native_only')
         if args.space_telemetry and not args.focus_stress:
             raise base.Refused('space_telemetry_requires_focus_suite')
-        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised, args.seat_probe, args.slack_launch, args.slack_live, manual_suite=args.manual_suite) if args.run_approved else {
+        report = inside() if args.inside else run(args.input_root, args.focus_stress, args.space_telemetry, args.addon_witness, args.witness_no_query, args.core_entry_witness, args.grab_entry_witness, args.focus_repeats, args.server_route_witness, args.grab_epoch_witness, args.frontend_variant, args.slack_supervised, args.seat_probe, args.slack_launch, args.slack_live, manual_suite=args.manual_suite, product_suite=args.product_suite) if args.run_approved else {
             'schema': 1, 'status': 'plan_only', 'hostDisplayConnected': False,
             'frontendVariant': args.frontend_variant,
             'requiresOwnerApproval': True, 'maxTrialSeconds': 75,

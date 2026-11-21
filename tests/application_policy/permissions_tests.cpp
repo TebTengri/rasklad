@@ -38,6 +38,16 @@ int main() {
     assert(leaseA.valid && leaseB.valid);
     assert(permissions.enable("app.a"));
     assert(permissions.snapshot("app.a").revision == enabledA.revision);
+    // Manual is a separate mode: switching changes the revision; other modes refused.
+    assert(!permissions.enable("app.a", Mode::Off));
+    assert(!permissions.enable("app.a", static_cast<Mode>(99)));
+    assert(permissions.snapshot("app.a").mode == Mode::Automatic);
+    assert(permissions.enable("app.a", Mode::Manual));
+    assert(permissions.snapshot("app.a").mode == Mode::Manual);
+    assert(permissions.snapshot("app.a").revision == enabledA.revision + 1);
+    assert(!revalidateCorrection(registry, permissions.snapshot("app.a"), a, leaseA).allowed());
+    assert(permissions.enable("app.a"));
+    assert(permissions.snapshot("app.a").mode == Mode::Automatic);
     assert(permissions.revoke("app.a"));
     const auto offA = permissions.snapshot("app.a");
     assert(offA.revision > enabledA.revision);

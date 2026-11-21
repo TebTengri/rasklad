@@ -43,14 +43,14 @@ bool ApplicationPermissions::exhaust() noexcept {
     for (std::size_t i = 0; i < size_; ++i) entries_[i].mode = Mode::Off;
     return false;
 }
-bool ApplicationPermissions::enable(std::string_view id) noexcept {
-    if (!ready_) return false;
+bool ApplicationPermissions::enable(std::string_view id, Mode mode) noexcept {
+    if (!ready_ || (mode != Mode::Automatic && mode != Mode::Manual)) return false;
     auto *entry = find(id);
     if (!entry) return false;
-    if (entry->mode == Mode::Automatic) return true;
+    if (entry->mode == mode) return true;
     if (entry->revision == std::numeric_limits<std::uint64_t>::max()) return exhaust();
     ++entry->revision;
-    entry->mode = Mode::Automatic;
+    entry->mode = mode;
     return true;
 }
 bool ApplicationPermissions::revoke(std::string_view id) noexcept {
