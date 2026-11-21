@@ -188,11 +188,31 @@ try{
   await ev(`prose.value=''`);await type('shift2');report.manualClearedFieldUntouched=await v()==='';
   phase='manual_after_space_key_between';await reset();await type('word');await type('space');await type('backspace');await type('shift2');
   report.manualKeyBetweenNoReplace=await v()==='ghbdtn';
+  await type('space'); // BackSpace latches bypass; a boundary ends it before the next case
+  // Right Shift works the same; Ctrl+Shift and both Shifts together are combinations, never the gesture.
+  phase='manual_shift_right';await reset();await type('word');await type('shiftr2');await type('space');
+  report.manualShiftRightValue=await v();report.manualShiftRight=report.manualShiftRightValue==='привет ';
+  phase='manual_ctrl_shift';await reset();await type('word');await type('ctrlshift2');await type('space');
+  report.manualCtrlShiftIgnored=await v()==='ghbdtn ';
+  await type('space'); // a passed-through modifier may latch bypass; a boundary ends it
+  phase='manual_both_shifts';await reset();await type('word');await type('shiftlr2');await type('space');
+  report.manualBothShiftsIgnored=await v()==='ghbdtn ';
+  await type('space');
+  // Caret moved after Space (as a mouse click would): the word is no longer replaceable,
+  // even after the caret comes back to the end.
+  phase='manual_after_space_caret';await reset();await type('word');await type('space');await new Promise(r=>setTimeout(r,150));
+  await ev(`prose.setSelectionRange(0,0)`);await new Promise(r=>setTimeout(r,150));
+  await ev(`prose.setSelectionRange(prose.value.length,prose.value.length)`);await new Promise(r=>setTimeout(r,150));
+  await type('shift2');report.manualCaretMovedNoReplace=await v()==='ghbdtn ';
+  // Typing straight on after a replacement starts a fresh word; nothing else changes.
+  phase='manual_after_replace_typing';await reset();await type('word');await type('space');await type('shift2');
+  const first=await v();await type('word');await type('space');
+  report.manualTypingAfterReplace=['привет ','ghbdtn '].includes(first)&&await v()===first+'ghbdtn ';
   phase='manual_password';await reset('secret');await type('word');await type('shift2');await type('space');
   report.manualPasswordUntouched=await ev(`secret.value==='ghbdtn '&&!imeEvents.some(x=>x.type==='compositionstart')`);
   phase='manual_focus';await reset();await type('word');await type('shift2');await ev(`other.focus();imeEvents=[]`);await new Promise(r=>setTimeout(r,120));await type('space');
   report.manualFocusNoLeak=await ev(`other.value===' '`);
-  const required=['manualPreeditConverted','manualConvertedCommit','manualUndoPreedit','manualUndoCommit','manualNoAutoCorrection','manualShiftLetterOriginal','manualSlowIgnored','manualEmptyNothing','manualShiftBeforeWord','manualBackspaceConverted','manualBackspaceCommit','manualFlushCommitsShown','manualZhurnal','manualKhorosho','manualYolka','manualEnglishCommaKept','manualAfterSpaceUnknownRefused','manualClearedFieldUntouched','manualKeyBetweenNoReplace','manualPasswordUntouched','manualFocusNoLeak'];
+  const required=['manualPreeditConverted','manualConvertedCommit','manualUndoPreedit','manualUndoCommit','manualNoAutoCorrection','manualShiftLetterOriginal','manualSlowIgnored','manualEmptyNothing','manualShiftBeforeWord','manualBackspaceConverted','manualBackspaceCommit','manualFlushCommitsShown','manualZhurnal','manualKhorosho','manualYolka','manualEnglishCommaKept','manualAfterSpaceUnknownRefused','manualClearedFieldUntouched','manualKeyBetweenNoReplace','manualPasswordUntouched','manualFocusNoLeak','manualShiftRight','manualCtrlShiftIgnored','manualBothShiftsIgnored','manualCaretMovedNoReplace','manualTypingAfterReplace'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else{
  await reset();phase='word';await type('word');
