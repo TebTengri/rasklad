@@ -45,8 +45,17 @@
 ## Настройка хоста владельца (2026-11-22, по просьбе владельца)
 
 - **Fcitx.** Группа `Default` состоит из `keyboard-us` и `keyboard-ru`
-  (через D-Bus `SetInputMethodGroupInfo`). Клавиши `EnumerateForwardKeys`:
-  `Alt+Alt_R`, `Alt+Alt_L`.
+  (через D-Bus `SetInputMethodGroupInfo`). Горячие клавиши `EnumerateForwardKeys`
+  (`Alt+Alt_R`, `Alt+Alt_L`) срабатывали от одиночного Alt; 2026-11-22 убраны
+  (D-Bus `SetConfig fcitx://config/global`, копия `config.bak.1795296359`).
+  Раскладку переключает аддон: два быстрых нажатия Alt (решение владельца).
+- **Панель Omarchy.** Виджет раскладки склонирован командой
+  `omarchy plugin clone omarchy.keyboard-layout` в
+  `~/.config/omarchy/plugins/mvn.keyboard-layout`. Правки: для методов
+  `keyboard-*` показывается код раскладки Fcitx (`en`/`ru`), правый клик
+  открывает `rasklad-settings`. Откат: `omarchy plugin enable
+  omarchy.keyboard-layout` и `omarchy plugin disable mvn.keyboard-layout`
+  (копия `shell.json` сохранена рядом с ним).
 - **Hyprland.** В `~/.config/hypr/input.lua` добавлен блок: `kb_layout = "us"`,
   без `grp:alts_toggle`. Раскладку переключает только Fcitx.
 - **Откат.** Восстановить `*.bak.1795287539` (input.lua, fcitx5/config,
@@ -71,7 +80,7 @@ Grok, четыре раунда. Принятые исправления опи�
 
 - **Нет отмены** после исправления по знаку или Enter. Enter отправляет уже
   исправленное слово.
-- **Индикатор раскладки Omarchy** следит за Hyprland и не видит переключений
-  Fcitx.
+- **Двойной Alt** не перехватывается: приложения, у которых Alt открывает меню,
+  видят оба нажатия. Alt_R (AltGr) тоже считается.
 - **Словари и модель** — локальная сборка; при обновлении `hunspell` нужна
   пересборка.
