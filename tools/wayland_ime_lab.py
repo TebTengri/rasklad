@@ -188,7 +188,7 @@ def run(input_root,nested_smoke=False,focus_stress=False,space_telemetry=False,a
  if os.geteuid()==0:raise base.Refused('root_not_admitted')
  if input_root is None and not slack_gate and not manual_suite:raise base.Refused('explicit_input_root_required')
  if space_telemetry and not focus_stress:raise base.Refused('space_telemetry_requires_focus_suite')
- if product_suite not in (None,'listed','unlisted'):raise base.Refused('product_suite_mode')
+ if product_suite not in (None,'listed','unlisted','layout'):raise base.Refused('product_suite_mode')
  global MANUAL_SUITE,PRODUCT_SUITE;MANUAL_SUITE=bool(manual_suite or manual_gesture or product_suite);PRODUCT_SUITE=product_suite
  paths=chrome.files();paths.pop('xvfb');paths.pop('keys');paths['runner']=ROOT/'tools/wayland_ime_lab.py';paths['addon']=ROOT/('build/chromium-ime/grab-entry-addon/raskladlab.so' if grab_entry_witness else 'build/chromium-ime/core-entry-addon/raskladlab.so' if core_entry_witness else 'build/chromium-ime/witness-addon/raskladlab.so' if addon_witness else 'build/chromium-ime/profile-addon/raskladlab.so')
  if disable_suite:paths['addon']=ROOT/'build/chromium-ime/disable-addon/raskladlab.so'
@@ -267,6 +267,9 @@ def inside():
  if os.environ.get('RASKLAD_PRODUCT_SUITE')=='unlisted':
   # Product addon configured without the fixture's app id: it must stay inert.
   (config/'conf').mkdir();(config/'conf'/'rasklad.conf').write_text('[Applications]\n0=slack\n')
+ if os.environ.get('RASKLAD_PRODUCT_SUITE')=='layout':
+  # SYS-226: both layouts as Fcitx input methods; the addon switches between them.
+  (config/'profile').write_text(base.PROFILE.replace('[GroupOrder]','[Groups/0/Items/1]\nName=keyboard-ru\nLayout=\n\n[GroupOrder]'))
  children=[];phase='software_compositor'
  try:
   server_env=load('server_route_child',Path('/lab/server_route_witness_guard.py')).child_env(base) if os.environ.get('RASKLAD_SERVER_ROUTE_WITNESS_LAB')=='1' else None
@@ -302,7 +305,7 @@ def inside():
     except subprocess.TimeoutExpired:child.kill();child.wait(timeout=1)
 
 def main():
- p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--disable-suite',action='store_true');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');p.add_argument('--addon-witness',action='store_true');p.add_argument('--witness-no-query',action='store_true');p.add_argument('--core-entry-witness',action='store_true');p.add_argument('--grab-entry-witness',action='store_true');p.add_argument('--grab-epoch-witness',action='store_true');p.add_argument('--server-route-witness',action='store_true');p.add_argument('--focus-repeats',type=int,choices=range(1,6),default=1);p.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system');p.add_argument('--slack-gate',action='store_true');p.add_argument('--slack-gate-control',action='store_true');p.add_argument('--slack-supervised',action='store_true');p.add_argument('--manual-suite',action='store_true');p.add_argument('--manual-gesture',action='store_true');p.add_argument('--product-suite',choices=('listed','unlisted'));p.add_argument('--packaged',action='store_true');args=p.parse_args()
+ p=argparse.ArgumentParser(description=__doc__);a=p.add_mutually_exclusive_group();a.add_argument('--run',action='store_true');a.add_argument('--smoke-nested-hypr',action='store_true');a.add_argument('--inside',action='store_true',help=argparse.SUPPRESS);p.add_argument('--input-root');p.add_argument('--disable-suite',action='store_true');p.add_argument('--focus-stress',action='store_true');p.add_argument('--space-telemetry',action='store_true');p.add_argument('--addon-witness',action='store_true');p.add_argument('--witness-no-query',action='store_true');p.add_argument('--core-entry-witness',action='store_true');p.add_argument('--grab-entry-witness',action='store_true');p.add_argument('--grab-epoch-witness',action='store_true');p.add_argument('--server-route-witness',action='store_true');p.add_argument('--focus-repeats',type=int,choices=range(1,6),default=1);p.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system');p.add_argument('--slack-gate',action='store_true');p.add_argument('--slack-gate-control',action='store_true');p.add_argument('--slack-supervised',action='store_true');p.add_argument('--manual-suite',action='store_true');p.add_argument('--manual-gesture',action='store_true');p.add_argument('--product-suite',choices=('listed','unlisted','layout'));p.add_argument('--packaged',action='store_true');args=p.parse_args()
  os.environ.pop('RASKLAD_PRODUCT_PACKAGED_CLI',None)
  if args.packaged and not args.product_suite:raise SystemExit('--packaged requires --product-suite')
  if args.packaged:os.environ['RASKLAD_PRODUCT_PACKAGED_CLI']='1'

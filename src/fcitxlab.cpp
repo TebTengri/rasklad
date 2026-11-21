@@ -156,6 +156,8 @@
 #include <fcitx/inputcontextmanager.h>
 #include <fcitx/inputcontextproperty.h>
 #include <fcitx/inputmethodentry.h>
+#include <fcitx/inputmethodgroup.h>
+#include <fcitx/inputmethodmanager.h>
 #include <fcitx/inputpanel.h>
 #include <fcitx/instance.h>
 #include <fcitx/text.h>
@@ -289,6 +291,9 @@ constexpr policy::Registry fixtureRegistry() { return kFixtureRegistry; }
 constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
 #endif
 constexpr const char kLabEntry[] = "keyboard-us";
+#ifdef RASKLAD_PRODUCT
+constexpr const char kRuEntry[] = "keyboard-ru"; // SYS-226: switched to after a us->ru correction
+#endif
 constexpr const char kPropertyName[] = "raskladlabState";
 
 // Synthetic test rule only. No dictionaries, model or other strings.
@@ -533,6 +538,13 @@ public:
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
                     if (auto *s = state(ic, false)) {
+#ifdef RASKLAD_PRODUCT
+                        // Our own deferred layout switch happens only with an empty
+                        // word; the last committed word stays replaceable.
+                        if (selfSwitch_ && event.type() == fcitx::EventType::InputContextSwitchInputMethod &&
+                            s->empty())
+                            return;
+#endif
                         discard(ic, *s); // Invalidates even an idle context first.
                     }
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -762,9 +774,15 @@ private:
             !ic->capabilityFlags().test(fcitx::CapabilityFlag::Disable);
 #endif
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
+#ifdef RASKLAD_PRODUCT
+        if (!entry || (entry->uniqueName() != kLabEntry && entry->uniqueName() != kRuEntry)) {
+            return false;
+        }
+#else
         if (!entry || entry->uniqueName() != kLabEntry) {
             return false;
         }
+#endif
         const auto caps = ic->capabilityFlags();
         using fcitx::CapabilityFlag;
         if (!caps.test(CapabilityFlag::Preedit)) {
@@ -1014,7 +1032,7 @@ private:
         }
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
-    static void replaceLast(fcitx::InputContext *ic, LabState &s) {
+    static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
         const std::string oldText = s.lastText();
         std::string newText = LabState::form(s.lastTyped, s.lastTypedRu == s.lastConverted, s.lastUpper) + ' ';
         const auto &st = ic->surroundingText();
@@ -1027,7 +1045,7 @@ private:
 #else
         const bool gated = true;
 #endif
-        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return; }
+        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
@@ -1042,6 +1060,7 @@ private:
         }
 #endif
         wipeString(newText);
+        return true;
     }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
     // release, depending on the frontend on the press) is ignored.
@@ -1343,8 +1362,16 @@ private:
                     return;
                 }
                 if (s->empty() && s->lastValid) {
-                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time()))
+                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
+#ifdef RASKLAD_PRODUCT
+                        // The restored form's layout becomes current (SYS-226).
+                        const bool toRu = s->lastTypedRu == s->lastConverted;
+                        auto ref = ic->watch();
+                        if (replaceLast(ic, *s)) switchLayout(ref, toRu);
+#else
                         replaceLast(ic, *s); // No state/event access after this call.
+#endif
+                    }
                     return;
                 }
                 if (s->empty() || !validate(ic, *s)) {
@@ -1613,7 +1640,15 @@ private:
                 // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
+#ifdef RASKLAD_PRODUCT
+                const bool switchAfter = fixed.has_value();
+                const bool toRu = !s->typedRu;
+                auto ref = ic->watch();
+#endif
                 commitAndClear(ic, *s, std::move(out));
+#ifdef RASKLAD_PRODUCT
+                if (switchAfter) switchLayout(ref, toRu); // the corrected word's layout
+#endif
                 return;
             }
             if (sym == FcitxKey_BackSpace) {
@@ -1647,7 +1682,11 @@ private:
             bool whole = false;
             std::optional<std::string> fixed;
             if (wordEnd(key)) fixed = autoText(*s, whole);
+            const bool toRu = !s->typedRu;
+            auto ref = ic->watch();
+            const bool switchAfter = fixed.has_value();
             commitAndClear(ic, *s, fixed ? std::move(*fixed) : s->shown());
+            if (switchAfter) switchLayout(ref, toRu);
 #elif defined(RASKLAD_MANUAL_LAB)
             commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
 #else
@@ -1662,6 +1701,34 @@ private:
     RaskladConfig config_;
     bool applying_ = false;
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
+    std::unique_ptr<fcitx::EventSource> switchEvent_;
+    bool selfSwitch_ = false;
+    // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
+    // layout becomes the current Fcitx input method, so the owner keeps typing in it.
+    // Only between keyboard-us and keyboard-ru, only if both are in the current group,
+    // deferred to the next loop turn, and only while that context is focused with no
+    // word in progress (never drops typed letters).
+    void switchLayout(fcitx::TrackableObjectReference<fcitx::InputContext> ref, bool toRu) {
+        if (!instance_) return;
+        const std::string target = toRu ? kRuEntry : kLabEntry;
+        bool us = false, ru = false;
+        for (const auto &item : instance_->inputMethodManager().currentGroup().inputMethodList()) {
+            us = us || item.name() == kLabEntry;
+            ru = ru || item.name() == kRuEntry;
+        }
+        if (!us || !ru) return;
+        switchEvent_ = instance_->eventLoop().addDeferEvent([this, ref, target](fcitx::EventSource *) {
+            auto *c = ref.get();
+            if (!c || !c->hasFocus()) return true;
+            if (auto *s = state(c, false); s && !s->empty()) return true;
+            const auto *entry = instance_->inputMethodEntry(c);
+            if (!entry || entry->uniqueName() == target) return true;
+            selfSwitch_ = true;
+            instance_->setCurrentInputMethod(c, target, false);
+            selfSwitch_ = false;
+            return true;
+        });
+    }
 #endif
     std::unique_ptr<policy::ApplicationPermissions> permissionStore_ =
         std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());

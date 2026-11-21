@@ -148,6 +148,24 @@ try{
   await type('shift2');report.productUnlistedAfterSpace=await v()==='ghbdtn ';
   const required=['productUnlistedNoPreedit','productUnlistedTyped','productUnlistedAfterSpace'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
+  // SYS-226: keyboard-us and keyboard-ru in Fcitx. A correction makes the corrected
+  // word's layout current, so the next word is typed in it without correction.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');const settle=()=>new Promise(r=>setTimeout(r,250));
+  phase='layout_to_ru';await reset();await type('word');await type('space');
+  report.layoutFirstCorrected=await v()==='привет ';
+  await settle();await type('word');await type('space');
+  report.layoutSecondValue=await v();report.layoutSecondTypedInRu=report.layoutSecondValue==='привет привет ';
+  // A single letter is never corrected: only the switched layout makes x into ч.
+  await type('xspace');report.layoutLetterValue=await v();report.layoutLetterIsRu=report.layoutLetterValue==='привет привет ч ';
+  phase='layout_to_us';await settle();await type('hello');
+  report.layoutThirdValue=await v();report.layoutThirdCorrected=report.layoutThirdValue==='привет привет ч hello ';
+  await settle();await type('hello');
+  report.layoutFourthValue=await v();report.layoutFourthTypedInUs=report.layoutFourthValue==='привет привет ч hello hello ';
+  await type('xspace');report.layoutLetterUsValue=await v();report.layoutLetterIsUs=report.layoutLetterUsValue==='привет привет ч hello hello x ';
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='listed'){
   // SYS-226 product addon: automatic correction on Space by the reviewed profile, both
   // directions; double Shift right after the Space restores; the gesture still works.

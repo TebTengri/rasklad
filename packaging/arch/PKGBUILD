@@ -4,7 +4,7 @@
 # Installs only an Fcitx addon: no service, autostart, setuid, udev or user
 # configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.2.2
+pkgver=0.3.0
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
