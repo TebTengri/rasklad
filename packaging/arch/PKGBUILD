@@ -1,0 +1,43 @@
+# SYS-228: Arch package for the rasklad Fcitx5 addon (manual double-Shift).
+# Built locally by tools/build_arch_package.sh from a git archive of this repo.
+# Installs only an Fcitx addon: no service, autostart, setuid, udev or user
+# configuration. Fcitx loads it on its next start.
+pkgname=rasklad-fcitx5
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Manual double-Shift keyboard layout correction (us->ru) for Fcitx5, in listed applications only'
+arch=('x86_64')
+url='https://github.com/TebTengri/rasklad'
+license=('MIT')
+depends=('fcitx5')
+makedepends=('qt6-base')  # qmake6 only; the addon does not link Qt
+source=("rasklad-${pkgver}.tar.gz")
+sha256sums=('@SHA256@')
+
+build() {
+  cd "rasklad-${pkgver}"
+  mkdir -p build/addon build/policy build/permissions
+  (cd build/addon && qmake6 ../../tools/fcitx_product.pro && make)
+  (cd build/policy && qmake6 ../../tests/application_policy/application_policy.pro && make)
+  (cd build/permissions && qmake6 ../../tests/application_permissions/application_permissions.pro && make)
+}
+
+check() {
+  cd "rasklad-${pkgver}"
+  ./build/policy/application_policy_tests
+  ./build/permissions/application_permissions_tests
+  # The addon must not read the environment or use D-Bus, sockets or processes.
+  if nm -D --undefined-only build/addon/rasklad.so | grep -E -w 'getenv|secure_getenv|socket|connect|fork|execve|popen|system|dbus_[a-z_]+'; then
+    echo 'unexpected import in rasklad.so' >&2
+    return 1
+  fi
+}
+
+package() {
+  cd "rasklad-${pkgver}"
+  install -Dm755 build/addon/rasklad.so "${pkgdir}/usr/lib/fcitx5/rasklad.so"
+  install -Dm644 addon/rasklad.conf "${pkgdir}/usr/share/fcitx5/addon/rasklad.conf"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 docs/SYS-246-PRODUCT-ADDON.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 packaging/arch/INSTALL.md "${pkgdir}/usr/share/doc/${pkgname}/INSTALL.md"
+}
