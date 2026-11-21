@@ -29,6 +29,7 @@ static_assert(KEY_ESC == 1, "unexpected KEY_ESC");
 static_assert(KEY_F12 == 88, "unexpected KEY_F12");
 static_assert(KEY_F11 == 87, "unexpected KEY_F11");
 static_assert(KEY_LEFTSHIFT == 42, "unexpected KEY_LEFTSHIFT");
+static_assert(KEY_RIGHTSHIFT == 54, "unexpected KEY_RIGHTSHIFT");
 
 namespace {
 
@@ -237,7 +238,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, Zhurnal, Khorosho, Yolka, HelloComma, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -260,6 +261,9 @@ Cmd parse(std::string_view line)
         if (line == "shift2") return Cmd::Shift2;
         if (line == "shiftslow") return Cmd::ShiftSlow;
         if (line == "shifta") return Cmd::ShiftA;
+        if (line == "shiftr2") return Cmd::ShiftR2;
+        if (line == "ctrlshift2") return Cmd::CtrlShift2;
+        if (line == "shiftlr2") return Cmd::ShiftLR2;
         if (line == "zhurnal") return Cmd::Zhurnal;
         if (line == "khorosho") return Cmd::Khorosho;
         if (line == "yolka") return Cmd::Yolka;
@@ -294,6 +298,18 @@ bool run(Session &s, Cmd cmd)
         return s.tap(KEY_LEFTSHIFT);
     }
     case Cmd::ShiftA: return s.chord(KEY_LEFTSHIFT, KEY_A);
+    case Cmd::ShiftR2: return s.tap(KEY_RIGHTSHIFT) && s.tap(KEY_RIGHTSHIFT);
+    // Two Shift taps while Ctrl is held: a modifier combination, never the gesture.
+    case Cmd::CtrlShift2:
+        return s.sendKey(KEY_LEFTCTRL, true) && s.tap(KEY_LEFTSHIFT) && s.tap(KEY_LEFTSHIFT) &&
+               s.sendKey(KEY_LEFTCTRL, false);
+    // Both Shifts down together, twice: a chord, never the gesture.
+    case Cmd::ShiftLR2:
+        for (int i = 0; i < 2; ++i)
+            if (!(s.sendKey(KEY_LEFTSHIFT, true) && s.sendKey(KEY_RIGHTSHIFT, true) &&
+                  s.sendKey(KEY_RIGHTSHIFT, false) && s.sendKey(KEY_LEFTSHIFT, false)))
+                return false;
+        return true;
     case Cmd::Zhurnal: return typeFixed(s, ";ehyfk");
     case Cmd::Khorosho: return typeFixed(s, "[jhjij");
     case Cmd::Yolka: return typeFixed(s, "`krf");
