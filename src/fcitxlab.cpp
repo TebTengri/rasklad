@@ -556,8 +556,12 @@ public:
                 }));
         }
 #ifdef RASKLAD_PRODUCT
+        // Two Alt taps belong to one window: a focus change between them ends the gesture.
+        for (const auto type : {fcitx::EventType::InputContextFocusIn, fcitx::EventType::InputContextFocusOut})
+            watchers_.emplace_back(instance_->watchEvent(type, fcitx::EventWatcherPhase::PreInputMethod,
+                                                         [this](fcitx::Event &) { altTap_.reset(); }));
         // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
-        // keyboard-ru, whoever switched it (Alt+Alt, a correction or an undo).
+        // keyboard-ru, whoever switched it (double Alt, a correction or an undo).
         watchers_.emplace_back(instance_->watchEvent(
             fcitx::EventType::InputContextSwitchInputMethod, fcitx::EventWatcherPhase::Default,
             [this](fcitx::Event &event) {
@@ -1367,6 +1371,9 @@ private:
         if (!registered_ || event.filtered()) {
             return;
         }
+#ifdef RASKLAD_PRODUCT
+        altTap(event); // observes only; Alt always reaches the application
+#endif
         fcitx::InputContext *ic = event.inputContext();
         const fcitx::Key &key = event.key();
 
@@ -1723,12 +1730,50 @@ private:
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
     std::unique_ptr<fcitx::EventSource> switchEvent_;
     bool selfSwitch_ = false;
+    rasklad::manual::DoubleShift altTap_; // same timing rules, fed with Alt
     rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
     // layout becomes the current Fcitx input method, so the owner keeps typing in it.
     // Only between keyboard-us and keyboard-ru, only if both are in the current group,
     // deferred to the next loop turn, and only while that context is focused with no
     // word in progress (never drops typed letters).
+    // Owner decision 2026-11-22: two quick taps on Alt (left or right, 400 ms, like
+    // double Shift) switch keyboard-us <-> keyboard-ru in every application. A
+    // single Alt, Alt held with another key, or both Alts at once do nothing.
+    // Alt is never filtered. A word in progress is committed as shown first, so
+    // nothing typed is lost.
+    static bool isAlt(const fcitx::Key &key) {
+        if (key.sym() != FcitxKey_Alt_L && key.sym() != FcitxKey_Alt_R) return false;
+        return !fcitx::Key(key.sym(), key.states().unset(fcitx::KeyState::Alt)).hasModifier();
+    }
+    void altTap(fcitx::KeyEvent &event) {
+        if (!isAlt(event.key())) {
+            if (!event.isRelease()) altTap_.feed(rasklad::manual::Input::Other, event.time());
+            return;
+        }
+        if (!event.isRelease()) {
+            altTap_.feed(rasklad::manual::Input::ShiftPress, event.time());
+            return;
+        }
+        if (!altTap_.feed(rasklad::manual::Input::ShiftRelease, event.time())) return;
+        auto *ic = event.inputContext();
+        const auto *entry = ic ? instance_->inputMethodEntry(ic) : nullptr;
+        if (!entry || !ic->hasFocus()) return;
+        bool toRu;
+        if (entry->uniqueName() == kLabEntry) toRu = true;
+        else if (entry->uniqueName() == kRuEntry) toRu = false;
+        else return;
+        if (auto *s = state(ic, false); s && !s->empty() && !s->stopping()) {
+            auto ref = ic->watch();
+            commitAndClear(ic, *s, s->shown());
+            auto *again = ref.get(); // the client may drop the context while committing
+            if (!again) return;
+            if (auto *after = state(again, false)) after->forgetLast();
+            switchLayout(again->watch(), toRu);
+            return;
+        }
+        switchLayout(ic->watch(), toRu);
+    }
     void switchLayout(fcitx::TrackableObjectReference<fcitx::InputContext> ref, bool toRu) {
         if (!instance_) return;
         const std::string target = toRu ? kRuEntry : kLabEntry;

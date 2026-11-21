@@ -253,7 +253,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -291,6 +291,11 @@ Cmd parse(std::string_view line)
         if (line == "capword") return Cmd::CapWord;
         if (line == "shortword") return Cmd::ShortWord;
         if (line == "hyphen") return Cmd::Hyphen;
+        if (line == "alt1") return Cmd::Alt1;
+        if (line == "alt2") return Cmd::Alt2;
+        if (line == "altr2") return Cmd::AltR2;
+        if (line == "alttab") return Cmd::AltTab;
+        if (line == "altslow") return Cmd::AltSlow;
     }
     return Cmd::Unknown;
 }
@@ -341,6 +346,18 @@ bool run(Session &s, Cmd cmd)
     case Cmd::UsGroup: return s.setGroup(0);
     case Cmd::WordComma: return typeFixed(s, "ghbdtn, ");
     case Cmd::Exclaim: return s.chord(KEY_LEFTSHIFT, KEY_1);
+    case Cmd::Alt1: return s.tap(KEY_LEFTALT);
+    case Cmd::Alt2: return s.tap(KEY_LEFTALT) && s.tap(KEY_LEFTALT);
+    case Cmd::AltR2: return s.tap(KEY_RIGHTALT) && s.tap(KEY_RIGHTALT);
+    // Alt held with another key in between: never a double tap.
+    case Cmd::AltTab: return s.tap(KEY_LEFTALT) && s.chord(KEY_LEFTALT, KEY_TAB);
+    case Cmd::AltSlow: {
+        // Two taps 600 ms apart: slower than the 400 ms gesture window.
+        if (!s.tap(KEY_LEFTALT)) return false;
+        timespec pause {0, 600 * 1000 * 1000};
+        while (nanosleep(&pause, &pause) != 0 && errno == EINTR) {}
+        return s.tap(KEY_LEFTALT);
+    }
     case Cmd::Enter: return s.tap(KEY_ENTER);
     case Cmd::CapWord: return s.chord(KEY_LEFTSHIFT, KEY_G) && typeFixed(s, "hbdtn ");
     case Cmd::ShortWord: return typeFixed(s, "rfr ");
