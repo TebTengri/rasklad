@@ -1,5 +1,6 @@
 {
  "application": "installed Chromium native Wayland IM",
+ "autoAfterGestureWord": true,
  "autoEnglishCommaKept": true,
  "autoEnglishKept": true,
  "autoFocusNoLeak": true,
@@ -21,7 +22,7 @@
  "boundaryBasis": "fixed namespaces/mounts/env and guard tests; not a global OS change audit",
  "browserVersion": "Chrome/155.0.8059.84",
  "cdpTyping": false,
- "checks": 17,
+ "checks": 18,
  "dbusInputFrontendAbsent": true,
  "driverExitCode": 0,
  "exitCode": 0,
