@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Rasklad
+GenericName=Keyboard layout correction
+GenericName[ru]=Исправление раскладки
+Comment=Choose where words typed in the wrong layout are corrected
+Comment[ru]=Где исправлять слова, набранные не в той раскладке
+Exec=rasklad-settings
+Icon=rasklad-settings
+Terminal=false
+Categories=Settings;
+Keywords=keyboard;layout;fcitx;раскладка;клавиатура;

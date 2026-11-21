@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Main.qml</file>
+        <file>i18n/ru.json</file>
+    </qresource>
+</RCC>

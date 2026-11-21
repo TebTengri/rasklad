@@ -1,28 +1,32 @@
-# SYS-228/SYS-226: Arch package for the rasklad Fcitx5 addon (automatic correction
-# by the reviewed local profile, double-Shift gesture).
+# SYS-228/SYS-226/SYS-227: Arch package for the rasklad Fcitx5 addon (automatic
+# correction by the reviewed local profile, double-Shift gesture) and its
+# settings window rasklad-settings.
 # Built locally by tools/build_arch_package.sh from a git archive of this repo.
-# Installs only an Fcitx addon: no service, autostart, setuid, udev or user
-# configuration. Fcitx loads it on its next start.
+# Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
+# or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.3.1
+pkgver=0.4.0
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
 license=('MIT')
-depends=('fcitx5' 'qt6-base' 'hunspell' 'alsa-lib')
-optdepends=('fcitx5-configtool: edit the list of applications')
-makedepends=('fcitx5' 'qt6-base' 'hunspell' 'alsa-lib')
+depends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib')
+optdepends=('fcitx5-configtool: generic Fcitx settings'
+            'hyprland: list open windows in rasklad-settings')
+makedepends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib')
 source=("rasklad-${pkgver}.tar.gz" "rasklad-profile-${pkgver}.tar.gz")
 sha256sums=('@SHA256@' '@PROFILE_SHA256@')
 
 build() {
   cd "rasklad-${pkgver}"
-  mkdir -p build/addon build/policy build/permissions build/cue
+  mkdir -p build/addon build/policy build/permissions build/cue build/settings build/settings-tests
   (cd build/addon && qmake6 ../../tools/fcitx_product.pro && make)
   (cd build/policy && qmake6 ../../tests/application_policy/application_policy.pro && make)
   (cd build/permissions && qmake6 ../../tests/application_permissions/application_permissions.pro && make)
   (cd build/cue && qmake6 ../../tests/layout_cue/layout_cue.pro && make)
+  (cd build/settings && qmake6 ../../settings/settings.pro && make)
+  (cd build/settings-tests && qmake6 ../../tests/settings/settings_tests.pro && make)
 }
 
 check() {
@@ -30,6 +34,7 @@ check() {
   ./build/policy/application_policy_tests
   ./build/permissions/application_permissions_tests
   ./build/cue/layout_cue_tests
+  ./build/settings-tests/settings_tests
   # The addon must not read the environment, load code, or use D-Bus, sockets or processes.
   local imports
   imports=$(nm -D --undefined-only build/addon/rasklad.so) || return 1
@@ -44,6 +49,9 @@ package() {
   cd "rasklad-${pkgver}"
   install -Dm755 build/addon/rasklad.so "${pkgdir}/usr/lib/fcitx5/rasklad.so"
   install -Dm644 addon/rasklad.conf "${pkgdir}/usr/share/fcitx5/addon/rasklad.conf"
+  install -Dm755 build/settings/rasklad-settings "${pkgdir}/usr/bin/rasklad-settings"
+  install -Dm644 packaging/arch/rasklad-settings.desktop "${pkgdir}/usr/share/applications/rasklad-settings.desktop"
+  install -Dm644 packaging/arch/rasklad-settings.svg "${pkgdir}/usr/share/icons/hicolor/scalable/apps/rasklad-settings.svg"
   # Reviewed detector profile (dictionaries, model, notices) at its pinned paths.
   (cd "${srcdir}/profile" && find . -type f -print0 | while IFS= read -r -d '' f; do
     [[ /$f/ != */../* ]] || return 1
