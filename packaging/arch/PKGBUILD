@@ -10,7 +10,8 @@ arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
 license=('MIT')
 depends=('fcitx5')
-makedepends=('qt6-base')  # qmake6 only; the addon does not link Qt
+optdepends=('fcitx5-configtool: edit the list of applications')
+makedepends=('fcitx5' 'qt6-base')  # qmake6 only; the addon does not link Qt
 source=("rasklad-${pkgver}.tar.gz")
 sha256sums=('@SHA256@')
 
@@ -26,8 +27,11 @@ check() {
   cd "rasklad-${pkgver}"
   ./build/policy/application_policy_tests
   ./build/permissions/application_permissions_tests
-  # The addon must not read the environment or use D-Bus, sockets or processes.
-  if nm -D --undefined-only build/addon/rasklad.so | grep -E -w 'getenv|secure_getenv|socket|connect|fork|execve|popen|system|dbus_[a-z_]+'; then
+  # The addon must not read the environment, load code, or use D-Bus, sockets or processes.
+  local imports
+  imports=$(nm -D --undefined-only build/addon/rasklad.so) || return 1
+  [[ -n $imports ]] || return 1
+  if grep -E -w 'getenv|secure_getenv|socket|connect|bind|fork|vfork|clone|exec[lv]p?e?|posix_spawnp?|popen|system|syscall|dlopen|dlsym|dbus_[a-z_]+' <<<"$imports"; then
     echo 'unexpected import in rasklad.so' >&2
     return 1
   fi

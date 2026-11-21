@@ -22,7 +22,7 @@ tools/build_arch_package.sh
 ## Установка (только с разрешения владельца)
 
 ```
-sudo pacman -U build/arch-package/rasklad-fcitx5-0.1.0-1-x86_64.pkg.tar.zst
+sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd
 ```
 
