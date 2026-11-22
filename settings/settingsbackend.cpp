@@ -52,7 +52,10 @@ bool SettingsBackend::commit(const AddonConfig &next)
     // Show what the addon actually holds now, not what was asked for.
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
-    else if (m_config.apps != next.apps || m_config.sound != next.sound) m_error = QStringLiteral("write");
+    else if (m_config.apps != next.apps || m_config.sound != next.sound ||
+             m_config.wordOptions != next.wordOptions || m_config.autoCorrect != next.autoCorrect ||
+             m_config.exceptions != next.exceptions)
+        m_error = QStringLiteral("write");
     rebuildApps();
     return m_error.isEmpty();
 }
@@ -104,6 +107,53 @@ void SettingsBackend::setSound(bool on)
     if (on == m_config.sound) return;
     AddonConfig next = m_config;
     next.sound = on;
+    commit(next);
+}
+
+void SettingsBackend::setAutoCorrect(bool on)
+{
+    if (!wordOptions() || on == m_config.autoCorrect) return;
+    AddonConfig next = m_config;
+    next.autoCorrect = on;
+    commit(next);
+}
+
+bool SettingsBackend::addException(const QString &raw)
+{
+    m_error.clear();
+    if (!wordOptions()) {
+        rebuildApps();
+        return false;
+    }
+    const QString word = normalizeException(raw);
+    if (word.isEmpty()) {
+        m_error = QStringLiteral("word");
+        rebuildApps();
+        return false;
+    }
+    // Already there in either layout's form ("ok" for "щл"): nothing to add.
+    const QString key = exceptionKey(word);
+    for (const QString &have : m_config.exceptions)
+        if (exceptionKey(have) == key) {
+            rebuildApps();
+            return true;
+        }
+    if (m_config.exceptions.size() >= kMaxExceptions) {
+        m_error = QStringLiteral("words-full");
+        rebuildApps();
+        return false;
+    }
+    AddonConfig next = m_config;
+    next.exceptions.append(word);
+    std::sort(next.exceptions.begin(), next.exceptions.end());
+    return commit(next);
+}
+
+void SettingsBackend::removeException(const QString &word)
+{
+    if (!wordOptions()) return;
+    AddonConfig next = m_config;
+    if (!next.exceptions.removeAll(word)) return;
     commit(next);
 }
 

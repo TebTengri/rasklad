@@ -164,6 +164,7 @@
 #include <fcitx/instance.h>
 #include <fcitx/text.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdlib>
@@ -244,9 +245,14 @@ constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
 FCITX_CONFIGURATION(RaskladConfig,
     fcitx::Option<std::vector<std::string>> applications{this, "Applications",
         "Applications (window app ids)", {"slack", "chromium", "chromium-browser"}};
-    fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};);
+    fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};
+    // SYS-227: off leaves only the gestures (double Shift, double Alt).
+    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
+    fcitx::Option<std::vector<std::string>> exceptions{this, "Exceptions",
+        "Words never corrected automatically", {}};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 constexpr std::size_t kMaxApps = 64;
+constexpr std::size_t kMaxExceptions = 256;
 // Same character rules as the policy registry; anything else is dropped.
 bool appIdentifier(const std::string &id) {
     if (id.empty() || id.size() > 128) return false;
@@ -500,6 +506,7 @@ public:
         if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
 #ifdef RASKLAD_PRODUCT
         fcitx::readAsIni(config_, kConfigPath);
+        rebuildExceptions();
         rebuildApps();
         // Missing/changed profile: no automatic correction; the gesture still works.
         profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>(profileRoot().c_str());
@@ -635,10 +642,12 @@ public:
     void setConfig(const fcitx::RawConfig &raw) override {
         config_.load(raw, true);
         fcitx::safeSaveAsIni(config_, kConfigPath);
+        rebuildExceptions();
         applyApps();
     }
     void reloadConfig() override {
         fcitx::readAsIni(config_, kConfigPath);
+        rebuildExceptions();
         applyApps();
     }
 #endif
@@ -654,6 +663,21 @@ private:
     friend struct ApplicationOffTest;
 #endif
 #ifdef RASKLAD_PRODUCT
+    // SYS-227: exception words as the us keys that type them (either layout's form
+    // matches); invalid entries are dropped. Words the owner wrote into the config,
+    // never typed input.
+    void rebuildExceptions() {
+        exceptionKeys_.clear();
+        for (const auto &word : *config_.exceptions) {
+            if (exceptionKeys_.size() == kMaxExceptions) break;
+            auto keys = rasklad::manual::exceptionKeys(word);
+            if (!keys.empty()) exceptionKeys_.push_back(std::move(keys));
+        }
+        std::sort(exceptionKeys_.begin(), exceptionKeys_.end());
+    }
+    bool exception(const std::string &keys) const {
+        return std::binary_search(exceptionKeys_.begin(), exceptionKeys_.end(), keys);
+    }
     // Rebuild the application list from config_; the revision always advances so
     // no lease from the previous list stays valid.
     void rebuildApps() {
@@ -1108,6 +1132,7 @@ private:
     // stay as typed: "ckjdj," -> "слово,".
     std::optional<std::string> autoText(LabState &s, bool &whole) {
         whole = false;
+        if (!*config_.autoCorrect) return std::nullopt; // SYS-227: gestures only
         if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
         // Case: all lowercase, a capital first letter, or all capitals (letters only).
         const std::uint32_t all = s.size() >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << s.size()) - 1;
@@ -1122,6 +1147,7 @@ private:
                 if (cut == 0 || cut == w.size()) break;
             }
             std::string keys = w.substr(0, cut);
+            if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word
             std::string typed = LabState::form(keys, s.typedRu);
             std::string other = LabState::form(keys, !s.typedRu);
             auto fix = profile_->correctTyped(typed, s.typedRu);
@@ -1726,6 +1752,7 @@ private:
     fcitx::InputContextManager *manager_;
 #ifdef RASKLAD_PRODUCT
     RaskladConfig config_;
+    std::vector<std::string> exceptionKeys_; // sorted
     bool applying_ = false;
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
     std::unique_ptr<fcitx::EventSource> switchEvent_;

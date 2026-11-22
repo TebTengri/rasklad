@@ -207,6 +207,79 @@ private Q_SLOTS:
         QCOMPARE(b.error(), QStringLiteral("write"));
         QVERIFY(b.sound()); // shows what Fcitx kept
     }
+    void exceptionRules()
+    {
+        QCOMPARE(normalizeException(QStringLiteral(" Привет ")), QStringLiteral("привет"));
+        QCOMPARE(normalizeException(QStringLiteral("OK")), QStringLiteral("ok"));
+        QCOMPARE(normalizeException(QStringLiteral("Ёлка")), QStringLiteral("ёлка"));
+        QVERIFY(normalizeException(QStringLiteral("two words")).isEmpty());
+        QVERIFY(normalizeException(QStringLiteral("okей")).isEmpty());
+        QVERIFY(normalizeException(QStringLiteral("ok,")).isEmpty());
+        QVERIFY(normalizeException(QString()).isEmpty());
+        QCOMPARE(exceptionKey(QStringLiteral("щл")), exceptionKey(QStringLiteral("ok")));
+        // An older addon (no AutoCorrect key) never gets the new keys written.
+        const AddonConfig old = *configFromMap(fcitxMap({QStringLiteral("slack")}, true));
+        QVERIFY(!old.wordOptions);
+        QVERIFY(!mapFromConfig(old).contains(QStringLiteral("Exceptions")));
+        // Words are normalised, invalid ones and same-key duplicates dropped.
+        QVariantMap words{{QStringLiteral("0"), QStringLiteral("Привет")},
+                          {QStringLiteral("1"), QStringLiteral("bad word")},
+                          {QStringLiteral("2"), QStringLiteral("ok")},
+                          {QStringLiteral("3"), QStringLiteral("щл")}};
+        QVariantMap m = fcitxMap({}, true);
+        m.insert(QStringLiteral("AutoCorrect"), QStringLiteral("False"));
+        m.insert(QStringLiteral("Exceptions"), words);
+        const AddonConfig c = *configFromMap(m);
+        QVERIFY(c.wordOptions && !c.autoCorrect);
+        QCOMPARE(c.exceptions, (QStringList{QStringLiteral("привет"), QStringLiteral("ok")}));
+        const QVariantMap back = mapFromConfig(c);
+        QCOMPARE(back.value(QStringLiteral("AutoCorrect")).toString(), QStringLiteral("False"));
+        QCOMPARE(back.value(QStringLiteral("Exceptions")).toMap().size(), 2);
+        // Empty list as "", missing list as empty; another shape is a failed read.
+        m.insert(QStringLiteral("Exceptions"), QString());
+        QVERIFY(configFromMap(m)->exceptions.isEmpty());
+        m.remove(QStringLiteral("Exceptions"));
+        QVERIFY(configFromMap(m)->exceptions.isEmpty());
+        m.insert(QStringLiteral("Exceptions"), QStringLiteral("ok"));
+        QVERIFY(!configFromMap(m));
+    }
+    void exceptionsAndAutoCorrect()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(b.wordOptions() && b.autoCorrect());
+        QVERIFY(b.addException(QStringLiteral("Привет")));
+        QVERIFY(b.addException(QStringLiteral("rfr")));
+        QCOMPARE(b.exceptions(), (QStringList{QStringLiteral("rfr"), QStringLiteral("привет")}));
+        QCOMPARE(configFromMap(f.stored)->exceptions, b.exceptions());
+        const int before = f.writes;
+        QVERIFY(b.addException(QStringLiteral("GHBDTN"))); // same keys as "привет": nothing to add
+        QCOMPARE(f.writes, before);
+        QVERIFY(!b.addException(QStringLiteral("two words")));
+        QCOMPARE(b.error(), QStringLiteral("word"));
+        QCOMPARE(f.writes, before);
+        b.removeException(QStringLiteral("rfr"));
+        QCOMPARE(configFromMap(f.stored)->exceptions, (QStringList{QStringLiteral("привет")}));
+        b.setAutoCorrect(false);
+        QVERIFY(!configFromMap(f.stored)->autoCorrect);
+        QVERIFY(!b.autoCorrect());
+        QCOMPARE(b.error(), QString());
+    }
+    void olderAddonNeverGetsWordOptions()
+    {
+        FakeFcitx f; // stored has no AutoCorrect: an addon before 0.5
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(b.configLoaded() && !b.wordOptions());
+        const int before = f.writes;
+        QVERIFY(!b.addException(QStringLiteral("ok")));
+        b.setAutoCorrect(false);
+        QCOMPARE(f.writes, before);
+        b.setSound(false);
+        QVERIFY(!f.stored.contains(QStringLiteral("AutoCorrect")));
+    }
     void capAt64()
     {
         FakeFcitx f;

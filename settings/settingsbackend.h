@@ -21,6 +21,9 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(bool configLoaded READ configLoaded NOTIFY changed)
     Q_PROPERTY(bool layoutsReady READ layoutsReady NOTIFY changed)
     Q_PROPERTY(bool sound READ sound NOTIFY changed)
+    Q_PROPERTY(bool wordOptions READ wordOptions NOTIFY changed)
+    Q_PROPERTY(bool autoCorrect READ autoCorrect NOTIFY changed)
+    Q_PROPERTY(QStringList exceptions READ exceptions NOTIFY changed)
     Q_PROPERTY(QVariantList apps READ apps NOTIFY changed)
     Q_PROPERTY(int enabledCount READ enabledCount NOTIFY changed)
     Q_PROPERTY(QString error READ error NOTIFY changed)
@@ -33,9 +36,12 @@ public:
     bool configLoaded() const { return m_loaded; }
     bool layoutsReady() const { return m_layouts; }
     bool sound() const { return m_config.sound; }
+    bool wordOptions() const { return m_loaded && m_config.wordOptions; }
+    bool autoCorrect() const { return m_config.autoCorrect; }
+    QStringList exceptions() const { return m_config.exceptions; }
     QVariantList apps() const { return m_apps; }
     int enabledCount() const { return static_cast<int>(m_config.apps.size()); }
-    // "", "fcitx", "write", "invalid", "terminal", "full"
+    // "", "fcitx", "write", "invalid", "terminal", "full", "word", "words-full"
     QString error() const { return m_error; }
 
     Q_INVOKABLE void refresh();
@@ -43,6 +49,9 @@ public:
     Q_INVOKABLE void setAppEnabled(const QString &id, bool enabled);
     Q_INVOKABLE bool addApp(const QString &id);
     Q_INVOKABLE void setSound(bool on);
+    Q_INVOKABLE void setAutoCorrect(bool on);
+    Q_INVOKABLE bool addException(const QString &word);
+    Q_INVOKABLE void removeException(const QString &word);
 
 Q_SIGNALS:
     void changed();
