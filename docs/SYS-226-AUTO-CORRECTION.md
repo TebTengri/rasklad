@@ -62,6 +62,16 @@
   fcitx5/profile), затем `hyprctl reload; fcitx5 -rd`. Пакет удаляется так:
   `sudo pacman -R rasklad-fcitx5`.
 
+- **Значок раскладки (2026-11-23, по просьбе владельца).** Клон
+  `mvn.keyboard-layout` брал раскладку из общего индикатора Omarchy, а тот
+  после перезапуска Fcitx перестал её получать — значок стоял на `EN`.
+  Вместо клона в панели свой виджет `rasklad.layout`
+  (`packaging/omarchy/rasklad.layout`), который сам спрашивает Fcitx. Владелец
+  подтвердил: значок появился и меняется. Двойной Alt — правило Hyprland
+  (строка `dofile` в `~/.config/hypr/bindings.lua`); владелец подтвердил, что
+  работает. Резервные копии: `shell.json.bak.*`, `bindings.lua.bak.*`. Каталог
+  клона `~/.config/omarchy/plugins/mvn.keyboard-layout` больше не используется.
+
 ## Проверки
 
 Закрытый Sway (Chromium, настоящий Fcitx, библиотека и профиль из пакета):

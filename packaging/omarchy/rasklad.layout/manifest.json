@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "rasklad.layout",
+  "name": "Rasklad layout",
+  "version": "0.5.2",
+  "author": "rasklad",
+  "description": "Fcitx layout (EN/RU) for Rasklad: click switches, right click opens Rasklad settings",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "RaskladLayout.qml"
+  },
+  "barWidget": {
+    "displayName": "Rasklad layout",
+    "description": "Fcitx layout (EN/RU) for Rasklad",
+    "category": "Compositor",
+    "defaultSection": "right",
+    "allowMultiple": false
+  }
+}
