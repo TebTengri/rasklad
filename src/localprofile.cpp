@@ -34,7 +34,8 @@ std::unique_ptr<LocalEvidenceProvider> LocalEvidenceProvider::load(const QString
         error = ProfileError::ManifestMismatch;
         return nullptr;
     }
-    if (!verifyLoadedHunspell(pins.library.path, pins.library.sha256, pins.library.bytes, pins.hunspellVersion)) {
+    // SYS-249: a Hunspell bug-fix update must not switch correction off.
+    if (!verifyCompatibleHunspell(pins.hunspellVersion)) {
         error = ProfileError::LibraryMismatch;
         return nullptr;
     }

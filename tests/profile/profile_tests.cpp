@@ -306,9 +306,26 @@ private Q_SLOTS:
         QVERIFY(f.build());
         if (!pinLoadedLibrary(f))
             QSKIP("loaded Hunspell library is not under /usr/lib");
-        profile::ProfilePins wrongLibrary = f.pins;
-        wrongLibrary.library.sha256 = QString(64, QLatin1Char('0'));
         ProfileError error = ProfileError::None;
+        // SYS-249: a pacman update of Hunspell within the same minor series. The pins
+        // and the manifest still record the evaluated build (another hash and patch
+        // release); only the installed library differs, and the profile still loads.
+        const profile::ProfilePins installed = f.pins;
+        f.pins.library.sha256 = QString(64, QLatin1Char('0'));
+        f.pins.hunspellVersion = installed.hunspellVersion.section(QLatin1Char('.'), 0, 1)
+            + QStringLiteral(".0");
+        QVERIFY(f.pins.hunspellVersion != installed.hunspellVersion || installed.hunspellVersion.endsWith(QLatin1String(".0")));
+        QVERIFY(f.writeMorph());
+        QVERIFY(profile::LocalEvidenceProvider::load(f.root, f.pins, error));
+        QCOMPARE(error, ProfileError::None);
+        f.pins = installed;
+        QVERIFY(f.writeMorph());
+        // Another minor series does not.
+        profile::ProfilePins wrongLibrary = f.pins;
+        wrongLibrary.hunspellVersion = QStringLiteral("1.6.2");
+        QVERIFY(!profile::LocalEvidenceProvider::load(f.root, wrongLibrary, error));
+        QCOMPARE(error, ProfileError::LibraryMismatch);
+        wrongLibrary.hunspellVersion = QStringLiteral("1.7");
         QVERIFY(!profile::LocalEvidenceProvider::load(f.root, wrongLibrary, error));
         QCOMPARE(error, ProfileError::LibraryMismatch);
 

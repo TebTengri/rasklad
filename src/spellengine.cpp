@@ -8,6 +8,7 @@
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
+#include <QStringList>
 
 #include <dlfcn.h>
 
@@ -48,6 +49,36 @@ bool verifyLoadedHunspell(const QString &expectedPath, const QString &expectedSh
     if (!readBounded(loaded, kMaxLibraryBytes, bytes))
         return false;
     return qint64(bytes.size()) == expectedBytes && sha256Hex(bytes) == expectedSha256;
+}
+
+namespace {
+// "1.7.5" -> "1.7"; "" unless it is <digits>.<digits>.<digits>.
+QString minorSeries(const QString &version)
+{
+    const QStringList parts = version.split(QLatin1Char('.'));
+    if (parts.size() != 3) return {};
+    for (const QString &part : parts) {
+        if (part.isEmpty() || part.size() > 4) return {};
+        for (const QChar c : part)
+            if (c < QLatin1Char('0') || c > QLatin1Char('9')) return {};
+    }
+    return parts.at(0) + QLatin1Char('.') + parts.at(1);
+}
+} // namespace
+
+bool verifyCompatibleHunspell(const QString &expectedVersion)
+{
+    const QString series = minorSeries(expectedVersion);
+    if (series.isEmpty() || minorSeries(compiledHunspellVersion()) != series
+        || minorSeries(runtimeHunspellVersion()) != series)
+        return false;
+    const QString loaded = loadedHunspellLibraryPath();
+    if (!loaded.startsWith(QLatin1String("/usr/lib/libhunspell-") + series + QLatin1String(".so.")))
+        return false;
+    const QFileInfo info(loaded);
+    if (!info.isFile() || info.isSymLink() || info.ownerId() != 0)
+        return false;
+    return !(info.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
 }
 
 std::unique_ptr<SpellEngine> SpellEngine::create(const QString &affPath, const QString &dicPath)
