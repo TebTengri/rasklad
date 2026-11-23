@@ -1,0 +1,119 @@
+{
+ "task": "SYS-253",
+ "version": "0.5.9-1",
+ "date": "2026-11-24",
+ "source": "tools/program_name_probe.py --addon build/arch-package/x/usr/lib/fcitx5; headless Sway, own D-Bus, own Fcitx 5.1.23, throwaway HOME; names, frontends and capability flags only, no text",
+ "probe": [
+  {
+   "case": "foot",
+   "swayAppIds": [
+    "foot"
+   ],
+   "fcitx": [
+    [
+     "foot",
+     "wayland_v2",
+     true
+    ]
+   ],
+   "seenApplications": []
+  },
+  {
+   "case": "qt6-fcitx-module",
+   "swayAppIds": [
+    "omawrite"
+   ],
+   "fcitx": [
+    [
+     "omawrite",
+     "dbus",
+     true
+    ],
+    [
+     "omawrite",
+     "wayland_v2",
+     true
+    ]
+   ],
+   "seenApplications": [
+    "omawrite"
+   ]
+  },
+  {
+   "case": "qt6-text-input-v3",
+   "swayAppIds": [
+    "omawrite"
+   ],
+   "fcitx": [
+    [
+     "omawrite",
+     "wayland_v2",
+     true
+    ]
+   ],
+   "seenApplications": [
+    "omawrite"
+   ]
+  },
+  {
+   "case": "gtk4-fcitx-module",
+   "swayAppIds": [
+    "org.gnome.Nautilus"
+   ],
+   "fcitx": [
+    [
+     "org.gnome.Nautilus",
+     "dbus",
+     true
+    ],
+    [
+     "org.gnome.Nautilus",
+     "wayland_v2",
+     true
+    ]
+   ],
+   "seenApplications": [
+    "omawrite"
+   ]
+  },
+  {
+   "case": "gtk4-text-input-v3",
+   "swayAppIds": [
+    "org.gnome.Nautilus"
+   ],
+   "fcitx": [
+    [
+     "org.gnome.Nautilus",
+     "wayland_v2",
+     true
+    ]
+   ],
+   "seenApplications": [
+    "omawrite"
+   ]
+  }
+ ],
+ "packagedSuites": {
+  "listed": {
+   "passed": true,
+   "checks": 30
+  },
+  "unlisted": {
+   "passed": true,
+   "checks": 3
+  },
+  "layout": {
+   "passed": true,
+   "checks": 18
+  },
+  "exceptions": {
+   "passed": true,
+   "checks": 7
+  },
+  "gestures": {
+   "passed": true,
+   "checks": 7
+  }
+ },
+ "notMeasured": "Telegram (not installed); Nautilus had no focused text field, so it is correctly absent from SeenApplications"
+}
