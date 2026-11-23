@@ -36,7 +36,8 @@ BarWidget {
   }
 
   // busctl --json=short reply to GetConfig: {"data":[{"data":{"Key":{"data":"True"}}}, ...]}.
-  function parseStatus(output) {
+  // Returns "on", "paused", "broken" or "" (unknown).
+  function statusOf(output) {
     let values = null
     try {
       const reply = JSON.parse(String(output || ""))
@@ -50,20 +51,10 @@ BarWidget {
       return v === "True" ? true : v === "False" ? false : null
     }
     const ready = flag("ProfileReady"), auto = flag("AutoCorrect")
-    if (ready === null || auto === null) root.correction = ""
-    else if (!ready) root.correction = "broken"
-    else root.correction = auto ? "on" : "paused"
-    // A middle click waits for this fresh reply, so it never acts on a state read
-    // from a Fcitx that has since restarted.
-    if (root.pauseRequested) {
-      root.pauseRequested = false
-      if ((root.correction === "on" || root.correction === "paused") && !pause.running) {
-        pause.next = root.correction === "on" ? "False" : "True"
-        pause.running = true
-      }
-    }
+    if (ready === null || auto === null) return ""
+    if (!ready) return "broken"
+    return auto ? "on" : "paused"
   }
-  property bool pauseRequested: false
 
   function call(args) {
     return ["busctl", "--user", "--timeout=1"].concat(args)
@@ -86,9 +77,40 @@ BarWidget {
                        ["GetConfig", "s", "fcitx://config/addon/rasklad/status"]))
     stdout: StdioCollector {
       waitForEnd: true
-      onStreamFinished: root.parseStatus(text)
+      onStreamFinished: root.correction = root.statusOf(text)
     }
-    onExited: (code) => { if (code !== 0) { root.correction = ""; root.pauseRequested = false } }
+    onExited: (code) => { if (code !== 0) root.correction = "" }
+  }
+
+  // A middle click asks Fcitx afresh with its own query and writes only after that
+  // query has both answered and exited successfully, so it never acts on a state
+  // read before the click (or from a Fcitx that has since restarted). If the query
+  // cannot start, neither signal comes and nothing is written.
+  Process {
+    id: clickQuery
+    property string reply: ""
+    property bool answered: false
+    property bool succeeded: false
+    command: statusQuery.command
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: { clickQuery.reply = text; clickQuery.answered = true; clickQuery.decide() }
+    }
+    onExited: (code) => { clickQuery.succeeded = code === 0; if (code !== 0) clickQuery.answered = false; clickQuery.decide() }
+    function start() {
+      reply = ""; answered = false; succeeded = false
+      running = true
+    }
+    function decide() {
+      if (!answered || !succeeded) return
+      answered = false; succeeded = false
+      const state = root.statusOf(reply)
+      root.correction = state
+      if ((state === "on" || state === "paused") && !pause.running) {
+        pause.next = state === "on" ? "False" : "True"
+        pause.running = true
+      }
+    }
   }
 
   // The layout every 400 ms; the correction status every 2 s and after a change.
@@ -119,11 +141,6 @@ BarWidget {
     onExited: if (!statusQuery.running) statusQuery.running = true
   }
 
-  function requestPause() {
-    if (root.pauseRequested) return
-    root.pauseRequested = true
-    if (!statusQuery.running) statusQuery.running = true
-  }
 
   visible: label !== ""
   implicitWidth: button.implicitWidth
@@ -147,7 +164,7 @@ BarWidget {
       if (pressedButton === Qt.RightButton) {
         Util.execArgv(["rasklad-settings"])
       } else if (pressedButton === Qt.MiddleButton) {
-        if (!pause.running) root.requestPause()
+        if (!pause.running && !clickQuery.running) clickQuery.start()
       } else if (pressedButton === Qt.LeftButton && !toggle.running) {
         toggle.running = true
       }

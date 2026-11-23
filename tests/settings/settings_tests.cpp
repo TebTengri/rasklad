@@ -354,8 +354,10 @@ private Q_SLOTS:
         f.ready = false;
         b.refresh();
         QVERIFY(b.profileBroken());
-        f.ready = true; // a change re-reads it: a restarted Fcitx clears the warning
-        b.setSound(false);
+        f.ready = true; // a change re-reads it first: a restarted Fcitx clears the warning
+        const int writes = f.writes;
+        b.setSound(b.sound()); // no change, so no write: only the pre-change read ran
+        QCOMPARE(f.writes, writes);
         QVERIFY(!b.profileBroken());
         f.ready = false;
         b.refresh();
