@@ -122,7 +122,7 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if not isinstance(state.get("files"), dict):
+  if set(state) - {"version", "files", "link", "fcitx"} or not isinstance(state.get("files"), dict):
     raise bad
   for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
@@ -154,6 +154,8 @@ def save_and_drop(state):
   drop = state.pop("_drop", [])
   save_state(state)
   for backup in drop:
+    if backup not in {backup_path(f) for f in FILES}:
+      continue  # only this tool's own copies of its own files
     try:
       os.unlink(backup)
     except FileNotFoundError:
@@ -429,7 +431,14 @@ def install(assume_yes):
   changes = []
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
     # One read: the diff, the backup and the final comparison all use it.
-    old = read(path) if file_state(path) is None else None
+    bad = file_state(path)
+    if bad:
+      say(bad, os.path.basename(path), "left as is")
+      continue
+    old = read(path)
+    if old is None:
+      say("missing-file", os.path.basename(path), "left as is")
+      continue
     status, new = plan(old)
     if status == "missing" and path in state["files"]:
       # Installed before and edited since: a second copy would let --revert
