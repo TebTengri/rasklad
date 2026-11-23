@@ -398,18 +398,20 @@ public:
     void keepLast(const fcitx::SurroundingText &pre, std::string now, std::string other,
                   bool otherRu, std::string suffix) {
         forgetLast();
-        if (!pre.isValid() || pre.cursor() != pre.anchor() || now == other) {
-            for (std::string *text : {&now, &other}) {
-                volatile char *p = text->data();
-                for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
-            }
-            return;
+        // Copied, not moved (a short string's bytes would stay behind), then every
+        // parameter is wiped whatever happens.
+        const bool keep = pre.isValid() && pre.cursor() == pre.anchor() && now != other;
+        if (keep) {
+            lastNow = now; lastOther = other; lastSuffix = suffix;
+            lastOtherRu = otherRu;
+            lastValid = true; // Pending
+            lastRule = Confirm::AfterCommit;
+            lastPreCursor = pre.cursor();
         }
-        lastNow = std::move(now); lastOther = std::move(other); lastSuffix = std::move(suffix);
-        lastOtherRu = otherRu;
-        lastValid = true; // Pending
-        lastRule = Confirm::AfterCommit;
-        lastPreCursor = pre.cursor();
+        for (std::string *text : {&now, &other, &suffix}) {
+            volatile char *p = text->data();
+            for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
+        }
     }
 #endif
     const std::uint64_t id;
@@ -1117,8 +1119,11 @@ private:
     // surrounding text refuses (fail closed). Deletes exactly that many code points.
     static bool lastMatches(fcitx::InputContext *ic, const LabState &s) {
         const auto &st = ic->surroundingText();
-        return st.isValid() && st.cursor() == st.anchor() &&
-            rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), s.lastText());
+        if (!st.isValid() || st.cursor() != st.anchor()) return false;
+        std::string text = s.lastText();
+        const bool ends = rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), text);
+        wipeString(text);
+        return ends;
     }
     // Surrounding-text update from the client (fresh by definition).
     static void observeSurrounding(fcitx::InputContext *ic, LabState &s) {
@@ -1128,7 +1133,7 @@ private:
             // Stale pre-commit updates may still arrive: they never confirm and never arm.
             // Fail closed when the pre-commit cursor was unknown.
             const unsigned cursor = ic->surroundingText().cursor();
-            const long n = rasklad::manual::codePointCount(s.lastText());
+            const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
             const bool fresh =
                 (s.lastRule == LabState::Confirm::AfterReplace) ||
                 (s.lastRule == LabState::Confirm::AfterCommit && n > 0 &&
@@ -1139,10 +1144,9 @@ private:
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
     static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
-        const std::string oldText = s.lastText();
         std::string newText = s.lastOther + s.lastSuffix;
         const auto &st = ic->surroundingText();
-        const long n = rasklad::manual::codePointCount(oldText);
+        const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -1197,7 +1201,7 @@ private:
         const auto caseOk = [&s](std::size_t keys) {
             const std::uint32_t all = keys >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << keys) - 1;
             const std::uint32_t mask = s.upper & all;
-            return (s.upper & ~all) == 0 && (mask == 0 || mask == 1 || mask == all);
+            return mask == 0 || mask == 1 || mask == all;
         };
         std::string w = s.word();
         std::optional<std::string> result;
@@ -1217,9 +1221,11 @@ private:
                 }
                 if (kept) break;
             }
-            if (!caseOk(cut)) continue;
             std::string keys = w.substr(0, cut);
+            // The exception first: an excepted word is never corrected in a shorter
+            // form just because its own case was not eligible.
             if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word
+            if (!caseOk(cut)) { wipeString(keys); continue; }
             std::string typed = LabState::form(keys, s.typedRu);
             std::string other = LabState::form(keys, !s.typedRu);
             auto fix = profile_->correctTyped(typed, s.typedRu);
