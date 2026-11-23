@@ -34,6 +34,7 @@ void SettingsBackend::refresh()
     m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
+    m_profileBroken = m_addon && m_fcitx->profileReady() == std::optional<bool>(false);
     m_open = m_windows->openApps();
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();

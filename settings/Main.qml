@@ -326,6 +326,14 @@ ApplicationWindow {
                     Layout.fillWidth: true
                 }
 
+                Label {
+                    visible: backend.profileBroken
+                    text: qsTr("Automatic correction is off: the dictionary profile did not pass verification (for example, after a hunspell update). Double Shift still converts a word. Reinstall the Rasklad package.")
+                    color: theme.error
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
                 SettingRow {
                     Layout.fillWidth: true
                     visible: backend.wordOptions

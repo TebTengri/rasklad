@@ -40,5 +40,6 @@
     "open": "открыто",
     "terminal": "терминал",
     "tested": "проверено"
-  }
+  },
+  "Automatic correction is off: the dictionary profile did not pass verification (for example, after a hunspell update). Double Shift still converts a word. Reinstall the Rasklad package.": "Автоисправление выключено: профиль словарей не прошёл проверку (например, после обновления hunspell). Двойной Shift по-прежнему переводит слово. Переустановите пакет Rasklad."
 }

@@ -116,6 +116,19 @@ std::optional<QVariantMap> DBusFcitx::readConfig()
     return v.toMap();
 }
 
+std::optional<bool> DBusFcitx::profileReady()
+{
+    const QDBusMessage r = call(QStringLiteral("GetConfig"), {QStringLiteral("fcitx://config/addon/rasklad/status")});
+    if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty()) return std::nullopt;
+    const QVariant v = plain(r.arguments().constFirst());
+    if (v.metaType() != QMetaType::fromType<QVariantMap>()) return std::nullopt;
+    const QVariant ready = v.toMap().value(QStringLiteral("ProfileReady"));
+    if (ready.metaType() != QMetaType::fromType<QString>()) return std::nullopt;
+    if (ready.toString() == QLatin1String("True")) return true;
+    if (ready.toString() == QLatin1String("False")) return false;
+    return std::nullopt;
+}
+
 bool DBusFcitx::writeConfig(const QVariantMap &config)
 {
     const QDBusMessage r = call(QStringLiteral("SetConfig"), {kUri, QVariant::fromValue(QDBusVariant(config))});

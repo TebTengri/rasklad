@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "rasklad.layout",
   "name": "Rasklad layout",
-  "version": "0.5.2",
+  "version": "0.5.4",
   "author": "rasklad",
-  "description": "Fcitx layout (EN/RU) for Rasklad: click switches, right click opens Rasklad settings",
+  "description": "Fcitx layout (EN/RU) and Rasklad auto-correction state: click switches the layout, middle click pauses auto-correction, right click opens Rasklad settings",
   "kinds": [
     "bar-widget"
   ],

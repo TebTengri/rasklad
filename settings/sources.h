@@ -22,6 +22,9 @@ public:
     virtual QStringList groupMethods() = 0;
     virtual std::optional<QVariantMap> readConfig() = 0;
     virtual bool writeConfig(const QVariantMap &config) = 0;
+    // SYS-248: the addon's read-only status. nullopt: unknown (Fcitx down or an
+    // older addon); false: the dictionary profile did not pass verification.
+    virtual std::optional<bool> profileReady() = 0;
 };
 
 class WindowSource
@@ -39,6 +42,7 @@ public:
     bool addonEnabled() override;
     QStringList groupMethods() override;
     std::optional<QVariantMap> readConfig() override;
+    std::optional<bool> profileReady() override;
     bool writeConfig(const QVariantMap &config) override;
 };
 

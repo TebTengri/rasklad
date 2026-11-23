@@ -26,12 +26,14 @@ public:
     bool dropSound = false; // accepts the call but keeps Sound on
     bool otherClientMutesSound = false; // another client switches Sound off during a write
     bool broken = false;    // returns a config without a readable list
+    std::optional<bool> ready = true; // the addon's status ProfileReady
     int writes = 0;
     QVariantMap stored = fcitxMap({QStringLiteral("slack"), QStringLiteral("chromium")}, true);
     QStringList group{QStringLiteral("keyboard-us"), QStringLiteral("keyboard-ru")};
     bool running() override { return up; }
     bool addonEnabled() override { return up; }
     QStringList groupMethods() override { return group; }
+    std::optional<bool> profileReady() override { return up ? ready : std::nullopt; }
     std::optional<QVariantMap> readConfig() override
     {
         if (!up) return std::nullopt;
@@ -342,6 +344,23 @@ private Q_SLOTS:
         QVERIFY(b.addException(QStringLiteral("ok")));
         QCOMPARE(b.error(), QString());
         QVERIFY(!b.sound()); // shows the other client's change
+    }
+    void profileStatusShownOnlyWhenDefinite()
+    {
+        FakeFcitx f;
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(!b.profileBroken());
+        f.ready = false;
+        b.refresh();
+        QVERIFY(b.profileBroken());
+        f.ready = std::nullopt; // an older addon without the status: not broken
+        b.refresh();
+        QVERIFY(!b.profileBroken());
+        f.ready = false;
+        f.up = false; // Fcitx down: unknown, the Fcitx error is shown instead
+        b.refresh();
+        QVERIFY(!b.profileBroken());
     }
     void capAt64()
     {

@@ -5,7 +5,7 @@
 # Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
 # or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.5.3
+pkgver=0.5.4
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
@@ -60,6 +60,8 @@ package() {
   # Omarchy bar widget (EN/RU from Fcitx); the user copies it into ~/.config/omarchy/plugins.
   install -Dm644 packaging/omarchy/rasklad.layout/manifest.json "${pkgdir}/usr/share/${pkgname}/omarchy/rasklad.layout/manifest.json"
   install -Dm644 packaging/omarchy/rasklad.layout/RaskladLayout.qml "${pkgdir}/usr/share/${pkgname}/omarchy/rasklad.layout/RaskladLayout.qml"
+  install -Dm644 packaging/omarchy/rasklad.layout/i18n/en.json "${pkgdir}/usr/share/${pkgname}/omarchy/rasklad.layout/i18n/en.json"
+  install -Dm644 packaging/omarchy/rasklad.layout/i18n/ru.json "${pkgdir}/usr/share/${pkgname}/omarchy/rasklad.layout/i18n/ru.json"
   install -Dm644 packaging/arch/rasklad-settings.svg "${pkgdir}/usr/share/icons/hicolor/scalable/apps/rasklad-settings.svg"
   # Reviewed detector profile (dictionaries, model, notices) at its pinned paths.
   (cd "${srcdir}/profile" && find . -type f -print0 | while IFS= read -r -d '' f; do
