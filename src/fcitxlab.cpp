@@ -367,8 +367,9 @@ public:
     // How a Pending word may confirm. AfterCommit: the update's cursor must be the
     // pre-commit cursor advanced by exactly the committed length (a stale pre-commit
     // repeat, or a click onto the same text elsewhere, never confirms). AfterReplace:
-    // both forms have the same number of code points, so the update's cursor must be
-    // the cursor the replacement was made at (the same word elsewhere never confirms).
+    // the old-form text cannot match the new form, so no cursor rule. The cursor is
+    // not compared here on purpose: Chromium reports it inside a window trimmed by
+    // bytes, so the same caret gets a different offset once Cyrillic replaces Latin.
     // Never: the pre-commit cursor was unknown.
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
@@ -1092,7 +1093,7 @@ private:
             const unsigned cursor = ic->surroundingText().cursor();
             const long n = rasklad::manual::codePointCount(s.lastText());
             const bool fresh =
-                (s.lastRule == LabState::Confirm::AfterReplace && cursor == s.lastPreCursor) ||
+                (s.lastRule == LabState::Confirm::AfterReplace) ||
                 (s.lastRule == LabState::Confirm::AfterCommit && n > 0 &&
                  static_cast<unsigned long>(cursor) == static_cast<unsigned long>(s.lastPreCursor) + static_cast<unsigned long>(n));
             if (match && fresh) { s.lastConfirmed = true; s.lastCursor = ic->surroundingText().cursor(); }
@@ -1118,7 +1119,6 @@ private:
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
         s.lastRule = LabState::Confirm::AfterReplace;
-        s.lastPreCursor = s.lastCursor;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
 #ifdef RASKLAD_SLACK_SESSION_LAB
