@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 #include "sources.h"
 
+#include <QDeadlineTimer>
+
 #include "settingscore.h"
 
 #include <QDBusArgument>
@@ -166,10 +168,12 @@ int hyprlandRounding()
     // Non-blocking throughout: a wedged compositor never holds the window back.
     const int fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd < 0) return 0;
-    const auto wait = [fd](short events) {
+    // One deadline for the whole exchange: a trickling reply cannot stretch it.
+    const QDeadlineTimer deadline(kTimeoutMs);
+    const auto wait = [fd, &deadline](short events) {
         pollfd p{fd, events, 0};
         int r;
-        do r = ::poll(&p, 1, kTimeoutMs); while (r < 0 && errno == EINTR);
+        do r = ::poll(&p, 1, static_cast<int>(deadline.remainingTime())); while (r < 0 && errno == EINTR);
         return r > 0 && (p.revents & events);
     };
     QByteArray reply;

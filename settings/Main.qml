@@ -37,6 +37,13 @@ ApplicationWindow {
     // The app row that had keyboard focus: a list rebuild (after a switch or a
     // refresh) recreates the rows, and the new one takes the focus back.
     property string rowFocus: ""
+    property var rowItems: ({}) // key -> live row; plain JS, no bindings
+    function restoreFocus() {
+        const row = rowItems[rowFocus]
+        if (rowFocus !== "" && row && focusLost()) row.forceActiveFocus()
+    }
+    // After every rebuild, once the old rows are gone and the new ones exist.
+    Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
@@ -64,9 +71,10 @@ ApplicationWindow {
     Shortcut { sequence: "?"; enabled: !window.typing; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
     // Й is Q in the Russian layout: the keys work in either layout.
-    Shortcut { sequences: ["Q", "Й"]; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
+    Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
     Shortcut {
         sequence: "Escape"
+        autoRepeat: false // a held Esc takes one step, never clear-then-quit
         onActivated: {
             if (help.opened) help.close()
             else if (addBox.visible) { addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
@@ -148,6 +156,7 @@ ApplicationWindow {
         property string tip
         property string iconName
         property string key // app id, for focus after a rebuild
+        readonly property bool isRow: true
         property bool showIcon: false
         property bool checked
         property bool available: true
@@ -173,7 +182,14 @@ ApplicationWindow {
             toggled(!checked)
         }
         onActiveFocusChanged: if (activeFocus) window.rowFocus = key
-        Component.onCompleted: if (key !== "" && key === window.rowFocus && window.focusLost()) forceActiveFocus()
+        Component.onCompleted: if (key !== "") window.rowItems[key] = row
+        Component.onDestruction: if (key !== "" && window.rowItems[key] === row) delete window.rowItems[key]
+        // j/k walk rows only, never into fields where they are letters.
+        function step(forward) {
+            let it = nextItemInFocusChain(forward)
+            for (let i = 0; i < 200 && it && it !== row && !it.isRow; ++i) it = it.nextItemInFocusChain(forward)
+            if (it && it.isRow) it.forceActiveFocus()
+        }
         Keys.onPressed: event => {
             if (event.isAutoRepeat && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
                 event.accepted = true // a held key switches once
@@ -183,8 +199,8 @@ ApplicationWindow {
             if (event.modifiers !== Qt.NoModifier && event.modifiers !== Qt.KeypadModifier) return
             // j/k, and о/л in the same places of the Russian layout.
             const t = event.text.toLowerCase()
-            if (event.key === Qt.Key_Down || t === "j" || t === "о") { nextItemInFocusChain(true).forceActiveFocus(); event.accepted = true }
-            else if (event.key === Qt.Key_Up || t === "k" || t === "л") { nextItemInFocusChain(false).forceActiveFocus(); event.accepted = true }
+            if (event.key === Qt.Key_Down || t === "j" || t === "о") { step(true); event.accepted = true }
+            else if (event.key === Qt.Key_Up || t === "k" || t === "л") { step(false); event.accepted = true }
         }
         Rectangle { // keyboard cursor bar, as in Omarchy menus
             visible: row.activeFocus
@@ -463,9 +479,13 @@ ApplicationWindow {
                     }
                 }
                 InlineError {
-                    visible: ["invalid", "terminal", "full"].includes(backend.error)
+                    visible: ["invalid", "terminal"].includes(backend.error)
                     text: window.errorText(backend.error)
                 }
+            }
+            InlineError { // a switched row can hit the limit too, with the form closed
+                visible: backend.error === "full"
+                text: window.errorText(backend.error)
             }
 
             // ---- Exceptions
@@ -581,7 +601,7 @@ ApplicationWindow {
                     Repeater {
                         model: [
                             "Space, Enter", qsTr("switch the selected row"),
-                            "j, k, ↓, ↑", qsTr("next or previous item"),
+                            "j, k, ↓, ↑", qsTr("next or previous row"),
                             "Tab", qsTr("next control"),
                             "Ctrl+N", qsTr("add an application"),
                             "Ctrl+R, F5", qsTr("refresh"),

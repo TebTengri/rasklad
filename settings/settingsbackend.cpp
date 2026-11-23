@@ -221,13 +221,15 @@ void SettingsBackend::rebuildApps()
     // One row per app (canonical name). System components (the shell, launchers)
     // are never offered; terminals never reach this list (configFromMap drops them).
     QStringList apps;
-    const auto add = [&](const QString &id) {
+    const auto add = [&](const QString &id, bool stored) {
         const QString app = canonicalApp(id);
-        if (!isSystemComponent(app) && !isTerminal(app) && !apps.contains(app)) apps.append(app);
+        // A component already switched on stays listed, so it can be switched off.
+        if ((stored || !isSystemComponent(app)) && !isTerminal(app) && !apps.contains(app)) apps.append(app);
     };
-    for (const QStringList *list : {&m_config.apps, &m_focused, &m_seen})
-        for (const QString &id : *list) add(id);
-    for (const char *tested : {"slack", "chromium"}) add(QLatin1String(tested));
+    for (const QString &id : m_config.apps) add(id, true);
+    for (const QStringList *list : {&m_focused, &m_seen})
+        for (const QString &id : *list) add(id, false);
+    for (const char *tested : {"slack", "chromium"}) add(QLatin1String(tested), false);
 
     QList<QVariantMap> rows;
     for (const QString &app : apps) {
@@ -253,7 +255,9 @@ void SettingsBackend::rebuildApps()
                         {QStringLiteral("description"), QString()},
                         {QStringLiteral("icon"), QString()},
                         {QStringLiteral("webApp"), false}};
-        const auto info = m_names ? m_names->find(app) : std::nullopt;
+        std::optional<AppInfo> info;
+        for (const QString &n : names) // the entry may know only one of the names
+            if (m_names && !info) info = m_names->find(n);
         if (info) {
             row.insert(QStringLiteral("name"), info->name);
             row.insert(QStringLiteral("description"), info->description);

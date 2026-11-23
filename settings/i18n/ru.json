@@ -46,7 +46,7 @@
     "close": "закрыть",
     "help": "справка",
     "next control": "следующий элемент",
-    "next or previous item": "следующий или предыдущий элемент",
+    "next or previous row": "следующая или предыдущая строка",
     "refresh": "обновить",
     "switch the selected row": "переключить выбранную строку"
   }

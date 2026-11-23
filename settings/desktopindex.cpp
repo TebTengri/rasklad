@@ -246,7 +246,9 @@ std::optional<AppInfo> DesktopIndex::find(const QString &program) const
         return hidden;
     };
 
-    const Entry *hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p; });
+    // Launchers sharing a window class: the one whose id is the program wins.
+    const Entry *hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p && e.id == p; });
+    if (!hit) hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p; });
     if (!hit) hit = pick([&](const Entry &e) { return e.id == p; });
     if (!hit) {
         // A reverse-DNS segment names an app only when exactly one entry has it:

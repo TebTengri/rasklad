@@ -204,6 +204,18 @@ private Q_SLOTS:
         QCOMPARE(entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("group")).toString(), QStringLiteral("on"));
         QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
     }
+    void enabledSystemComponentStaysListed()
+    {
+        FakeFcitx f;
+        f.stored = fcitxMap({QStringLiteral("quickshell")}, true);
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(entry(b, QStringLiteral("quickshell")).value(QStringLiteral("enabled")).toBool());
+        b.setAppEnabled(QStringLiteral("quickshell"), false);
+        QVERIFY(configFromMap(f.stored)->apps.isEmpty());
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("quickshell")).isEmpty()); // off: hidden again
+    }
     void roundingReply()
     {
         QCOMPARE(roundingFromReply(R"({"option":"decoration:rounding","int":8,"set":true})"), 8);
