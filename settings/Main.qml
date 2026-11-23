@@ -57,9 +57,17 @@ ApplicationWindow {
         context: Qt.ApplicationShortcut
         onActivated: {
             const field = tabs.currentIndex === 0 ? addField : wordField
-            window.reveal(field)
+            window.reveal(field) // also when the window itself has no keyboard focus yet
             field.forceActiveFocus()
         }
+    }
+
+    readonly property int rowHeight: 52 // one application row; the list is sized from it
+
+    // Keyboard focus (Tab, Ctrl+N) never lands outside the visible part of the page.
+    onActiveFocusItemChanged: {
+        for (let it = activeFocusItem; it; it = it.parent)
+            if (it === content) { reveal(activeFocusItem); return }
     }
 
     // Scrolls the page just enough to show the item (a field below a small window's edge).
@@ -219,6 +227,8 @@ ApplicationWindow {
         TabBar {
             id: tabs
             Layout.fillWidth: true
+            // A new tab starts at its top, not at the old tab's scroll offset.
+            onCurrentIndexChanged: page.contentY = Math.min(page.contentY, Math.max(0, tabs.y + content.y - 20))
             TabButton { text: qsTr("Applications") }
             TabButton { text: qsTr("Correction") }
         }
@@ -255,8 +265,8 @@ ApplicationWindow {
                 ListView {
                     id: list
                     Layout.fillWidth: true
-                    // Rows are 52 high with 2 between them; the page scrolls instead.
-                    Layout.preferredHeight: Math.max(0, count * 54 - 2)
+                    // All rows, rowHeight each with spacing between; the page scrolls instead.
+                    Layout.preferredHeight: Math.max(0, count * (window.rowHeight + spacing) - spacing)
                     interactive: false
                     spacing: 2
                     model: backend.apps
@@ -264,7 +274,7 @@ ApplicationWindow {
                         id: row
                         required property var modelData
                         width: ListView.view.width
-                        height: 52
+                        height: window.rowHeight
                         radius: theme.radius
                         color: hover.hovered ? theme.surface : "transparent"
                         HoverHandler { id: hover }
