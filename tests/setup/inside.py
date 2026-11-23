@@ -49,7 +49,8 @@ def group():
                          "org.fcitx.Fcitx.Controller1", "InputMethodGroupInfo", "s", "Default"],
                         capture_output=True, text=True, timeout=10)
   try:
-    return sorted(i[0] for i in json.loads(done.stdout)["data"][1])
+    reply = json.loads(done.stdout)["data"]
+    return [reply[0], [list(i) for i in reply[1]]]  # layout and items, in order
   except (ValueError, KeyError, IndexError, TypeError):
     return None
 
@@ -66,9 +67,14 @@ code, _ = tool("--install", "--yes")
 report["installOk"] = code == 0
 after_install = snapshot()
 code, states = tool("--check")
-steps = ("fcitx-group", "double-alt", "hyprland-layout", "bar-widget-link", "bar-widget")
-report["checkCleanAfter"] = all(states.get(s) == "ok" for s in steps)
-report["groupHasBoth"] = group() == ["keyboard-ru", "keyboard-us"]
+steps = ("package", "fcitx-addon", "fcitx-group", "double-alt", "hyprland-layout", "bar-widget-link", "bar-widget")
+report["checkCleanAfter"] = code == 0 and all(states.get(s) == "ok" for s in steps)
+now = group()
+report["groupHasBoth"] = now is not None and [i[0] for i in now[1]] == ["keyboard-us", "keyboard-ru"]
+# Both edited Lua files still compile.
+report["luaValid"] = all(subprocess.run(["luac", "-p", os.path.join(CONFIG, "hypr", f)],
+                                        capture_output=True).returncode == 0
+                         for f in ("bindings.lua", "input.lua"))
 code, _ = tool("--install", "--yes")
 report["secondInstallNoChange"] = code == 0 and snapshot() == after_install
 report["bakBeside"] = os.path.isfile(os.path.join(CONFIG, "hypr", "bindings.lua.rasklad.bak"))
@@ -82,8 +88,21 @@ report["stateRemoved"] = not os.path.exists(STATE)
 code, _ = tool("--revert")
 save()
 report["secondRevertNoop"] = code == 0 and snapshot() == before
-required = ["checkMissingFirst", "installOk", "checkCleanAfter", "groupHasBoth", "secondInstallNoChange",
-            "bakBeside", "revertOk", "revertByteExact", "groupRestored", "stateRemoved", "secondRevertNoop"]
+# A config that is a symlink (a dotfiles checkout) is never written.
+bindings = os.path.join(CONFIG, "hypr", "bindings.lua")
+real = os.path.join(os.environ["HOME"], "dotfiles-bindings.lua")
+os.replace(bindings, real)
+os.symlink(real, bindings)
+with open(real, "rb") as f:
+  real_before = f.read()
+code, states = tool("--install", "--yes")
+with open(real, "rb") as f:
+  report["symlinkLeftAlone"] = os.path.islink(bindings) and f.read() == real_before and \
+    states.get("bindings.lua") == "symlink"
+tool("--revert")
+required = ["checkMissingFirst", "installOk", "checkCleanAfter", "groupHasBoth", "luaValid",
+            "secondInstallNoChange", "bakBeside", "revertOk", "revertByteExact", "groupRestored",
+            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone"]
 report["checks"] = len(required)
 report["passed"] = all(report[k] is True for k in required)
 print(json.dumps(report, sort_keys=True))

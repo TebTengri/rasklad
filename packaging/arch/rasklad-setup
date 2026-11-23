@@ -23,7 +23,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import stat
 import subprocess
 import sys
@@ -122,12 +121,24 @@ def load_state():
   if not isinstance(state, dict) or state.get("version") != 1:
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
-  for path, entry in state.get("files", {}).items():
+  bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
+  if not isinstance(state.get("files"), dict):
+    raise bad
+  for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
-       entry.get("backup") != backup_path(path) or entry.get("bak") != path + ".rasklad.bak":
-      raise Refused("unexpected entry in the state file: %s" % STATE_FILE)
+       entry.get("backup") != backup_path(path) or entry.get("bak") != path + ".rasklad.bak" or \
+       not isinstance(entry.get("bak_ours"), bool) or \
+       not (isinstance(entry.get("written"), str) and re.fullmatch(r"[0-9a-f]{64}", entry["written"])):
+      raise bad
   if state.get("link") not in (None, WIDGET):
-    raise Refused("unexpected entry in the state file: %s" % STATE_FILE)
+    raise bad
+  saved = state.get("fcitx")
+  if saved is not None:
+    items = lambda v: isinstance(v, list) and all(
+      isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
+    if not (isinstance(saved, dict) and isinstance(saved.get("group"), str) and
+            isinstance(saved.get("layout"), str) and items(saved.get("before")) and items(saved.get("after"))):
+      raise bad
   return state
 
 
@@ -230,10 +241,15 @@ def append_block(data, block):
 
 
 def file_state(path):
-  if os.path.islink(path):
+  # Only a regular file reached without any symlink (a dotfiles checkout, a
+  # symlinked ~/.config) is ever read for editing or written.
+  try:
+    info = os.lstat(path)
+  except FileNotFoundError:
+    return "missing-file"
+  if stat.S_ISLNK(info.st_mode) or os.path.realpath(path) != os.path.abspath(path):
     return "symlink"
-  data = read(path)
-  return "missing-file" if data is None else None
+  return None if stat.S_ISREG(info.st_mode) else "not-a-file"
 
 
 def bindings_plan():
@@ -289,7 +305,21 @@ def shell_plan():
     return "unparsable", None
   if OUR_ID.search(data):
     return "ok", None
-  if len(STOCK_ID.findall(data)) != 1:
+  # Exactly one stock widget, and it sits in the bar's layout.
+  found = []
+
+  def walk(node, where):
+    if isinstance(node, dict):
+      if node.get("id") == "omarchy.keyboard-layout":
+        found.append(where)
+      for key, value in node.items():
+        walk(value, where + [key])
+    elif isinstance(node, list):
+      for value in node:
+        walk(value, where)
+
+  walk(json.loads(data), [])
+  if len(STOCK_ID.findall(data)) != 1 or len(found) != 1 or found[0][:2] != ["bar", "layout"]:
     return "no-slot", None
   new = STOCK_ID.sub(rb'\1"rasklad.layout"', data)
   json.loads(new)
@@ -356,19 +386,29 @@ def remember_file(state, path, old, new):
     private_state_dir()
     write_atomic(backup_path(path), old, 0o600)
     bak = path + ".rasklad.bak"
-    if not os.path.lexists(bak):
+    ours = not os.path.lexists(bak)
+    if ours:
       write_atomic(bak, old, stat.S_IMODE(os.stat(path).st_mode))
-    entry = state["files"][path] = {"backup": backup_path(path), "bak": bak}
+    entry = state["files"][path] = {"backup": backup_path(path), "bak": bak, "bak_ours": ours}
   entry["written"] = sha(new)
 
 
 def install(assume_yes):
   state = load_state()
   changes = []
-  for path, (status, new) in ((BINDINGS, bindings_plan()), (INPUT, input_plan()),
-                              (SHELL_JSON, shell_plan())):
-    if status == "missing":
-      changes.append((path, read(path), new))
+  for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
+    old = read(path) if file_state(path) is None else None
+    status, new = plan()
+    if status == "missing" and path in state["files"]:
+      # Installed before and edited since: a second copy would let --revert
+      # drop those edits. The user reverts first.
+      say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
+    elif status == "missing" and old is not None and new.startswith(old):
+      changes.append((path, old, new))
+    elif status == "missing" and old is not None and STOCK_ID.sub(rb'\1"rasklad.layout"', old) == new:
+      changes.append((path, old, new))
+    elif status == "missing":
+      say("changed", os.path.basename(path), "changed while planning; left as is")
     elif status == "unknown":
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
     elif status != "ok":
@@ -401,7 +441,13 @@ def install(assume_yes):
   # Each step is recorded before it is done, so a crash in between leaves a
   # state --revert can reconcile (an unwritten file still equals its copy).
   errors_before = hypr_errors()
+  failed = False
   for path, old, new in changes:
+    # The file must still be exactly what the diff was made from.
+    if file_state(path) is not None or read(path) != old:
+      say("changed", os.path.basename(path), "edited while waiting; left as is")
+      failed = True
+      continue
     remember_file(state, path, old, new)
     save_state(state)
     write_atomic(path, new)
@@ -414,9 +460,18 @@ def install(assume_yes):
     say("done", "bar-widget-link")
   if group[0] == "missing":
     name, layout, before, after = group[1]
-    state["fcitx"] = {"group": name, "layout": layout, "before": before, "after": after}
+    # A retry keeps the group as it was before the first attempt.
+    saved = state.get("fcitx")
+    if not (saved and saved["group"] == name):
+      saved = {"group": name, "layout": layout, "before": before}
+    saved["after"] = after
+    state["fcitx"] = saved
     save_state(state)
-    say("done" if bus["set_group"](name, layout, after) else "failed", "fcitx-group")
+    if bus["set_group"](name, layout, after):
+      say("done", "fcitx-group")
+    else:
+      say("failed", "fcitx-group")
+      failed = True
 
   # Hyprland reloads a saved config by itself. Only errors that were not there
   # before undo our edits, and only the files this run changed.
@@ -431,7 +486,7 @@ def install(assume_yes):
       save_state(state)
       run([HYPRCTL, "reload"])
       return 1
-  return 0
+  return 1 if failed else 0
 
 
 def restore(state, path):
@@ -442,8 +497,9 @@ def restore(state, path):
   if old is None:
     say("missing", os.path.basename(path), "the saved copy is gone; left as is")
     return False
-  if os.path.islink(path):
-    say("symlink", os.path.basename(path), "now a symlink; left as is")
+  bad = file_state(path)
+  if bad not in (None, "missing-file"):
+    say(bad, os.path.basename(path), "left as is")
     return False
   current = read(path)
   if current is not None and current == old:
@@ -454,8 +510,12 @@ def restore(state, path):
   else:
     write_atomic(path, old)
   bak = entry["bak"]
-  if not os.path.islink(bak) and read(bak) == old:
+  if entry["bak_ours"] and file_state(bak) is None and read(bak) == old:
     os.unlink(bak)
+  try:
+    os.unlink(entry["backup"])
+  except FileNotFoundError:
+    pass
   del state["files"][path]
   say("restored", os.path.basename(path))
   return True
@@ -489,9 +549,9 @@ def revert():
     if current is None:
       say("no-fcitx", "fcitx-group", "start Fcitx and run --revert again")
       clean = False
-    elif current[0] == saved["group"] and ids(current[2]) == ids(saved["before"]):
+    elif current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["before"]:
       state["fcitx"] = None  # never changed, or already back
-    elif current[0] == saved["group"] and ids(current[2]) == ids(saved["after"]):
+    elif current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["after"]:
       if bus["set_group"](saved["group"], saved["layout"], saved["before"]):
         say("restored", "fcitx-group")
         state["fcitx"] = None
@@ -503,12 +563,13 @@ def revert():
       clean = False
   save_state(state)
   if clean:
+    # Only what this tool made: its state file, then the directories if empty.
     os.unlink(STATE_FILE)
-    shutil.rmtree(BACKUP_DIR, ignore_errors=True)
-    try:
-      os.rmdir(STATE_DIR)
-    except OSError:
-      pass
+    for d in (BACKUP_DIR, STATE_DIR):
+      try:
+        os.rmdir(d)
+      except OSError:
+        pass
   if restored_hypr and hypr_running():
     run([HYPRCTL, "reload"])
   return 0 if clean else 1
