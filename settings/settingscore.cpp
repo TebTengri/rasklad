@@ -38,17 +38,17 @@ bool isTested(const QString &id)
 
 QString normalizeException(const QString &word)
 {
-    const QString lower = word.trimmed().toLower();
-    const QByteArray utf8 = lower.toUtf8();
-    if (rasklad::manual::exceptionKeys(std::string_view(utf8.constData(), static_cast<std::size_t>(utf8.size())))
-            .empty())
-        return {};
-    return lower;
+    // Checked as written, by the addon's own rule, so the window never shows a word
+    // the addon ignores (" rfr " or a lookalike letter that lowercases to Latin).
+    // Every accepted letter is A-Z, a-z, А-Я, а-я, Ё or ё, which Qt lowercases
+    // exactly as the addon does.
+    if (exceptionKey(word).isEmpty()) return {};
+    return word.toLower();
 }
 
 QString exceptionKey(const QString &word)
 {
-    const QByteArray utf8 = word.trimmed().toUtf8();
+    const QByteArray utf8 = word.toUtf8();
     return QString::fromStdString(
         rasklad::manual::exceptionKeys(std::string_view(utf8.constData(), static_cast<std::size_t>(utf8.size()))));
 }

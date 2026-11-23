@@ -58,6 +58,7 @@ Q_SIGNALS:
 
 private:
     void reloadConfig();
+    bool fresh();
     bool commit(const AddonConfig &next);
     void rebuildApps();
 

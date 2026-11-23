@@ -41,6 +41,20 @@ void SettingsBackend::refresh()
     rebuildApps();
 }
 
+bool SettingsBackend::fresh()
+{
+    // A change starts from what the addon holds now, not from the window's copy:
+    // fcitx5-configtool may have changed it, or Fcitx may have restarted with an
+    // older addon that must never get keys it does not know.
+    m_error.clear();
+    m_running = m_fcitx->running();
+    reloadConfig();
+    if (m_loaded) return true;
+    m_error = QStringLiteral("fcitx");
+    rebuildApps();
+    return false;
+}
+
 bool SettingsBackend::commit(const AddonConfig &next)
 {
     m_error.clear();
@@ -68,9 +82,13 @@ void SettingsBackend::setAppEnabled(const QString &id, bool enabled)
         rebuildApps();
         return;
     }
+    if (!fresh()) return;
     AddonConfig next = m_config;
     if (enabled) {
-        if (next.apps.contains(id)) return;
+        if (next.apps.contains(id)) {
+            rebuildApps();
+            return;
+        }
         if (next.apps.size() >= kMaxApps) {
             m_error = QStringLiteral("full");
             rebuildApps();
@@ -78,7 +96,10 @@ void SettingsBackend::setAppEnabled(const QString &id, bool enabled)
         }
         next.apps.append(id);
     } else {
-        if (!next.apps.removeAll(id)) return;
+        if (!next.apps.removeAll(id)) {
+            rebuildApps();
+            return;
+        }
         if (!m_seen.contains(id)) m_seen.append(id);
     }
     commit(next);
@@ -104,7 +125,11 @@ bool SettingsBackend::addApp(const QString &raw)
 
 void SettingsBackend::setSound(bool on)
 {
-    if (on == m_config.sound) return;
+    if (!fresh()) return;
+    if (on == m_config.sound) {
+        rebuildApps();
+        return;
+    }
     AddonConfig next = m_config;
     next.sound = on;
     commit(next);
@@ -112,7 +137,11 @@ void SettingsBackend::setSound(bool on)
 
 void SettingsBackend::setAutoCorrect(bool on)
 {
-    if (!wordOptions() || on == m_config.autoCorrect) return;
+    if (!fresh()) return;
+    if (!wordOptions() || on == m_config.autoCorrect) {
+        rebuildApps();
+        return;
+    }
     AddonConfig next = m_config;
     next.autoCorrect = on;
     commit(next);
@@ -120,12 +149,12 @@ void SettingsBackend::setAutoCorrect(bool on)
 
 bool SettingsBackend::addException(const QString &raw)
 {
-    m_error.clear();
+    if (!fresh()) return false;
     if (!wordOptions()) {
         rebuildApps();
         return false;
     }
-    const QString word = normalizeException(raw);
+    const QString word = normalizeException(raw.trimmed()); // typed input: spaces around are fine
     if (word.isEmpty()) {
         m_error = QStringLiteral("word");
         rebuildApps();
@@ -151,9 +180,12 @@ bool SettingsBackend::addException(const QString &raw)
 
 void SettingsBackend::removeException(const QString &word)
 {
-    if (!wordOptions()) return;
+    if (!fresh()) return;
     AddonConfig next = m_config;
-    if (!next.exceptions.removeAll(word)) return;
+    if (!wordOptions() || !next.exceptions.removeAll(word)) {
+        rebuildApps();
+        return;
+    }
     commit(next);
 }
 

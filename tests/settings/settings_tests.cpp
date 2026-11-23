@@ -209,7 +209,10 @@ private Q_SLOTS:
     }
     void exceptionRules()
     {
-        QCOMPARE(normalizeException(QStringLiteral(" Привет ")), QStringLiteral("привет"));
+        QCOMPARE(normalizeException(QStringLiteral("Привет")), QStringLiteral("привет"));
+        // Stored words are checked as written, exactly as the addon reads them.
+        QVERIFY(normalizeException(QStringLiteral(" rfr ")).isEmpty());
+        QVERIFY(normalizeException(QString(QChar(0x212A))).isEmpty()); // Kelvin sign, lowercases to k
         QCOMPARE(normalizeException(QStringLiteral("OK")), QStringLiteral("ok"));
         QCOMPARE(normalizeException(QStringLiteral("Ёлка")), QStringLiteral("ёлка"));
         QVERIFY(normalizeException(QStringLiteral("two words")).isEmpty());
@@ -250,7 +253,7 @@ private Q_SLOTS:
         FakeWindows w;
         SettingsBackend b(&f, &w);
         QVERIFY(b.wordOptions() && b.autoCorrect());
-        QVERIFY(b.addException(QStringLiteral("Привет")));
+        QVERIFY(b.addException(QStringLiteral(" Привет "))); // typed input is trimmed
         QVERIFY(b.addException(QStringLiteral("rfr")));
         QCOMPARE(b.exceptions(), (QStringList{QStringLiteral("rfr"), QStringLiteral("привет")}));
         QCOMPARE(configFromMap(f.stored)->exceptions, b.exceptions());
@@ -279,6 +282,29 @@ private Q_SLOTS:
         QCOMPARE(f.writes, before);
         b.setSound(false);
         QVERIFY(!f.stored.contains(QStringLiteral("AutoCorrect")));
+    }
+    void changesStartFromTheAddonsCurrentConfig()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        // Another client switches automatic correction off while the window is open.
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("False"));
+        b.setSound(false);
+        QCOMPARE(b.error(), QString());
+        QVERIFY(!configFromMap(f.stored)->autoCorrect);
+        QVERIFY(!b.autoCorrect());
+        // Fcitx restarts with an older addon: no new key is ever written.
+        f.stored = fcitxMap({QStringLiteral("slack")}, false);
+        b.setSound(true);
+        QVERIFY(!f.stored.contains(QStringLiteral("AutoCorrect")));
+        QVERIFY(!f.stored.contains(QStringLiteral("Exceptions")));
+        QVERIFY(!b.wordOptions());
+        const int before = f.writes;
+        QVERIFY(!b.addException(QStringLiteral("ok")));
+        b.setAutoCorrect(true);
+        QCOMPARE(f.writes, before);
     }
     void capAt64()
     {

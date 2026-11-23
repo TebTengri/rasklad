@@ -186,9 +186,11 @@ try{
   await reset();await type('capword');report.exceptCapitalValue=await v();report.exceptCapital=report.exceptCapitalValue==='Ghbdtn ';
   await reset();await type('wordcomma');report.exceptCommaValue=await v();report.exceptComma=report.exceptCommaValue==='ghbdtn, ';
   await reset();await type('shortword');report.exceptShortValue=await v();report.exceptShort=report.exceptShortValue==='rfr ';
+  // "пою" (gj.) then a comma: the punctuation fallback must not correct "gj" to "по".
+  await reset();await type('poyucomma');report.exceptLetterKeyValue=await v();report.exceptLetterKey=report.exceptLetterKeyValue==='gj., ';
   phase='exception_others';await reset();await type('zhurnal');await type('space');report.exceptOtherValue=await v();report.exceptOtherCorrected=report.exceptOtherValue==='журнал ';
   phase='exception_gesture';await reset();await type('word');await type('shift2');await type('space');report.exceptGestureValue=await v();report.exceptGesture=report.exceptGestureValue==='привет ';
-  const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptOtherCorrected','exceptGesture'];
+  const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='gestures'){
   // SYS-227: automatic correction switched off: words stay as typed on every word end,

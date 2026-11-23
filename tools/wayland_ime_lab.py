@@ -270,7 +270,7 @@ def inside():
  # SYS-227: words never corrected (either case and layout form), and gestures only.
  apps='[Applications]\n0=slack\n1=chromium\n2=chromium-browser\n'
  if os.environ.get('RASKLAD_PRODUCT_SUITE')=='exceptions':
-  (config/'conf').mkdir();(config/'conf'/'rasklad.conf').write_text(apps+'[Exceptions]\n0=Привет\n1=rfr\n2=not a word\n')
+  (config/'conf').mkdir();(config/'conf'/'rasklad.conf').write_text(apps+'[Exceptions]\n0=Привет\n1=rfr\n2=not a word\n3=пою\n')
  if os.environ.get('RASKLAD_PRODUCT_SUITE')=='gestures':
   (config/'conf').mkdir();(config/'conf'/'rasklad.conf').write_text('AutoCorrect=False\n'+apps)
  if os.environ.get('RASKLAD_PRODUCT_SUITE')=='layout':

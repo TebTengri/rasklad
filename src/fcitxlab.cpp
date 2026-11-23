@@ -640,8 +640,16 @@ public:
 #ifdef RASKLAD_PRODUCT
     const fcitx::Configuration *getConfig() const override { return &config_; }
     void setConfig(const fcitx::RawConfig &raw) override {
+        fcitx::RawConfig before;
+        config_.save(before);
         config_.load(raw, true);
-        fcitx::safeSaveAsIni(config_, kConfigPath);
+        // Not saved: keep the previous settings, so the settings app's read-back
+        // reports the failure instead of a change that is lost on the next start.
+        // Nothing changed then, so a word being typed is not discarded either.
+        if (!fcitx::safeSaveAsIni(config_, kConfigPath)) {
+            config_.load(before);
+            return;
+        }
         rebuildExceptions();
         applyApps();
     }
@@ -668,10 +676,12 @@ private:
     // never typed input.
     void rebuildExceptions() {
         exceptionKeys_.clear();
+        // The cap counts distinct entries in list order, as the settings app does.
         for (const auto &word : *config_.exceptions) {
             if (exceptionKeys_.size() == kMaxExceptions) break;
             auto keys = rasklad::manual::exceptionKeys(word);
-            if (!keys.empty()) exceptionKeys_.push_back(std::move(keys));
+            if (!keys.empty() && std::find(exceptionKeys_.begin(), exceptionKeys_.end(), keys) == exceptionKeys_.end())
+                exceptionKeys_.push_back(std::move(keys));
         }
         std::sort(exceptionKeys_.begin(), exceptionKeys_.end());
     }
@@ -1145,6 +1155,15 @@ private:
                 if (s.typedRu) break;
                 while (cut > 0 && !(w[cut - 1] >= 'a' && w[cut - 1] <= 'z')) --cut;
                 if (cut == 0 || cut == w.size()) break;
+                // An exception that itself ends in a letter key the fallback strips
+                // ("пою" is typed gj.) is never corrected to a shorter word.
+                bool kept = false;
+                for (std::size_t k = cut + 1; k < w.size() && !kept; ++k) {
+                    std::string longer = w.substr(0, k);
+                    kept = exception(longer);
+                    wipeString(longer);
+                }
+                if (kept) break;
             }
             std::string keys = w.substr(0, cut);
             if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word

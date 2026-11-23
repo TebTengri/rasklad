@@ -383,13 +383,22 @@ ApplicationWindow {
                                 required property string modelData
                                 radius: Math.min(4, theme.radius)
                                 color: theme.surface
-                                implicitWidth: chipRow.implicitWidth + 12
+                                // A long word is elided so its remove button stays in view.
+                                // (A label's implicitWidth is its full text width, whatever its width.)
+                                width: Math.min(Math.ceil(wordLabel.implicitWidth) + 28 + 2 + 12, words.width)
                                 implicitHeight: chipRow.implicitHeight + 4
                                 RowLayout {
                                     id: chipRow
-                                    anchors.centerIn: parent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: 6
+                                    width: parent.width - 12
                                     spacing: 2
-                                    Label { text: chip.modelData }
+                                    Label {
+                                        id: wordLabel
+                                        text: chip.modelData
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
                                     ToolButton {
                                         text: "×"
                                         implicitWidth: 28
@@ -431,6 +440,7 @@ ApplicationWindow {
                 text: qsTr("Ctrl+1/2 tabs · Ctrl+N add · Ctrl+R refresh · Esc close")
                 color: theme.muted
                 font.pixelSize: 12
+                wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
             Button {

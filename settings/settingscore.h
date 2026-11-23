@@ -22,7 +22,8 @@ bool isTerminal(const QString &id);
 bool isTested(const QString &id);
 
 // An exception word as stored: lowercase, one word of Latin or Cyrillic letters
-// (same rule as the addon). "" if it is not a valid exception.
+// (same rule as the addon, checked as written: no trimming). "" if it is not a
+// valid exception.
 QString normalizeException(const QString &word);
 // Same entry in either layout: "ok" and "щл" share their keys.
 QString exceptionKey(const QString &word);
