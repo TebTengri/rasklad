@@ -164,18 +164,15 @@ try{
   await settle();await type('hello');
   report.layoutFourthValue=await v();report.layoutFourthTypedInUs=report.layoutFourthValue==='привет привет ч hello hello ';
   await type('xspace');report.layoutLetterUsValue=await v();report.layoutLetterIsUs=report.layoutLetterUsValue==='привет привет ч hello hello x ';
-  // Owner decision 2026-11-22: two quick Alt taps switch the layout; one Alt, or Alt
-  // with another key between the taps, do not.
-  phase='alt_taps';const base='привет привет ч hello hello x ';
-  await type('alt1');await settle();await type('xspace');report.altSingleValue=await v();report.altSingleKeepsUs=report.altSingleValue===base+'x ';
-  await type('alttab');await settle();await type('xspace');report.altTabValue=await v();report.altTabKeepsUs=report.altTabValue===base+'x x ';
-  await type('alt2');await settle();await type('xspace');report.altDoubleValue=await v();report.altDoubleToRu=report.altDoubleValue===base+'x x ч ';
-  await type('altr2');await settle();await type('xspace');report.altRightValue=await v();report.altRightToUs=report.altRightValue===base+'x x ч x ';
-  const altBase=base+'x x ч x ';
-  await type('altslow');await settle();await type('xspace');report.altSlowValue=await v();report.altSlowKeepsUs=report.altSlowValue===altBase+'x ';
-  // A word being typed is kept as typed (not corrected, not lost), then the layout switches.
-  await type('word');await type('alt2');await settle();await type('xspace');report.altWordValue=await v();report.altWordKeptThenRu=report.altWordValue===altBase+'x ghbdtnч ';
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','altSingleKeepsUs','altTabKeepsUs','altDoubleToRu','altRightToUs','altSlowKeepsUs','altWordKeptThenRu'];
+  // Owner decision 2026-11-23: double Alt is detected by Hyprland, which runs
+  // rasklad-layout-toggle; here the same packaged script runs directly. It switches
+  // us <-> ru, and a word in progress is committed as typed, then the layout switches.
+  phase='toggle';const base='привет привет ч hello hello x ';
+  const toggle=()=>execFileSync('/lab/rasklad-layout-toggle',[],{stdio:['ignore','ignore','pipe'],timeout:5000});
+  toggle();await settle();await type('xspace');report.toggleToRuValue=await v();report.toggleToRu=report.toggleToRuValue===base+'ч ';
+  toggle();await settle();await type('xspace');report.toggleToUsValue=await v();report.toggleToUs=report.toggleToUsValue===base+'ч x ';
+  await type('word');toggle();await settle();await type('xspace');report.toggleWordValue=await v();report.toggleWordKeptThenRu=report.toggleWordValue===base+'ч x ghbdtnч ';
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='exceptions'){
   // SYS-227: exceptions "Привет" and "rfr" are never corrected automatically, in any
