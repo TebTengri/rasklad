@@ -17,6 +17,9 @@ void SettingsBackend::reloadConfig()
     const auto parsed = map ? configFromMap(*map) : std::nullopt;
     m_loaded = parsed.has_value();
     if (parsed) m_config = *parsed;
+    // Asked again on every read (refresh and before each change), so a restarted
+    // Fcitx never keeps showing the previous daemon's warning.
+    m_profileBroken = m_running && m_fcitx->profileReady() == std::optional<bool>(false);
 }
 
 void SettingsBackend::refreshIfStale()

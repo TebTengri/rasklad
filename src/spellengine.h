@@ -31,6 +31,14 @@ namespace rasklad::profile {
 [[nodiscard]] bool verifyLoadedHunspell(const QString &expectedPath, const QString &expectedSha256,
                                         qint64 expectedBytes, const QString &expectedVersion);
 
+// SYS-249: the product's check, which survives system updates. The header and
+// runtime versions share expectedVersion's major.minor (Hunspell keeps the
+// dictionary format and API within a minor series), and the loaded library is
+// /usr/lib/libhunspell-<major>.<minor>.so.* (canonical), a regular file this user
+// cannot change (not writable by us, our group or others), as pacman installs it. The exact build that
+// the profile was evaluated with stays recorded in the pins and the manifest.
+[[nodiscard]] bool verifyCompatibleHunspell(const QString &expectedVersion);
+
 class SpellEngine final
 {
 public:

@@ -23,6 +23,7 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(bool sound READ sound NOTIFY changed)
     Q_PROPERTY(bool wordOptions READ wordOptions NOTIFY changed)
     Q_PROPERTY(bool autoCorrect READ autoCorrect NOTIFY changed)
+    Q_PROPERTY(bool profileBroken READ profileBroken NOTIFY changed)
     Q_PROPERTY(QStringList exceptions READ exceptions NOTIFY changed)
     Q_PROPERTY(QVariantList apps READ apps NOTIFY changed)
     Q_PROPERTY(int enabledCount READ enabledCount NOTIFY changed)
@@ -38,6 +39,8 @@ public:
     bool sound() const { return m_config.sound; }
     bool wordOptions() const { return m_loaded && m_config.wordOptions; }
     bool autoCorrect() const { return m_config.autoCorrect; }
+    // Only a definite "not verified" from a running addon; unknown is not broken.
+    bool profileBroken() const { return m_profileBroken; }
     QStringList exceptions() const { return m_config.exceptions; }
     QVariantList apps() const { return m_apps; }
     int enabledCount() const { return static_cast<int>(m_config.apps.size()); }
@@ -67,6 +70,7 @@ private:
     bool m_running = false;
     bool m_addon = false;
     bool m_loaded = false;
+    bool m_profileBroken = false;
     bool m_layouts = false;
     AddonConfig m_config;
     QStringList m_open;

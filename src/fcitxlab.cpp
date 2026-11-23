@@ -250,6 +250,11 @@ FCITX_CONFIGURATION(RaskladConfig,
     fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
     fcitx::Option<std::vector<std::string>> exceptions{this, "Exceptions",
         "Words never corrected automatically", {}};);
+// SYS-248: read-only status at fcitx://config/addon/rasklad/status, for the bar
+// widget and the settings app. Never saved; writes to it are ignored. Booleans only.
+FCITX_CONFIGURATION(RaskladStatus,
+    fcitx::Option<bool> profileReady{this, "ProfileReady", "Profile verified", false};
+    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 constexpr std::size_t kMaxApps = 64;
 constexpr std::size_t kMaxExceptions = 256;
@@ -664,6 +669,13 @@ public:
         rebuildExceptions();
         applyApps();
     }
+    const fcitx::Configuration *getSubConfig(const std::string &path) const override {
+        if (path != "status") return nullptr;
+        status_.profileReady.setValue(profile_ && profile_->ready());
+        status_.autoCorrect.setValue(*config_.autoCorrect);
+        return &status_;
+    }
+    void setSubConfig(const std::string &, const fcitx::RawConfig &) override {}
     void reloadConfig() override {
         fcitx::readAsIni(config_, kConfigPath);
         rebuildExceptions();
@@ -1780,6 +1792,7 @@ private:
     fcitx::InputContextManager *manager_;
 #ifdef RASKLAD_PRODUCT
     RaskladConfig config_;
+    mutable RaskladStatus status_; // filled on each read; see getSubConfig
     std::vector<std::string> exceptionKeys_; // sorted
     bool applying_ = false;
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;

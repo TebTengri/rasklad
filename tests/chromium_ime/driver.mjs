@@ -172,7 +172,40 @@ try{
   toggle();await settle();await type('xspace');report.toggleToRuValue=await v();report.toggleToRu=report.toggleToRuValue===base+'ч ';
   toggle();await settle();await type('xspace');report.toggleToUsValue=await v();report.toggleToUs=report.toggleToUsValue===base+'ч x ';
   await type('word');toggle();await settle();await type('xspace');report.toggleWordValue=await v();report.toggleWordKeptThenRu=report.toggleWordValue===base+'ч x ghbdtnч ';
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu'];
+  // SYS-248: the bar widget's own commands. The status sub-config reports the
+  // verified profile and mirrors AutoCorrect; a partial SetConfig pauses and resumes.
+  // The lab registers the addon as "raskladlab" (tools/chromium_ime_lab.py); the
+  // installed addon, which the widget addresses, is "rasklad".
+  phase='status';
+  const ctl=['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1'];
+  const status=()=>{const r=JSON.parse(execFileSync('/usr/bin/busctl',['--json=short',...ctl,'GetConfig','s','fcitx://config/addon/raskladlab/status'],{stdio:['ignore','pipe','pipe'],timeout:5000}).toString());const d=r.data[0].data;return {ready:d.ProfileReady&&d.ProfileReady.data,auto:d.AutoCorrect&&d.AutoCorrect.data};};
+  const pause=(value)=>execFileSync('/usr/bin/busctl',[...ctl,'SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','AutoCorrect','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
+  const s0=status();report.statusReady=s0.ready==='True'&&s0.auto==='True';
+  toggle();await settle();await reset();
+  pause('False');await settle();const s1=status();report.statusPaused=s1.ready==='True'&&s1.auto==='False';
+  await type('word');await type('space');report.pausedValue=await v();report.pausedKept=report.pausedValue==='ghbdtn ';
+  pause('True');await settle();const s2=status();
+  await type('word');await type('space');report.resumedValue=await v();report.resumedCorrected=s2.auto==='True'&&report.resumedValue==='ghbdtn привет ';
+  // SYS-251: the widget's helper prints a line only on change; it follows a layout
+  // switch and a pause, and stays quiet otherwise.
+  phase='watch';
+  const watcher=spawn('/usr/bin/python3',['-I','/lab/rasklad-layout-watch','raskladlab'],{stdio:['ignore','pipe','ignore']});
+  const lines=[];let pending=null;let buffered='';
+  watcher.stdout.on('data',d=>{buffered+=d.toString();let i;while((i=buffered.indexOf('\n'))>=0){lines.push(buffered.slice(0,i));buffered=buffered.slice(i+1);if(pending){const p=pending;pending=null;p();}}});
+  const nextLine=(ms)=>new Promise(resolve=>{if(lines.length)return resolve(lines.shift());const t=setTimeout(()=>{pending=null;resolve(null);},ms);pending=()=>{clearTimeout(t);resolve(lines.shift());};});
+  const parse=l=>{try{return JSON.parse(l);}catch(e){return null;}};
+  const w0=parse(await nextLine(3000));report.watchStart=!!w0&&['keyboard-us','keyboard-ru'].includes(w0.method)&&w0.correction==='on';
+  toggle();const w1=parse(await nextLine(2000));report.watchFollowsSwitch=!!w0&&!!w1&&['keyboard-us','keyboard-ru'].includes(w1.method)&&w1.method!==w0.method&&w1.correction==='on';
+  // The widget's middle click: rasklad-pause-toggle flips AutoCorrect on the same Fcitx.
+  const pauseToggle=()=>{try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});return true;}catch(e){return false;}};
+  const p1=pauseToggle();const w2=parse(await nextLine(2000));const p2=pauseToggle();const w3=parse(await nextLine(2000));
+  report.watchFollowsPause=p1&&p2&&!!w2&&w2.correction==='paused'&&!!w3&&w3.correction==='on';
+  report.watchQuietWithoutChange=(await nextLine(1200))===null;
+  // The widget closing its end must stop the helper even while nothing changes.
+  const exited=new Promise(resolve=>{const t=setTimeout(()=>resolve(false),2000);watcher.once('exit',()=>{clearTimeout(t);resolve(true);});});
+  watcher.stdout.destroy();report.watchStopsWithReader=await exited;
+  if(!report.watchStopsWithReader)watcher.kill('SIGTERM');
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu','statusReady','statusPaused','pausedKept','resumedCorrected','watchStart','watchFollowsSwitch','watchFollowsPause','watchQuietWithoutChange','watchStopsWithReader'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='exceptions'){
   // SYS-227: exceptions "Привет" and "rfr" are never corrected automatically, in any
