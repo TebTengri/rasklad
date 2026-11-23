@@ -201,8 +201,11 @@ try{
   const p1=pauseToggle();const w2=parse(await nextLine(2000));const p2=pauseToggle();const w3=parse(await nextLine(2000));
   report.watchFollowsPause=p1&&p2&&!!w2&&w2.correction==='paused'&&!!w3&&w3.correction==='on';
   report.watchQuietWithoutChange=(await nextLine(1200))===null;
-  watcher.kill('SIGTERM');
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu','statusReady','statusPaused','pausedKept','resumedCorrected','watchStart','watchFollowsSwitch','watchFollowsPause','watchQuietWithoutChange'];
+  // The widget closing its end must stop the helper even while nothing changes.
+  const exited=new Promise(resolve=>{const t=setTimeout(()=>resolve(false),2000);watcher.once('exit',()=>{clearTimeout(t);resolve(true);});});
+  watcher.stdout.destroy();report.watchStopsWithReader=await exited;
+  if(!report.watchStopsWithReader)watcher.kill('SIGTERM');
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu','statusReady','statusPaused','pausedKept','resumedCorrected','watchStart','watchFollowsSwitch','watchFollowsPause','watchQuietWithoutChange','watchStopsWithReader'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='exceptions'){
   // SYS-227: exceptions "Привет" and "rfr" are never corrected automatically, in any

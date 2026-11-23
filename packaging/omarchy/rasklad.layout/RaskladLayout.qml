@@ -47,7 +47,8 @@ BarWidget {
 
   // SYS-251: one long-lived helper reports the layout and the correction state as
   // they change (Fcitx announces neither on the bus), instead of a busctl process
-  // every 400 ms. If it stops, it is started again after 2 s.
+  // every 400 ms. If it stops or cannot start (no signal comes then), the timer
+  // below starts it again within 2 s.
   Process {
     id: watch
     command: ["rasklad-layout-watch"]
@@ -55,11 +56,12 @@ BarWidget {
     stdout: SplitParser {
       onRead: data => root.applyWatch(data)
     }
-    onExited: { root.method = ""; root.correction = ""; restart.start() }
+    onExited: { root.method = ""; root.correction = "" }
   }
   Timer {
-    id: restart
     interval: 2000
+    running: true
+    repeat: true
     onTriggered: if (!watch.running) watch.running = true
   }
 
@@ -69,16 +71,10 @@ BarWidget {
   }
 
   // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
-  // the same Fcitx instance, and exits 0 only after a write.
+  // the same Fcitx instance. The widget shows only what the watcher reports.
   Process {
     id: pause
     command: ["rasklad-pause-toggle"]
-    property string before: ""
-    // Shown at once; the helper confirms or corrects it within half a second.
-    onExited: (code) => {
-      if (code === 0 && root.correction === before)
-        root.correction = before === "on" ? "paused" : before === "paused" ? "on" : root.correction
-    }
   }
 
   visible: label !== ""
@@ -103,7 +99,7 @@ BarWidget {
       if (pressedButton === Qt.RightButton) {
         Util.execArgv(["rasklad-settings"])
       } else if (pressedButton === Qt.MiddleButton) {
-        if (!pause.running) { pause.before = root.correction; pause.running = true }
+        if (!pause.running) pause.running = true
       } else if (pressedButton === Qt.LeftButton && !toggle.running) {
         toggle.running = true
       }

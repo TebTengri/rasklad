@@ -8,9 +8,11 @@
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
+#include <QRegularExpression>
 #include <QStringList>
 
 #include <dlfcn.h>
+#include <unistd.h>
 
 namespace rasklad::profile {
 
@@ -72,16 +74,27 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
     if (series.isEmpty() || minorSeries(compiledHunspellVersion()) != series
         || minorSeries(runtimeHunspellVersion()) != series)
         return false;
-    const QString loaded = loadedHunspellLibraryPath();
-    if (!loaded.startsWith(QLatin1String("/usr/lib/libhunspell-") + series + QLatin1String(".so.")))
+    // A direct child of /usr/lib named libhunspell-<series>.so.<digits...>, as
+    // pacman installs it; not a file inside some look-alike directory.
+    const QFileInfo info(loadedHunspellLibraryPath());
+    const QRegularExpression name(QLatin1String("^libhunspell-")
+                                  + QRegularExpression::escape(series)
+                                  + QLatin1String("\\.so\\.[0-9]+(\\.[0-9]+)*$"));
+    if (info.absolutePath() != QLatin1String("/usr/lib") || !name.match(info.fileName()).hasMatch())
         return false;
-    // Not changeable by this user: not writable by us, our group or others. The
-    // owner is not compared with root on purpose: inside a user namespace (bwrap,
-    // the closed lab) root's files show up as the overflow user.
-    const QFileInfo info(loaded);
-    if (!info.isFile() || info.isSymLink() || info.isWritable())
-        return false;
-    return !(info.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
+    // Neither the file nor /usr/lib may be changeable by this user: not owned by
+    // us (an owner can chmod), not writable by us, our group or others. Root is
+    // not required by owner id on purpose: inside a user namespace (bwrap, the
+    // closed lab) root's files show up as the overflow user. The library is
+    // already mapped when this runs; replacing it would need write access to
+    // /usr/lib, which the directory check rules out.
+    const auto unchangeable = [](const QFileInfo &f) {
+        return f.ownerId() != ::getuid() && !f.isWritable()
+            && !(f.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
+    };
+    const QFileInfo dir(QStringLiteral("/usr/lib"));
+    return info.isFile() && !info.isSymLink() && unchangeable(info)
+        && dir.isDir() && unchangeable(dir);
 }
 
 std::unique_ptr<SpellEngine> SpellEngine::create(const QString &affPath, const QString &dicPath)

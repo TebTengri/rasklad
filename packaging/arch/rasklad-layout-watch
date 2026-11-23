@@ -8,6 +8,7 @@
 # (2.5 processes a second) with a single process. Only the method name and two
 # booleans are read, never text. It exits when the widget stops reading.
 import json
+import os
 import re
 import sys
 
@@ -19,18 +20,32 @@ ADDON = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
 METHOD = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 
 
-def call(bus, method, args=None):
-  # Never start a stopped Fcitx, never wait long.
-  return bus.call_sync(BUS, "/controller", INTERFACE, method, args, None,
-                       Gio.DBusCallFlags.NO_AUTO_START, 1000, None).unpack()
-
-
-def current_method(bus):
+def owner_of(bus):
+  # The unique name currently owning Fcitx's well-known name, or "" when none.
   try:
-    name = call(bus, "CurrentInputMethod")[0]
+    reply = bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+                          "GetNameOwner", GLib.Variant("(s)", (BUS,)), GLib.VariantType("(s)"),
+                          Gio.DBusCallFlags.NO_AUTO_START, 1000, None)
   except GLib.Error:
     return ""
-  return name if isinstance(name, str) and METHOD.match(name) else ""
+  return reply.unpack()[0]
+
+
+def call(bus, owner, method, args, reply_type):
+  # One Fcitx instance (its unique name), a checked reply type, never a start,
+  # never a long wait. Returns None on any failure.
+  try:
+    reply = bus.call_sync(owner, "/controller", INTERFACE, method, args, GLib.VariantType(reply_type),
+                          Gio.DBusCallFlags.NO_AUTO_START, 1000, None)
+  except GLib.Error:
+    return None
+  return reply.unpack()
+
+
+def current_method(bus, owner):
+  reply = call(bus, owner, "CurrentInputMethod", None, "(s)")
+  name = reply[0] if reply else ""
+  return name if METHOD.match(name) else ""
 
 
 def flag(values, key):
@@ -38,11 +53,9 @@ def flag(values, key):
   return True if value == "True" else False if value == "False" else None
 
 
-def correction(bus, status):
-  try:
-    values = call(bus, "GetConfig", GLib.Variant("(s)", (status,)))[0]
-  except GLib.Error:
-    return ""
+def correction(bus, owner, status):
+  reply = call(bus, owner, "GetConfig", GLib.Variant("(s)", (status,)), "(va(sa(sssva{sv})))")
+  values = reply[0] if reply else None
   if not isinstance(values, dict):
     return ""
   ready, auto = flag(values, "ProfileReady"), flag(values, "AutoCorrect")
@@ -61,15 +74,18 @@ def main():
   status = "fcitx://config/addon/%s/status" % addon
   bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
   loop = GLib.MainLoop()
-  state = {"method": None, "correction": None, "tick": 0}
+  state = {"owner": None, "correction": "", "tick": 0, "last": None}
 
   def tick():
-    method = current_method(bus)
-    if state["tick"] % 2 == 0 or not method:
-      state["correction"] = correction(bus, status) if method else ""
+    owner = owner_of(bus)
+    method = current_method(bus, owner) if owner else ""
+    # Both values come from one Fcitx: a new owner invalidates the cached status.
+    if owner != state["owner"] or state["tick"] % 2 == 0 or not method:
+      state["correction"] = correction(bus, owner, status) if method else ""
+    state["owner"] = owner
     state["tick"] += 1
     line = {"method": method, "correction": state["correction"]}
-    if line != state.get("last"):
+    if line != state["last"]:
       state["last"] = line
       try:
         sys.stdout.write(json.dumps(line) + "\n")
@@ -79,7 +95,14 @@ def main():
         return False
     return True
 
-  tick()
+  def reader_gone(*_):
+    loop.quit()
+    return False
+
+  # Stop as soon as the widget closes its end, even while nothing changes.
+  GLib.io_add_watch(sys.stdout.fileno(), GLib.PRIORITY_DEFAULT, GLib.IO_ERR | GLib.IO_HUP, reader_gone)
+  if not tick():
+    return
   GLib.timeout_add(250, tick)
   try:
     loop.run()
@@ -89,3 +112,5 @@ def main():
 
 if __name__ == "__main__":
   main()
+  # The reader may be gone: send the final interpreter flush nowhere.
+  os.dup2(os.open(os.devnull, os.O_WRONLY), 1)
