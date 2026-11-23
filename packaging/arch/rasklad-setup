@@ -248,6 +248,19 @@ def ids(items):
 
 # --- the steps: (state, new bytes) --------------------------------------------
 
+def lua_ok(data):
+  # The edited file must still compile (a file ending in "return ..." would
+  # not with a block after it). luac comes with lua, which Hyprland needs; if
+  # it is missing, Hyprland's own config check after the reload decides.
+  try:
+    done = subprocess.run(["/usr/bin/luac", "-p", "-"], input=data, capture_output=True, timeout=5)
+  except FileNotFoundError:
+    return True
+  except (OSError, subprocess.TimeoutExpired):
+    return False
+  return done.returncode == 0
+
+
 def append_block(data, block):
   sep = b"" if not data or data.endswith(b"\n") else b"\n"
   return data + sep + block.encode()
@@ -280,7 +293,8 @@ def bindings_plan(data=None):
            "local found = io.open(rasklad, \"r\")\n"
            "if found then found:close(); dofile(rasklad) end\n"
            "%s\n") % (BEGIN, RULE, END)
-  return "missing", append_block(data, block)
+  new = append_block(data, block)
+  return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
 
 def input_plan(data=None):
@@ -306,7 +320,8 @@ def input_plan(data=None):
            "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
            "hl.config({\n  input = {\n    kb_layout = \"%s\",\n    kb_variant = \"%s\",\n"
            "    kb_options = \"%s\",\n  },\n})\n%s\n") % ((BEGIN,) + values + (END,))
-  return "missing", append_block(data, block)
+  new = append_block(data, block)
+  return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
 
 def shell_plan(data=None):

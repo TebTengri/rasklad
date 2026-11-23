@@ -100,9 +100,21 @@ with open(real, "rb") as f:
   report["symlinkLeftAlone"] = os.path.islink(bindings) and f.read() == real_before and \
     states.get("bindings.lua") == "symlink"
 tool("--revert")
+os.unlink(bindings)
+os.replace(real, bindings)
+# A Lua file ending in "return": a block after it would not compile, so the
+# file is left as is.
+with open(bindings, "ab") as f:
+  f.write(b"return {}\n")
+with open(bindings, "rb") as f:
+  ending_before = f.read()
+code, states = tool("--install", "--yes")
+with open(bindings, "rb") as f:
+  report["returnEndingLeftAlone"] = f.read() == ending_before and states.get("bindings.lua") == "lua-error"
+tool("--revert")
 required = ["checkMissingFirst", "installOk", "checkCleanAfter", "groupHasBoth", "luaValid",
             "secondInstallNoChange", "bakBeside", "revertOk", "revertByteExact", "groupRestored",
-            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone"]
+            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone", "returnEndingLeftAlone"]
 report["checks"] = len(required)
 report["passed"] = all(report[k] is True for k in required)
 print(json.dumps(report, sort_keys=True))
