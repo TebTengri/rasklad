@@ -367,8 +367,10 @@ public:
     // How a Pending word may confirm. AfterCommit: the update's cursor must be the
     // pre-commit cursor advanced by exactly the committed length (a stale pre-commit
     // repeat, or a click onto the same text elsewhere, never confirms). AfterReplace:
-    // the old-form text cannot match the new form, and same-length forms keep the
-    // cursor in place, so no cursor rule. Never: the pre-commit cursor was unknown.
+    // the old-form text cannot match the new form, so no cursor rule. The cursor is
+    // not compared here on purpose: Chromium reports it inside a window trimmed by
+    // bytes, so the same caret gets a different offset once Cyrillic replaces Latin.
+    // Never: the pre-commit cursor was unknown.
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
@@ -1696,13 +1698,14 @@ private:
                 s->forgetLast();
                 {
 #endif
-                s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu; s->lastUpper = s->upper;
-                s->lastValid = true; // Pending
-                {
-                    const auto &pre = ic->surroundingText();
-                    const bool known = pre.isValid() && pre.cursor() == pre.anchor();
-                    s->lastRule = known ? LabState::Confirm::AfterCommit : LabState::Confirm::Never;
-                    s->lastPreCursor = known ? pre.cursor() : 0;
+                // Kept only when it can ever confirm: with no known pre-commit cursor
+                // the word could never be replaced, so it is not kept at all.
+                const auto &pre = ic->surroundingText();
+                if (pre.isValid() && pre.cursor() == pre.anchor()) {
+                    s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu; s->lastUpper = s->upper;
+                    s->lastValid = true; // Pending
+                    s->lastRule = LabState::Confirm::AfterCommit;
+                    s->lastPreCursor = pre.cursor();
                 }
                 }
 #else
