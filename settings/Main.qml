@@ -40,11 +40,14 @@ ApplicationWindow {
     property var rowItems: ({}) // key -> live row; plain JS, no bindings
     function restoreFocus() {
         const row = rowItems[rowFocus]
-        if (rowFocus !== "" && row && focusLost()) row.forceActiveFocus()
+        if (!focusLost()) return
+        if (rowFocus !== "" && row) row.forceActiveFocus()
+        else firstRow.forceActiveFocus() // the row went away (a component switched off)
     }
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
+        if (help.opened) return false // help keeps its own focus
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -187,7 +190,7 @@ ApplicationWindow {
         // j/k walk rows only, never into fields where they are letters.
         function step(forward) {
             let it = nextItemInFocusChain(forward)
-            for (let i = 0; i < 200 && it && it !== row && !it.isRow; ++i) it = it.nextItemInFocusChain(forward)
+            for (let i = 0; i < 1000 && it && it !== row && !it.isRow; ++i) it = it.nextItemInFocusChain(forward)
             if (it && it.isRow) it.forceActiveFocus()
         }
         Keys.onPressed: event => {
@@ -429,7 +432,10 @@ ApplicationWindow {
                             showIcon: true
                             iconName: modelData.icon
                             title: modelData.name
-                            detail: modelData.partial ? qsTr("On only for part of its program names.")
+                            // The limit is said at the row that hit it, not only below the list.
+                            detail: backend.error === "full" && modelData.id === window.rowFocus && !modelData.enabled
+                                    ? window.errorText("full")
+                                  : modelData.partial ? qsTr("On only for part of its program names.")
                                   : modelData.description !== "" ? modelData.description
                                   : modelData.webApp ? qsTr("Web app") : ""
                             tip: qsTr("Program name: %1").arg(modelData.names.join(", "))

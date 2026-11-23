@@ -247,8 +247,12 @@ std::optional<AppInfo> DesktopIndex::find(const QString &program) const
     };
 
     // Launchers sharing a window class: the one whose id is the program wins.
-    const Entry *hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p && e.id == p; });
-    if (!hit) hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p; });
+    // A visible launcher still beats a NoDisplay one, as everywhere else.
+    auto wm = [&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p; };
+    const Entry *hit = pick([&](const Entry &e) { return wm(e) && e.id == p && !e.noDisplay; });
+    if (!hit) hit = pick([&](const Entry &e) { return wm(e) && !e.noDisplay; });
+    if (!hit) hit = pick([&](const Entry &e) { return wm(e) && e.id == p; });
+    if (!hit) hit = pick(wm);
     if (!hit) hit = pick([&](const Entry &e) { return e.id == p; });
     if (!hit) {
         // A reverse-DNS segment names an app only when exactly one entry has it:

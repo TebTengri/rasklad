@@ -173,7 +173,10 @@ int hyprlandRounding()
     const auto wait = [fd, &deadline](short events) {
         pollfd p{fd, events, 0};
         int r;
-        do r = ::poll(&p, 1, static_cast<int>(deadline.remainingTime())); while (r < 0 && errno == EINTR);
+        do {
+            if (deadline.hasExpired()) return false; // never past the budget, even on EINTR
+            r = ::poll(&p, 1, static_cast<int>(deadline.remainingTime()));
+        } while (r < 0 && errno == EINTR);
         return r > 0 && (p.revents & events);
     };
     QByteArray reply;
