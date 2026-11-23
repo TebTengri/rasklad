@@ -328,8 +328,9 @@ preload. Контракт, guards, калибровка и ограничени�
 
 The product addon remembers the program names (`InputContext::program()`, as the
 client claims them) of input contexts that got focus since Fcitx started. It
-keeps names only, in memory only: they are never saved, logged or sent anywhere,
-and no text is read. Terminals and the settings app itself are refused; at most
+keeps names only, in memory only: they are never saved, logged or sent over the
+network, and no text is read. Other processes of the same user can read them over
+the session bus, as described below. Terminals and the settings app itself are refused; at most
 64 names are kept, and the least recently focused one goes when the list is full.
 The list is exposed as `SeenApplications` in the read-only status sub-config, so
 any process of the same user on the session bus can read which applications got

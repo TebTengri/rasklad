@@ -167,6 +167,7 @@ def inside(addon_dir=None):
         for label, argv, extra in CASES:
             app = subprocess.Popen(argv, env=dict(env, **extra), stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL, start_new_session=True)
+            procs.append(app)  # an interruption mid-case stops it in finally as well
             time.sleep(4)
             before = {(i['program'], i['frontend']) for i in (result['baseline'] or [])}
             ics = debug_info(env) or []
@@ -176,6 +177,7 @@ def inside(addon_dir=None):
                 entry['seenApplications'] = seen_applications(env)
             result['cases'].append(entry)
             stop(app)
+            procs.remove(app)
             time.sleep(1)
     finally:
         for p in reversed(procs):
