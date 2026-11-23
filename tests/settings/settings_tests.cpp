@@ -354,6 +354,12 @@ private Q_SLOTS:
         f.ready = false;
         b.refresh();
         QVERIFY(b.profileBroken());
+        f.ready = true; // a change re-reads it: a restarted Fcitx clears the warning
+        b.setSound(false);
+        QVERIFY(!b.profileBroken());
+        f.ready = false;
+        b.refresh();
+        QVERIFY(b.profileBroken());
         f.ready = std::nullopt; // an older addon without the status: not broken
         b.refresh();
         QVERIFY(!b.profileBroken());

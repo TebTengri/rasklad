@@ -17,6 +17,9 @@ void SettingsBackend::reloadConfig()
     const auto parsed = map ? configFromMap(*map) : std::nullopt;
     m_loaded = parsed.has_value();
     if (parsed) m_config = *parsed;
+    // Asked again on every read (refresh and before each change), so a restarted
+    // Fcitx never keeps showing the previous daemon's warning.
+    m_profileBroken = m_running && m_fcitx->profileReady() == std::optional<bool>(false);
 }
 
 void SettingsBackend::refreshIfStale()
@@ -34,7 +37,6 @@ void SettingsBackend::refresh()
     m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
-    m_profileBroken = m_addon && m_fcitx->profileReady() == std::optional<bool>(false);
     m_open = m_windows->openApps();
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();

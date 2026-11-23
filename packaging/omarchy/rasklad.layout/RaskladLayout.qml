@@ -44,11 +44,26 @@ BarWidget {
     } catch (e) {
       values = null
     }
-    const flag = key => values && values[key] && values[key].data === "True"
-    if (!values || !values.ProfileReady || !values.AutoCorrect) root.correction = ""
-    else if (!flag("ProfileReady")) root.correction = "broken"
-    else root.correction = flag("AutoCorrect") ? "on" : "paused"
+    // Only the exact strings count; anything else is unknown.
+    const flag = key => {
+      const v = values && values[key] && values[key].data
+      return v === "True" ? true : v === "False" ? false : null
+    }
+    const ready = flag("ProfileReady"), auto = flag("AutoCorrect")
+    if (ready === null || auto === null) root.correction = ""
+    else if (!ready) root.correction = "broken"
+    else root.correction = auto ? "on" : "paused"
+    // A middle click waits for this fresh reply, so it never acts on a state read
+    // from a Fcitx that has since restarted.
+    if (root.pauseRequested) {
+      root.pauseRequested = false
+      if ((root.correction === "on" || root.correction === "paused") && !pause.running) {
+        pause.next = root.correction === "on" ? "False" : "True"
+        pause.running = true
+      }
+    }
   }
+  property bool pauseRequested: false
 
   function call(args) {
     return ["busctl", "--user", "--timeout=1"].concat(args)
@@ -73,7 +88,7 @@ BarWidget {
       waitForEnd: true
       onStreamFinished: root.parseStatus(text)
     }
-    onExited: (code) => { if (code !== 0) root.correction = "" }
+    onExited: (code) => { if (code !== 0) { root.correction = ""; root.pauseRequested = false } }
   }
 
   // The layout every 400 ms; the correction status every 2 s and after a change.
@@ -104,6 +119,12 @@ BarWidget {
     onExited: if (!statusQuery.running) statusQuery.running = true
   }
 
+  function requestPause() {
+    if (root.pauseRequested) return
+    root.pauseRequested = true
+    if (!statusQuery.running) statusQuery.running = true
+  }
+
   visible: label !== ""
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
@@ -120,14 +141,13 @@ BarWidget {
                          : root.correction === "paused" ? "tooltip.paused"
                          : root.correction === "broken" ? "tooltip.broken"
                          : "tooltip.unknown").arg(root.code || "—")
+    // The bar copies the tooltip when the pointer enters; refresh it in place.
+    onTooltipTextChanged: if (tooltipHovered && root.bar) root.bar.showTooltip(button, tooltipText)
     onPressed: function(pressedButton) {
       if (pressedButton === Qt.RightButton) {
         Util.execArgv(["rasklad-settings"])
       } else if (pressedButton === Qt.MiddleButton) {
-        if ((root.correction === "on" || root.correction === "paused") && !pause.running) {
-          pause.next = root.correction === "on" ? "False" : "True"
-          pause.running = true
-        }
+        if (!pause.running) root.requestPause()
       } else if (pressedButton === Qt.LeftButton && !toggle.running) {
         toggle.running = true
       }
