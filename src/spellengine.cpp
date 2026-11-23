@@ -8,11 +8,12 @@
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
+#include <QList>
 #include <QRegularExpression>
+#include <QSet>
 #include <QStringList>
 
 #include <dlfcn.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace rasklad::profile {
@@ -84,33 +85,40 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
         + QLatin1String("\\.so\\.[0-9]+(\\.[0-9]+)*")));
     if (info.absolutePath() != QLatin1String("/usr/lib") || !name.match(info.fileName()).hasMatch())
         return false;
-    // Neither the file nor /usr/lib may be changeable by this user: not owned by
-    // us (an owner can chmod), not writable by us, our group or others. Root is
-    // not required by owner id on purpose: inside a user namespace (bwrap, the
-    // closed lab) root's files show up as the overflow user. The library is
-    // already mapped when this runs; replacing it would need write access to
-    // /usr/lib or a parent, so each parent up to / must be unchangeable as well,
-    // unless the child is a mount point: a mounted directory cannot be renamed
-    // away (the lab's / is a user-owned tmpfs with /usr bound onto it).
+    // Nothing on the way to the library may be swappable by this user. A file or
+    // directory can be replaced when its parent is changeable for us (owned by
+    // us, writable by us, our group or others), unless it is itself a mount
+    // point: a mount point cannot be renamed away (EBUSY). Root is not required
+    // by owner id on purpose: inside a user namespace (bwrap, the closed lab)
+    // root's files show up as the overflow user, and the lab's / is a
+    // user-owned tmpfs with /usr bound onto it. Mount points come from
+    // /proc/self/mountinfo, which also sees same-filesystem bind mounts.
     const auto unchangeable = [](const QFileInfo &f) {
         return f.ownerId() != ::getuid() && !f.isWritable()
             && !(f.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
     };
     if (!info.isFile() || info.isSymLink() || !unchangeable(info))
         return false;
-    const char *const chain[] = {"/usr/lib", "/usr", "/"};
-    struct stat below {};
-    for (int i = 0; i < 3; ++i) {
-        const QFileInfo dir{QString::fromLatin1(chain[i])};
-        struct stat here {};
-        if (!dir.isDir() || dir.isSymLink() || ::lstat(chain[i], &here) != 0)
+    QSet<QByteArray> mounts;
+    QFile mountinfo(QStringLiteral("/proc/self/mountinfo"));
+    if (!mountinfo.open(QIODevice::ReadOnly))
+        return false;
+    for (const QByteArray &line : mountinfo.readAll().split('\n')) {
+        const QList<QByteArray> fields = line.split(' ');
+        if (fields.size() > 4)
+            mounts.insert(fields.at(4));
+    }
+    // (path, parent): the library's directory, then each directory above it.
+    const char *const chain[][2] = {{"/usr/lib", "/usr"}, {"/usr", "/"}};
+    const QFileInfo lib{QStringLiteral("/usr/lib")};
+    if (!lib.isDir() || lib.isSymLink() || !unchangeable(lib))
+        return false;
+    for (const auto &step : chain) {
+        const QFileInfo parent{QString::fromLatin1(step[1])};
+        if (!parent.isDir() || parent.isSymLink())
             return false;
-        const bool childIsMount = i > 0 && below.st_dev != here.st_dev;
-        if (!childIsMount && !unchangeable(dir))
+        if (!mounts.contains(QByteArray(step[0])) && !unchangeable(parent))
             return false;
-        if (childIsMount)
-            break;
-        below = here;
     }
     return true;
 }
