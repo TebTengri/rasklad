@@ -1,0 +1,46 @@
+#!/usr/bin/python3 -I
+# SPDX-License-Identifier: MIT
+# Rasklad: pause or resume automatic correction (the bar widget's middle click).
+# Reads Rasklad's read-only status and writes only AutoCorrect (Fcitx merges a
+# partial addon config) to the same Fcitx instance: both calls go to the unique
+# bus name that owned org.fcitx.Fcitx5 when the status was read, so a Fcitx that
+# restarted in between gets nothing. Does nothing unless the status is exactly
+# on or paused. Exit status 0 only after a write; it prints nothing.
+import re
+import sys
+
+from gi.repository import Gio, GLib
+
+ADDON = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
+
+
+def main():
+  # Optional addon name (the closed lab registers it as "raskladlab").
+  addon = sys.argv[1] if len(sys.argv) == 2 else "rasklad"
+  if len(sys.argv) > 2 or not ADDON.match(addon):
+    return 2
+  try:
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    owner = bus.call_sync("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+                          "GetNameOwner", GLib.Variant("(s)", ("org.fcitx.Fcitx5",)), None,
+                          Gio.DBusCallFlags.NO_AUTO_START, 1000, None).unpack()[0]
+
+    def call(method, args):
+      return bus.call_sync(owner, "/controller", "org.fcitx.Fcitx.Controller1", method, args, None,
+                           Gio.DBusCallFlags.NO_AUTO_START, 1000, None).unpack()
+
+    values = call("GetConfig", GLib.Variant("(s)", ("fcitx://config/addon/%s/status" % addon,)))[0]
+    if not isinstance(values, dict) or values.get("ProfileReady") != "True":
+      return 1
+    auto = values.get("AutoCorrect")
+    if auto not in ("True", "False"):
+      return 1
+    value = GLib.Variant("a{sv}", {"AutoCorrect": GLib.Variant("s", "False" if auto == "True" else "True")})
+    call("SetConfig", GLib.Variant("(sv)", ("fcitx://config/addon/%s" % addon, value)))
+  except GLib.Error:
+    return 1
+  return 0
+
+
+if __name__ == "__main__":
+  sys.exit(main())

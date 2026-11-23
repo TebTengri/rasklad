@@ -186,7 +186,23 @@ try{
   await type('word');await type('space');report.pausedValue=await v();report.pausedKept=report.pausedValue==='ghbdtn ';
   pause('True');await settle();const s2=status();
   await type('word');await type('space');report.resumedValue=await v();report.resumedCorrected=s2.auto==='True'&&report.resumedValue==='ghbdtn привет ';
-  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu','statusReady','statusPaused','pausedKept','resumedCorrected'];
+  // SYS-251: the widget's helper prints a line only on change; it follows a layout
+  // switch and a pause, and stays quiet otherwise.
+  phase='watch';
+  const watcher=spawn('/usr/bin/python3',['-I','/lab/rasklad-layout-watch','raskladlab'],{stdio:['ignore','pipe','ignore']});
+  const lines=[];let pending=null;let buffered='';
+  watcher.stdout.on('data',d=>{buffered+=d.toString();let i;while((i=buffered.indexOf('\n'))>=0){lines.push(buffered.slice(0,i));buffered=buffered.slice(i+1);if(pending){const p=pending;pending=null;p();}}});
+  const nextLine=(ms)=>new Promise(resolve=>{if(lines.length)return resolve(lines.shift());const t=setTimeout(()=>{pending=null;resolve(null);},ms);pending=()=>{clearTimeout(t);resolve(lines.shift());};});
+  const parse=l=>{try{return JSON.parse(l);}catch(e){return null;}};
+  const w0=parse(await nextLine(3000));report.watchStart=!!w0&&['keyboard-us','keyboard-ru'].includes(w0.method)&&w0.correction==='on';
+  toggle();const w1=parse(await nextLine(2000));report.watchFollowsSwitch=!!w0&&!!w1&&['keyboard-us','keyboard-ru'].includes(w1.method)&&w1.method!==w0.method&&w1.correction==='on';
+  // The widget's middle click: rasklad-pause-toggle flips AutoCorrect on the same Fcitx.
+  const pauseToggle=()=>{try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});return true;}catch(e){return false;}};
+  const p1=pauseToggle();const w2=parse(await nextLine(2000));const p2=pauseToggle();const w3=parse(await nextLine(2000));
+  report.watchFollowsPause=p1&&p2&&!!w2&&w2.correction==='paused'&&!!w3&&w3.correction==='on';
+  report.watchQuietWithoutChange=(await nextLine(1200))===null;
+  watcher.kill('SIGTERM');
+  const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','toggleToRu','toggleToUs','toggleWordKeptThenRu','statusReady','statusPaused','pausedKept','resumedCorrected','watchStart','watchFollowsSwitch','watchFollowsPause','watchQuietWithoutChange'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='exceptions'){
   // SYS-227: exceptions "Привет" and "rfr" are never corrected automatically, in any

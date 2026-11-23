@@ -75,8 +75,11 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
     const QString loaded = loadedHunspellLibraryPath();
     if (!loaded.startsWith(QLatin1String("/usr/lib/libhunspell-") + series + QLatin1String(".so.")))
         return false;
+    // Not changeable by this user: not writable by us, our group or others. The
+    // owner is not compared with root on purpose: inside a user namespace (bwrap,
+    // the closed lab) root's files show up as the overflow user.
     const QFileInfo info(loaded);
-    if (!info.isFile() || info.isSymLink() || info.ownerId() != 0)
+    if (!info.isFile() || info.isSymLink() || info.isWritable())
         return false;
     return !(info.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
 }

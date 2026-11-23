@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Rasklad bar widget: the Fcitx layout as EN or RU, and whether automatic
-// correction is on, paused or off. It asks Fcitx itself (Controller1 over busctl)
-// rather than through the shell's shared input-method indicator, so it keeps up
-// across Fcitx restarts. Only the method name and two booleans are read, never text.
+// correction is on, paused or off, from rasklad-layout-watch (one long-lived helper
+// that asks Fcitx itself rather than through the shell's shared input-method
+// indicator, so it keeps up across Fcitx restarts). Only the method name and two
+// booleans are read, never text.
 // Left click switches us <-> ru (the same rasklad-layout-toggle that double Alt
 // runs); middle click pauses or resumes automatic correction; right click opens
 // the Rasklad settings window.
@@ -30,117 +31,55 @@ BarWidget {
                                : method === "" ? "" : "··"
   readonly property string label: code === "" ? "" : correction === "broken" ? code + "!" : code
 
-  function parseMethod(output) {
-    const match = /^s "([A-Za-z0-9_.:-]{1,64})"/.exec(String(output || "").trim())
-    root.method = match ? match[1] : ""
-  }
-
-  // busctl --json=short reply to GetConfig: {"data":[{"data":{"Key":{"data":"True"}}}, ...]}.
-  // Returns "on", "paused", "broken" or "" (unknown).
-  function statusOf(output) {
-    let values = null
+  // One line from rasklad-layout-watch: {"method": "...", "correction": "..."}.
+  // Validated here as well: only known shapes change the widget.
+  function applyWatch(line) {
+    let state = null
     try {
-      const reply = JSON.parse(String(output || ""))
-      values = reply && reply.data && reply.data[0] && reply.data[0].data
+      state = JSON.parse(String(line || ""))
     } catch (e) {
-      values = null
+      state = null
     }
-    // Only the exact strings count; anything else is unknown.
-    const flag = key => {
-      const v = values && values[key] && values[key].data
-      return v === "True" ? true : v === "False" ? false : null
-    }
-    const ready = flag("ProfileReady"), auto = flag("AutoCorrect")
-    if (ready === null || auto === null) return ""
-    if (!ready) return "broken"
-    return auto ? "on" : "paused"
+    if (!state || typeof state.method !== "string" || typeof state.correction !== "string") return
+    root.method = /^[A-Za-z0-9_.:-]{1,64}$/.test(state.method) ? state.method : ""
+    root.correction = ["on", "paused", "broken"].indexOf(state.correction) >= 0 ? state.correction : ""
   }
 
-  function call(args) {
-    return ["busctl", "--user", "--timeout=1"].concat(args)
-  }
-  readonly property var controller: ["org.fcitx.Fcitx5", "/controller", "org.fcitx.Fcitx.Controller1"]
-
+  // SYS-251: one long-lived helper reports the layout and the correction state as
+  // they change (Fcitx announces neither on the bus), instead of a busctl process
+  // every 400 ms. If it stops, it is started again after 2 s.
   Process {
-    id: methodQuery
-    command: root.call(["call"].concat(root.controller, ["CurrentInputMethod"]))
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.parseMethod(text)
-    }
-    onExited: (code) => { if (code !== 0) root.method = "" }
-  }
-
-  Process {
-    id: statusQuery
-    command: root.call(["--json=short", "call"].concat(root.controller,
-                       ["GetConfig", "s", "fcitx://config/addon/rasklad/status"]))
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.correction = root.statusOf(text)
-    }
-    onExited: (code) => { if (code !== 0) root.correction = "" }
-  }
-
-  // A middle click asks Fcitx afresh with its own query and writes only after that
-  // query has both answered and exited successfully, so it never acts on a state
-  // read before the click (or from a Fcitx that has since restarted). If the query
-  // cannot start, neither signal comes and nothing is written.
-  Process {
-    id: clickQuery
-    property string reply: ""
-    property bool answered: false
-    property bool succeeded: false
-    command: statusQuery.command
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: { clickQuery.reply = text; clickQuery.answered = true; clickQuery.decide() }
-    }
-    onExited: (code) => { clickQuery.succeeded = code === 0; if (code !== 0) clickQuery.answered = false; clickQuery.decide() }
-    function start() {
-      reply = ""; answered = false; succeeded = false
-      running = true
-    }
-    function decide() {
-      if (!answered || !succeeded) return
-      answered = false; succeeded = false
-      const state = root.statusOf(reply)
-      root.correction = state
-      if ((state === "on" || state === "paused") && !pause.running) {
-        pause.next = state === "on" ? "False" : "True"
-        pause.running = true
-      }
-    }
-  }
-
-  // The layout every 400 ms; the correction status every 2 s and after a change.
-  property int ticks: 0
-  Timer {
-    interval: 400
+    id: watch
+    command: ["rasklad-layout-watch"]
     running: true
-    repeat: true
-    triggeredOnStart: true
-    onTriggered: {
-      if (!methodQuery.running) methodQuery.running = true
-      if (root.ticks++ % 5 === 0 && !statusQuery.running) statusQuery.running = true
+    stdout: SplitParser {
+      onRead: data => root.applyWatch(data)
     }
+    onExited: { root.method = ""; root.correction = ""; restart.start() }
+  }
+  Timer {
+    id: restart
+    interval: 2000
+    onTriggered: if (!watch.running) watch.running = true
   }
 
   Process {
     id: toggle
     command: ["rasklad-layout-toggle"]
-    onExited: if (!methodQuery.running) methodQuery.running = true
   }
 
-  // Writes only AutoCorrect (Fcitx merges a partial config); fixed values.
+  // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
+  // the same Fcitx instance, and exits 0 only after a write.
   Process {
     id: pause
-    property string next: "False"
-    command: root.call(["call"].concat(root.controller,
-                       ["SetConfig", "sv", "fcitx://config/addon/rasklad", "a{sv}", "1", "AutoCorrect", "s", next]))
-    onExited: if (!statusQuery.running) statusQuery.running = true
+    command: ["rasklad-pause-toggle"]
+    property string before: ""
+    // Shown at once; the helper confirms or corrects it within half a second.
+    onExited: (code) => {
+      if (code === 0 && root.correction === before)
+        root.correction = before === "on" ? "paused" : before === "paused" ? "on" : root.correction
+    }
   }
-
 
   visible: label !== ""
   implicitWidth: button.implicitWidth
@@ -164,7 +103,7 @@ BarWidget {
       if (pressedButton === Qt.RightButton) {
         Util.execArgv(["rasklad-settings"])
       } else if (pressedButton === Qt.MiddleButton) {
-        if (!pause.running && !clickQuery.running) clickQuery.start()
+        if (!pause.running) { pause.before = root.correction; pause.running = true }
       } else if (pressedButton === Qt.LeftButton && !toggle.running) {
         toggle.running = true
       }
