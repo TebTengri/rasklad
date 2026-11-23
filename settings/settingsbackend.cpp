@@ -72,11 +72,14 @@ bool SettingsBackend::commit(const AddonConfig &next)
     }
     // Show what the addon actually holds now, not what was asked for.
     reloadConfig();
-    if (!m_loaded) m_error = QStringLiteral("fcitx");
-    else if (m_config.apps != next.apps || m_config.sound != next.sound ||
-             m_config.wordOptions != next.wordOptions || m_config.autoCorrect != next.autoCorrect ||
-             m_config.exceptions != next.exceptions)
-        m_error = QStringLiteral("write");
+    // Only the written keys must match: another client may change the others.
+    if (!m_loaded) {
+        m_error = QStringLiteral("fcitx");
+    } else {
+        const QVariantMap after = mapFromConfig(m_config);
+        for (auto it = changes.cbegin(); it != changes.cend(); ++it)
+            if (after.value(it.key()) != it.value()) m_error = QStringLiteral("write");
+    }
     rebuildApps();
     return m_error.isEmpty();
 }

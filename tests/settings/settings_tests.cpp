@@ -24,6 +24,7 @@ public:
     bool up = true;
     bool failWrites = false;
     bool dropSound = false; // accepts the call but keeps Sound on
+    bool otherClientMutesSound = false; // another client switches Sound off during a write
     bool broken = false;    // returns a config without a readable list
     int writes = 0;
     QVariantMap stored = fcitxMap({QStringLiteral("slack"), QStringLiteral("chromium")}, true);
@@ -43,6 +44,7 @@ public:
         if (!up || failWrites) return false;
         for (auto it = config.cbegin(); it != config.cend(); ++it) stored.insert(it.key(), it.value());
         if (dropSound) stored.insert(QStringLiteral("Sound"), QStringLiteral("True"));
+        if (otherClientMutesSound) stored.insert(QStringLiteral("Sound"), QStringLiteral("False"));
         return true;
     }
 };
@@ -329,6 +331,17 @@ private Q_SLOTS:
         b.removeException(QStringLiteral("ok"));
         QCOMPARE(b.error(), QString());
         QVERIFY(configFromMap(f.stored)->exceptions.isEmpty());
+    }
+    void otherClientsChangeIsNotAnError()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        f.otherClientMutesSound = true;
+        QVERIFY(b.addException(QStringLiteral("ok")));
+        QCOMPARE(b.error(), QString());
+        QVERIFY(!b.sound()); // shows the other client's change
     }
     void capAt64()
     {
