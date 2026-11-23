@@ -55,10 +55,36 @@ ApplicationWindow {
     Shortcut {
         sequence: "Ctrl+N"
         context: Qt.ApplicationShortcut
-        onActivated: (tabs.currentIndex === 0 ? addField : wordField).forceActiveFocus()
+        onActivated: {
+            const field = tabs.currentIndex === 0 ? addField : wordField
+            window.reveal(field) // also when the window itself has no keyboard focus yet
+            field.forceActiveFocus()
+        }
     }
-    Shortcut { sequence: "Ctrl+1"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 0 }
-    Shortcut { sequence: "Ctrl+2"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 1 }
+
+    readonly property int rowHeight: 52 // one application row; the list is sized from it
+
+    // Keyboard focus (Tab, Ctrl+N) never lands outside the visible part of the page.
+    onActiveFocusItemChanged: {
+        for (let it = activeFocusItem; it; it = it.parent)
+            if (it === content) { reveal(activeFocusItem); return }
+    }
+
+    // Scrolls the page just enough to show the item (a field below a small window's edge).
+    function reveal(item) {
+        const y = item.mapToItem(content, 0, 0).y + content.y
+        const max = Math.max(0, page.contentHeight - page.height)
+        if (y < page.contentY) page.contentY = Math.max(0, y - 20)
+        else if (y + item.height > page.contentY + page.height)
+            page.contentY = Math.min(max, y + item.height - page.height + 20)
+    }
+    // Focus goes to the chosen tab, so it never stays on a control scrolled out of view.
+    Shortcut { sequence: "Ctrl+1"; context: Qt.ApplicationShortcut; onActivated: window.showTab(0) }
+    Shortcut { sequence: "Ctrl+2"; context: Qt.ApplicationShortcut; onActivated: window.showTab(1) }
+    function showTab(index) {
+        tabs.currentIndex = index
+        tabs.currentItem.forceActiveFocus()
+    }
 
     // The addon notes new programs while the settings are open: look again on focus.
     onActiveChanged: if (active) backend.refreshIfStale()
@@ -139,9 +165,22 @@ ApplicationWindow {
         }
     }
 
-    ColumnLayout {
+    // SYS-254: the whole page scrolls, so a small tiled window still reaches every
+    // row and field; the lists inside show all their rows and do not scroll on their own.
+    Flickable {
+        id: page
         anchors.fill: parent
-        anchors.margins: 20
+        contentWidth: width
+        contentHeight: content.implicitHeight + 40
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+        ScrollBar.vertical: ScrollBar {}
+
+    ColumnLayout {
+        id: content
+        x: 20
+        y: 20
+        width: page.width - 40
         spacing: 14
 
         Label {
@@ -193,6 +232,8 @@ ApplicationWindow {
         TabBar {
             id: tabs
             Layout.fillWidth: true
+            // A new tab starts at its top, not at the old tab's scroll offset.
+            onCurrentIndexChanged: page.contentY = Math.min(page.contentY, Math.max(0, tabs.y + content.y - 20))
             TabButton { text: qsTr("Applications") }
             TabButton { text: qsTr("Correction") }
         }
@@ -200,9 +241,11 @@ ApplicationWindow {
         StackLayout {
             currentIndex: tabs.currentIndex
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            // Only the shown tab sets the height: no empty space below a short tab.
+            Layout.preferredHeight: currentIndex === 0 ? appsPage.implicitHeight : correctionPage.implicitHeight
 
             ColumnLayout {
+                id: appsPage
                 spacing: 14
                 RowLayout {
                     Layout.fillWidth: true
@@ -227,16 +270,16 @@ ApplicationWindow {
                 ListView {
                     id: list
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
+                    // All rows, rowHeight each with spacing between; the page scrolls instead.
+                    Layout.preferredHeight: Math.max(0, count * (window.rowHeight + spacing) - spacing)
+                    interactive: false
                     spacing: 2
                     model: backend.apps
-                    ScrollBar.vertical: ScrollBar {}
                     delegate: Rectangle {
                         id: row
                         required property var modelData
                         width: ListView.view.width
-                        height: 52
+                        height: window.rowHeight
                         radius: theme.radius
                         color: hover.hovered ? theme.surface : "transparent"
                         HoverHandler { id: hover }
@@ -318,6 +361,7 @@ ApplicationWindow {
             }
 
             ColumnLayout {
+                id: correctionPage
                 spacing: 14
 
                 Label {
@@ -375,13 +419,10 @@ ApplicationWindow {
                     Layout.fillWidth: true
                 }
 
-                Flickable {
+                Item {
                     visible: backend.wordOptions
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    contentHeight: words.implicitHeight
-                    ScrollBar.vertical: ScrollBar {}
+                    Layout.preferredHeight: words.implicitHeight
                     Flow {
                         id: words
                         width: parent.width
@@ -440,7 +481,6 @@ ApplicationWindow {
                     }
                 }
 
-                Item { visible: !backend.wordOptions; Layout.fillHeight: true }
             }
         }
 
@@ -459,5 +499,6 @@ ApplicationWindow {
                 onClicked: backend.refresh()
             }
         }
+    }
     }
 }
