@@ -1,0 +1,14 @@
+# Synthetic fixture.
+[Desktop Entry]
+Type=Application
+Name=Telegram Desktop
+Name[ru]=Телеграм
+Comment=Official desktop client
+Comment[ru]=Официальный клиент
+Icon=org.telegram.desktop
+Exec=env QT_QPA_PLATFORM=wayland telegram-desktop -- %u
+
+[Desktop Action quit]
+Name=Quit Telegram
+Name[ru]=Выйти из Телеграма
+Exec=telegram-desktop -quit

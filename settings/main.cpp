@@ -7,6 +7,7 @@
 // back. It offers the program names the addon saw with a focused text field.
 // No typed text, no network, no autostart, no files written by this process.
 
+#include "appiconprovider.h"
 #include "jsontranslator.h"
 #include "settingsbackend.h"
 #include "sources.h"
@@ -45,7 +46,9 @@ int main(int argc, char *argv[])
     app::ThemeWatcher theme(app::defaultThemeSources(), QString(), true);
     settings::DBusFcitx fcitx;
     settings::FcitxSeenApps seen;
-    settings::SettingsBackend backend(&fcitx, &seen);
+    // SYS-254: human names from .desktop entries, in the window's language.
+    settings::DesktopAppNames names([&theme] { return theme.language(); });
+    settings::SettingsBackend backend(&fcitx, &seen, &names);
 
     QQmlApplicationEngine engine;
     app::JsonTranslator ru;
@@ -67,6 +70,9 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
     engine.rootContext()->setContextProperty(QStringLiteral("theme"), &theme);
+    // SYS-254: Omarchy apps round corners like Hyprland windows (decoration:rounding).
+    engine.rootContext()->setContextProperty(QStringLiteral("corner"), settings::hyprlandRounding());
+    engine.addImageProvider(QStringLiteral("appicon"), new settings::AppIconProvider); // engine owns it
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); },
         Qt::QueuedConnection);

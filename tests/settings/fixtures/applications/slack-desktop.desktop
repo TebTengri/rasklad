@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Slack
+Comment=Team communication
+Icon=slack
+Exec=/usr/bin/slack -s %U
+StartupWMClass=Slack

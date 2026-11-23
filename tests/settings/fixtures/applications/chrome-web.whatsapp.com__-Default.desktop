@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=WhatsApp Web
+Icon=chrome-web.whatsapp.com__-Default
+Exec=chromium --app=https://web.whatsapp.com/
+StartupWMClass=chrome-web.whatsapp.com__-Default

@@ -7,6 +7,7 @@
 #include "sources.h"
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QObject>
 #include <QStringList>
 #include <QVariantList>
@@ -30,7 +31,8 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(QString error READ error NOTIFY changed)
 
 public:
-    SettingsBackend(FcitxSource *fcitx, AppSource *apps, QObject *parent = nullptr);
+    // names may be null: rows then show program names (tests, or no .desktop entries).
+    SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names = nullptr, QObject *parent = nullptr);
 
     bool fcitxRunning() const { return m_running; }
     bool addonEnabled() const { return m_addon; }
@@ -67,6 +69,7 @@ private:
 
     FcitxSource *m_fcitx;
     AppSource *m_appSource;
+    AppNames *m_names;
     bool m_running = false;
     bool m_addon = false;
     bool m_loaded = false;
@@ -75,6 +78,8 @@ private:
     AddonConfig m_config;
     QStringList m_focused; // SYS-253: programs the addon saw with a focused field
     QStringList m_seen; // switched off in this session: stay visible to switch back on
+    // Group of each row, fixed at refresh: a switched row stays where it is under the cursor.
+    QHash<QString, QString> m_groups;
     QVariantList m_apps;
     QString m_error;
     QElapsedTimer m_lastRefresh;

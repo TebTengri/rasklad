@@ -52,6 +52,11 @@ QVariantMap mapFromConfig(const AddonConfig &config);
 // or of another shape.
 QStringList seenAppsFromStatus(const QVariantMap &status);
 
+// SYS-254: Hyprland's reply to `j/getoption decoration:rounding`: the corner
+// radius Omarchy apps use. 0 (sharp, Omarchy's default) for any other reply;
+// capped at 24 so a stray value cannot distort the window.
+int roundingFromReply(const QByteArray &json);
+
 // True if the current input-method group has both keyboard-us and keyboard-ru.
 bool layoutsReady(const QStringList &groupMethods);
 

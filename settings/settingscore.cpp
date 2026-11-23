@@ -5,6 +5,9 @@
 #include "terminalapps.h"
 
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 
 #include <algorithm>
 
@@ -146,6 +149,15 @@ QStringList seenAppsFromStatus(const QVariantMap &status)
     }
     std::sort(out.begin(), out.end());
     return out;
+}
+
+int roundingFromReply(const QByteArray &json)
+{
+    const QJsonDocument doc = QJsonDocument::fromJson(json.left(4096));
+    if (!doc.isObject()) return 0;
+    const QJsonValue v = doc.object().value(QStringLiteral("int"));
+    if (!v.isDouble()) return 0;
+    return std::clamp(v.toInt(), 0, 24);
 }
 
 bool layoutsReady(const QStringList &groupMethods)

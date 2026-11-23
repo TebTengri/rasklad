@@ -5,8 +5,8 @@
 
 namespace rasklad::settings {
 
-SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, QObject *parent)
-    : QObject(parent), m_fcitx(fcitx), m_appSource(apps)
+SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, QObject *parent)
+    : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names)
 {
     refresh();
 }
@@ -38,6 +38,8 @@ void SettingsBackend::refresh()
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
+    if (m_names) m_names->reload();
+    m_groups.clear(); // regrouped only here, never on a switch
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();
     else m_lastRefresh.invalidate();
@@ -96,24 +98,33 @@ void SettingsBackend::setAppEnabled(const QString &id, bool enabled)
         return;
     }
     if (!fresh()) return;
+    // SYS-254: a row is one app; every program name it answers to switches with it
+    // (Chromium is "chromium" under X11/GTK and "chromium-browser" on Wayland).
+    const QString app = canonicalApp(id);
+    const QStringList names = appAliases(app);
     AddonConfig next = m_config;
     if (enabled) {
-        if (next.apps.contains(id)) {
+        QStringList missing;
+        for (const QString &n : names)
+            if (!next.apps.contains(n)) missing.append(n);
+        if (missing.isEmpty()) {
             rebuildApps();
             return;
         }
-        if (next.apps.size() >= kMaxApps) {
+        if (next.apps.size() + missing.size() > kMaxApps) {
             m_error = QStringLiteral("full");
             rebuildApps();
             return;
         }
-        next.apps.append(id);
+        next.apps.append(missing);
     } else {
-        if (!next.apps.removeAll(id)) {
+        qsizetype removed = 0;
+        for (const QString &n : names) removed += next.apps.removeAll(n);
+        if (removed == 0) {
             rebuildApps();
             return;
         }
-        if (!m_seen.contains(id)) m_seen.append(id);
+        if (!m_seen.contains(app)) m_seen.append(app);
     }
     commit(next);
 }
@@ -207,26 +218,60 @@ void SettingsBackend::removeException(const QString &word)
 
 void SettingsBackend::rebuildApps()
 {
-    QStringList ids = m_config.apps;
-    for (const QStringList *more : {&m_focused, &m_seen})
-        for (const QString &id : *more)
-            if (!ids.contains(id)) ids.append(id);
-    for (const char *tested : {"slack", "chromium"})
-        if (!ids.contains(QLatin1String(tested))) ids.append(QLatin1String(tested));
-    std::sort(ids.begin(), ids.end(), [this](const QString &a, const QString &b) {
-        const bool ea = m_config.apps.contains(a), eb = m_config.apps.contains(b);
-        if (ea != eb) return ea;
-        const bool ta = isTerminal(a), tb = isTerminal(b);
-        if (ta != tb) return tb;
-        return a.compare(b, Qt::CaseInsensitive) < 0;
+    // One row per app (canonical name). System components (the shell, launchers)
+    // are never offered; terminals never reach this list (configFromMap drops them).
+    QStringList apps;
+    const auto add = [&](const QString &id) {
+        const QString app = canonicalApp(id);
+        if (!isSystemComponent(app) && !isTerminal(app) && !apps.contains(app)) apps.append(app);
+    };
+    for (const QStringList *list : {&m_config.apps, &m_focused, &m_seen})
+        for (const QString &id : *list) add(id);
+    for (const char *tested : {"slack", "chromium"}) add(QLatin1String(tested));
+
+    QList<QVariantMap> rows;
+    for (const QString &app : apps) {
+        const QStringList names = appAliases(app);
+        int on = 0;
+        for (const QString &n : names) on += m_config.apps.contains(n) ? 1 : 0;
+        bool focused = false;
+        for (const QString &n : names) focused = focused || m_focused.contains(n);
+        QString group = m_groups.value(app);
+        if (group.isEmpty()) {
+            // Fixed for this refresh, so switching never moves a row under the cursor.
+            group = on > 0 ? QStringLiteral("on")
+                  : (focused || m_seen.contains(app) || !isTested(app)) ? QStringLiteral("recent")
+                  : QStringLiteral("recommended");
+            m_groups.insert(app, group);
+        }
+        QVariantMap row{{QStringLiteral("id"), app},
+                        {QStringLiteral("names"), names},
+                        {QStringLiteral("enabled"), on > 0},
+                        {QStringLiteral("partial"), on > 0 && on < names.size()},
+                        {QStringLiteral("group"), group},
+                        {QStringLiteral("name"), app},
+                        {QStringLiteral("description"), QString()},
+                        {QStringLiteral("icon"), QString()},
+                        {QStringLiteral("webApp"), false}};
+        const auto info = m_names ? m_names->find(app) : std::nullopt;
+        if (info) {
+            row.insert(QStringLiteral("name"), info->name);
+            row.insert(QStringLiteral("description"), info->description);
+            row.insert(QStringLiteral("icon"), info->icon);
+            row.insert(QStringLiteral("webApp"), info->webApp);
+        }
+        rows.append(row);
+    }
+    static const QStringList order{QStringLiteral("on"), QStringLiteral("recent"), QStringLiteral("recommended")};
+    std::sort(rows.begin(), rows.end(), [](const QVariantMap &a, const QVariantMap &b) {
+        const auto ga = order.indexOf(a.value(QStringLiteral("group")).toString());
+        const auto gb = order.indexOf(b.value(QStringLiteral("group")).toString());
+        if (ga != gb) return ga < gb;
+        return a.value(QStringLiteral("name")).toString().compare(b.value(QStringLiteral("name")).toString(),
+                                                                  Qt::CaseInsensitive) < 0;
     });
     m_apps.clear();
-    for (const QString &id : ids)
-        m_apps.append(QVariantMap{{QStringLiteral("id"), id},
-                                  {QStringLiteral("enabled"), m_config.apps.contains(id)},
-                                  {QStringLiteral("tested"), isTested(id)},
-                                  {QStringLiteral("focused"), m_focused.contains(id)},
-                                  {QStringLiteral("terminal"), isTerminal(id)}});
+    for (const QVariantMap &row : rows) m_apps.append(row);
     Q_EMIT changed();
 }
 

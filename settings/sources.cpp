@@ -10,6 +10,13 @@
 #include <QDBusMessage>
 #include <QDBusVariant>
 
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <poll.h>
+#include <unistd.h>
+
+#include <cstring>
+
 namespace rasklad::settings {
 
 namespace {
@@ -143,6 +150,34 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
 {
     const QDBusMessage r = call(QStringLiteral("SetConfig"), {kUri, QVariant::fromValue(QDBusVariant(config))});
     return r.type() == QDBusMessage::ReplyMessage;
+}
+
+int hyprlandRounding()
+{
+    const QByteArray runtime = qgetenv("XDG_RUNTIME_DIR");
+    const QByteArray instance = qgetenv("HYPRLAND_INSTANCE_SIGNATURE");
+    if (runtime.isEmpty() || instance.isEmpty() || instance.contains('/')) return 0;
+    const QByteArray path = runtime + "/hypr/" + instance + "/.socket.sock";
+    sockaddr_un addr{};
+    if (path.size() >= static_cast<qsizetype>(sizeof(addr.sun_path))) return 0;
+    addr.sun_family = AF_UNIX;
+    std::memcpy(addr.sun_path, path.constData(), static_cast<size_t>(path.size()));
+    const int fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    if (fd < 0) return 0;
+    QByteArray reply;
+    const QByteArray request = "j/getoption decoration:rounding";
+    if (::connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == 0 &&
+        ::send(fd, request.constData(), static_cast<size_t>(request.size()), MSG_NOSIGNAL) == request.size()) {
+        char buf[1024];
+        pollfd p{fd, POLLIN, 0};
+        while (reply.size() < 4096 && ::poll(&p, 1, kTimeoutMs) > 0) {
+            const ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
+            if (n <= 0) break;
+            reply.append(buf, n);
+        }
+    }
+    ::close(fd);
+    return roundingFromReply(reply);
 }
 
 QStringList FcitxSeenApps::seenApps()
