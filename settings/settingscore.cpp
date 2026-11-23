@@ -136,14 +136,15 @@ QVariantMap mapFromConfig(const AddonConfig &config)
     return out;
 }
 
-QStringList classesFromClients(const QByteArray &json)
+QStringList seenAppsFromStatus(const QVariantMap &status)
 {
     QStringList out;
-    const QJsonDocument doc = QJsonDocument::fromJson(json);
-    if (!doc.isArray()) return out;
-    for (const QJsonValue v : doc.array()) {
-        const QString cls = v.toObject().value(QStringLiteral("class")).toString();
-        if (validAppId(cls) && !out.contains(cls)) out.append(cls);
+    const auto names = listFromValue(status.value(QStringLiteral("SeenApplications")));
+    if (!names) return out;
+    for (const QString &id : *names) {
+        if (out.size() == kMaxApps) break;
+        if (!validAppId(id) || id == QLatin1String("rasklad-settings") || out.contains(id)) continue;
+        out.append(id);
     }
     std::sort(out.begin(), out.end());
     return out;

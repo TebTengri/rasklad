@@ -133,6 +133,7 @@
 #include "fcitxlabprofile.h"
 #include "frequentwords.h"
 #include "layoutcue.h"
+#include "seenprograms.h"
 #include "terminalapps.h"
 #include <fcitx-utils/standardpaths.h>
 #endif
@@ -245,28 +246,25 @@ constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
 // Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
 FCITX_CONFIGURATION(RaskladConfig,
     fcitx::Option<std::vector<std::string>> applications{this, "Applications",
-        "Applications (window app ids)", {"slack", "chromium", "chromium-browser"}};
+        "Applications (program names as Fcitx reports them)", {"slack", "chromium", "chromium-browser"}};
     fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};
     // SYS-227: off leaves only double Shift (and double Alt, which Hyprland handles).
     fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
     fcitx::Option<std::vector<std::string>> exceptions{this, "Exceptions",
         "Words never corrected automatically", {}};);
 // SYS-248: read-only status at fcitx://config/addon/rasklad/status, for the bar
-// widget and the settings app. Never saved; writes to it are ignored. Booleans only.
+// widget and the settings app. Never saved; writes to it are ignored. Booleans and,
+// since SYS-253, program names (no text) of apps with a focused field, kept in memory.
 FCITX_CONFIGURATION(RaskladStatus,
     fcitx::Option<bool> profileReady{this, "ProfileReady", "Profile verified", false};
-    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};);
+    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
+    fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
+        "Applications with a focused text field since start", {}};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 constexpr std::size_t kMaxApps = 64;
 constexpr std::size_t kMaxExceptions = 256;
 // Same character rules as the policy registry; anything else is dropped.
-bool appIdentifier(const std::string &id) {
-    if (id.empty() || id.size() > 128) return false;
-    for (const unsigned char c : id)
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-              c == '.' || c == '_' || c == '-')) return false;
-    return true;
-}
+bool appIdentifier(const std::string &id) { return rasklad::programIdentifier(id); }
 // Applications from the addon configuration (compositor app ids as Fcitx reports
 // them in InputContext::program()). Claims, not authentication: policy allows
 // them for the manual gesture only. Rebuilt only after every state is discarded.
@@ -610,6 +608,15 @@ public:
                 }));
         }
 #ifdef RASKLAD_PRODUCT
+        // SYS-253: remember which program got a focused field, so the settings app
+        // offers the name this addon matches. Its own watcher: no early return in the
+        // lifecycle handler can skip it. The name only; no text is read here.
+        watchers_.emplace_back(instance_->watchEvent(
+            fcitx::EventType::InputContextFocusIn, fcitx::EventWatcherPhase::PreInputMethod,
+            [this](fcitx::Event &event) {
+                auto *ic = static_cast<fcitx::InputContextEvent &>(event).inputContext();
+                if (ic) rasklad::rememberProgram(seenPrograms_, ic->program());
+            }));
         // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
         // keyboard-ru, whoever switched it (double Alt in Hyprland, a correction or an undo).
         watchers_.emplace_back(instance_->watchEvent(
@@ -700,6 +707,7 @@ public:
         if (path != "status") return nullptr;
         status_.profileReady.setValue(profile_ && profile_->ready());
         status_.autoCorrect.setValue(*config_.autoCorrect);
+        status_.seenApplications.setValue(seenPrograms_);
         return &status_;
     }
     void setSubConfig(const std::string &, const fcitx::RawConfig &) override {}
@@ -1837,6 +1845,7 @@ private:
 #ifdef RASKLAD_PRODUCT
     RaskladConfig config_;
     mutable RaskladStatus status_; // filled on each read; see getSubConfig
+    std::vector<std::string> seenPrograms_; // SYS-253: names only, memory only
     std::vector<std::string> exceptionKeys_; // sorted
     bool applying_ = false;
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
