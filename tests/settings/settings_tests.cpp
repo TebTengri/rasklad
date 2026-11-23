@@ -17,7 +17,7 @@ QVariantMap fcitxMap(const QStringList &apps, bool sound)
             {QStringLiteral("Sound"), sound ? QStringLiteral("True") : QStringLiteral("False")}};
 }
 
-// Behaves like the addon: stores what it is given and drops terminals/invalid ids.
+// Behaves like the addon's SetConfig: partial, so keys not written stay as stored.
 class FakeFcitx final : public FcitxSource
 {
 public:
@@ -41,7 +41,7 @@ public:
     {
         ++writes;
         if (!up || failWrites) return false;
-        stored = mapFromConfig(*configFromMap(config));
+        for (auto it = config.cbegin(); it != config.cend(); ++it) stored.insert(it.key(), it.value());
         if (dropSound) stored.insert(QStringLiteral("Sound"), QStringLiteral("True"));
         return true;
     }
@@ -305,6 +305,30 @@ private Q_SLOTS:
         QVERIFY(!b.addException(QStringLiteral("ok")));
         b.setAutoCorrect(true);
         QCOMPARE(f.writes, before);
+    }
+    void writesOnlyWhatChanged()
+    {
+        FakeFcitx f;
+        // 257 distinct words written by another tool: the window shows 256.
+        QVariantMap words;
+        for (int i = 0; i < kMaxExceptions + 1; ++i) {
+            QString w;
+            for (int n = i; ; n /= 26) { w.prepend(QChar(u'a' + n % 26)); if (n < 26) break; }
+            words.insert(QString::number(i), QStringLiteral("x") + w);
+        }
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        f.stored.insert(QStringLiteral("Exceptions"), words);
+        FakeWindows w;
+        SettingsBackend b(&f, &w);
+        QCOMPARE(b.exceptions().size(), kMaxExceptions);
+        b.setSound(false);
+        QCOMPARE(b.error(), QString());
+        QCOMPARE(f.stored.value(QStringLiteral("Exceptions")).toMap().size(), kMaxExceptions + 1);
+        // Remove by key: the chip says "ok", another tool stored "щл".
+        f.stored.insert(QStringLiteral("Exceptions"), QVariantMap{{QStringLiteral("0"), QStringLiteral("щл")}});
+        b.removeException(QStringLiteral("ok"));
+        QCOMPARE(b.error(), QString());
+        QVERIFY(configFromMap(f.stored)->exceptions.isEmpty());
     }
     void capAt64()
     {

@@ -58,7 +58,14 @@ bool SettingsBackend::fresh()
 bool SettingsBackend::commit(const AddonConfig &next)
 {
     m_error.clear();
-    if (!m_loaded || !m_fcitx->writeConfig(mapFromConfig(next))) {
+    // Write only what changed. Fcitx applies an addon's SetConfig partially, so a
+    // list this window shows capped (more than 64 apps or 256 words written by
+    // another tool) stays as stored unless the user edits that list.
+    QVariantMap changes = mapFromConfig(next);
+    const QVariantMap now = mapFromConfig(m_config);
+    for (auto it = now.cbegin(); it != now.cend(); ++it)
+        if (changes.value(it.key()) == it.value()) changes.remove(it.key());
+    if (!m_loaded || !m_fcitx->writeConfig(changes)) {
         m_error = m_loaded ? QStringLiteral("write") : QStringLiteral("fcitx");
         rebuildApps();
         return false;
@@ -181,8 +188,11 @@ bool SettingsBackend::addException(const QString &raw)
 void SettingsBackend::removeException(const QString &word)
 {
     if (!fresh()) return;
+    // By key: the chip may show "ok" while another tool has since stored "щл".
+    const QString key = exceptionKey(word);
     AddonConfig next = m_config;
-    if (!wordOptions() || !next.exceptions.removeAll(word)) {
+    const auto removed = next.exceptions.removeIf([&](const QString &have) { return exceptionKey(have) == key; });
+    if (!wordOptions() || key.isEmpty() || removed == 0) {
         rebuildApps();
         return;
     }
