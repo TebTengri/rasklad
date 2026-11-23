@@ -238,6 +238,7 @@ uint32_t codeFor(char c)
     case '[': return KEY_LEFTBRACE;
     case '`': return KEY_GRAVE;
     case ',': return KEY_COMMA;
+    case '.': return KEY_DOT;
     case '-': return KEY_MINUS;
     case ' ': return KEY_SPACE;
     default: return 0;
@@ -253,7 +254,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, PoyuComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -286,6 +287,7 @@ Cmd parse(std::string_view line)
         if (line == "rugroup") return Cmd::RuGroup;
         if (line == "usgroup") return Cmd::UsGroup;
         if (line == "wordcomma") return Cmd::WordComma;
+        if (line == "poyucomma") return Cmd::PoyuComma;
         if (line == "exclaim") return Cmd::Exclaim;
         if (line == "enter") return Cmd::Enter;
         if (line == "capword") return Cmd::CapWord;
@@ -345,6 +347,8 @@ bool run(Session &s, Cmd cmd)
     case Cmd::RuGroup: return s.setGroup(1);
     case Cmd::UsGroup: return s.setGroup(0);
     case Cmd::WordComma: return typeFixed(s, "ghbdtn, ");
+    // "пою" on us keys, then a comma: the exception ends in a letter key (.).
+    case Cmd::PoyuComma: return typeFixed(s, "gj., ");
     case Cmd::Exclaim: return s.chord(KEY_LEFTSHIFT, KEY_1);
     case Cmd::Alt1: return s.tap(KEY_LEFTALT);
     case Cmd::Alt2: return s.tap(KEY_LEFTALT) && s.tap(KEY_LEFTALT);

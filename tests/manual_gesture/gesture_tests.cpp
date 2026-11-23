@@ -91,6 +91,22 @@ int main() {
     CHECK(!endsBeforeCursor("ok hello ", 9, "привет "));
     CHECK(!endsBeforeCursor("abc", 4, "c"));                 // cursor past the end
     CHECK(!endsBeforeCursor("ab\xd0", 2, "ab"));            // malformed anywhere
+    using rasklad::manual::exceptionKeys;
+    CHECK(exceptionKeys("ok") == "ok");
+    CHECK(exceptionKeys("щл") == "ok");            // same keys in the ru layout
+    CHECK(exceptionKeys("ОК") == "jr");
+    CHECK(exceptionKeys("Hello") == "hello");
+    CHECK(exceptionKeys("ёжик") == "`;br");
+    CHECK(exceptionKeys("Ёж") == "`;");
+    CHECK(exceptionKeys("съешь") == "c]tim");
+    CHECK(exceptionKeys("").empty());
+    CHECK(exceptionKeys("okей").empty());          // mixed scripts
+    CHECK(exceptionKeys("a b").empty());
+    CHECK(exceptionKeys("ok,").empty());           // punctuation is not a letter
+    CHECK(exceptionKeys("über").empty());
+    CHECK(exceptionKeys("\xd0").empty());          // malformed
+    CHECK(exceptionKeys(std::string(32, 'a')).size() == 32);
+    CHECK(exceptionKeys(std::string(33, 'a')).empty());
     if (failures) return 1;
     std::printf("manual gesture tests OK\n");
     return 0;

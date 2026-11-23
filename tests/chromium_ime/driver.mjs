@@ -177,6 +177,36 @@ try{
   await type('word');await type('alt2');await settle();await type('xspace');report.altWordValue=await v();report.altWordKeptThenRu=report.altWordValue===altBase+'x ghbdtnч ';
   const required=['layoutFirstCorrected','layoutSecondTypedInRu','layoutLetterIsRu','layoutThirdCorrected','layoutFourthTypedInUs','layoutLetterIsUs','altSingleKeepsUs','altTabKeepsUs','altDoubleToRu','altRightToUs','altSlowKeepsUs','altWordKeptThenRu'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='exceptions'){
+  // SYS-227: exceptions "Привет" and "rfr" are never corrected automatically, in any
+  // case or with punctuation after them; other words still are; the gesture still works.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');
+  phase='exception_word';await reset();await type('word');await type('space');report.exceptWordValue=await v();report.exceptWord=report.exceptWordValue==='ghbdtn ';
+  await reset();await type('capword');report.exceptCapitalValue=await v();report.exceptCapital=report.exceptCapitalValue==='Ghbdtn ';
+  await reset();await type('wordcomma');report.exceptCommaValue=await v();report.exceptComma=report.exceptCommaValue==='ghbdtn, ';
+  await reset();await type('shortword');report.exceptShortValue=await v();report.exceptShort=report.exceptShortValue==='rfr ';
+  // "пою" (gj.) then a comma: the punctuation fallback must not correct "gj" to "по".
+  await reset();await type('poyucomma');report.exceptLetterKeyValue=await v();report.exceptLetterKey=report.exceptLetterKeyValue==='gj., ';
+  phase='exception_others';await reset();await type('zhurnal');await type('space');report.exceptOtherValue=await v();report.exceptOtherCorrected=report.exceptOtherValue==='журнал ';
+  phase='exception_gesture';await reset();await type('word');await type('shift2');await type('space');report.exceptGestureValue=await v();report.exceptGesture=report.exceptGestureValue==='привет ';
+  const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='gestures'){
+  // SYS-227: automatic correction switched off: words stay as typed on every word end,
+  // in both layouts; double Shift still converts the word being typed.
+  if(!nativeWayland)throw Error('native product suite required');
+  const v=()=>ev('prose.value');
+  phase='gestures_space';await reset();await type('word');await type('space');report.offSpaceValue=await v();report.offSpace=report.offSpaceValue==='ghbdtn ';
+  await reset();await type('shortword');report.offShortValue=await v();report.offShort=report.offShortValue==='rfr ';
+  await reset();await type('wordcomma');report.offCommaValue=await v();report.offComma=report.offCommaValue==='ghbdtn, ';
+  await reset();await type('word');await type('enter');report.offEnterValue=await v();report.offEnter=report.offEnterValue==='ghbdtn\n';
+  phase='gestures_shift';await reset();await type('word');await type('shift2');report.offGesturePreedit=await v()==='привет';
+  await type('space');report.offGestureValue=await v();report.offGestureCommit=report.offGestureValue==='привет ';
+  phase='gestures_ru';await reset();await type('rugroup');await type('hello');report.offRuValue=await v();report.offRu=report.offRuValue==='руддщ ';
+  await type('usgroup');
+  const required=['offSpace','offShort','offComma','offEnter','offGesturePreedit','offGestureCommit','offRu'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='listed'){
   // SYS-226 product addon: automatic correction on Space by the reviewed profile, both
   // directions; double Shift right after the Space restores; the gesture still works.

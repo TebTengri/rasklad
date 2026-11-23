@@ -47,6 +47,41 @@ inline char ruToUsKey(char32_t c) {
     return 0;
 }
 
+// SYS-227: an exception word ("never correct this") as the us keys that type it, so
+// "ok" and "щл" are the same entry and match a buffer word in either layout. One
+// word of Latin a..z or Cyrillic а..я/ё (either case), not both, 1..32 letters.
+// Anything else returns "" (not a valid exception).
+inline std::string exceptionKeys(std::string_view word) {
+    std::string out;
+    bool latin = false, cyrillic = false;
+    for (std::size_t i = 0; i < word.size();) {
+        const unsigned char c = static_cast<unsigned char>(word[i]);
+        if (c < 0x80) {
+            if (c >= 'A' && c <= 'Z') out.push_back(static_cast<char>(c + 32));
+            else if (c >= 'a' && c <= 'z') out.push_back(static_cast<char>(c));
+            else return {};
+            latin = true;
+            ++i;
+        } else if ((c & 0xe0) == 0xc0 && i + 1 < word.size() &&
+                   (static_cast<unsigned char>(word[i + 1]) & 0xc0) == 0x80) {
+            char32_t cp = (static_cast<char32_t>(c & 0x1f) << 6) |
+                          (static_cast<unsigned char>(word[i + 1]) & 0x3f);
+            if (cp >= U'А' && cp <= U'Я') cp += 0x20;
+            else if (cp == U'Ё') cp = U'ё';
+            const char key = ruToUsKey(cp);
+            if (!key) return {};
+            out.push_back(key);
+            cyrillic = true;
+            i += 2;
+        } else {
+            return {};
+        }
+        if (out.size() > 32) return {};
+    }
+    if (latin && cyrillic) return {};
+    return out;
+}
+
 // Converts a word of lowercase ASCII letters and the seven keys above. Anything
 // else returns "" (the caller keeps the original; fail closed).
 inline std::string usToRu(std::string_view word) {
