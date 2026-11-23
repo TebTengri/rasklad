@@ -127,7 +127,7 @@ def load_state():
   for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
        entry.get("backup") != backup_path(path) or entry.get("bak") != path + ".rasklad.bak" or \
-       not isinstance(entry.get("bak_ours"), bool) or \
+       not isinstance(entry.get("bak_ours", False), bool) or \
        not (isinstance(entry.get("written"), str) and re.fullmatch(r"[0-9a-f]{64}", entry["written"])):
       raise bad
   if state.get("link") not in (None, WIDGET):
@@ -137,7 +137,8 @@ def load_state():
     items = lambda v: isinstance(v, list) and all(
       isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
     if not (isinstance(saved, dict) and isinstance(saved.get("group"), str) and
-            isinstance(saved.get("layout"), str) and items(saved.get("before")) and items(saved.get("after"))):
+            isinstance(saved.get("layout"), str) and isinstance(saved.get("after_layout", ""), str) and
+            items(saved.get("before")) and items(saved.get("after"))):
       raise bad
   return state
 
@@ -145,6 +146,18 @@ def load_state():
 def save_state(state):
   private_state_dir()
   write_atomic(STATE_FILE, (json.dumps(state, indent=2, sort_keys=True) + "\n").encode(), 0o600)
+
+
+def save_and_drop(state):
+  # Restored files' private copies are deleted only after the state without
+  # their entries is on disk, so an interruption never strands an entry.
+  drop = state.pop("_drop", [])
+  save_state(state)
+  for backup in drop:
+    try:
+      os.unlink(backup)
+    except FileNotFoundError:
+      pass
 
 
 def backup_path(path):
@@ -252,11 +265,12 @@ def file_state(path):
   return None if stat.S_ISREG(info.st_mode) else "not-a-file"
 
 
-def bindings_plan():
+def bindings_plan(data=None):
   bad = file_state(BINDINGS)
   if bad:
     return bad, None
-  data = read(BINDINGS)
+  if data is None:
+    data = read(BINDINGS)
   text = data.decode(errors="replace")
   if BEGIN in text or RULE_LINE.search(text):
     return "ok", None
@@ -269,12 +283,13 @@ def bindings_plan():
   return "missing", append_block(data, block)
 
 
-def input_plan():
+def input_plan(data=None):
   """Hyprland keeps one layout and no xkb group toggle: Fcitx switches layouts."""
   bad = file_state(INPUT)
   if bad:
     return bad, None
-  data = read(INPUT)
+  if data is None:
+    data = read(INPUT)
   if BEGIN.encode() in data:
     return "ok", None  # decided by the file, not by what Hyprland has loaded
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
@@ -294,11 +309,12 @@ def input_plan():
   return "missing", append_block(data, block)
 
 
-def shell_plan():
+def shell_plan(data=None):
   bad = file_state(SHELL_JSON)
   if bad:
     return bad, None
-  data = read(SHELL_JSON)
+  if data is None:
+    data = read(SHELL_JSON)
   try:
     json.loads(data)
   except ValueError:
@@ -397,18 +413,15 @@ def install(assume_yes):
   state = load_state()
   changes = []
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
+    # One read: the diff, the backup and the final comparison all use it.
     old = read(path) if file_state(path) is None else None
-    status, new = plan()
+    status, new = plan(old)
     if status == "missing" and path in state["files"]:
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
       say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
-    elif status == "missing" and old is not None and new.startswith(old):
-      changes.append((path, old, new))
-    elif status == "missing" and old is not None and STOCK_ID.sub(rb'\1"rasklad.layout"', old) == new:
-      changes.append((path, old, new))
     elif status == "missing":
-      say("changed", os.path.basename(path), "changed while planning; left as is")
+      changes.append((path, old, new))
     elif status == "unknown":
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
     elif status != "ok":
@@ -465,6 +478,7 @@ def install(assume_yes):
     if not (saved and saved["group"] == name):
       saved = {"group": name, "layout": layout, "before": before}
     saved["after"] = after
+    saved["after_layout"] = layout  # the layout this write used
     state["fcitx"] = saved
     save_state(state)
     if bus["set_group"](name, layout, after):
@@ -483,7 +497,7 @@ def install(assume_yes):
       say("error", "hyprland", "new config errors after the change; undoing it")
       for path in hypr:
         restore(state, path)
-      save_state(state)
+      save_and_drop(state)
       run([HYPRCTL, "reload"])
       return 1
   return 1 if failed else 0
@@ -510,12 +524,10 @@ def restore(state, path):
   else:
     write_atomic(path, old)
   bak = entry["bak"]
-  if entry["bak_ours"] and file_state(bak) is None and read(bak) == old:
+  if entry.get("bak_ours", False) and file_state(bak) is None and read(bak) == old:
     os.unlink(bak)
-  try:
-    os.unlink(entry["backup"])
-  except FileNotFoundError:
-    pass
+  # The private copy goes only after the state without this entry is saved.
+  state.setdefault("_drop", []).append(entry["backup"])
   del state["files"][path]
   say("restored", os.path.basename(path))
   return True
@@ -551,7 +563,8 @@ def revert():
       clean = False
     elif current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["before"]:
       state["fcitx"] = None  # never changed, or already back
-    elif current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["after"]:
+    elif current[0] == saved["group"] and current[1] == saved.get("after_layout", saved["layout"]) and \
+         current[2] == saved["after"]:
       if bus["set_group"](saved["group"], saved["layout"], saved["before"]):
         say("restored", "fcitx-group")
         state["fcitx"] = None
@@ -561,7 +574,7 @@ def revert():
     else:
       say("changed", "fcitx-group", "changed since install; left as is")
       clean = False
-  save_state(state)
+  save_and_drop(state)
   if clean:
     # Only what this tool made: its state file, then the directories if empty.
     os.unlink(STATE_FILE)
