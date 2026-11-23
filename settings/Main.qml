@@ -37,9 +37,10 @@ ApplicationWindow {
     // The app row that had keyboard focus: a list rebuild (after a switch or a
     // refresh) recreates the rows, and the new one takes the focus back.
     property string rowFocus: ""
-    property var rowItems: ({}) // key -> live row; plain JS, no bindings
+    property var rowItems: Object.create(null) // key -> live row; no prototype keys
+    property string limitApp: "" // the app whose switch-on hit the 64-app limit
     function restoreFocus() {
-        const row = rowItems[rowFocus]
+        const row = Object.prototype.hasOwnProperty.call(rowItems, rowFocus) ? rowItems[rowFocus] : null
         if (!focusLost()) return
         if (rowFocus !== "" && row) row.forceActiveFocus()
         else firstRow.forceActiveFocus() // the row went away (a component switched off)
@@ -47,7 +48,7 @@ ApplicationWindow {
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
-        if (help.opened) return false // help keeps its own focus
+        if (help.visible) return false // help keeps its own focus, also while it animates in
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -433,7 +434,7 @@ ApplicationWindow {
                             iconName: modelData.icon
                             title: modelData.name
                             // The limit is said at the row that hit it, not only below the list.
-                            detail: backend.error === "full" && modelData.id === window.rowFocus && !modelData.enabled
+                            detail: backend.error === "full" && modelData.id === window.limitApp && !modelData.enabled
                                     ? window.errorText("full")
                                   : modelData.partial ? qsTr("On only for part of its program names.")
                                   : modelData.description !== "" ? modelData.description
@@ -442,7 +443,7 @@ ApplicationWindow {
                             Accessible.description: detail === "" ? tip : detail + ". " + tip
                             checked: modelData.enabled
                             available: backend.configLoaded
-                            onToggled: on => backend.setAppEnabled(modelData.id, on)
+                            onToggled: on => { window.limitApp = modelData.id; backend.setAppEnabled(modelData.id, on) }
                         }
                     }
                 }
@@ -573,7 +574,8 @@ ApplicationWindow {
         property Item returnTo: null
         onAboutToShow: returnTo = window.activeFocusItem
         onOpened: helpClose.forceActiveFocus()
-        onClosed: if (returnTo) returnTo.forceActiveFocus()
+        // A row destroyed while help was open nulls returnTo: find its successor.
+        onClosed: if (returnTo) returnTo.forceActiveFocus(); else window.restoreFocus()
         background: Rectangle {
             color: theme.background
             radius: window.small
