@@ -8,12 +8,12 @@
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
-#include <QList>
 #include <QRegularExpression>
-#include <QSet>
 #include <QStringList>
 
 #include <dlfcn.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace rasklad::profile {
@@ -91,23 +91,23 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
     // point: a mount point cannot be renamed away (EBUSY). Root is not required
     // by owner id on purpose: inside a user namespace (bwrap, the closed lab)
     // root's files show up as the overflow user, and the lab's / is a
-    // user-owned tmpfs with /usr bound onto it. Mount points come from
-    // /proc/self/mountinfo, which also sees same-filesystem bind mounts.
+    // user-owned tmpfs with /usr bound onto it. Mount points come from the
+    // kernel for the visible path, so bind and hidden mounts are judged right.
     const auto unchangeable = [](const QFileInfo &f) {
         return f.ownerId() != ::getuid() && !f.isWritable()
             && !(f.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
     };
     if (!info.isFile() || info.isSymLink() || !unchangeable(info))
         return false;
-    QSet<QByteArray> mounts;
-    QFile mountinfo(QStringLiteral("/proc/self/mountinfo"));
-    if (!mountinfo.open(QIODevice::ReadOnly))
-        return false;
-    for (const QByteArray &line : mountinfo.readAll().split('\n')) {
-        const QList<QByteArray> fields = line.split(' ');
-        if (fields.size() > 4)
-            mounts.insert(fields.at(4));
-    }
+    // Whether the visible path is the root of a mount, as the kernel sees it
+    // (statx STATX_ATTR_MOUNT_ROOT, Linux 5.8+); an unknown answer counts as no.
+    const auto isMountRoot = [](const char *path) {
+        struct statx stx {};
+        if (::statx(AT_FDCWD, path, AT_SYMLINK_NOFOLLOW, STATX_BASIC_STATS, &stx) != 0)
+            return false;
+        return (stx.stx_attributes_mask & STATX_ATTR_MOUNT_ROOT)
+            && (stx.stx_attributes & STATX_ATTR_MOUNT_ROOT);
+    };
     // (path, parent): the library's directory, then each directory above it.
     const char *const chain[][2] = {{"/usr/lib", "/usr"}, {"/usr", "/"}};
     const QFileInfo lib{QStringLiteral("/usr/lib")};
@@ -117,7 +117,7 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
         const QFileInfo parent{QString::fromLatin1(step[1])};
         if (!parent.isDir() || parent.isSymLink())
             return false;
-        if (!mounts.contains(QByteArray(step[0])) && !unchangeable(parent))
+        if (!isMountRoot(step[0]) && !unchangeable(parent))
             return false;
     }
     return true;
