@@ -51,6 +51,18 @@ dofile("/usr/share/rasklad-fcitx5/hyprland/double-alt.lua")
 по-прежнему доходит до приложений: меню Slack мигнёт. Недописанное слово
 вставляется как набрано, затем раскладка меняется. Откат — убрать эту строку.
 
+**Значок в панели Omarchy.** Виджет Rasklad показывает раскладку Fcitx (`EN`/`RU`)
+и сам спрашивает её у Fcitx примерно раз в 0,4 с; левый клик переключает,
+правый открывает настройки Rasklad. Установка — скопировать его в свои плагины
+и поставить в панель вместо `omarchy.keyboard-layout` (в `~/.config/omarchy/shell.json`
+заменить `"id": "omarchy.keyboard-layout"` на `"id": "rasklad.layout"`):
+
+```
+cp -r /usr/share/rasklad-fcitx5/omarchy/rasklad.layout ~/.config/omarchy/plugins/
+```
+
+Откат — вернуть прежний id в `shell.json`.
+
 - **Автоматически в конце слова** (пробел, знак препинания, Enter, Tab). Слово,
   набранное не в той раскладке, заменяется:
   `ghbdtn` → `привет`, `руддщ` → `hello`. Замена только если словарь и модель
