@@ -5,8 +5,8 @@
 
 namespace rasklad::settings {
 
-SettingsBackend::SettingsBackend(FcitxSource *fcitx, WindowSource *windows, QObject *parent)
-    : QObject(parent), m_fcitx(fcitx), m_windows(windows)
+SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, QObject *parent)
+    : QObject(parent), m_fcitx(fcitx), m_appSource(apps)
 {
     refresh();
 }
@@ -37,7 +37,7 @@ void SettingsBackend::refresh()
     m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
-    m_open = m_windows->openApps();
+    m_focused = m_running ? m_appSource->seenApps() : QStringList{};
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();
     else m_lastRefresh.invalidate();
@@ -208,7 +208,7 @@ void SettingsBackend::removeException(const QString &word)
 void SettingsBackend::rebuildApps()
 {
     QStringList ids = m_config.apps;
-    for (const QStringList *more : {&m_open, &m_seen})
+    for (const QStringList *more : {&m_focused, &m_seen})
         for (const QString &id : *more)
             if (!ids.contains(id)) ids.append(id);
     for (const char *tested : {"slack", "chromium"})
@@ -225,7 +225,7 @@ void SettingsBackend::rebuildApps()
         m_apps.append(QVariantMap{{QStringLiteral("id"), id},
                                   {QStringLiteral("enabled"), m_config.apps.contains(id)},
                                   {QStringLiteral("tested"), isTested(id)},
-                                  {QStringLiteral("open"), m_open.contains(id)},
+                                  {QStringLiteral("focused"), m_focused.contains(id)},
                                   {QStringLiteral("terminal"), isTerminal(id)}});
     Q_EMIT changed();
 }

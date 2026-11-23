@@ -26,10 +26,12 @@ ApplicationWindow {
         const known = {
             "slack": "Slack", "chromium": "Chromium", "chromium-browser": "Chromium",
             "google-chrome": "Google Chrome", "firefox": "Firefox", "chatgpt": "ChatGPT",
-            "org.telegram.desktop": "Telegram", "org.omarchy.agent": "Omarchy agent",
+            "org.telegram.desktop": "Telegram", "Telegram": "Telegram",
+            "telegram-desktop": "Telegram", "org.omarchy.agent": "Omarchy agent",
             "obsidian": "Obsidian", "code": "VS Code", "discord": "Discord"
         }
-        if (known[id] !== undefined) return known[id]
+        // Own keys only: names like "constructor" must not reach Object.prototype.
+        if (Object.prototype.hasOwnProperty.call(known, id)) return known[id]
         const web = /^chrome-(.+?)__.*$/.exec(id)
         if (web) return qsTr("%1 (web app)").arg(web[1])
         return id
@@ -39,7 +41,7 @@ ApplicationWindow {
         switch (code) {
         case "fcitx": return qsTr("Fcitx is not running or the Rasklad addon is not loaded. Start Fcitx (fcitx5 -rd) and press Refresh.")
         case "write": return qsTr("Fcitx did not accept the change. Nothing was changed.")
-        case "invalid": return qsTr("A window id has only Latin letters, digits, dot, dash and underscore.")
+        case "invalid": return qsTr("A program name has only Latin letters, digits, dot, dash and underscore.")
         case "terminal": return qsTr("Terminals are never corrected: they hold commands and passwords.")
         case "full": return qsTr("At most 64 applications.")
         case "word": return qsTr("An exception is one word of Latin or Cyrillic letters, up to 32.")
@@ -58,7 +60,7 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+1"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 0 }
     Shortcut { sequence: "Ctrl+2"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 1 }
 
-    // Open windows change while the settings are open: look again on focus.
+    // The addon notes new programs while the settings are open: look again on focus.
     onActiveChanged: if (active) backend.refreshIfStale()
 
     component StatusLine: RowLayout {
@@ -273,8 +275,8 @@ ApplicationWindow {
                                 tone: row.modelData.tested ? theme.accent : theme.muted
                             }
                             Badge {
-                                visible: row.modelData.open
-                                text: qsTr("open")
+                                visible: row.modelData.focused
+                                text: qsTr("seen")
                             }
                             Switch {
                                 checked: row.modelData.enabled
@@ -295,7 +297,7 @@ ApplicationWindow {
                     TextField {
                         id: addField
                         Layout.fillWidth: true
-                        placeholderText: qsTr("Window id, e.g. org.telegram.desktop")
+                        placeholderText: qsTr("Program name, e.g. Telegram")
                         enabled: backend.configLoaded
                         onAccepted: if (backend.addApp(text)) text = ""
                     }
@@ -306,7 +308,7 @@ ApplicationWindow {
                     }
                 }
                 Label {
-                    text: qsTr("Open the application first: it appears in the list by itself.")
+                    text: qsTr("Missing an app? Click a text field in it, then refresh (Ctrl+R). The list starts over when Fcitx restarts.")
                     color: theme.muted
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap

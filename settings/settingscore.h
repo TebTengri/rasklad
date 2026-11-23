@@ -3,7 +3,6 @@
 // tests run without Fcitx or Hyprland.
 #pragma once
 
-#include <QByteArray>
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>
@@ -46,9 +45,12 @@ struct AddonConfig {
 std::optional<AddonConfig> configFromMap(const QVariantMap &map);
 QVariantMap mapFromConfig(const AddonConfig &config);
 
-// Window classes from `hyprctl -j clients`; only "class" is read, everything
-// else (titles included) is ignored. Sorted, unique, valid ids only.
-QStringList classesFromClients(const QByteArray &json);
+// SYS-253: "SeenApplications" from the addon status (fcitx://config/addon/rasklad/status):
+// program names, exactly as Fcitx reports them, of apps where a text field got
+// focus since the addon started. Sorted, unique, valid ids only, at most kMaxApps;
+// the settings app itself is left out. Empty if the key is missing (older addon)
+// or of another shape.
+QStringList seenAppsFromStatus(const QVariantMap &status);
 
 // True if the current input-method group has both keyboard-us and keyboard-ru.
 bool layoutsReady(const QStringList &groupMethods);

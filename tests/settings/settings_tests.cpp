@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-// SYS-227: settings app logic against fake Fcitx and Hyprland sources.
+// SYS-227: settings app logic against fake Fcitx and app sources (SYS-253).
 #include "settingsbackend.h"
 #include "settingscore.h"
+#include "seenprograms.h"
 
 #include <QtTest>
 
@@ -51,11 +52,11 @@ public:
     }
 };
 
-class FakeWindows final : public WindowSource
+class FakeApps final : public AppSource
 {
 public:
     QStringList open{QStringLiteral("foot"), QStringLiteral("chatgpt"), QStringLiteral("slack")};
-    QStringList openApps() override { return open; }
+    QStringList seenApps() override { return open; }
 };
 
 QVariantMap entry(const SettingsBackend &b, const QString &id)
@@ -110,12 +111,51 @@ private Q_SLOTS:
         QVERIFY(isTerminal(QStringLiteral("org.gnome.Ptyxis")));
         QVERIFY(isTerminal(QStringLiteral("xfce4-terminal")));
     }
-    void clientsParseOnlyClasses()
+    void seenAppsParse()
     {
-        const QByteArray json = R"([{"class":"slack","title":"secret title"},{"class":"foot"},
-            {"class":"slack"},{"class":"a b"},{"title":"no class"}])";
-        QCOMPARE(classesFromClients(json), (QStringList{QStringLiteral("foot"), QStringLiteral("slack")}));
-        QVERIFY(classesFromClients("not json").isEmpty());
+        // SYS-253: a Fcitx list option, keyed "0", "1", …; names exactly as reported.
+        const QVariantMap names{{QStringLiteral("0"), QStringLiteral("Telegram")},
+                                {QStringLiteral("1"), QStringLiteral("org.gnome.Nautilus")},
+                                {QStringLiteral("2"), QStringLiteral("Telegram")},
+                                {QStringLiteral("3"), QStringLiteral("a b")},
+                                {QStringLiteral("4"), QString()},
+                                {QStringLiteral("5"), QStringLiteral("rasklad-settings")},
+                                {QStringLiteral("6"), QStringLiteral("omawrite")}};
+        QCOMPARE(seenAppsFromStatus({{QStringLiteral("SeenApplications"), names},
+                                     {QStringLiteral("ProfileReady"), QStringLiteral("True")}}),
+                 (QStringList{QStringLiteral("Telegram"), QStringLiteral("omawrite"),
+                              QStringLiteral("org.gnome.Nautilus")}));
+        // Empty list, older addon without the key, other shapes: nothing on offer.
+        QVERIFY(seenAppsFromStatus({{QStringLiteral("SeenApplications"), QString()}}).isEmpty());
+        QVERIFY(seenAppsFromStatus({{QStringLiteral("ProfileReady"), QStringLiteral("True")}}).isEmpty());
+        QVERIFY(seenAppsFromStatus({{QStringLiteral("SeenApplications"), QStringLiteral("slack")}}).isEmpty());
+        QVariantMap many;
+        for (int i = 0; i < 70; ++i) many.insert(QString::number(i), QStringLiteral("app%1").arg(i, 2, 10, QLatin1Char('0')));
+        QCOMPARE(seenAppsFromStatus({{QStringLiteral("SeenApplications"), many}}).size(), kMaxApps);
+    }
+    void addonRemembersProgramNames()
+    {
+        // The addon side (src/seenprograms.h), the same filter in memory.
+        std::vector<std::string> seen;
+        QVERIFY(rasklad::rememberProgram(seen, "Telegram"));
+        QVERIFY(!rasklad::rememberProgram(seen, "Telegram"));
+        QVERIFY(!rasklad::rememberProgram(seen, ""));
+        QVERIFY(!rasklad::rememberProgram(seen, "foot"));
+        QVERIFY(!rasklad::rememberProgram(seen, "Alacritty"));
+        QVERIFY(!rasklad::rememberProgram(seen, "a b"));
+        QVERIFY(!rasklad::rememberProgram(seen, std::string(129, 'a')));
+        QVERIFY(!rasklad::rememberProgram(seen, "rasklad-settings"));
+        QCOMPARE(seen.size(), std::size_t{1});
+        // Full: the least recently focused name goes; one focused again stays.
+        for (int i = 0; seen.size() < rasklad::kMaxSeenPrograms; ++i)
+            QVERIFY(rasklad::rememberProgram(seen, "app" + std::to_string(i)));
+        QVERIFY(rasklad::rememberProgram(seen, "Telegram")); // moves to the end
+        QCOMPARE(seen.back(), std::string("Telegram"));
+        QVERIFY(rasklad::rememberProgram(seen, "late"));
+        QCOMPARE(seen.size(), rasklad::kMaxSeenPrograms);
+        QCOMPARE(seen.back(), std::string("late"));
+        QVERIFY(std::find(seen.begin(), seen.end(), std::string("Telegram")) != seen.end());
+        QVERIFY(std::find(seen.begin(), seen.end(), std::string("app0")) == seen.end());
     }
     void layouts()
     {
@@ -125,13 +165,13 @@ private Q_SLOTS:
     void listShowsEnabledOpenAndTerminals()
     {
         FakeFcitx f;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(b.fcitxRunning() && b.addonEnabled() && b.configLoaded() && b.layoutsReady());
         QCOMPARE(b.enabledCount(), 2);
         QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("enabled")).toBool());
         QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("tested")).toBool());
-        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("open")).toBool());
+        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("focused")).toBool());
         QVERIFY(!entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("enabled")).toBool());
         QVERIFY(entry(b, QStringLiteral("foot")).value(QStringLiteral("terminal")).toBool());
         // Enabled first, terminals last.
@@ -141,7 +181,7 @@ private Q_SLOTS:
     void toggleWritesAndReadsBack()
     {
         FakeFcitx f;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         b.setAppEnabled(QStringLiteral("chatgpt"), true);
         QCOMPARE(b.error(), QString());
@@ -160,7 +200,7 @@ private Q_SLOTS:
     void terminalsAndBadIdsRefused()
     {
         FakeFcitx f;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         const int before = f.writes;
         b.setAppEnabled(QStringLiteral("foot"), true);
@@ -176,7 +216,7 @@ private Q_SLOTS:
     void failuresShowTruth()
     {
         FakeFcitx f;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         f.failWrites = true;
         b.setAppEnabled(QStringLiteral("chatgpt"), true);
@@ -194,7 +234,7 @@ private Q_SLOTS:
     {
         FakeFcitx f;
         f.broken = true;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(!b.configLoaded());
         b.setSound(false);
@@ -205,7 +245,7 @@ private Q_SLOTS:
     {
         FakeFcitx f;
         f.dropSound = true;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         b.setSound(false);
         QCOMPARE(b.error(), QStringLiteral("write"));
@@ -254,7 +294,7 @@ private Q_SLOTS:
     {
         FakeFcitx f;
         f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(b.wordOptions() && b.autoCorrect());
         QVERIFY(b.addException(QStringLiteral(" Привет "))); // typed input is trimmed
@@ -277,7 +317,7 @@ private Q_SLOTS:
     void olderAddonNeverGetsWordOptions()
     {
         FakeFcitx f; // stored has no AutoCorrect: an addon before 0.5
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(b.configLoaded() && !b.wordOptions());
         const int before = f.writes;
@@ -291,7 +331,7 @@ private Q_SLOTS:
     {
         FakeFcitx f;
         f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         // Another client switches automatic correction off while the window is open.
         f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("False"));
@@ -322,7 +362,7 @@ private Q_SLOTS:
         }
         f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
         f.stored.insert(QStringLiteral("Exceptions"), words);
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QCOMPARE(b.exceptions().size(), kMaxExceptions);
         b.setSound(false);
@@ -338,7 +378,7 @@ private Q_SLOTS:
     {
         FakeFcitx f;
         f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         f.otherClientMutesSound = true;
         QVERIFY(b.addException(QStringLiteral("ok")));
@@ -348,7 +388,7 @@ private Q_SLOTS:
     void profileStatusShownOnlyWhenDefinite()
     {
         FakeFcitx f;
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(!b.profileBroken());
         f.ready = false;
@@ -376,7 +416,7 @@ private Q_SLOTS:
         QStringList many;
         for (int i = 0; i < kMaxApps; ++i) many.append(QStringLiteral("app%1").arg(i));
         f.stored = fcitxMap(many, true);
-        FakeWindows w;
+        FakeApps w;
         SettingsBackend b(&f, &w);
         QVERIFY(!b.addApp(QStringLiteral("one-more")));
         QCOMPARE(b.error(), QStringLiteral("full"));

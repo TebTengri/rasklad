@@ -30,7 +30,7 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(QString error READ error NOTIFY changed)
 
 public:
-    SettingsBackend(FcitxSource *fcitx, WindowSource *windows, QObject *parent = nullptr);
+    SettingsBackend(FcitxSource *fcitx, AppSource *apps, QObject *parent = nullptr);
 
     bool fcitxRunning() const { return m_running; }
     bool addonEnabled() const { return m_addon; }
@@ -66,14 +66,14 @@ private:
     void rebuildApps();
 
     FcitxSource *m_fcitx;
-    WindowSource *m_windows;
+    AppSource *m_appSource;
     bool m_running = false;
     bool m_addon = false;
     bool m_loaded = false;
     bool m_profileBroken = false;
     bool m_layouts = false;
     AddonConfig m_config;
-    QStringList m_open;
+    QStringList m_focused; // SYS-253: programs the addon saw with a focused field
     QStringList m_seen; // switched off in this session: stay visible to switch back on
     QVariantList m_apps;
     QString m_error;

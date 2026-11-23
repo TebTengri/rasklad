@@ -9,8 +9,6 @@
 #include <QDBusInterface>
 #include <QDBusMessage>
 #include <QDBusVariant>
-#include <QProcess>
-#include <QStandardPaths>
 
 namespace rasklad::settings {
 
@@ -116,13 +114,25 @@ std::optional<QVariantMap> DBusFcitx::readConfig()
     return v.toMap();
 }
 
-std::optional<bool> DBusFcitx::profileReady()
+namespace {
+
+// The addon's read-only status map; nullopt if Fcitx or the addon does not answer.
+std::optional<QVariantMap> statusMap()
 {
     const QDBusMessage r = call(QStringLiteral("GetConfig"), {QStringLiteral("fcitx://config/addon/rasklad/status")});
     if (r.type() != QDBusMessage::ReplyMessage || r.arguments().isEmpty()) return std::nullopt;
     const QVariant v = plain(r.arguments().constFirst());
     if (v.metaType() != QMetaType::fromType<QVariantMap>()) return std::nullopt;
-    const QVariant ready = v.toMap().value(QStringLiteral("ProfileReady"));
+    return v.toMap();
+}
+
+} // namespace
+
+std::optional<bool> DBusFcitx::profileReady()
+{
+    const auto status = statusMap();
+    if (!status) return std::nullopt;
+    const QVariant ready = status->value(QStringLiteral("ProfileReady"));
     if (ready.metaType() != QMetaType::fromType<QString>()) return std::nullopt;
     if (ready.toString() == QLatin1String("True")) return true;
     if (ready.toString() == QLatin1String("False")) return false;
@@ -135,21 +145,10 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
     return r.type() == QDBusMessage::ReplyMessage;
 }
 
-QStringList HyprlandWindows::openApps()
+QStringList FcitxSeenApps::seenApps()
 {
-    const QString hyprctl = QStandardPaths::findExecutable(QStringLiteral("hyprctl"));
-    if (hyprctl.isEmpty()) return {};
-    QProcess p;
-    p.setProcessChannelMode(QProcess::SeparateChannels);
-    p.setStandardErrorFile(QProcess::nullDevice());
-    p.start(hyprctl, {QStringLiteral("-j"), QStringLiteral("clients")});
-    if (!p.waitForFinished(kTimeoutMs)) {
-        p.kill();
-        p.waitForFinished(200);
-        return {};
-    }
-    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) return {};
-    return classesFromClients(p.readAllStandardOutput()); // titles are parsed out and dropped here
+    const auto status = statusMap();
+    return status ? seenAppsFromStatus(*status) : QStringList{};
 }
 
 } // namespace rasklad::settings

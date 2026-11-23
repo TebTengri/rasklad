@@ -2,7 +2,8 @@
 // SYS-227: where the settings app reads and writes. The real implementations
 // talk to Fcitx over the session D-Bus (the same Controller1 calls
 // fcitx5-configtool uses, so the addon applies changes at once and saves its
-// own file) and ask Hyprland for open window classes. Tests inject fakes.
+// own file). Since SYS-253 the apps on offer come from the addon too: the
+// program names it saw with a focused text field. Tests inject fakes.
 #pragma once
 
 #include <QString>
@@ -27,12 +28,13 @@ public:
     virtual std::optional<bool> profileReady() = 0;
 };
 
-class WindowSource
+class AppSource
 {
 public:
-    virtual ~WindowSource() = default;
-    // Window classes of open windows; empty if Hyprland is not reachable.
-    virtual QStringList openApps() = 0;
+    virtual ~AppSource() = default;
+    // Program names the addon saw with a focused text field since it started;
+    // empty if Fcitx is not reachable or the addon is older than SYS-253.
+    virtual QStringList seenApps() = 0;
 };
 
 class DBusFcitx final : public FcitxSource
@@ -46,10 +48,10 @@ public:
     bool writeConfig(const QVariantMap &config) override;
 };
 
-class HyprlandWindows final : public WindowSource
+class FcitxSeenApps final : public AppSource
 {
 public:
-    QStringList openApps() override;
+    QStringList seenApps() override;
 };
 
 } // namespace rasklad::settings

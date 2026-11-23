@@ -4,7 +4,7 @@
 // Turns correction on or off per application and switches the layout sound.
 // Changes go to Fcitx over the session D-Bus (Controller1 SetConfig), which the
 // addon applies at once and saves itself; the window then reads the result
-// back. It reads window classes from `hyprctl -j clients` to offer open apps.
+// back. It offers the program names the addon saw with a focused text field.
 // No typed text, no network, no autostart, no files written by this process.
 
 #include "jsontranslator.h"
@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
 
     app::ThemeWatcher theme(app::defaultThemeSources(), QString(), true);
     settings::DBusFcitx fcitx;
-    settings::HyprlandWindows windows;
-    settings::SettingsBackend backend(&fcitx, &windows);
+    settings::FcitxSeenApps seen;
+    settings::SettingsBackend backend(&fcitx, &seen);
 
     QQmlApplicationEngine engine;
     app::JsonTranslator ru;
