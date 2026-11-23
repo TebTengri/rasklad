@@ -12,6 +12,7 @@
 #include <QStringList>
 
 #include <dlfcn.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace rasklad::profile {
@@ -77,9 +78,10 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
     // A direct child of /usr/lib named libhunspell-<series>.so.<digits...>, as
     // pacman installs it; not a file inside some look-alike directory.
     const QFileInfo info(loadedHunspellLibraryPath());
-    const QRegularExpression name(QLatin1String("^libhunspell-")
-                                  + QRegularExpression::escape(series)
-                                  + QLatin1String("\\.so\\.[0-9]+(\\.[0-9]+)*$"));
+    // anchoredPattern: \A...\z, so a trailing newline does not match.
+    const QRegularExpression name(QRegularExpression::anchoredPattern(
+        QLatin1String("libhunspell-") + QRegularExpression::escape(series)
+        + QLatin1String("\\.so\\.[0-9]+(\\.[0-9]+)*")));
     if (info.absolutePath() != QLatin1String("/usr/lib") || !name.match(info.fileName()).hasMatch())
         return false;
     // Neither the file nor /usr/lib may be changeable by this user: not owned by
@@ -87,14 +89,30 @@ bool verifyCompatibleHunspell(const QString &expectedVersion)
     // not required by owner id on purpose: inside a user namespace (bwrap, the
     // closed lab) root's files show up as the overflow user. The library is
     // already mapped when this runs; replacing it would need write access to
-    // /usr/lib, which the directory check rules out.
+    // /usr/lib or a parent, so each parent up to / must be unchangeable as well,
+    // unless the child is a mount point: a mounted directory cannot be renamed
+    // away (the lab's / is a user-owned tmpfs with /usr bound onto it).
     const auto unchangeable = [](const QFileInfo &f) {
         return f.ownerId() != ::getuid() && !f.isWritable()
             && !(f.permissions() & (QFileDevice::WriteGroup | QFileDevice::WriteOther));
     };
-    const QFileInfo dir(QStringLiteral("/usr/lib"));
-    return info.isFile() && !info.isSymLink() && unchangeable(info)
-        && dir.isDir() && unchangeable(dir);
+    if (!info.isFile() || info.isSymLink() || !unchangeable(info))
+        return false;
+    const char *const chain[] = {"/usr/lib", "/usr", "/"};
+    struct stat below {};
+    for (int i = 0; i < 3; ++i) {
+        const QFileInfo dir{QString::fromLatin1(chain[i])};
+        struct stat here {};
+        if (!dir.isDir() || dir.isSymLink() || ::lstat(chain[i], &here) != 0)
+            return false;
+        const bool childIsMount = i > 0 && below.st_dev != here.st_dev;
+        if (!childIsMount && !unchangeable(dir))
+            return false;
+        if (childIsMount)
+            break;
+        below = here;
+    }
+    return true;
 }
 
 std::unique_ptr<SpellEngine> SpellEngine::create(const QString &affPath, const QString &dicPath)
