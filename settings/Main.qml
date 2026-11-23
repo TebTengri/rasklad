@@ -39,6 +39,8 @@ ApplicationWindow {
     property string rowFocus: ""
     property var rowItems: Object.create(null) // key -> live row; no prototype keys
     property string limitApp: "" // the app whose switch-on hit the 64-app limit
+    // Typed adds have no row yet: the limit message shows below the list, at no row.
+    function addTyped(text) { limitApp = ""; return backend.addApp(text) }
     function restoreFocus() {
         const row = Object.prototype.hasOwnProperty.call(rowItems, rowFocus) ? rowItems[rowFocus] : null
         if (!focusLost()) return
@@ -476,13 +478,13 @@ ApplicationWindow {
                         placeholderText: qsTr("Program name, e.g. Telegram")
                         placeholderTextColor: window.secondary
                         enabled: backend.configLoaded
-                        onAccepted: if (backend.addApp(text)) { text = ""; addBox.visible = false; addButton.forceActiveFocus() }
+                        onAccepted: if (window.addTyped(text)) { text = ""; addBox.visible = false; addButton.forceActiveFocus() }
                         Accessible.name: placeholderText
                     }
                     Button {
                         text: qsTr("Add")
                         enabled: backend.configLoaded && addField.text.trim() !== ""
-                        onClicked: if (backend.addApp(addField.text)) { addField.text = ""; addBox.visible = false; addButton.forceActiveFocus() }
+                        onClicked: if (window.addTyped(addField.text)) { addField.text = ""; addBox.visible = false; addButton.forceActiveFocus() }
                     }
                 }
                 InlineError {
