@@ -150,6 +150,7 @@
 #include <fcitx-utils/key.h>
 #include <fcitx-utils/keysym.h>
 #include <fcitx-utils/textformatflags.h>
+#include <fcitx-utils/utf8.h>
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
 #include <fcitx/addonmanager.h>
@@ -356,16 +357,19 @@ public:
         if (out.empty()) out = typed;
         return mask ? rasklad::manual::applyUpper(out, mask) : out;
     }
-    // The last word this addon committed with Space, kept only until any other
-    // key, lifecycle event or failed check. Only it may be replaced after Space.
+    // The last word this addon committed with Space or a punctuation key (SYS-250),
+    // kept only until any other key, lifecycle event or failed check. Only it may
+    // be replaced. lastNow: the form now in the field; lastOther: the form a
+    // double Shift puts there instead; lastSuffix: what follows the word (the
+    // Space, or the punctuation character the client inserts itself).
     // Pending: committed, not yet confirmed by a FRESH surrounding-text update from
     // the client. Confirmed: such an update showed exactly that word + space right
     // before a collapsed cursor at lastCursor; any later update that differs
     // (text or cursor, e.g. a mouse click) forgets it. Only Confirmed may replace.
-    std::string lastTyped;
-    bool lastConverted = false;
-    bool lastTypedRu = false;
-    std::uint32_t lastUpper = 0;
+    std::string lastNow;
+    std::string lastOther;
+    std::string lastSuffix;
+    bool lastOtherRu = false; // lastOther is the Cyrillic form
     bool lastValid = false;
     bool lastConfirmed = false;
     unsigned lastCursor = 0;
@@ -379,12 +383,35 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return form(lastTyped, lastTypedRu != lastConverted, lastUpper) + ' '; }
+    std::string lastText() const { return lastNow + lastSuffix; }
     void forgetLast() {
-        volatile char *p = lastTyped.data();
-        for (std::size_t i = 0; i < lastTyped.size(); ++i) p[i] = '\0';
-        lastTyped.clear(); lastConverted = false; lastTypedRu = false; lastUpper = 0; lastValid = false; lastConfirmed = false; lastCursor = 0;
+        for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) {
+            volatile char *p = text->data();
+            for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
+            text->clear();
+        }
+        lastOtherRu = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
         lastRule = Confirm::Never; lastPreCursor = 0;
+    }
+    // Keep a just-committed word for the double-Shift swap, only when it can ever
+    // confirm: with no known pre-commit cursor it could never be replaced.
+    void keepLast(const fcitx::SurroundingText &pre, std::string now, std::string other,
+                  bool otherRu, std::string suffix) {
+        forgetLast();
+        // Copied, not moved (a short string's bytes would stay behind), then every
+        // parameter is wiped whatever happens.
+        const bool keep = pre.isValid() && pre.cursor() == pre.anchor() && now != other;
+        if (keep) {
+            lastNow = now; lastOther = other; lastSuffix = suffix;
+            lastOtherRu = otherRu;
+            lastValid = true; // Pending
+            lastRule = Confirm::AfterCommit;
+            lastPreCursor = pre.cursor();
+        }
+        for (std::string *text : {&now, &other, &suffix}) {
+            volatile char *p = text->data();
+            for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
+        }
     }
 #endif
     const std::uint64_t id;
@@ -1092,8 +1119,11 @@ private:
     // surrounding text refuses (fail closed). Deletes exactly that many code points.
     static bool lastMatches(fcitx::InputContext *ic, const LabState &s) {
         const auto &st = ic->surroundingText();
-        return st.isValid() && st.cursor() == st.anchor() &&
-            rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), s.lastText());
+        if (!st.isValid() || st.cursor() != st.anchor()) return false;
+        std::string text = s.lastText();
+        const bool ends = rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), text);
+        wipeString(text);
+        return ends;
     }
     // Surrounding-text update from the client (fresh by definition).
     static void observeSurrounding(fcitx::InputContext *ic, LabState &s) {
@@ -1103,7 +1133,7 @@ private:
             // Stale pre-commit updates may still arrive: they never confirm and never arm.
             // Fail closed when the pre-commit cursor was unknown.
             const unsigned cursor = ic->surroundingText().cursor();
-            const long n = rasklad::manual::codePointCount(s.lastText());
+            const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
             const bool fresh =
                 (s.lastRule == LabState::Confirm::AfterReplace) ||
                 (s.lastRule == LabState::Confirm::AfterCommit && n > 0 &&
@@ -1114,10 +1144,9 @@ private:
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
     static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
-        const std::string oldText = s.lastText();
-        std::string newText = LabState::form(s.lastTyped, s.lastTypedRu == s.lastConverted, s.lastUpper) + ' ';
+        std::string newText = s.lastOther + s.lastSuffix;
         const auto &st = ic->surroundingText();
-        const long n = rasklad::manual::codePointCount(oldText);
+        const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -1129,7 +1158,7 @@ private:
         if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
-        s.lastConverted = !s.lastConverted; s.lastConfirmed = false;
+        std::swap(s.lastNow, s.lastOther); s.lastOtherRu = !s.lastOtherRu; s.lastConfirmed = false;
         s.lastRule = LabState::Confirm::AfterReplace;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
@@ -1167,9 +1196,13 @@ private:
         whole = false;
         if (!*config_.autoCorrect) return std::nullopt; // SYS-227: gestures only
         if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
-        // Case: all lowercase, a capital first letter, or all capitals (letters only).
-        const std::uint32_t all = s.size() >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << s.size()) - 1;
-        if (s.upper != 0 && s.upper != 1 && s.upper != all) return std::nullopt;
+        // Case: all lowercase, a capital first letter, or all capitals, judged on the
+        // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
+        const auto caseOk = [&s](std::size_t keys) {
+            const std::uint32_t all = keys >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << keys) - 1;
+            const std::uint32_t mask = s.upper & all;
+            return mask == 0 || mask == 1 || mask == all;
+        };
         std::string w = s.word();
         std::optional<std::string> result;
         std::size_t cut = w.size();
@@ -1189,7 +1222,10 @@ private:
                 if (kept) break;
             }
             std::string keys = w.substr(0, cut);
+            // The exception first: an excepted word is never corrected in a shorter
+            // form just because its own case was not eligible.
             if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word
+            if (!caseOk(cut)) { wipeString(keys); continue; }
             std::string typed = LabState::form(keys, s.typedRu);
             std::string other = LabState::form(keys, !s.typedRu);
             auto fix = profile_->correctTyped(typed, s.typedRu);
@@ -1457,7 +1493,7 @@ private:
                     if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
 #ifdef RASKLAD_PRODUCT
                         // The restored form's layout becomes current (SYS-226).
-                        const bool toRu = s->lastTypedRu == s->lastConverted;
+                        const bool toRu = s->lastOtherRu;
                         auto ref = ic->watch();
                         if (replaceLast(ic, *s)) switchLayout(ref, toRu);
 #else
@@ -1698,28 +1734,23 @@ private:
                 // SYS-226: automatic correction only if the owner did not choose a form
                 // with the gesture, and only on the reviewed profile's Correct, which
                 // must equal this word's other-layout form. Double Shift right after
-                // the Space restores the original (replaceLast).
+                // the Space restores the original (replaceLast); SYS-250: also when
+                // only the letters were corrected and trailing keys kept ("ns," -> "ты,").
                 bool whole = false;
                 auto fixed = autoText(*s, whole);
-                const bool undoable = !fixed || whole;
                 std::string out = fixed ? std::move(*fixed) : s->shown();
-                s->forgetLast();
-                if (undoable) {
 #else
                 std::string out = s->shown(); // only what the owner chose to see
-                s->forgetLast();
-                {
 #endif
-                // Kept only when it can ever confirm: with no known pre-commit cursor
-                // the word could never be replaced, so it is not kept at all.
-                const auto &pre = ic->surroundingText();
-                if (pre.isValid() && pre.cursor() == pre.anchor()) {
-                    s->lastTyped = w; s->lastConverted = s->converted; s->lastTypedRu = s->typedRu; s->lastUpper = s->upper;
-                    s->lastValid = true; // Pending
-                    s->lastRule = LabState::Confirm::AfterCommit;
-                    s->lastPreCursor = pre.cursor();
-                }
-                }
+                // The other form: after a correction (whole or letters only) the word
+                // exactly as typed; otherwise the whole word in the layout not shown.
+#ifdef RASKLAD_PRODUCT
+                const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
+#else
+                const bool otherRu = s->typedRu == s->converted;
+#endif
+                s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
+                            std::string(" "));
 #else
                 std::string out = (w == kRuleFrom) ? std::string(kRuleTo) : w;
 #endif
@@ -1771,14 +1802,27 @@ private:
             }
 #if defined(RASKLAD_PRODUCT)
             // SYS-226: a punctuation key, Enter or Tab also ends the word: the same
-            // automatic correction as Space (no undo), then the key passes.
+            // automatic correction as Space, then the key passes. SYS-250: after a
+            // punctuation character (not Enter or Tab: Enter may already have sent
+            // the message) double Shift swaps the word back, with the character the
+            // client inserted kept as it is.
             bool whole = false;
             std::optional<std::string> fixed;
-            if (wordEnd(key)) fixed = autoText(*s, whole);
+            const bool ends = wordEnd(key);
+            if (ends) fixed = autoText(*s, whole);
             const bool toRu = !s->typedRu;
             auto ref = ic->watch();
             const bool switchAfter = fixed.has_value();
-            commitAndClear(ic, *s, fixed ? std::move(*fixed) : s->shown());
+            std::string out = fixed ? std::move(*fixed) : s->shown();
+            const std::uint32_t mark = fcitx::Key::keySymToUnicode(sym);
+            if (ends && mark > 0x20 && mark != 0x7f) {
+                const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
+                std::string w = s->word();
+                s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
+                            fcitx::utf8::UCS4ToUTF8(mark));
+                wipeString(w);
+            }
+            commitAndClear(ic, *s, std::move(out));
             if (switchAfter) switchLayout(ref, toRu);
 #elif defined(RASKLAD_MANUAL_LAB)
             commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
