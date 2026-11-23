@@ -117,6 +117,7 @@ def sandbox_args(paths,identity,profile,runtime,config,nested_smoke=False,snapsh
  at=clean.index('--')
  extra=['--ro-bind',str(ROOT/'tools/native_ime_clients.py'),'/lab/native_ime_clients.py','--dir','/lab/wayland-runtime','--ro-bind',str(config),'/lab/sway.conf',
  '--ro-bind',str(ROOT/'build/wayland-ime/keys/rasklad-wayland-keys'),'/lab/rasklad-wayland-keys']
+ if PRODUCT_SUITE:extra+=['--ro-bind',str(ROOT/'packaging/arch/rasklad-layout-toggle'),'/lab/rasklad-layout-toggle']  # owner decision 2026-11-23: double Alt via Hyprland
  for name in sorted(RUNTIME):extra+=['--ro-bind',str(runtime/name),'/lab/wayland-runtime/'+name]
  for k,v in {'LD_LIBRARY_PATH':'/lab/wayland-runtime','RASKLAD_NATIVE_WAYLAND_LAB':'1',
   'WLR_BACKENDS':'headless','WLR_RENDERER':'pixman','WLR_LIBINPUT_NO_DEVICES':'1',

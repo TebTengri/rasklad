@@ -19,7 +19,7 @@ case "$out/" in
   *) echo 'refusing: output must be a directory inside build/' >&2; exit 1 ;;
 esac
 ver=$(sed -n 's/^pkgver=//p' "$root/packaging/arch/PKGBUILD")
-if [[ -n $(git -C "$root" status --porcelain -- src tools addon packaging tests docs LICENSE) ]]; then
+if [[ -n $(git -C "$root" status --porcelain -- src tools addon packaging tests docs settings LICENSE) ]]; then
   echo 'refusing: uncommitted changes would not be in the package' >&2
   exit 1
 fi
