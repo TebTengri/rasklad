@@ -188,6 +188,8 @@ def inside(addon_dir=None):
 def main():
     args = sys.argv[1:]
     if args[:1] == ['--inside']:
+        # SIGTERM (timeout, dbus-run-session ending) runs the finally cleanup too.
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
         print(json.dumps(inside(args[1] if len(args) > 1 else None), ensure_ascii=False))
         return
     addon = []

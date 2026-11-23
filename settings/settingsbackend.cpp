@@ -225,7 +225,7 @@ void SettingsBackend::rebuildApps()
         m_apps.append(QVariantMap{{QStringLiteral("id"), id},
                                   {QStringLiteral("enabled"), m_config.apps.contains(id)},
                                   {QStringLiteral("tested"), isTested(id)},
-                                  {QStringLiteral("seen"), m_focused.contains(id)},
+                                  {QStringLiteral("focused"), m_focused.contains(id)},
                                   {QStringLiteral("terminal"), isTerminal(id)}});
     Q_EMIT changed();
 }

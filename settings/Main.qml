@@ -30,7 +30,8 @@ ApplicationWindow {
             "telegram-desktop": "Telegram", "org.omarchy.agent": "Omarchy agent",
             "obsidian": "Obsidian", "code": "VS Code", "discord": "Discord"
         }
-        if (known[id] !== undefined) return known[id]
+        // Own keys only: names like "constructor" must not reach Object.prototype.
+        if (Object.prototype.hasOwnProperty.call(known, id)) return known[id]
         const web = /^chrome-(.+?)__.*$/.exec(id)
         if (web) return qsTr("%1 (web app)").arg(web[1])
         return id
@@ -274,7 +275,7 @@ ApplicationWindow {
                                 tone: row.modelData.tested ? theme.accent : theme.muted
                             }
                             Badge {
-                                visible: row.modelData.seen
+                                visible: row.modelData.focused
                                 text: qsTr("seen")
                             }
                             Switch {

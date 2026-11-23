@@ -323,3 +323,26 @@ ELF wrapper только в закрытом Fcitx child. ABI закреплён
 удаляет preload env для потомков. Строгая thread confinement защищает простые
 counters. Default/profile не содержат bridge; runner/Node/Chromium не получают
 preload. Контракт, guards, калибровка и ограничения: [Core entry](docs/CORE-ENTRY-WITNESS-001.md).
+
+## Program names on offer in the settings app (SYS-253)
+
+The product addon remembers the program names (`InputContext::program()`, as the
+client claims them) of input contexts that got focus since Fcitx started. It
+keeps names only, in memory only: they are never saved, logged or sent anywhere,
+and no text is read. Terminals and the settings app itself are refused; at most
+64 names are kept, and the least recently focused one goes when the list is full.
+The list is exposed as `SeenApplications` in the read-only status sub-config, so
+any process of the same user on the session bus can read which applications got
+a focused field. That includes apps where only a password field had focus: the
+name, never the field or its text. This stays inside the same-user boundary
+above; Fcitx `DebugInfo` already lists the programs of live input contexts. The
+names only populate the offer list. Correction is enabled only for applications
+the user switches on, and a client can claim any name, as before.
+
+`tools/program_name_probe.py` is a developer probe, not part of the package. It
+runs a headless Sway from the pinned lab runtime, a private `dbus-run-session`,
+its own Fcitx and a throwaway HOME, with an environment reduced to `PATH` and
+`LANG`. It launches installed system applications (`foot`, `omawrite`,
+`nautilus`) and reads only program names, frontend, capability flags and Sway
+app ids. It does not use bwrap, so those applications can read what the user can
+read. Do not add applications that open the owner's data.

@@ -3,7 +3,6 @@
 // tests run without Fcitx or Hyprland.
 #pragma once
 
-#include <QByteArray>
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>

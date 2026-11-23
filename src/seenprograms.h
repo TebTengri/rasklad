@@ -27,14 +27,21 @@ inline bool programIdentifier(std::string_view id)
     return true;
 }
 
-// Adds a name once. Empty, invalid and terminal names are refused, and so is
-// any new name once the list is full: a client claiming many names cannot push
-// out the ones already there. True if the list changed.
+// Keeps the most recently focused names, oldest first. Empty, invalid and
+// terminal names and the settings app itself are refused. A name seen again
+// moves to the end; when full, the least recently focused name goes, so a
+// long session (or a client claiming many names) never freezes the list.
+// True if the list changed.
 inline bool rememberProgram(std::vector<std::string> &seen, std::string_view program)
 {
-    if (!programIdentifier(program) || terminalApp(program)) return false;
-    if (std::find(seen.begin(), seen.end(), program) != seen.end()) return false;
-    if (seen.size() >= kMaxSeenPrograms) return false;
+    if (!programIdentifier(program) || terminalApp(program) || program == "rasklad-settings") return false;
+    const auto it = std::find(seen.begin(), seen.end(), program);
+    if (it != seen.end()) {
+        if (it + 1 == seen.end()) return false;
+        std::rotate(it, it + 1, seen.end()); // most recent last
+        return true;
+    }
+    if (seen.size() >= kMaxSeenPrograms) seen.erase(seen.begin());
     seen.emplace_back(program);
     return true;
 }

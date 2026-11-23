@@ -144,13 +144,18 @@ private Q_SLOTS:
         QVERIFY(!rasklad::rememberProgram(seen, "Alacritty"));
         QVERIFY(!rasklad::rememberProgram(seen, "a b"));
         QVERIFY(!rasklad::rememberProgram(seen, std::string(129, 'a')));
+        QVERIFY(!rasklad::rememberProgram(seen, "rasklad-settings"));
         QCOMPARE(seen.size(), std::size_t{1});
-        // Full: new names are refused, the ones there stay.
+        // Full: the least recently focused name goes; one focused again stays.
         for (int i = 0; seen.size() < rasklad::kMaxSeenPrograms; ++i)
             QVERIFY(rasklad::rememberProgram(seen, "app" + std::to_string(i)));
-        QVERIFY(!rasklad::rememberProgram(seen, "late"));
-        QCOMPARE(seen.front(), std::string("Telegram"));
+        QVERIFY(rasklad::rememberProgram(seen, "Telegram")); // moves to the end
+        QCOMPARE(seen.back(), std::string("Telegram"));
+        QVERIFY(rasklad::rememberProgram(seen, "late"));
         QCOMPARE(seen.size(), rasklad::kMaxSeenPrograms);
+        QCOMPARE(seen.back(), std::string("late"));
+        QVERIFY(std::find(seen.begin(), seen.end(), std::string("Telegram")) != seen.end());
+        QVERIFY(std::find(seen.begin(), seen.end(), std::string("app0")) == seen.end());
     }
     void layouts()
     {
@@ -166,7 +171,7 @@ private Q_SLOTS:
         QCOMPARE(b.enabledCount(), 2);
         QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("enabled")).toBool());
         QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("tested")).toBool());
-        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("seen")).toBool());
+        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("focused")).toBool());
         QVERIFY(!entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("enabled")).toBool());
         QVERIFY(entry(b, QStringLiteral("foot")).value(QStringLiteral("terminal")).toBool());
         // Enabled first, terminals last.

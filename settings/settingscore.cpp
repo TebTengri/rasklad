@@ -4,9 +4,7 @@
 #include "manualgesture.h"
 #include "terminalapps.h"
 
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
+#include <QByteArray>
 
 #include <algorithm>
 
