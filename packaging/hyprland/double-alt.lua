@@ -1,7 +1,10 @@
 -- SPDX-License-Identifier: MIT
--- Rasklad: two quick taps of Alt (left or right, within 400 ms) switch the Fcitx
--- layout us <-> ru in every window. Load it from ~/.config/hypr/bindings.lua:
---   dofile("/usr/share/rasklad-fcitx5/hyprland/double-alt.lua")
+-- Rasklad: two quick taps of the left Alt (within 400 ms) switch the Fcitx layout
+-- us <-> ru in every window. Right Alt is left alone: Omarchy binds it to dictation
+-- push-to-talk. Load it from ~/.config/hypr/bindings.lua, only if installed:
+--   local rasklad = "/usr/share/rasklad-fcitx5/hyprland/double-alt.lua"
+--   local found = io.open(rasklad, "r")
+--   if found then found:close(); dofile(rasklad) end
 --
 -- Detected here, not in Fcitx: after the first Alt, Electron apps such as Slack
 -- move focus to their menu bar, and Fcitx never sees the second tap.
@@ -29,6 +32,6 @@ local function tap()
   end, { timeout = window_ms, type = "oneshot" })
 end
 
-for _, key in ipairs({ "ALT + ALT_L", "ALT + ALT_R" }) do
+for _, key in ipairs({ "ALT + ALT_L" }) do
   hl.bind(key, tap, { release = true, non_consuming = true, description = "Rasklad: switch layout (double Alt)" })
 end

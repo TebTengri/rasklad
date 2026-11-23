@@ -49,28 +49,27 @@
   (`Alt+Alt_R`, `Alt+Alt_L`) срабатывали от одиночного Alt; 2026-11-22 убраны
   (D-Bus `SetConfig fcitx://config/global`, копия `config.bak.1795296359`).
   Раскладку переключает аддон: два быстрых нажатия Alt (решение владельца).
-- **Панель Omarchy.** Виджет раскладки склонирован командой
-  `omarchy plugin clone omarchy.keyboard-layout` в
-  `~/.config/omarchy/plugins/mvn.keyboard-layout`. Правки: для методов
-  `keyboard-*` показывается код раскладки Fcitx (`en`/`ru`), правый клик
-  открывает `rasklad-settings`. Откат: `omarchy plugin enable
-  omarchy.keyboard-layout` и `omarchy plugin disable mvn.keyboard-layout`
-  (копия `shell.json` сохранена рядом с ним).
+- **Панель Omarchy.** На месте `omarchy.keyboard-layout` стоит свой виджет
+  `rasklad.layout`: `~/.config/omarchy/plugins/rasklad.layout` — символическая
+  ссылка на `/usr/share/rasklad-fcitx5/omarchy/rasklad.layout`, поэтому
+  обновляется вместе с пакетом. Он сам спрашивает Fcitx (клон стандартного
+  виджета брал раскладку из общего индикатора Omarchy и после перезапуска Fcitx
+  застревал на `EN`). Владелец подтвердил: значок появился и меняется. Откат —
+  вернуть `"id": "omarchy.keyboard-layout"` в `~/.config/omarchy/shell.json`.
+  Миграция Omarchy может вернуть стандартный значок рядом; убрать его можно
+  командой `omarchy bar`.
+- **Двойной Alt.** Правило Hyprland, подключённое в `~/.config/hypr/bindings.lua`
+  строкой `dofile`, которая проверяет, что файл пакета существует (после
+  удаления пакета Hyprland не выдаёт ошибку). Только левый Alt: правый Alt
+  в Omarchy — запись диктовки (Superwhisper). Владелец подтвердил, что работает.
 - **Hyprland.** В `~/.config/hypr/input.lua` добавлен блок: `kb_layout = "us"`,
-  без `grp:alts_toggle`. Раскладку переключает только Fcitx.
-- **Откат.** Восстановить `*.bak.1795287539` (input.lua, fcitx5/config,
-  fcitx5/profile), затем `hyprctl reload; fcitx5 -rd`. Пакет удаляется так:
-  `sudo pacman -R rasklad-fcitx5`.
-
-- **Значок раскладки (2026-11-23, по просьбе владельца).** Клон
-  `mvn.keyboard-layout` брал раскладку из общего индикатора Omarchy, а тот
-  после перезапуска Fcitx перестал её получать — значок стоял на `EN`.
-  Вместо клона в панели свой виджет `rasklad.layout`
-  (`packaging/omarchy/rasklad.layout`), который сам спрашивает Fcitx. Владелец
-  подтвердил: значок появился и меняется. Двойной Alt — правило Hyprland
-  (строка `dofile` в `~/.config/hypr/bindings.lua`); владелец подтвердил, что
-  работает. Резервные копии: `shell.json.bak.*`, `bindings.lua.bak.*`. Каталог
-  клона `~/.config/omarchy/plugins/mvn.keyboard-layout` больше не используется.
+  без `grp:alts_toggle`. Раскладку переключает только Fcitx. `omarchy refresh
+  hyprland` сотрёт и этот блок, и строку `dofile`.
+- **Откат.** Убрать блок из `input.lua` и строку `dofile` из `bindings.lua`,
+  вернуть id виджета, в Fcitx вернуть прежнюю группу и горячие клавиши
+  (`fcitx5-configtool`), затем `hyprctl reload; fcitx5 -rd`. Пакет удаляется
+  так: `sudo pacman -R rasklad-fcitx5`. Резервные копии от настройки
+  2026-11-22/23 удалены по просьбе владельца после проверки.
 
 ## Проверки
 

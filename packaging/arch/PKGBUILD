@@ -1,11 +1,11 @@
 # SYS-228/SYS-226/SYS-227: Arch package for the rasklad Fcitx5 addon (automatic
-# correction by the reviewed local profile, double-Shift gesture) and its
+# correction by the reviewed local profile, double-Shift undo) and its
 # settings window rasklad-settings.
 # Built locally by tools/build_arch_package.sh from a git archive of this repo.
 # Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
 # or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.5.2
+pkgver=0.5.3
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
@@ -35,11 +35,14 @@ check() {
   ./build/permissions/application_permissions_tests
   ./build/cue/layout_cue_tests
   ./build/settings-tests/settings_tests
-  # The addon must not read the environment, load code, or use D-Bus, sockets or processes.
+  # The addon must not read the environment, load code, log, write files, or use D-Bus,
+  # the network or processes (libc names, then Qt classes, which nm shows mangled).
+  # Reading the pinned profile with QFile is expected.
   local imports
   imports=$(nm -D --undefined-only build/addon/rasklad.so) || return 1
   [[ -n $imports ]] || return 1
-  if grep -E -w 'getenv|secure_getenv|socket|connect|bind|fork|vfork|clone|exec[lv]p?e?|posix_spawnp?|popen|system|syscall|dlopen|dlsym|dbus_[a-z_]+' <<<"$imports"; then
+  if grep -E -w 'getenv|secure_getenv|socket|connect|bind|send|sendto|sendmsg|getaddrinfo|fork|vfork|clone|exec[lv]p?e?|execveat|fexecve|posix_spawnp?|popen|system|syscall|ptrace|dlopen|dlsym|dbus_[a-z_]+|open|open64|openat|openat64|creat|fopen|fopen64|write|fwrite|syslog' <<<"$imports" ||
+     grep -E 'QProcess|QDBus|QNetwork|QLocalSocket|QTcpSocket|QUdpSocket|QSaveFile|QTemporaryFile|QMessageLogger|QDebug|QLibrary|QPluginLoader|QSettings' <<<"$imports"; then
     echo 'unexpected import in rasklad.so' >&2
     return 1
   fi

@@ -37,28 +37,32 @@ fcitx5 -rd
 
 Работает в приложениях, включённых в Rasklad (по умолчанию Slack и Chromium).
 
-**Двойной Alt.** Два быстрых нажатия Alt (левого или правого, за 400 мс)
+**Двойной Alt.** Два быстрых нажатия левого Alt (за 400 мс)
 переключают раскладку Fcitx us ↔ ru в любом окне. Ловит их Hyprland: после
 первого Alt Slack и другие Electron-приложения уводят фокус в меню, и Fcitx
 второго нажатия не видит. Подключается одной строкой в
 `~/.config/hypr/bindings.lua`:
 
 ```
-dofile("/usr/share/rasklad-fcitx5/hyprland/double-alt.lua")
+local rasklad = "/usr/share/rasklad-fcitx5/hyprland/double-alt.lua"
+local found = io.open(rasklad, "r")
+if found then found:close(); dofile(rasklad) end
 ```
 
+Проверка файла нужна, чтобы после удаления пакета Hyprland не выдал ошибку
+конфигурации. Правый Alt не используется: в Omarchy он записывает диктовку.
 Одиночный Alt и Alt вместе с другой клавишей ничего не переключают. Alt
 по-прежнему доходит до приложений: меню Slack мигнёт. Недописанное слово
-вставляется как набрано, затем раскладка меняется. Откат — убрать эту строку.
+вставляется как набрано, затем раскладка меняется. Откат — убрать эти строки.
 
 **Значок в панели Omarchy.** Виджет Rasklad показывает раскладку Fcitx (`EN`/`RU`)
 и сам спрашивает её у Fcitx примерно раз в 0,4 с; левый клик переключает,
-правый открывает настройки Rasklad. Установка — скопировать его в свои плагины
-и поставить в панель вместо `omarchy.keyboard-layout` (в `~/.config/omarchy/shell.json`
+правый открывает настройки Rasklad. Установка — ссылка из своих плагинов (так
+виджет обновляется вместе с пакетом) и замена в панели в панель вместо `omarchy.keyboard-layout` (в `~/.config/omarchy/shell.json`
 заменить `"id": "omarchy.keyboard-layout"` на `"id": "rasklad.layout"`):
 
 ```
-cp -r /usr/share/rasklad-fcitx5/omarchy/rasklad.layout ~/.config/omarchy/plugins/
+ln -s /usr/share/rasklad-fcitx5/omarchy/rasklad.layout ~/.config/omarchy/plugins/rasklad.layout
 ```
 
 Откат — вернуть прежний id в `shell.json`.
