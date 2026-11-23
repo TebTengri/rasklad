@@ -1,0 +1,633 @@
+#!/usr/bin/python3 -I
+# SPDX-License-Identifier: MIT
+# rasklad-setup (SYS-252): connect an installed rasklad-fcitx5 to this user's
+# Omarchy desktop, check it, and undo it. The package never runs this: only the
+# user changes their own settings.
+#
+#   rasklad-setup --check     what works and what is missing (states only)
+#   rasklad-setup --install   show the changes, ask, apply; running it again
+#                             changes nothing
+#   rasklad-setup --revert    put back exactly what --install replaced
+#
+# Steps: the double left Alt rule in ~/.config/hypr/bindings.lua; one Hyprland
+# layout with no group toggle in ~/.config/hypr/input.lua (Fcitx switches
+# layouts); the bar widget link in ~/.config/omarchy/plugins and its id in
+# ~/.config/omarchy/shell.json; keyboard-us and keyboard-ru in the current Fcitx
+# group. Every file is copied before it is changed (a .rasklad.bak beside it and
+# a private copy under ~/.local/state/rasklad-setup); --revert restores a file
+# only if it is still exactly what --install wrote. A config file that is a
+# symlink (a dotfiles repository) is never written. Nothing typed is read or
+# printed.
+import difflib
+import hashlib
+import json
+import os
+import re
+import stat
+import subprocess
+import sys
+import tempfile
+
+SHARE = "/usr/share/rasklad-fcitx5"
+RULE = SHARE + "/hyprland/double-alt.lua"
+WIDGET = SHARE + "/omarchy/rasklad.layout"
+HYPRCTL = "/usr/bin/hyprctl"
+BEGIN = "-- BEGIN rasklad-setup"
+END = "-- END rasklad-setup"
+# The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
+RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
+STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
+OUR_ID = re.compile(rb'"id"\s*:\s*"rasklad\.layout"')
+XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
+
+HOME = os.path.expanduser("~")
+CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
+STATE_HOME = os.environ.get("XDG_STATE_HOME") or os.path.join(HOME, ".local", "state")
+BINDINGS = os.path.join(CONFIG, "hypr", "bindings.lua")
+INPUT = os.path.join(CONFIG, "hypr", "input.lua")
+SHELL_JSON = os.path.join(CONFIG, "omarchy", "shell.json")
+FILES = (BINDINGS, INPUT, SHELL_JSON)
+PLUGIN_LINK = os.path.join(CONFIG, "omarchy", "plugins", "rasklad.layout")
+STATE_DIR = os.path.join(STATE_HOME, "rasklad-setup")
+BACKUP_DIR = os.path.join(STATE_DIR, "backup")
+STATE_FILE = os.path.join(STATE_DIR, "state.json")
+
+
+class Refused(Exception):
+  pass
+
+
+def say(state, step, note=""):
+  print(("%-8s %-18s %s" % (state, step, note)) if note else ("%-8s %s" % (state, step)))
+
+
+# --- files --------------------------------------------------------------------
+
+def read(path):
+  try:
+    with open(path, "rb") as f:
+      return f.read()
+  except FileNotFoundError:
+    return None
+
+
+def sha(data):
+  return hashlib.sha256(data).hexdigest()
+
+
+def write_atomic(path, data, mode=None):
+  # A fresh private temporary file beside the target (never a fixed name that
+  # could be a planted symlink), synced, then renamed over the target.
+  if mode is None:
+    mode = stat.S_IMODE(os.lstat(path).st_mode) if os.path.lexists(path) else 0o644
+  fd, tmp = tempfile.mkstemp(prefix=".rasklad-setup.", dir=os.path.dirname(path))
+  try:
+    with os.fdopen(fd, "wb") as f:
+      f.write(data)
+      f.flush()
+      os.fchmod(f.fileno(), mode)
+      os.fsync(f.fileno())
+    os.replace(tmp, path)
+  except BaseException:
+    try:
+      os.unlink(tmp)
+    except OSError:
+      pass
+    raise
+
+
+def private_state_dir():
+  # Our own directory, mode 0700, owned by us; never a symlink.
+  for d in (STATE_DIR, BACKUP_DIR):
+    os.makedirs(d, mode=0o700, exist_ok=True)
+    info = os.lstat(d)
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+      raise Refused("%s is not a private directory of this user" % d)
+    os.chmod(d, 0o700)
+
+
+def new_state():
+  return {"version": 1, "files": {}, "link": None, "fcitx": None}
+
+
+def load_state():
+  data = read(STATE_FILE)
+  if data is None:
+    return new_state()
+  try:
+    state = json.loads(data)
+  except ValueError:
+    raise Refused("the state file is damaged: %s" % STATE_FILE)
+  if not isinstance(state, dict) or state.get("version") != 1:
+    raise Refused("unknown state file: %s" % STATE_FILE)
+  # Only paths this tool itself would ever record are trusted.
+  bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
+  if set(state) - {"version", "files", "link", "fcitx"} or not isinstance(state.get("files"), dict):
+    raise bad
+  for path, entry in state["files"].items():
+    if path not in FILES or not isinstance(entry, dict) or \
+       entry.get("backup") != backup_path(path) or entry.get("bak") != path + ".rasklad.bak" or \
+       not isinstance(entry.get("bak_ours", False), bool) or \
+       not (isinstance(entry.get("written"), str) and re.fullmatch(r"[0-9a-f]{64}", entry["written"])):
+      raise bad
+  if state.get("link") not in (None, WIDGET):
+    raise bad
+  saved = state.get("fcitx")
+  if saved is not None:
+    items = lambda v: isinstance(v, list) and all(
+      isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
+    if not (isinstance(saved, dict) and isinstance(saved.get("group"), str) and
+            isinstance(saved.get("layout"), str) and isinstance(saved.get("after_layout", ""), str) and
+            items(saved.get("before")) and items(saved.get("after"))):
+      raise bad
+  return state
+
+
+def save_state(state):
+  private_state_dir()
+  write_atomic(STATE_FILE, (json.dumps(state, indent=2, sort_keys=True) + "\n").encode(), 0o600)
+
+
+def save_and_drop(state):
+  # Restored files' private copies are deleted only after the state without
+  # their entries is on disk, so an interruption never strands an entry.
+  drop = state.pop("_drop", [])
+  save_state(state)
+  for backup in drop:
+    if backup not in {backup_path(f) for f in FILES}:
+      continue  # only this tool's own copies of its own files
+    try:
+      os.unlink(backup)
+    except FileNotFoundError:
+      pass
+
+
+def backup_path(path):
+  return os.path.join(BACKUP_DIR, hashlib.sha256(path.encode()).hexdigest()[:16])
+
+
+# --- Hyprland -----------------------------------------------------------------
+
+def run(argv, timeout=5):
+  try:
+    return subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
+  except (OSError, subprocess.TimeoutExpired):
+    return None
+
+
+def hypr_option(name):
+  done = run([HYPRCTL, "getoption", name, "-j"])
+  if not done or done.returncode != 0:
+    return None
+  try:
+    value = json.loads(done.stdout).get("str")
+  except (ValueError, AttributeError):
+    return None
+  return value if isinstance(value, str) else None
+
+
+def hypr_running():
+  done = run([HYPRCTL, "version", "-j"])
+  return bool(done and done.returncode == 0)
+
+
+def hypr_errors():
+  done = run([HYPRCTL, "configerrors", "-j"])
+  if not done or done.returncode != 0:
+    return None
+  try:
+    errors = json.loads(done.stdout)
+  except ValueError:
+    return None
+  return sorted(e for e in errors if isinstance(e, str) and e.strip()) if isinstance(errors, list) else None
+
+
+# --- Fcitx over D-Bus (only method names and input method ids) ---------------
+
+def fcitx():
+  try:
+    from gi.repository import Gio, GLib
+  except ImportError:
+    return None
+  try:
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+  except GLib.Error:
+    return None
+
+  def call(method, args=None, reply="()"):
+    try:
+      return bus.call_sync("org.fcitx.Fcitx5", "/controller", "org.fcitx.Fcitx.Controller1", method,
+                           args, GLib.VariantType(reply), Gio.DBusCallFlags.NO_AUTO_START, 2000,
+                           None).unpack()
+    except GLib.Error:
+      return None
+
+  def group():
+    name = call("CurrentInputMethodGroup", None, "(s)")
+    if not name:
+      return None
+    info = call("InputMethodGroupInfo", GLib.Variant("(s)", (name[0],)), "(sa(ss))")
+    if not info:
+      return None
+    return name[0], info[0], [list(item) for item in info[1]]
+
+  def set_group(name, layout, items):
+    return call("SetInputMethodGroupInfo",
+                GLib.Variant("(ssa(ss))", (name, layout, [tuple(i) for i in items]))) is not None
+
+  def status():
+    reply = call("GetConfig", GLib.Variant("(s)", ("fcitx://config/addon/rasklad/status",)),
+                 "(va(sa(sssva{sv})))")
+    values = reply[0] if reply else None
+    return values if isinstance(values, dict) else None
+
+  return {"group": group, "set_group": set_group, "status": status}
+
+
+def ids(items):
+  return sorted(i[0] for i in items)
+
+
+# --- the steps: (state, new bytes) --------------------------------------------
+
+def lua_ok(data):
+  # The edited file must still compile (a file ending in "return ..." would
+  # not with a block after it). luac comes with lua, which Hyprland needs; if
+  # it is missing, Hyprland's own config check after the reload decides.
+  try:
+    done = subprocess.run(["/usr/bin/luac", "-p", "-"], input=data, capture_output=True, timeout=5)
+  except FileNotFoundError:
+    return True
+  except (OSError, subprocess.TimeoutExpired):
+    return False
+  return done.returncode == 0
+
+
+def append_block(data, block):
+  sep = b"" if not data or data.endswith(b"\n") else b"\n"
+  return data + sep + block.encode()
+
+
+def file_state(path):
+  # Only a regular file reached without any symlink (a dotfiles checkout, a
+  # symlinked ~/.config) is ever read for editing or written.
+  try:
+    info = os.lstat(path)
+  except FileNotFoundError:
+    return "missing-file"
+  if stat.S_ISLNK(info.st_mode) or os.path.realpath(path) != os.path.abspath(path):
+    return "symlink"
+  return None if stat.S_ISREG(info.st_mode) else "not-a-file"
+
+
+def bindings_plan(data=None):
+  bad = file_state(BINDINGS)
+  if bad:
+    return bad, None
+  if data is None:
+    data = read(BINDINGS)
+  text = data.decode(errors="replace")
+  if BEGIN in text or RULE_LINE.search(text):
+    return "ok", None
+  block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
+           "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
+           "local rasklad = \"%s\"\n"
+           "local found = io.open(rasklad, \"r\")\n"
+           "if found then found:close(); dofile(rasklad) end\n"
+           "%s\n") % (BEGIN, RULE, END)
+  new = append_block(data, block)
+  return ("missing", new) if lua_ok(new) else ("lua-error", None)
+
+
+def input_plan(data=None):
+  """Hyprland keeps one layout and no xkb group toggle: Fcitx switches layouts."""
+  bad = file_state(INPUT)
+  if bad:
+    return bad, None
+  if data is None:
+    data = read(INPUT)
+  if BEGIN.encode() in data:
+    return "ok", None  # decided by the file, not by what Hyprland has loaded
+  layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
+  if layout is None or options is None:
+    return "unknown", None
+  opts = [o for o in options.split(",") if o]
+  kept = [o for o in opts if not o.startswith("grp:")]
+  if "," not in layout and len(kept) == len(opts):
+    return "ok", None
+  values = (layout.split(",")[0], (variant or "").split(",")[0], ",".join(kept))
+  if not all(XKB.fullmatch(v) for v in values):
+    raise Refused("unexpected characters in the Hyprland keyboard options")
+  block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
+           "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
+           "hl.config({\n  input = {\n    kb_layout = \"%s\",\n    kb_variant = \"%s\",\n"
+           "    kb_options = \"%s\",\n  },\n})\n%s\n") % ((BEGIN,) + values + (END,))
+  new = append_block(data, block)
+  return ("missing", new) if lua_ok(new) else ("lua-error", None)
+
+
+def shell_plan(data=None):
+  bad = file_state(SHELL_JSON)
+  if bad:
+    return bad, None
+  if data is None:
+    data = read(SHELL_JSON)
+  try:
+    json.loads(data)
+  except ValueError:
+    return "unparsable", None
+  if OUR_ID.search(data):
+    return "ok", None
+  # Exactly one stock widget, and it sits in the bar's layout.
+  found = []
+
+  def walk(node, where):
+    if isinstance(node, dict):
+      if node.get("id") == "omarchy.keyboard-layout":
+        found.append(where)
+      for key, value in node.items():
+        walk(value, where + [key])
+    elif isinstance(node, list):
+      for value in node:
+        walk(value, where)
+
+  walk(json.loads(data), [])
+  if len(STOCK_ID.findall(data)) != 1 or len(found) != 1 or found[0][:2] != ["bar", "layout"]:
+    return "no-slot", None
+  new = STOCK_ID.sub(rb'\1"rasklad.layout"', data)
+  json.loads(new)
+  return "missing", new
+
+
+def link_state():
+  if os.path.islink(PLUGIN_LINK):
+    return "ok" if os.readlink(PLUGIN_LINK) == WIDGET else "other"
+  return "other" if os.path.lexists(PLUGIN_LINK) else "missing"
+
+
+def fcitx_plan(bus):
+  current = bus["group"]() if bus else None
+  if current is None:
+    return "no-fcitx", None
+  name, layout, items = current
+  missing = [m for m in ("keyboard-us", "keyboard-ru") if m not in ids(items)]
+  if not missing:
+    return "ok", None
+  return "missing", (name, layout, items, items + [[m, ""] for m in missing])
+
+
+# --- modes --------------------------------------------------------------------
+
+def check():
+  ok = True
+
+  def report(state, step, note=""):
+    nonlocal ok
+    ok = ok and state == "ok"
+    say(state, step, note)
+
+  report("ok" if os.path.isfile(RULE) and os.path.isdir(WIDGET) else "missing", "package")
+  bus = fcitx()
+  status = bus["status"]() if bus else None
+  if status is None:
+    report("missing", "fcitx-addon", "Fcitx not running or Rasklad not loaded")
+  else:
+    report("ok" if status.get("ProfileReady") == "True" else "broken", "fcitx-addon")
+    say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
+  report(fcitx_plan(bus)[0], "fcitx-group")
+  report(bindings_plan()[0], "double-alt")
+  state = input_plan()[0]
+  if state == "unknown":
+    say("unknown", "hyprland-layout", "Hyprland not running")
+  else:
+    report(state, "hyprland-layout")
+  report(link_state(), "bar-widget-link")
+  report(shell_plan()[0], "bar-widget")
+  return 0 if ok else 1
+
+
+def show_diff(path, old, new):
+  sys.stdout.writelines(difflib.unified_diff(
+    old.decode(errors="replace").splitlines(True), new.decode(errors="replace").splitlines(True),
+    path + " (now)", path + " (after)"))
+
+
+def remember_file(state, path, old, new):
+  # The first copy is the one --revert restores; a later run never replaces it.
+  entry = state["files"].get(path)
+  if entry is None:
+    private_state_dir()
+    write_atomic(backup_path(path), old, 0o600)
+    bak = path + ".rasklad.bak"
+    ours = not os.path.lexists(bak)
+    if ours:
+      write_atomic(bak, old, stat.S_IMODE(os.stat(path).st_mode))
+    entry = state["files"][path] = {"backup": backup_path(path), "bak": bak, "bak_ours": ours}
+  entry["written"] = sha(new)
+
+
+def install(assume_yes):
+  state = load_state()
+  changes = []
+  for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
+    # One read: the diff, the backup and the final comparison all use it.
+    bad = file_state(path)
+    if bad:
+      say(bad, os.path.basename(path), "left as is")
+      continue
+    old = read(path)
+    if old is None:
+      say("missing-file", os.path.basename(path), "left as is")
+      continue
+    status, new = plan(old)
+    if status == "missing" and path in state["files"]:
+      # Installed before and edited since: a second copy would let --revert
+      # drop those edits. The user reverts first.
+      say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
+    elif status == "missing":
+      changes.append((path, old, new))
+    elif status == "unknown":
+      say("unknown", os.path.basename(path), "Hyprland not running; skipped")
+    elif status != "ok":
+      say(status, os.path.basename(path), "left as is")
+  link = link_state()
+  if link == "other":
+    say("other", "bar-widget-link", "something else is there; left as is")
+  bus = fcitx()
+  group = fcitx_plan(bus)
+  if group[0] == "no-fcitx":
+    say("no-fcitx", "fcitx-group", "start Fcitx and run again")
+
+  if not changes and link != "missing" and group[0] != "missing":
+    print("Nothing to change.")
+    return 0
+  for path, old, new in changes:
+    show_diff(path, old, new)
+  if link == "missing":
+    print("+ link %s -> %s" % (PLUGIN_LINK, WIDGET))
+  if group[0] == "missing":
+    print("+ Fcitx group %s: add %s" % (group[1][0], ", ".join(
+      sorted(set(ids(group[1][3])) - set(ids(group[1][2]))))))
+  if not assume_yes:
+    if not sys.stdin.isatty():
+      raise Refused("not a terminal: pass --yes to apply")
+    if input("Apply these changes? [y/N] ").strip().lower() not in ("y", "yes"):
+      print("Nothing changed.")
+      return 0
+
+  # Each step is recorded before it is done, so a crash in between leaves a
+  # state --revert can reconcile (an unwritten file still equals its copy).
+  errors_before = hypr_errors()
+  failed = False
+  for path, old, new in changes:
+    # The file must still be exactly what the diff was made from.
+    if file_state(path) is not None or read(path) != old:
+      say("changed", os.path.basename(path), "edited while waiting; left as is")
+      failed = True
+      continue
+    remember_file(state, path, old, new)
+    save_state(state)
+    write_atomic(path, new)
+    say("done", os.path.basename(path))
+  if link == "missing":
+    state["link"] = WIDGET
+    save_state(state)
+    os.makedirs(os.path.dirname(PLUGIN_LINK), exist_ok=True)
+    os.symlink(WIDGET, PLUGIN_LINK)
+    say("done", "bar-widget-link")
+  if group[0] == "missing":
+    name, layout, before, after = group[1]
+    # A retry keeps the group as it was before the first attempt.
+    saved = state.get("fcitx")
+    if not (saved and saved["group"] == name):
+      saved = {"group": name, "layout": layout, "before": before}
+    saved["after"] = after
+    saved["after_layout"] = layout  # the layout this write used
+    state["fcitx"] = saved
+    save_state(state)
+    if bus["set_group"](name, layout, after):
+      say("done", "fcitx-group")
+    else:
+      say("failed", "fcitx-group")
+      failed = True
+
+  # Hyprland reloads a saved config by itself. Only errors that were not there
+  # before undo our edits, and only the files this run changed.
+  hypr = [p for p, _, _ in changes if p in (BINDINGS, INPUT)]
+  if hypr and hypr_running():
+    run([HYPRCTL, "reload"])
+    errors = hypr_errors()
+    if errors and errors != errors_before:
+      say("error", "hyprland", "new config errors after the change; undoing it")
+      for path in hypr:
+        restore(state, path)
+      save_and_drop(state)
+      run([HYPRCTL, "reload"])
+      return 1
+  return 1 if failed else 0
+
+
+def restore(state, path):
+  entry = state["files"].get(path)
+  if not entry:
+    return True
+  old = read(entry["backup"])
+  if old is None:
+    say("missing", os.path.basename(path), "the saved copy is gone; left as is")
+    return False
+  bad = file_state(path)
+  if bad not in (None, "missing-file"):
+    say(bad, os.path.basename(path), "left as is")
+    return False
+  current = read(path)
+  if current is not None and current == old:
+    pass  # never written (an interrupted install), or already restored
+  elif current is None or sha(current) != entry["written"]:
+    say("changed", os.path.basename(path), "edited since install; left as is (copy: %s)" % entry["bak"])
+    return False
+  else:
+    write_atomic(path, old)
+  bak = entry["bak"]
+  if entry.get("bak_ours", False) and file_state(bak) is None and read(bak) == old:
+    os.unlink(bak)
+  # The private copy goes only after the state without this entry is saved.
+  state.setdefault("_drop", []).append(entry["backup"])
+  del state["files"][path]
+  say("restored", os.path.basename(path))
+  return True
+
+
+def revert():
+  if read(STATE_FILE) is None:
+    print("Nothing to revert.")
+    return 0
+  state = load_state()
+  clean = True
+  restored_hypr = False
+  for path in list(state["files"]):
+    done = restore(state, path)
+    clean = done and clean
+    restored_hypr = restored_hypr or (done and path in (BINDINGS, INPUT))
+  if state.get("link"):
+    if os.path.islink(PLUGIN_LINK) and os.readlink(PLUGIN_LINK) == WIDGET:
+      os.unlink(PLUGIN_LINK)
+      say("removed", "bar-widget-link")
+      state["link"] = None
+    elif not os.path.lexists(PLUGIN_LINK):
+      state["link"] = None  # never made (an interrupted install), or removed
+    else:
+      say("changed", "bar-widget-link", "not our link any more; left as is")
+      clean = False
+  if state.get("fcitx"):
+    saved = state["fcitx"]
+    bus = fcitx()
+    current = bus["group"]() if bus else None
+    if current is None:
+      say("no-fcitx", "fcitx-group", "start Fcitx and run --revert again")
+      clean = False
+    elif current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["before"]:
+      state["fcitx"] = None  # never changed, or already back
+    elif current[0] == saved["group"] and current[1] == saved.get("after_layout", saved["layout"]) and \
+         current[2] == saved["after"]:
+      if bus["set_group"](saved["group"], saved["layout"], saved["before"]):
+        say("restored", "fcitx-group")
+        state["fcitx"] = None
+      else:
+        say("failed", "fcitx-group")
+        clean = False
+    else:
+      say("changed", "fcitx-group", "changed since install; left as is")
+      clean = False
+  save_and_drop(state)
+  if clean:
+    # Only what this tool made: its state file, then the directories if empty.
+    os.unlink(STATE_FILE)
+    for d in (BACKUP_DIR, STATE_DIR):
+      try:
+        os.rmdir(d)
+      except OSError:
+        pass
+  if restored_hypr and hypr_running():
+    run([HYPRCTL, "reload"])
+  return 0 if clean else 1
+
+
+def main(argv):
+  args = [a for a in argv if a != "--yes"]
+  if len(args) != 1 or args[0] not in ("--check", "--install", "--revert") or \
+     ("--yes" in argv and args[0] != "--install"):
+    print("usage: rasklad-setup --check | --install [--yes] | --revert", file=sys.stderr)
+    return 2
+  try:
+    if args[0] == "--install":
+      return install("--yes" in argv)
+    return check() if args[0] == "--check" else revert()
+  except Refused as error:
+    print("refused: %s" % error, file=sys.stderr)
+  except (OSError, ValueError, KeyError) as error:
+    print("failed: %s" % error.__class__.__name__, file=sys.stderr)
+  return 1
+
+
+if __name__ == "__main__":
+  sys.exit(main(sys.argv[1:]))
