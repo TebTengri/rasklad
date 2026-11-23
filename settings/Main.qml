@@ -78,8 +78,13 @@ ApplicationWindow {
         else if (y + item.height > page.contentY + page.height)
             page.contentY = Math.min(max, y + item.height - page.height + 20)
     }
-    Shortcut { sequence: "Ctrl+1"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 0 }
-    Shortcut { sequence: "Ctrl+2"; context: Qt.ApplicationShortcut; onActivated: tabs.currentIndex = 1 }
+    // Focus goes to the chosen tab, so it never stays on a control scrolled out of view.
+    Shortcut { sequence: "Ctrl+1"; context: Qt.ApplicationShortcut; onActivated: window.showTab(0) }
+    Shortcut { sequence: "Ctrl+2"; context: Qt.ApplicationShortcut; onActivated: window.showTab(1) }
+    function showTab(index) {
+        tabs.currentIndex = index
+        tabs.currentItem.forceActiveFocus()
+    }
 
     // The addon notes new programs while the settings are open: look again on focus.
     onActiveChanged: if (active) backend.refreshIfStale()
