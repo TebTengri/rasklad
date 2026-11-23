@@ -254,7 +254,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, PoyuComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, PoyuComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, WordPeriod, Question, CapsComma, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -291,6 +291,10 @@ Cmd parse(std::string_view line)
         if (line == "exclaim") return Cmd::Exclaim;
         if (line == "enter") return Cmd::Enter;
         if (line == "capword") return Cmd::CapWord;
+        // SYS-250: undo after punctuation.
+        if (line == "wordperiod") return Cmd::WordPeriod;
+        if (line == "question") return Cmd::Question;
+        if (line == "capscomma") return Cmd::CapsComma;
         if (line == "shortword") return Cmd::ShortWord;
         if (line == "hyphen") return Cmd::Hyphen;
         if (line == "alt1") return Cmd::Alt1;
@@ -365,6 +369,12 @@ bool run(Session &s, Cmd cmd)
     case Cmd::Enter: return s.tap(KEY_ENTER);
     case Cmd::CapWord: return s.chord(KEY_LEFTSHIFT, KEY_G) && typeFixed(s, "hbdtn ");
     case Cmd::ShortWord: return typeFixed(s, "rfr ");
+    case Cmd::WordPeriod: return typeFixed(s, "ghbdtn. ");
+    case Cmd::Question: return s.chord(KEY_LEFTSHIFT, KEY_SLASH);
+    case Cmd::CapsComma:
+        for (char c : std::string_view("ghbdtn"))
+            if (!s.chord(KEY_LEFTSHIFT, codeFor(c))) return false;
+        return typeFixed(s, ", ");
     case Cmd::Hyphen: return typeFixed(s, "relf-nj ");
     case Cmd::Unknown: break;
     }

@@ -258,7 +258,19 @@ try{
   phase='auto_comma';await reset();await type('wordcomma');report.autoBeforeComma=await v()==='привет, ';
   phase='auto_exclaim';await reset();await type('word');await type('exclaim');await type('space');
   report.autoBeforeExclaimValue=await v();report.autoBeforeExclaim=report.autoBeforeExclaimValue==='привет! ';
+  // SYS-250: double Shift after a comma, a period or "?" swaps the word back and
+  // forth with the character kept; capitals plus a comma are corrected too.
+  const swap=async(name,fixedText,typedText)=>{report[name+'Value']=await v();const corrected=report[name+'Value']===fixedText;
+    await settle();await type('shift2');const back=await v();await settle();await type('shift2');const again=await v();
+    report[name+'UndoValue']=back;
+    report[name]=corrected&&(strictUndo?back===typedText&&again===fixedText:[fixedText,typedText].includes(back)&&[fixedText,typedText].includes(again));};
+  phase='undo_comma';await reset();await type('wordcomma');await swap('undoComma','привет, ','ghbdtn, ');
+  phase='undo_period';await reset();await type('wordperiod');await swap('undoPeriod','привет. ','ghbdtn. ');
+  phase='undo_question';await reset();await type('word');await type('question');await swap('undoQuestion','привет?','ghbdtn?');await type('space');
+  phase='undo_caps_comma';await reset();await type('capscomma');await swap('undoCapsComma','ПРИВЕТ, ','GHBDTN, ');
   phase='auto_enter';await reset();await type('word');await type('enter');report.autoBeforeEnter=await v()==='привет\n';
+  // After Enter there is no undo: the message may already be sent.
+  await settle();await type('shift2');report.noUndoAfterEnter=await v()==='привет\n';
   phase='auto_english_exclaim';await reset();await type('hello');await type('backspace');await type('exclaim');report.autoEnglishExclaimKept=await v()==='hello!';
   // BackSpace on an empty word above latched bypass until a delimiter.
   phase='auto_capital';await type('space');await reset();await type('capword');report.autoCapitalValue=await v();report.autoCapital=report.autoCapitalValue==='Привет ';
@@ -286,7 +298,7 @@ try{
   report.autoFocusNoLeak=await ev(`other.value===' '`);
   phase='auto_shift_letter';await reset();await type('word');await type('shifta');await type('space');
   report.autoShiftLetterOriginal=await v()==='ghbdtnA ';
-  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','autoBeforeComma','autoBeforeExclaim','autoBeforeEnter','autoEnglishExclaimKept','autoCapital','autoShort','autoHyphen','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
+  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','autoBeforeComma','autoBeforeExclaim','autoBeforeEnter','undoComma','undoPeriod','undoQuestion','undoCapsComma','noUndoAfterEnter','autoEnglishExclaimKept','autoCapital','autoShort','autoHyphen','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
   // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.
