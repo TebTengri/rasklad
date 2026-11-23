@@ -14,6 +14,12 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+// Fixed in the kernel UAPI since Linux 5.8; older headers lack the name. On an
+// older kernel the attribute mask lacks the bit and the check fails closed.
+#ifndef STATX_ATTR_MOUNT_ROOT
+#define STATX_ATTR_MOUNT_ROOT 0x00002000
+#endif
 #include <unistd.h>
 
 namespace rasklad::profile {
