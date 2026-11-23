@@ -34,6 +34,16 @@ ApplicationWindow {
     // Letters typed into a field are text, never window keys.
     readonly property bool typing: activeFocusItem !== null && activeFocusItem.cursorPosition !== undefined
 
+    // The app row that had keyboard focus: a list rebuild (after a switch or a
+    // refresh) recreates the rows, and the new one takes the focus back.
+    property string rowFocus: ""
+    function focusLost() {
+        for (let it = activeFocusItem; it; it = it.parent)
+            if (it === content) return false
+        return true
+    }
+    Component.onCompleted: firstRow.forceActiveFocus()
+
     // The addon notes new programs while the window is open: look again on focus.
     onActiveChanged: if (active) backend.refreshIfStale()
     // Keyboard focus (Tab, j/k) never lands outside the visible part of the page.
@@ -53,12 +63,15 @@ ApplicationWindow {
     Shortcut { sequence: "F1"; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "?"; enabled: !window.typing; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
-    Shortcut { sequence: "Q"; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
+    // Й is Q in the Russian layout: the keys work in either layout.
+    Shortcut { sequences: ["Q", "Й"]; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
     Shortcut {
         sequence: "Escape"
         onActivated: {
             if (help.opened) help.close()
-            else if (addBox.visible) { addBox.visible = false; addField.text = "" }
+            else if (addBox.visible) { addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
+            else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
+            else if (window.typing) firstRow.forceActiveFocus()
             else Qt.quit()
         }
     }
@@ -134,6 +147,7 @@ ApplicationWindow {
         property string detail
         property string tip
         property string iconName
+        property string key // app id, for focus after a rebuild
         property bool showIcon: false
         property bool checked
         property bool available: true
@@ -150,14 +164,27 @@ ApplicationWindow {
         Accessible.description: detail
         Accessible.checkable: true
         Accessible.checked: checked
-        function flip() { if (available) toggled(!checked) }
-        Keys.onSpacePressed: flip()
-        Keys.onReturnPressed: flip()
-        Keys.onEnterPressed: flip()
+        Accessible.focusable: true
+        Accessible.onToggleAction: flip()
+        Accessible.onPressAction: flip()
+        function flip() {
+            if (!available) return
+            if (key !== "") window.rowFocus = key
+            toggled(!checked)
+        }
+        onActiveFocusChanged: if (activeFocus) window.rowFocus = key
+        Component.onCompleted: if (key !== "" && key === window.rowFocus && window.focusLost()) forceActiveFocus()
         Keys.onPressed: event => {
-            if (event.modifiers !== Qt.NoModifier) return
-            if (event.key === Qt.Key_J || event.key === Qt.Key_Down) { nextItemInFocusChain(true).forceActiveFocus(); event.accepted = true }
-            else if (event.key === Qt.Key_K || event.key === Qt.Key_Up) { nextItemInFocusChain(false).forceActiveFocus(); event.accepted = true }
+            if (event.isAutoRepeat && (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                event.accepted = true // a held key switches once
+                return
+            }
+            if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) { flip(); event.accepted = true; return }
+            if (event.modifiers !== Qt.NoModifier && event.modifiers !== Qt.KeypadModifier) return
+            // j/k, and о/л in the same places of the Russian layout.
+            const t = event.text.toLowerCase()
+            if (event.key === Qt.Key_Down || t === "j" || t === "о") { nextItemInFocusChain(true).forceActiveFocus(); event.accepted = true }
+            else if (event.key === Qt.Key_Up || t === "k" || t === "л") { nextItemInFocusChain(false).forceActiveFocus(); event.accepted = true }
         }
         Rectangle { // keyboard cursor bar, as in Omarchy menus
             visible: row.activeFocus
@@ -172,7 +199,7 @@ ApplicationWindow {
             cursorShape: row.available ? Qt.PointingHandCursor : Qt.ArrowCursor
             onClicked: { row.forceActiveFocus(); row.flip() }
         }
-        ToolTip.visible: tip !== "" && mouse.containsMouse
+        ToolTip.visible: tip !== "" && (mouse.containsMouse || activeFocus)
         ToolTip.delay: 600
         ToolTip.text: tip
         RowLayout {
@@ -212,6 +239,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Label {
                     text: row.title
+                    Accessible.ignored: true
                     textFormat: Text.PlainText
                     font.pixelSize: 13
                     font.bold: true
@@ -219,6 +247,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                 }
                 Label {
+                    Accessible.ignored: true
                     visible: row.detail !== ""
                     text: row.detail
                     textFormat: Text.PlainText
@@ -326,6 +355,7 @@ ApplicationWindow {
             // ---- Correction
             SectionHeader { text: qsTr("CORRECTION") }
             ToggleRow {
+                id: firstRow
                 title: qsTr("Automatic correction")
                 detail: qsTr("When off, double Shift still fixes a word.")
                 checked: backend.autoCorrect
@@ -347,6 +377,7 @@ ApplicationWindow {
                 id: filter
                 visible: backend.apps.length > 12
                 placeholderText: qsTr("Find an application")
+                placeholderTextColor: window.secondary
                 Layout.fillWidth: true
                 Accessible.name: placeholderText
             }
@@ -378,6 +409,7 @@ ApplicationWindow {
                         model: group.rows
                         delegate: ToggleRow {
                             required property var modelData
+                            key: modelData.id
                             showIcon: true
                             iconName: modelData.icon
                             title: modelData.name
@@ -385,6 +417,7 @@ ApplicationWindow {
                                   : modelData.description !== "" ? modelData.description
                                   : modelData.webApp ? qsTr("Web app") : ""
                             tip: qsTr("Program name: %1").arg(modelData.names.join(", "))
+                            Accessible.description: detail === "" ? tip : detail + ". " + tip
                             checked: modelData.enabled
                             available: backend.configLoaded
                             onToggled: on => backend.setAppEnabled(modelData.id, on)
@@ -399,6 +432,7 @@ ApplicationWindow {
                 Layout.topMargin: 4
                 spacing: 10
                 Button {
+                    id: addButton
                     text: qsTr("Add manually…")
                     flat: true
                     enabled: backend.configLoaded
@@ -417,14 +451,15 @@ ApplicationWindow {
                         id: addField
                         Layout.fillWidth: true
                         placeholderText: qsTr("Program name, e.g. Telegram")
+                        placeholderTextColor: window.secondary
                         enabled: backend.configLoaded
-                        onAccepted: if (backend.addApp(text)) { text = ""; addBox.visible = false }
+                        onAccepted: if (backend.addApp(text)) { text = ""; addBox.visible = false; addButton.forceActiveFocus() }
                         Accessible.name: placeholderText
                     }
                     Button {
                         text: qsTr("Add")
                         enabled: backend.configLoaded && addField.text.trim() !== ""
-                        onClicked: if (backend.addApp(addField.text)) { addField.text = ""; addBox.visible = false }
+                        onClicked: if (backend.addApp(addField.text)) { addField.text = ""; addBox.visible = false; addButton.forceActiveFocus() }
                     }
                 }
                 InlineError {
@@ -465,8 +500,8 @@ ApplicationWindow {
                             }
                             ToolButton {
                                 text: "×"
-                                implicitWidth: 26
-                                implicitHeight: 26
+                                implicitWidth: 32
+                                implicitHeight: 28
                                 enabled: backend.wordOptions
                                 onClicked: backend.removeException(chip.modelData)
                                 Accessible.name: qsTr("Remove %1").arg(chip.modelData)
@@ -481,6 +516,7 @@ ApplicationWindow {
                     id: wordField
                     Layout.fillWidth: true
                     placeholderText: qsTr("Word, e.g. kek")
+                    placeholderTextColor: window.secondary
                     enabled: backend.wordOptions
                     onAccepted: if (backend.addException(text)) text = ""
                     Accessible.name: placeholderText
@@ -506,45 +542,67 @@ ApplicationWindow {
         focus: true
         anchors.centerIn: Overlay.overlay
         width: Math.min(window.width - 32, 480)
+        height: Math.min(window.height - 32, implicitHeight)
         padding: 18
+        property Item returnTo: null
+        onAboutToShow: returnTo = window.activeFocusItem
+        onOpened: helpClose.forceActiveFocus()
+        onClosed: if (returnTo) returnTo.forceActiveFocus()
         background: Rectangle {
             color: theme.background
             radius: window.small
             border.color: window.tint(0.4)
         }
-        contentItem: ColumnLayout {
-            spacing: 10
-            Label {
-                text: qsTr("Help")
-                font.pixelSize: 16
-                font.bold: true
-            }
-            Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
-            Hint { text: qsTr("An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts."); font.pixelSize: 12 }
-            Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
-            GridLayout {
-                columns: 2
-                columnSpacing: 16
-                rowSpacing: 4
-                Layout.topMargin: 4
-                Repeater {
-                    model: [
-                        "Space, Enter", qsTr("switch the selected row"),
-                        "j, k, ↓, ↑", qsTr("next or previous row"),
-                        "Tab", qsTr("next control"),
-                        "Ctrl+N", qsTr("add an application"),
-                        "Ctrl+R, F5", qsTr("refresh"),
-                        "?, F1", qsTr("help"),
-                        "Q, Esc", qsTr("close")
-                    ]
-                    delegate: Label {
-                        required property string modelData
-                        required property int index
-                        text: modelData
-                        textFormat: Text.PlainText
-                        font.bold: index % 2 === 0
-                        color: index % 2 === 0 ? window.fg : window.secondary
+        contentItem: Flickable {
+            implicitHeight: helpBody.implicitHeight
+            contentHeight: helpBody.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            ScrollBar.vertical: ScrollBar {}
+            Accessible.role: Accessible.Dialog
+            Accessible.name: qsTr("Help")
+            ColumnLayout {
+                id: helpBody
+                width: parent.width
+                spacing: 10
+                Label {
+                    text: qsTr("Help")
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+                Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
+                Hint { text: qsTr("An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts."); font.pixelSize: 12 }
+                Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
+                GridLayout {
+                    columns: 2
+                    columnSpacing: 16
+                    rowSpacing: 4
+                    Layout.topMargin: 4
+                    Repeater {
+                        model: [
+                            "Space, Enter", qsTr("switch the selected row"),
+                            "j, k, ↓, ↑", qsTr("next or previous item"),
+                            "Tab", qsTr("next control"),
+                            "Ctrl+N", qsTr("add an application"),
+                            "Ctrl+R, F5", qsTr("refresh"),
+                            "?, F1", qsTr("help"),
+                            "Q, Esc", qsTr("close")
+                        ]
+                        delegate: Label {
+                            required property string modelData
+                            required property int index
+                            text: modelData
+                            textFormat: Text.PlainText
+                            font.bold: index % 2 === 0
+                            color: index % 2 === 0 ? window.fg : window.secondary
+                        }
                     }
+                }
+                Button {
+                    id: helpClose
+                    text: qsTr("Close")
+                    Layout.alignment: Qt.AlignRight
+                    onClicked: help.close()
                 }
             }
         }

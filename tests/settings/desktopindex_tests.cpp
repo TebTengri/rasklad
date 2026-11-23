@@ -163,6 +163,34 @@ private Q_SLOTS:
         QCOMPARE(sub.find(QStringLiteral("vendor-tool"))->name, QStringLiteral("Vendor Tool"));
     }
 
+    void ambiguousSegmentGivesNothing()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QVERIFY(writeFile(dir.filePath(QStringLiteral("com.a.editor.desktop")), "[Desktop Entry]\nType=Application\nName=A\n"));
+        QVERIFY(writeFile(dir.filePath(QStringLiteral("org.b.editor.desktop")), "[Desktop Entry]\nType=Application\nName=B\n"));
+        QVERIFY(writeFile(dir.filePath(QStringLiteral("org.c.desktop.desktop")), "[Desktop Entry]\nType=Application\nName=C\n"));
+        DesktopIndex idx;
+        idx.load({dir.path()});
+        QVERIFY(!idx.find(QStringLiteral("editor")));
+        QVERIFY(!idx.find(QStringLiteral("desktop"))); // a generic segment never names an app
+        QCOMPARE(idx.find(QStringLiteral("org.b.editor"))->name, QStringLiteral("B")); // the full id still does
+        QCOMPARE(idx.find(QStringLiteral("c"))->name, QStringLiteral("C"));
+    }
+
+    void localeVariants()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QVERIFY(writeFile(dir.filePath(QStringLiteral("app.desktop")),
+                          "[Desktop Entry]\nType=Application\nName=App\nName[ru]=Прил\n"));
+        for (const char *lang : {"ru", "ru_RU", "ru-RU", "ru_RU.UTF-8", "ru_RU.UTF-8@x"}) {
+            DesktopIndex idx;
+            idx.load({dir.path()}, QString::fromLatin1(lang));
+            QCOMPARE(idx.find(QStringLiteral("app"))->name, QStringLiteral("Прил"));
+        }
+    }
+
     void webAppWithEntry()
     {
         const auto info = index.find(QStringLiteral("chrome-web.whatsapp.com__-Default"));
@@ -215,7 +243,7 @@ private Q_SLOTS:
     void systemComponents()
     {
         for (const char *id : {"quickshell", "org.quickshell", "Walker", "elephant", "mako", "waybar",
-                               "swayosd", "hyprlauncher", "rasklad-settings", "MAKO"})
+                               "swayosd", "hyprlauncher", "rasklad-settings", "MAKO", "org.omarchy.screensaver"})
             QVERIFY2(isSystemComponent(QLatin1String(id)), id);
         QVERIFY(!isSystemComponent(QStringLiteral("slack")));
         QVERIFY(!isSystemComponent(QString()));

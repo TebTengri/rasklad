@@ -15,6 +15,7 @@
 #include <poll.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstring>
 
 namespace rasklad::settings {
@@ -162,16 +163,29 @@ int hyprlandRounding()
     if (path.size() >= static_cast<qsizetype>(sizeof(addr.sun_path))) return 0;
     addr.sun_family = AF_UNIX;
     std::memcpy(addr.sun_path, path.constData(), static_cast<size_t>(path.size()));
-    const int fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    // Non-blocking throughout: a wedged compositor never holds the window back.
+    const int fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd < 0) return 0;
+    const auto wait = [fd](short events) {
+        pollfd p{fd, events, 0};
+        int r;
+        do r = ::poll(&p, 1, kTimeoutMs); while (r < 0 && errno == EINTR);
+        return r > 0 && (p.revents & events);
+    };
     QByteArray reply;
     const QByteArray request = "j/getoption decoration:rounding";
-    if (::connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == 0 &&
+    bool connected = ::connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == 0;
+    if (!connected && (errno == EINPROGRESS || errno == EAGAIN) && wait(POLLOUT)) {
+        int err = 0;
+        socklen_t len = sizeof(err);
+        connected = ::getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len) == 0 && err == 0;
+    }
+    if (connected && wait(POLLOUT) &&
         ::send(fd, request.constData(), static_cast<size_t>(request.size()), MSG_NOSIGNAL) == request.size()) {
         char buf[1024];
-        pollfd p{fd, POLLIN, 0};
-        while (reply.size() < 4096 && ::poll(&p, 1, kTimeoutMs) > 0) {
+        while (reply.size() < 4096 && wait(POLLIN)) {
             const ssize_t n = ::recv(fd, buf, sizeof(buf), 0);
+            if (n < 0 && errno == EINTR) continue;
             if (n <= 0) break;
             reply.append(buf, n);
         }

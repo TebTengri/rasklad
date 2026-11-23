@@ -11,6 +11,9 @@
 #include <QQuickImageProvider>
 #include <QRegularExpression>
 #include <QStandardPaths>
+#include <QUrl>
+
+#include <algorithm>
 
 namespace rasklad::settings {
 
@@ -33,7 +36,7 @@ private:
     {
         static const QRegularExpression name(QStringLiteral("^[A-Za-z0-9._+-]{1,128}$"));
         if (name.match(value).hasMatch()) return QIcon::fromTheme(value);
-        if (!QDir::isAbsolutePath(value) || value.contains(QLatin1String("/../"))) return {};
+        if (!QDir::isAbsolutePath(value)) return {};
         const QString clean = QDir::cleanPath(value);
         QStringList roots{QStringLiteral("/usr/share/icons/"), QStringLiteral("/usr/share/pixmaps/")};
         for (const QString &d : QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation))

@@ -35,7 +35,7 @@ The window is one scrolling page with no tabs, because Omarchy uses none. From t
    - Below the groups:
      - the button «Добавить вручную…», which opens a program-name field and «Добавить»;
      - the hint «Нет в списке? Щёлкните по полю ввода в нужном приложении.»
-5. **ИСКЛЮЧЕНИЯ.** The detail line reads «Эти слова не исправляются автоматически, в обеих раскладках.» Below it come the word chips, then the «Слово» field and «Добавить».
+5. **ИСКЛЮЧЕНИЯ.** The detail line reads «Эти слова не исправляются автоматически — ни в одной раскладке.» Below it come the word chips, then the «Слово» field and «Добавить».
 
 These are removed:
 - the tabs;
@@ -52,7 +52,7 @@ Help is an overlay inside the window. It contains:
   - «Двойной Shift меняет раскладку слова или отменяет только что сделанное исправление.»
   - «Двойной Alt переключает раскладку.»
 - one line on password fields: an unmarked password field looks like ordinary text;
-- one line on discovery: «Приложение появляется в списке, когда вы печатаете в нём. После перезапуска Fcitx список собирается заново.»
+- one line on discovery: «Приложение появляется в списке, когда вы щёлкаете по полю ввода в нём. После перезапуска Fcitx список собирается заново.»
 - the keys.
 
 Esc or `?` closes it.
@@ -62,10 +62,10 @@ Esc or `?` closes it.
 | Key | Action |
 |---|---|
 | `?`, F1 | Help |
-| `Q`, Ctrl+Q | Quit, when no text field is focused |
-| Esc | Close help or the add field, otherwise quit |
+| `Q` (Й), Ctrl+Q | Quit, when no text field is focused |
+| Esc | Close help or the add field; in a field, clear it, then leave it; otherwise quit |
 | Tab, Shift+Tab | Next or previous control |
-| `j`/`k`, ↓/↑ | Next or previous row |
+| `j`/`k` (о/л), ↓/↑ | Next or previous control |
 | Space, Enter | Toggle the focused row |
 | Ctrl+N | Add manually |
 | Ctrl+R, F5 | Refresh |
@@ -109,7 +109,7 @@ The index lives in `settings/desktopindex.{h,cpp}`. It is a small parser: it rea
 **Special cases:**
 - **Web apps.** `chrome-<site>__-Default` with no entry shows the site as the name and «Веб-приложение» as the description. It stays a separate permission from Chromium.
 - **Aliases.** `chromium` and `chromium-browser` share one row. The row is on if either is on. A click writes both. A mixed state shows as on with the detail line «Включено не для всех имён программы» until the user clicks.
-- **System components** are hidden: `quickshell`, `org.quickshell`, `walker`, `elephant`, `mako`, `waybar`, `swayosd`, `hyprlauncher` and `rasklad-settings`. Terminals stay hidden, as before.
+- **System components** are hidden: `quickshell`, `org.quickshell`, `walker`, `elephant`, `mako`, `waybar`, `swayosd`, `hyprlauncher`, `org.omarchy.screensaver` and `rasklad-settings`. Terminals stay hidden, as before.
 
 **Privacy:**
 - Of `Exec`, only the basename is kept.
@@ -129,3 +129,4 @@ The index lives in `settings/desktopindex.{h,cpp}`. It is a small parser: it rea
 - `j`, `k`, Space and Enter act only on a focused row; `Q` and `?` are ignored while a text field has focus.
 - A search field for long lists.
 - Not adopted: an "everywhere except" model. Rasklad stays opt-in per app on purpose (SECURITY.md: fields an app does not mark as passwords cannot be told apart).
+- Accessibility review: focus returns to the same row after a switch or a refresh; the window opens with focus on the first row; a held Space switches once; help has a Close button, scrolls, and returns focus; rows expose checkbox role, state and actions.

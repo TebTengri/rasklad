@@ -158,11 +158,17 @@ QStringList DesktopIndex::defaultDirs()
     return QStandardPaths::standardLocations(QStandardPaths::ApplicationsLocation);
 }
 
-void DesktopIndex::load(const QStringList &dirs, const QString &language)
+void DesktopIndex::load(const QStringList &dirs, const QString &rawLanguage)
 {
     m_entries.clear();
 
-    // "ru" -> {"ru_RU", "ru"}; "ru_RU" -> {"ru_RU", "ru"}.
+    // "ru" -> {"ru_RU", "ru"}; "ru_RU", "ru-RU", "ru_RU.UTF-8@x" -> {"ru_RU", "ru"}.
+    QString language = rawLanguage;
+    language.replace(QLatin1Char('-'), QLatin1Char('_'));
+    for (const QChar cut : {QLatin1Char('.'), QLatin1Char('@')}) {
+        const qsizetype at = language.indexOf(cut);
+        if (at >= 0) language.truncate(at);
+    }
     QStringList locales;
     const qsizetype us = language.indexOf(QLatin1Char('_'));
     const QString lang = us < 0 ? language : language.left(us);
@@ -241,14 +247,20 @@ std::optional<AppInfo> DesktopIndex::find(const QString &program) const
     };
 
     const Entry *hit = pick([&](const Entry &e) { return !e.wmClass.isEmpty() && e.wmClass == p; });
+    if (!hit) hit = pick([&](const Entry &e) { return e.id == p; });
     if (!hit) {
-        hit = pick([&](const Entry &e) {
-            if (e.id == p) return true;
+        // A reverse-DNS segment names an app only when exactly one entry has it:
+        // com.a.editor and org.b.editor both answer "editor", so neither does.
+        auto segMatch = [&](const Entry &e) {
             const QStringList seg = e.id.split(QLatin1Char('.'));
             if (seg.size() < 2) return false;
-            if (seg.last() == p) return true;
+            if (seg.last() == p) return !genericSegment(p);
             return seg.size() >= 3 && genericSegment(seg.last()) && seg.at(seg.size() - 2) == p;
-        });
+        };
+        int count = 0;
+        for (const Entry &e : m_entries)
+            if (segMatch(e)) ++count;
+        if (count == 1) hit = pick(segMatch);
     }
     if (!hit) {
         // Web app entries run the browser itself, so they never claim its basename.
@@ -285,7 +297,8 @@ bool isSystemComponent(const QString &id)
     static const QStringList components{
         QStringLiteral("quickshell"), QStringLiteral("org.quickshell"), QStringLiteral("walker"),
         QStringLiteral("elephant"),   QStringLiteral("mako"),           QStringLiteral("waybar"),
-        QStringLiteral("swayosd"),    QStringLiteral("hyprlauncher"),   QStringLiteral("rasklad-settings")};
+        QStringLiteral("swayosd"),    QStringLiteral("hyprlauncher"),   QStringLiteral("rasklad-settings"),
+        QStringLiteral("org.omarchy.screensaver")};
     return components.contains(id, Qt::CaseInsensitive);
 }
 
