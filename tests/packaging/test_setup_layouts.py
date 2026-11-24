@@ -1,17 +1,24 @@
 # SPDX-License-Identifier: MIT
-"""SYS-268: rasklad-setup keeps a layout the lock screen can use.
+"""SYS-268: rasklad-setup keeps a layout the lock screen can use, and asks first.
 
-input_plan() with a stand-in for hyprctl: no file, no Hyprland, no Fcitx.
+input_plan() and install() with stand-ins for hyprctl and Fcitx, in a temporary
+XDG_CONFIG_HOME and XDG_STATE_HOME: the user's own files are never touched.
 """
+import contextlib
 import importlib.machinery
 import importlib.util
+import io
+import os
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def load_setup():
+def load_setup(home):
+    os.environ['XDG_CONFIG_HOME'] = str(Path(home) / 'config')
+    os.environ['XDG_STATE_HOME'] = str(Path(home) / 'state')
     loader = importlib.machinery.SourceFileLoader('rasklad_setup', str(ROOT / 'packaging/arch/rasklad-setup'))
     spec = importlib.util.spec_from_loader('rasklad_setup', loader)
     module = importlib.util.module_from_spec(spec)
@@ -19,19 +26,69 @@ def load_setup():
     return module
 
 
-class Layouts(unittest.TestCase):
-    def plan(self, layout, options='compose:caps,grp:alts_toggle', variant=''):
-        setup = load_setup()
+class FakeFcitx:
+    def __init__(self, items, apply=True):
+        self.items = items
+        self.apply = apply
+        self.calls = 0
+
+    def bus(self):
+        return {'group': lambda: ('Default', 'us', [list(i) for i in self.items]),
+                'set_group': self.set_group, 'status': lambda: None}
+
+    def set_group(self, name, layout, items):
+        self.calls += 1
+        if self.apply:
+            self.items = [tuple(i) for i in items]
+        return True  # Fcitx answers normally even when nothing changed
+
+
+class Base(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.saved_env = {k: os.environ.get(k) for k in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME')}
+        self.addCleanup(self.restore_env)
+        self.setup = load_setup(self.tmp.name)
+        hypr = Path(self.tmp.name) / 'config' / 'hypr'
+        hypr.mkdir(parents=True)
+        self.input = hypr / 'input.lua'
+        self.input.write_bytes(b'-- user file\n')
+        self.setup.lua_ok = lambda data: True
+        self.setup.hypr_errors = lambda: []
+        self.setup.hypr_running = lambda: False
+        self.setup.link_state = lambda: 'ok'
+        self.setup.bindings_plan = lambda data=None: ('ok', None)
+        self.setup.shell_plan = lambda data=None: ('ok', None)
+
+    def restore_env(self):
+        for k, v in self.saved_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def hypr(self, layout, options='compose:caps,grp:alts_toggle', variant=''):
         values = {'input:kb_layout': layout, 'input:kb_options': options, 'input:kb_variant': variant}
-        setup.hypr_option = values.get
-        setup.file_state = lambda path: None
-        setup.lua_ok = lambda data: True
-        return setup.input_plan(b'-- user file\n')
+        self.setup.hypr_option = values.get
+
+    def plan(self, layout, **kw):
+        self.hypr(layout, **kw)
+        return self.setup.input_plan(b'-- user file\n')
 
     def kept(self, block):
         text = block.decode()
         return [line.strip() for line in text[text.index('kb_layout = "'):].split('\n')[:3]]
 
+    def install(self, fake, **kw):
+        self.setup.fcitx = (lambda: fake.bus()) if fake else (lambda: None)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = self.setup.install(True, **kw)
+        return code, out.getvalue()
+
+
+class Plan(Base):
     def test_us_first(self):
         status, new = self.plan('us,ru', variant=',')
         self.assertEqual(status, 'missing')
@@ -41,31 +98,67 @@ class Layouts(unittest.TestCase):
     def test_ru_first_keeps_us_for_the_lock_screen(self):
         status, new = self.plan('ru,us', variant='winkeys,intl')
         self.assertEqual(status, 'missing')
-        kept = self.kept(new)
-        self.assertEqual(kept[0], 'kb_layout = "us",')
-        self.assertEqual(kept[1], 'kb_variant = "intl",')
+        self.assertEqual(self.kept(new)[:2], ['kb_layout = "us",', 'kb_variant = "intl",'])
 
-    def test_third_layout_left_as_is(self):
-        self.assertEqual(self.plan('us,ru,kz'), ('other-layouts', None))
+    def test_missing_trailing_variant_is_the_base_layout(self):
+        status, new = self.plan('ru,us', variant='winkeys')
+        self.assertEqual(self.kept(new)[1], 'kb_variant = "",')
 
-    def test_other_pair_left_as_is(self):
-        self.assertEqual(self.plan('de,ru'), ('other-layouts', None))
-
-    def test_without_us_left_as_is(self):
-        self.assertEqual(self.plan('ru', options='grp:alts_toggle'), ('other-layouts', None))
+    def test_other_layouts_left_as_is(self):
+        for layout in ('us,ru,kz', 'de,ru', 'ru', 'us,ru,us'):
+            self.assertEqual(self.plan(layout, options='grp:alts_toggle'), ('other-layouts', None), layout)
 
     def test_single_us_without_toggle_is_ok(self):
         self.assertEqual(self.plan('us', options='compose:caps'), ('ok', None))
 
-    def test_unknown_without_hyprland(self):
-        setup = load_setup()
-        setup.hypr_option = lambda name: None
-        setup.file_state = lambda path: None
-        self.assertEqual(setup.input_plan(b'')[0], 'unknown')
+    def test_unknown_when_a_query_fails(self):
+        self.setup.hypr_option = {'input:kb_layout': 'ru,us', 'input:kb_options': ''}.get  # no kb_variant
+        self.assertEqual(self.setup.input_plan(b'')[0], 'unknown')
+        self.setup.hypr_option = lambda name: None
+        self.assertEqual(self.setup.input_plan(b'')[0], 'unknown')
 
-    def test_settings_knows_the_new_state(self):
-        core = (ROOT / 'settings/settingscore.cpp').read_text()
-        self.assertGreaterEqual(core.count('"other-layouts"'), 2)
+    def test_block_from_before_sys268_is_legacy(self):
+        old = b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "ru"}})\n'
+        self.assertEqual(self.setup.input_plan(old)[0], 'legacy')
+        ours = b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "us"}})\n'
+        self.assertEqual(self.setup.input_plan(ours)[0], 'ok')
+
+
+class Install(Base):
+    def test_yes_alone_keeps_hyprland_layouts(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
+        code, out = self.install(fake)
+        self.assertEqual(code, 0)
+        self.assertIn('--single-layout', out)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+
+    def test_single_layout_writes_us_after_fcitx_has_both(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(fake.calls, 1)
+        self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
+
+    def test_fcitx_reply_without_change_leaves_layouts(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')], apply=False)
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertIn('Fcitx does not have both layouts', out)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+
+    def test_without_fcitx_layouts_wait(self):
+        self.hypr('ru,us', variant=',')
+        code, out = self.install(None, single_layout=True)
+        self.assertIn('until Fcitx runs', out)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+
+    def test_usage_rejects_single_layout_elsewhere(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(self.setup.main(['--check', '--single-layout']), 2)
+            self.assertEqual(self.setup.main(['--install', '--yes', '--yes']), 2)
 
 
 if __name__ == '__main__':
