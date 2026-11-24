@@ -41,6 +41,14 @@ RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', 
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
 OUR_ID = re.compile(rb'"id"\s*:\s*"rasklad\.layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
+# SYS-268: the input.lua block, from BEGIN up to END, exactly as written.
+LAYOUT_BLOCK = (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
+                "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
+                + LAYOUT_MARK + "\n"
+                "hl.config({\n  input = {\n    kb_layout = \"us\",\n    kb_variant = \"{variant}\",\n"
+                "    kb_options = \"{options}\",\n  },\n})\n")
+LAYOUT_BLOCK_RE = re.compile(re.escape(LAYOUT_BLOCK).replace(re.escape("{variant}"), XKB.pattern)
+                             .replace(re.escape("{options}"), XKB.pattern).encode())
 
 HOME = os.path.expanduser("~")
 CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
@@ -195,6 +203,14 @@ def hypr_running():
   return bool(done and done.returncode == 0)
 
 
+def hypr_session():
+  """running, none (no Hyprland session here) or unknown (a session that does
+  not answer: it may still run with one layout)."""
+  if hypr_running():
+    return "running"
+  return "unknown" if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE") else "none"
+
+
 def hypr_errors():
   done = run([HYPRCTL, "configerrors", "-j"])
   if not done or done.returncode != 0:
@@ -318,9 +334,7 @@ def input_plan(data=None):
     start = data.index(BEGIN.encode())
     end = data.find(END.encode(), start)
     block = data[start:end] if end != -1 else b""
-    marked = LAYOUT_MARK.encode() in block
-    layouts = re.findall(rb'kb_layout\s*=\s*"([^"]*)"', block)
-    return ("ok", None) if marked and layouts == [b"us"] else ("legacy", None)
+    return ("ok", None) if LAYOUT_BLOCK_RE.fullmatch(block) else ("legacy", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
   if layout is None or options is None or variant is None:
     return "unknown", None
@@ -341,11 +355,7 @@ def input_plan(data=None):
   if not all(XKB.fullmatch(v) for v in values):
     # Only this optional step is affected; the rest of --install goes on.
     return "unknown", None
-  block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
-           "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
-           + LAYOUT_MARK + "\n"
-           "hl.config({\n  input = {\n    kb_layout = \"%s\",\n    kb_variant = \"%s\",\n"
-           "    kb_options = \"%s\",\n  },\n})\n%s\n") % ((BEGIN,) + values + (END,))
+  block = "\n" + LAYOUT_BLOCK.replace("{variant}", values[1]).replace("{options}", values[2]) + END + "\n"
   new = append_block(data, block)
   return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
@@ -587,6 +597,10 @@ def install(assume_yes, single_layout=False):
       say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
+    if path == INPUT and input_plan(old) != ("missing", new):
+      say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
+      failed = True
+      continue
     remember_file(state, path, old, new)
     save_state(state)
     write_atomic(path, new)
@@ -604,12 +618,15 @@ def install(assume_yes, single_layout=False):
       # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
       if INPUT in hypr and not restore(state, INPUT):
         say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
+      elif INPUT in hypr and not hypr_layouts_back():
+        state["await_hypr"] = True
+        say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert")
       else:
         for path in hypr:
           if path != INPUT:
             restore(state, path)
+        run([HYPRCTL, "reload"])
       save_and_drop(state)
-      run([HYPRCTL, "reload"])
       return 1
   return 1 if failed else 0
 
@@ -670,8 +687,9 @@ def revert():
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
   restored_hypr = had_input and not input_kept
-  if (restored_hypr or state.get("await_hypr")) and hypr_running():
-    if not hypr_layouts_back():
+  session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
+  if session != "none":
+    if session == "unknown" or not hypr_layouts_back():
       # The file is back, but Hyprland still runs with one layout: the controls
       # stay until it has taken the restored file; a later --revert checks again.
       state["await_hypr"] = True

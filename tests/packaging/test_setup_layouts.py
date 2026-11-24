@@ -59,6 +59,7 @@ class Base(unittest.TestCase):
         self.setup.lua_ok = lambda data: True
         self.setup.hypr_errors = lambda: []
         self.setup.hypr_running = lambda: False
+        self.setup.hypr_session = lambda: 'none'
         self.setup.link_state = lambda: 'ok'
         self.setup.bindings_plan = lambda data=None: ('ok', None)
         self.setup.shell_plan = lambda data=None: ('ok', None)
@@ -132,6 +133,10 @@ class Plan(Base):
         old = (b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "us"}})\n'
                + self.setup.END.encode() + b'\n' + self.setup.LAYOUT_MARK.encode() + b'\n')
         self.assertEqual(self.setup.input_plan(old)[0], 'legacy')
+        # ru added in a comment-and-replace edit, single quotes.
+        edited = new.replace(b'    kb_layout = "us",\n', b"    -- kb_layout = \"us\",\n    kb_layout = 'ru',\n")
+        self.assertNotEqual(edited, new)
+        self.assertEqual(self.setup.input_plan(edited)[0], 'legacy')
 
     def test_spaces_in_options_are_ignored(self):
         status, new = self.plan('us,ru', options='compose:caps, grp:alt_shift_toggle', variant=',')
@@ -195,7 +200,7 @@ class Install(Base):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
         self.assertEqual(self.install(fake, single_layout=True)[0], 0)
-        self.setup.hypr_running = lambda: True
+        self.setup.hypr_session = lambda: 'running'
         self.setup.hypr_layouts_back = lambda: False  # reload failed or still one layout
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -209,6 +214,44 @@ class Install(Base):
             self.assertEqual(self.setup.revert(), 0)
         self.assertEqual(fake.calls, 2)  # now Fcitx goes back too
         self.assertFalse(os.path.exists(self.setup.STATE_FILE))
+
+    def test_revert_waits_while_hyprland_does_not_answer(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.setup.hypr_session = lambda: 'unknown'
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 1)
+            self.assertEqual(self.setup.revert(), 1)  # the retry waits too
+        self.assertEqual(fake.calls, 1)
+        self.assertTrue(self.setup.load_state().get('await_hypr'))
+
+    def test_layouts_changed_while_asking(self):
+        self.hypr('us,ru', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        real = self.setup.fcitx_plan
+        def plan_then_kz(bus):
+            self.hypr('us,ru,kz', variant=',,')  # after the question
+            return real(bus)
+        self.setup.fcitx_plan = plan_then_kz
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertIn('layouts changed while waiting', out)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+
+    def test_rollback_keeps_controls_until_hyprland_takes_input(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.setup.hypr_running = lambda: True
+        errors = iter([[], ['new error']])
+        self.setup.hypr_errors = lambda: next(errors)
+        self.setup.hypr_layouts_back = lambda: False
+        self.setup.run = lambda argv, timeout=5: None
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertIn('has not taken the restored input.lua', out)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+        self.assertTrue(self.setup.load_state().get('await_hypr'))
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
