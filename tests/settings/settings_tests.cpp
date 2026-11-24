@@ -299,6 +299,14 @@ private Q_SLOTS:
         QCOMPARE(row(m, {QStringLiteral("g")}), QStringLiteral("problem"));
         QCOMPARE(setupFromCheck("unparsable bar-widget\n").value(QStringLiteral("bar-widget")).toString(),
                  QStringLiteral("unparsable"));
+        // SYS-268: the layout step through the real parser. Keeping Hyprland's
+        // layouts is a choice, other layouts are left as is, an old block is a fault.
+        const QStringList layout{QStringLiteral("hyprland-layout")};
+        QCOMPARE(row(setupFromCheck("optional hyprland-layout Hyprland keeps its layouts\n"), layout),
+                 QStringLiteral("ok"));
+        QCOMPARE(row(setupFromCheck("other-layouts hyprland-layout layouts other than us and ru\n"), layout),
+                 QStringLiteral("other"));
+        QCOMPARE(row(setupFromCheck("legacy hyprland-layout an older block\n"), layout), QStringLiteral("problem"));
     }
     void setupShownAndOpened()
     {

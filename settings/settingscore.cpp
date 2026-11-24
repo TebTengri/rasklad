@@ -163,7 +163,9 @@ QVariantMap setupFromCheck(const QByteArray &output)
                                     QStringLiteral("other"),    QStringLiteral("symlink"),     QStringLiteral("unknown"),
                                     QStringLiteral("no-fcitx"), QStringLiteral("missing-file"), QStringLiteral("lua-error"),
                                     QStringLiteral("no-slot"),  QStringLiteral("not-a-file"),  QStringLiteral("unparsable"),
-                                    QStringLiteral("on"),       QStringLiteral("paused")};
+                                    QStringLiteral("on"),       QStringLiteral("paused"),
+                                    QStringLiteral("other-layouts"), QStringLiteral("optional"),
+                                    QStringLiteral("legacy")};
     QVariantMap result;
     if (output.size() > 4096) return result;
     for (const QByteArray &raw : output.split('\n')) {
@@ -181,13 +183,16 @@ QString setupRowState(const QVariantMap &setup, const QStringList &steps)
     bool problem = false, missing = false, unknown = false, other = false;
     for (const QString &step : steps) {
         const QString s = setup.value(step).toString();
-        if (s == QLatin1String("ok")) continue;
+        // SYS-268: "optional" is the user's choice to keep Hyprland's layouts.
+        if (s == QLatin1String("ok") || s == QLatin1String("optional")) continue;
         if (s == QLatin1String("lua-error") || s == QLatin1String("no-slot") || s == QLatin1String("broken") ||
-            s == QLatin1String("not-a-file") || s == QLatin1String("unparsable"))
+            s == QLatin1String("not-a-file") || s == QLatin1String("unparsable") ||
+            s == QLatin1String("legacy")) // a pre-SYS-268 block: revert, then install
             problem = true;
         else if (s == QLatin1String("missing") || s == QLatin1String("missing-file"))
             missing = true;
-        else if (s == QLatin1String("other") || s == QLatin1String("symlink"))
+        else if (s == QLatin1String("other") || s == QLatin1String("symlink") ||
+                 s == QLatin1String("other-layouts")) // SYS-268: kz, de, ... left as is
             other = true;
         else
             unknown = true; // "unknown", "no-fcitx", or absent

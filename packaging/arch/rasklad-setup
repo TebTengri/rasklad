@@ -23,6 +23,7 @@ import hashlib
 import json
 import os
 import re
+import socket
 import stat
 import subprocess
 import sys
@@ -34,11 +35,23 @@ WIDGET = SHARE + "/omarchy/rasklad.layout"
 HYPRCTL = "/usr/bin/hyprctl"
 BEGIN = "-- BEGIN rasklad-setup"
 END = "-- END rasklad-setup"
+# SYS-268: in every input.lua block this version writes (us kept, by choice).
+LAYOUT_MARK = "-- rasklad-setup layout 2: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
 OUR_ID = re.compile(rb'"id"\s*:\s*"rasklad\.layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
+# SYS-268: us variants that type Latin letters (the lock screen keeps only us).
+LATIN_US = {"", "intl", "altgr-intl", "alt-intl", "euro", "mac", "colemak", "dvorak", "workman"}
+# SYS-268: the input.lua block, from BEGIN up to END, exactly as written.
+LAYOUT_BLOCK = (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
+                "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
+                + LAYOUT_MARK + "\n"
+                "hl.config({\n  input = {\n    kb_layout = \"us\",\n    kb_variant = \"{variant}\",\n"
+                "    kb_options = \"{options}\",\n  },\n})\n")
+LAYOUT_BLOCK_RE = re.compile(re.escape(LAYOUT_BLOCK).replace(re.escape("{variant}"), XKB.pattern)
+                             .replace(re.escape("{options}"), r"(?![^\"]*grp:)" + XKB.pattern).encode())
 
 HOME = os.path.expanduser("~")
 CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
@@ -122,7 +135,13 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if set(state) - {"version", "files", "link", "fcitx"} or not isinstance(state.get("files"), dict):
+  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout"} or \
+     not isinstance(state.get("files"), dict):
+    raise bad
+  if not isinstance(state.get("await_hypr", False), bool):
+    raise bad
+  hl = state.get("hypr_layout")
+  if hl is not None and not (isinstance(hl, str) and hl and XKB.fullmatch(hl)):
     raise bad
   for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
@@ -189,6 +208,37 @@ def hypr_option(name):
 def hypr_running():
   done = run([HYPRCTL, "version", "-j"])
   return bool(done and done.returncode == 0)
+
+
+def hypr_session():
+  """running, none (no Hyprland session here) or unknown (a session that does
+  not answer: it may still run with one layout)."""
+  if hypr_running():
+    return "running"
+  if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+    return "unknown"
+  # From a TTY or SSH: hyprctl finds instances by their sockets, so do we.
+  runtime = os.environ.get("XDG_RUNTIME_DIR") or "/run/user/%d" % os.getuid()
+  try:
+    names = os.listdir(os.path.join(runtime, "hypr"))
+  except OSError:
+    names = []
+  for n in names:
+    path = os.path.join(runtime, "hypr", n, ".socket.sock")
+    if not os.path.exists(path):
+      continue
+    probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    probe.settimeout(1)
+    try:
+      probe.connect(path)
+    except (ConnectionRefusedError, FileNotFoundError):
+      continue  # left behind by a Hyprland that is gone
+    except OSError:
+      return "unknown"
+    finally:
+      probe.close()
+    return "unknown"  # a live Hyprland this shell cannot query
+  return "none"
 
 
 def hypr_errors():
@@ -307,21 +357,38 @@ def input_plan(data=None):
   if data is None:
     data = read(INPUT)
   if BEGIN.encode() in data:
-    return "ok", None  # decided by the file, not by what Hyprland has loaded
+    # Decided by the file, not by what Hyprland has loaded. Only a block this
+    # version wrote is ours as is: the mark and kb_layout = "us" inside the same
+    # BEGIN..END block. Anything else (written before SYS-268, which may have
+    # kept ru or dropped kz, or edited since) is reported for revert and reinstall.
+    start = data.index(BEGIN.encode())
+    end = data.find(END.encode(), start)
+    block = data[start:end] if end != -1 else b""
+    return ("ok", None) if LAYOUT_BLOCK_RE.fullmatch(block) else ("legacy", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
-  if layout is None or options is None:
+  if layout is None or options is None or variant is None:
     return "unknown", None
-  opts = [o for o in options.split(",") if o]
+  # XKB ignores spaces around the commas ("compose:caps, grp:alt_shift_toggle").
+  opts = [o.strip() for o in options.split(",") if o.strip()]
   kept = [o for o in opts if not o.startswith("grp:")]
   if "," not in layout and len(kept) == len(opts):
     return "ok", None
-  values = (layout.split(",")[0], (variant or "").split(",")[0], ",".join(kept))
+  # SYS-268: Hyprland keeps us, wherever it is in the list: the lock screen reads
+  # its password with Hyprland's layout, and Fcitx never reaches it. Exactly us
+  # and ru, or nothing changes: kz, de or a second us would be lost.
+  layouts = [l.strip() for l in layout.split(",")]
+  if sorted(layouts) not in (["us"], ["ru", "us"]):
+    return "other-layouts", None
+  variants = variant.split(",")
+  i = layouts.index("us")
+  values = ("us", variants[i].strip() if i < len(variants) else "", ",".join(kept))
+  if values[1] not in LATIN_US:
+    # us(rus) and the like type Cyrillic: the lock screen would have no Latin.
+    return "other-layouts", None
   if not all(XKB.fullmatch(v) for v in values):
-    raise Refused("unexpected characters in the Hyprland keyboard options")
-  block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
-           "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
-           "hl.config({\n  input = {\n    kb_layout = \"%s\",\n    kb_variant = \"%s\",\n"
-           "    kb_options = \"%s\",\n  },\n})\n%s\n") % ((BEGIN,) + values + (END,))
+    # Only this optional step is affected; the rest of --install goes on.
+    return "unknown", None
+  block = "\n" + LAYOUT_BLOCK.replace("{variant}", values[1]).replace("{options}", values[2]) + END + "\n"
   new = append_block(data, block)
   return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
@@ -398,7 +465,16 @@ def check():
   report(bindings_plan()[0], "double-alt")
   state = input_plan()[0]
   if state == "unknown":
-    say("unknown", "hyprland-layout", "Hyprland not running")
+    say("unknown", "hyprland-layout", "Hyprland not running or its keyboard options not readable")
+  elif state == "missing":
+    # SYS-268: a choice, not a fault. Hyprland keeps its layouts and switch.
+    say("optional", "hyprland-layout", "Hyprland keeps its layouts; --install --single-layout leaves only us")
+  elif state == "lua-error":
+    say("optional", "hyprland-layout", "Hyprland keeps its layouts; input.lua would not compile with the block")
+  elif state == "other-layouts":
+    say("other-layouts", "hyprland-layout", "not exactly us and ru, or a us variant that is not Latin; Hyprland keeps them")
+  elif state == "legacy":
+    report("legacy", "hyprland-layout", "an older or edited layout block: run --revert; if it is left, remove the rasklad-setup block from input.lua, then --install")
   else:
     report(state, "hyprland-layout")
   report(link_state(), "bar-widget-link")
@@ -426,9 +502,10 @@ def remember_file(state, path, old, new):
   entry["written"] = sha(new)
 
 
-def install(assume_yes):
+def install(assume_yes, single_layout=False):
   state = load_state()
   changes = []
+  layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
     # One read: the diff, the backup and the final comparison all use it.
     bad = file_state(path)
@@ -444,10 +521,18 @@ def install(assume_yes):
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
       say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
+    elif status == "missing" and path == INPUT:
+      layout_change.append((path, old, new))
     elif status == "missing":
       changes.append((path, old, new))
     elif status == "unknown":
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
+    elif status == "other-layouts":
+      say("other-layouts", os.path.basename(path),
+          "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
+    elif status == "legacy":
+      say("legacy", os.path.basename(path),
+          "an older or edited layout block: run --revert; if it is left, remove the rasklad-setup block from input.lua, then --install")
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
   link = link_state()
@@ -457,28 +542,56 @@ def install(assume_yes):
   group = fcitx_plan(bus)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
+    # SYS-268: without Fcitx nothing else would switch layouts.
+    if layout_change:
+      say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
+      layout_change = []
 
-  if not changes and link != "missing" and group[0] != "missing":
+  main_steps = bool(changes) or link == "missing" or group[0] == "missing"
+  if not main_steps and not layout_change:
     print("Nothing to change.")
     return 0
-  for path, old, new in changes:
+  if main_steps:
+    for path, old, new in changes:
+      show_diff(path, old, new)
+    if link == "missing":
+      print("+ link %s -> %s" % (PLUGIN_LINK, WIDGET))
+    if group[0] == "missing":
+      print("+ Fcitx group %s: add %s" % (group[1][0], ", ".join(
+        sorted(set(ids(group[1][3])) - set(ids(group[1][2]))))))
+    if not assume_yes:
+      if not sys.stdin.isatty():
+        raise Refused("not a terminal: pass --yes to apply")
+      if input("Apply these changes? [y/N] ").strip().lower() not in ("y", "yes"):
+        print("Nothing changed.")
+        return 0
+
+  # SYS-268: keeping only us in Hyprland is the user's choice, asked on its own:
+  # the lock screen reads the password with Hyprland's layout, never Fcitx's.
+  if layout_change:
+    path, old, new = layout_change[0]
     show_diff(path, old, new)
-  if link == "missing":
-    print("+ link %s -> %s" % (PLUGIN_LINK, WIDGET))
-  if group[0] == "missing":
-    print("+ Fcitx group %s: add %s" % (group[1][0], ", ".join(
-      sorted(set(ids(group[1][3])) - set(ids(group[1][2]))))))
-  if not assume_yes:
-    if not sys.stdin.isatty():
-      raise Refused("not a terminal: pass --yes to apply")
-    if input("Apply these changes? [y/N] ").strip().lower() not in ("y", "yes"):
-      print("Nothing changed.")
-      return 0
+    print("  Hyprland keeps only the us layout; Fcitx switches layouts in apps.\n"
+          "  The lock screen then takes the password in the us (Latin) layout only.")
+    if assume_yes:
+      if not single_layout:
+        say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
+        layout_change = []
+    elif not sys.stdin.isatty():
+      raise Refused("not a terminal: pass --yes --single-layout to keep only us")
+    else:
+      # Asked even with --single-layout; the flag only makes yes the default.
+      answer = input("Keep only the us layout in Hyprland? [%s] " % ("Y/n" if single_layout else "y/N"))
+      answer = answer.strip().lower()
+      if not (answer in ("y", "yes") or (single_layout and answer == "")):
+        say("skipped", os.path.basename(path), "Hyprland keeps its layouts")
+        layout_change = []
 
   # Each step is recorded before it is done, so a crash in between leaves a
   # state --revert can reconcile (an unwritten file still equals its copy).
   errors_before = hypr_errors()
   failed = False
+  input_change = layout_change
   for path, old, new in changes:
     # The file must still be exactly what the diff was made from.
     if file_state(path) is not None or read(path) != old:
@@ -510,6 +623,32 @@ def install(assume_yes):
     else:
       say("failed", "fcitx-group")
       failed = True
+  for path, old, new in input_change:
+    # The group as Fcitx has it now, not the snapshot from before the question:
+    # a successful reply does not prove both layouts are there.
+    if fcitx_plan(fcitx())[0] != "ok":
+      say("skipped", os.path.basename(path), "Fcitx does not have both layouts; Hyprland layouts left as is")
+      failed = True
+      continue
+    if path == INPUT:
+      # What "the user's layouts are back" means for --revert (SYS-268); asked
+      # before the file comparison below, so nothing waits between it and the write.
+      recorded = "".join((hypr_option("input:kb_layout") or "").split())
+      state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
+    if path == INPUT and input_plan(old) != ("missing", new):
+      say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
+      failed = True
+      continue
+    # After the Hyprland queries above: a save made meanwhile is not overwritten.
+    if file_state(path) is not None or read(path) != old:
+      say("changed", os.path.basename(path), "edited while waiting; left as is")
+      failed = True
+      continue
+    remember_file(state, path, old, new)
+    save_state(state)
+    write_atomic(path, new)
+    say("done", os.path.basename(path))
+    changes.append((path, old, new))
 
   # Hyprland reloads a saved config by itself. Only errors that were not there
   # before undo our edits, and only the files this run changed.
@@ -519,10 +658,18 @@ def install(assume_yes):
     errors = hypr_errors()
     if errors and errors != errors_before:
       say("error", "hyprland", "new config errors after the change; undoing it")
-      for path in hypr:
-        restore(state, path)
+      # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
+      if INPUT in hypr and not restore(state, INPUT):
+        say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
+      elif INPUT in hypr and not hypr_layouts_back(state):
+        state["await_hypr"] = True
+        say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert")
+      else:
+        for path in hypr:
+          if path != INPUT:
+            restore(state, path)
+        run([HYPRCTL, "reload"])
       save_and_drop(state)
-      run([HYPRCTL, "reload"])
       return 1
   return 1 if failed else 0
 
@@ -557,6 +704,46 @@ def restore(state, path):
   return True
 
 
+def hypr_layouts_back(state):
+  """After restoring input.lua: Hyprland reloaded and runs with the user's own
+  layouts again: the ones it had when the block was written, or several. One us
+  with only a group toggle left would not type Cyrillic."""
+  done = run([HYPRCTL, "reload"])
+  if done is None or done.returncode != 0:
+    return False
+  layout, options = hypr_option("input:kb_layout"), hypr_option("input:kb_options")
+  if layout is None or options is None:
+    return False
+  layout = "".join(layout.split())
+  if "," in layout:
+    return True
+  # One layout: the block was only ever written over it with a group toggle
+  # (input_plan), and the block removes that toggle, so the toggle must be back.
+  toggle = any(o.strip().startswith("grp:") for o in options.split(","))
+  recorded = state.get("hypr_layout")
+  return toggle and (recorded is None or layout == recorded)
+
+
+def input_block_present():
+  # Opened without blocking and checked on the open file: a path swapped for a
+  # FIFO in between cannot stall revert.
+  try:
+    fd = os.open(INPUT, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
+  except OSError:
+    return False
+  try:
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+      return False
+    with os.fdopen(fd, "rb") as f:
+      fd = None
+      return BEGIN.encode() in f.read()
+  except OSError:
+    return False
+  finally:
+    if fd is not None:
+      os.close(fd)
+
+
 def revert():
   if read(STATE_FILE) is None:
     print("Nothing to revert.")
@@ -564,11 +751,49 @@ def revert():
   state = load_state()
   clean = True
   restored_hypr = False
-  for path in list(state["files"]):
-    done = restore(state, path)
-    clean = done and clean
-    restored_hypr = restored_hypr or (done and path in (BINDINGS, INPUT))
-  if state.get("link"):
+  # SYS-268: input.lua first. While it still keeps one Hyprland layout, the
+  # double Alt rule, the bar widget and Fcitx's layouts are the only ways to
+  # switch, so they all stay until a later --revert restores it.
+  had_input = INPUT in state["files"]
+  try:
+    input_kept = had_input and not restore(state, INPUT)
+  except OSError as e:  # unreadable input.lua or its directory
+    say("unreadable", os.path.basename(INPUT), "left as is (%s)" % e.strerror)
+    input_kept = True
+  input_left = False
+  # Kept only while a readable regular input.lua (through a dotfiles symlink
+  # too) still holds our block. Gone, a dangling link, a directory, unreadable:
+  # the live layouts decide. The path itself is never written here.
+  if input_kept and not input_block_present() and \
+     hypr_session() == "running" and hypr_layouts_back(state):
+    # Edited, our block gone, and Hyprland runs with the user's layouts again:
+    # input.lua stays as the user left it (its .rasklad.bak stays beside it).
+    input_kept, input_left = False, True
+    state.setdefault("_drop", []).append(state["files"].pop(INPUT)["backup"])
+  restored_hypr = had_input and not input_kept and not input_left
+  session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
+  if session != "none":
+    if session == "unknown" or not hypr_layouts_back(state):
+      # The file is back, but Hyprland still runs with one layout: the controls
+      # stay until it has taken the restored file; a later --revert checks again.
+      state["await_hypr"] = True
+      say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert again inside the Hyprland session")
+      save_and_drop(state)
+      return 1
+    state.pop("await_hypr", None)
+  if input_left:
+    clean = False  # input.lua left as is; its backup stays beside it
+  if input_kept:
+    clean = False
+    say("kept", "rasklad-controls", "input.lua edited; remove the rasklad-setup block from it and run --revert again")
+  else:
+    for path in list(state["files"]):
+      done = restore(state, path)
+      clean = done and clean
+      restored_hypr = restored_hypr or (done and path == BINDINGS)
+  if input_kept:
+    pass
+  elif state.get("link"):
     if os.path.islink(PLUGIN_LINK) and os.readlink(PLUGIN_LINK) == WIDGET:
       os.unlink(PLUGIN_LINK)
       say("removed", "bar-widget-link")
@@ -578,7 +803,12 @@ def revert():
     else:
       say("changed", "bar-widget-link", "not our link any more; left as is")
       clean = False
-  if state.get("fcitx"):
+  if state.get("fcitx") and input_kept:
+    # SYS-268: Hyprland still keeps one layout; Fcitx's two stay until input.lua
+    # is back, or nothing would switch layouts. The entry stays for a retry.
+    say("kept", "fcitx-group", "input.lua not restored; layouts kept in Fcitx")
+    clean = False
+  elif state.get("fcitx"):
     saved = state["fcitx"]
     bus = fcitx()
     current = bus["group"]() if bus else None
@@ -613,14 +843,15 @@ def revert():
 
 
 def main(argv):
-  args = [a for a in argv if a != "--yes"]
+  flags = ("--yes", "--single-layout")
+  args = [a for a in argv if a not in flags]
   if len(args) != 1 or args[0] not in ("--check", "--install", "--revert") or \
-     ("--yes" in argv and args[0] != "--install"):
-    print("usage: rasklad-setup --check | --install [--yes] | --revert", file=sys.stderr)
+     (any(f in argv for f in flags) and args[0] != "--install") or len(set(argv)) != len(argv):
+    print("usage: rasklad-setup --check | --install [--yes] [--single-layout] | --revert", file=sys.stderr)
     return 2
   try:
     if args[0] == "--install":
-      return install("--yes" in argv)
+      return install("--yes" in argv, "--single-layout" in argv)
     return check() if args[0] == "--check" else revert()
   except Refused as error:
     print("refused: %s" % error, file=sys.stderr)

@@ -61,9 +61,10 @@ before = snapshot()
 group_before = group()
 code, states = tool("--check")
 report["checkMissingFirst"] = code == 1 and states.get("double-alt") == "missing" and \
-  states.get("hyprland-layout") == "missing" and states.get("bar-widget") == "missing" and \
+  states.get("hyprland-layout") == "optional" and states.get("bar-widget") == "missing" and \
   states.get("bar-widget-link") == "missing" and states.get("fcitx-group") == "missing"
-code, _ = tool("--install", "--yes")
+# SYS-268: keeping only us in Hyprland is opted into separately.
+code, _ = tool("--install", "--yes", "--single-layout")
 report["installOk"] = code == 0
 after_install = snapshot()
 code, states = tool("--check")
@@ -88,6 +89,19 @@ report["stateRemoved"] = not os.path.exists(STATE)
 code, _ = tool("--revert")
 save()
 report["secondRevertNoop"] = code == 0 and snapshot() == before
+# SYS-268: --yes alone connects everything else and leaves Hyprland's layouts.
+input_lua = os.path.join(CONFIG, "hypr", "input.lua")
+with open(input_lua, "rb") as f:
+  input_before = f.read()
+code, _ = tool("--install", "--yes")
+with open(input_lua, "rb") as f:
+  input_after = f.read()
+check_code, states = tool("--check")
+report["layoutsKeptByDefault"] = code == 0 and input_after == input_before and check_code == 0 and \
+  states.get("hyprland-layout") == "optional" and states.get("double-alt") == "ok"
+code, _ = tool("--revert")
+save()
+report["layoutsKeptRevert"] = code == 0 and snapshot() == before
 # A config that is a symlink (a dotfiles checkout) is never written.
 bindings = os.path.join(CONFIG, "hypr", "bindings.lua")
 real = os.path.join(os.environ["HOME"], "dotfiles-bindings.lua")
@@ -114,7 +128,8 @@ with open(bindings, "rb") as f:
 tool("--revert")
 required = ["checkMissingFirst", "installOk", "checkCleanAfter", "groupHasBoth", "luaValid",
             "secondInstallNoChange", "bakBeside", "revertOk", "revertByteExact", "groupRestored",
-            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone", "returnEndingLeftAlone"]
+            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone", "returnEndingLeftAlone",
+            "layoutsKeptByDefault", "layoutsKeptRevert"]  # SYS-268
 report["checks"] = len(required)
 report["passed"] = all(report[k] is True for k in required)
 print(json.dumps(report, sort_keys=True))
