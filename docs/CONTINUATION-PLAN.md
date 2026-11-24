@@ -215,7 +215,7 @@ updatedaroundactualretainedgrabandnegativecontrol; no merge/release.
 
 ## 2026-11-16 — KEEP-GRAB closed native preflight PASS
 
-Authoritative report docs/FCITX-KEEP-GRAB-001.md. Checkpoint contains: firstkeep patch+separateknown-cancellationpatch (LGPL), verifiedbwrap
+Authoritative report docs/research/FCITX-KEEP-GRAB-001.md. Checkpoint contains: firstkeep patch+separateknown-cancellationpatch (LGPL), verifiedbwrap
 builder variantsbaseline/keep/knownbadcontrol; sourcearchive953files checked.
 Actualsame-peer A/Bstock0/1 vskeep1/1; unchangedgrab1/0. Rawinactive1/1 during350ms
 hold+reactivation; defaultinactive125. Founduncancelled1/2; separatelyreproducible
@@ -298,7 +298,7 @@ peer and runner hashes, one-live servergrab preserved. Positive explicitly
 waited for ack and proves gate passage.7 launcher/report controls PASS.
 Data: data/actual-fcitx-handoff-001-result.json and
  data/fcitx-frontend-baseline-build-001-result.json.
-Report/reproduction/bounds: docs/ACTUAL-FCITX-HANDOFF-001.md.
+Report/reproduction/bounds: docs/research/ACTUAL-FCITX-HANDOFF-001.md.
 
 NO client patch/raw retired replay used, no custom protocol, no Hyprland/GUI /
 Slack/host probe. Full production focus/held keys/modifiers/repeat/timeout /
@@ -325,7 +325,7 @@ tests/handoff_screen/README.md. No real transport/Fcitx/desktop/network in scree
 Pinned input-method XML commit serial describes done count/text state, not explicit
 target/grab/held-state binding; compositor may not further process forwarded keys.
 Invented ack in model is a hypothetical cooperative contract, not existing API.
-Protocol mapping complete at source level: docs/HANDOFF-PROTOCOL-MAPPING-001.md.
+Protocol mapping complete at source level: docs/research/HANDOFF-PROTOCOL-MAPPING-001.md.
 No unconditional Fcitx readiness reply established; forced preedit/commit path is
 realFocus-dependent. Pinned activated done creates grab before preedit update,
 a possible ordered signal but no generic API or runtime guarantee.
@@ -350,7 +350,7 @@ review findings addressed, no broader/runtime safety claim. Claude review reques
 timed out65s, no delivered result. Codex implementation. No installed/runtime
 frontend change, no host probes; environment ownership admission still blocks.
 `run.py --run --variant drain` now refuses this lifetime-only diagnostic as a
-functional candidate. Full report: docs/FCITX-RETIREMENT-REVIEW-001.md and
+functional candidate. Full report: docs/research/FCITX-RETIREMENT-REVIEW-001.md and
 aggregate data/retirement-review-001-result.json.
 
 Sender source inspected: deactivate does not clear grab vector; hasGrab uses
@@ -437,7 +437,7 @@ server emission1/1, client callback/Core/addon0/1, unknown0,peakLive1.
 Остальные3focus/baseline17/cleanup/compositor alive PASS. Это наблюдаемая
 server split-generation пара, не прямое измерение client discard.
 Данные data/hyprland-grab-epoch-010-result.json; анализ/ограничения:
-docs/INPUT-GRAB-RACE-001.md, source pins data/ime-source-review-010.json.
+docs/research/INPUT-GRAB-RACE-001.md, source pins data/ime-source-review-010.json.
 
 Следующий шаг — реальный closed Wayland object-lifetime contrast через
 socketpair с собственным toy protocol: destructor vs release+client-drain
@@ -446,7 +446,7 @@ socketpair с собственным toy protocol: destructor vs release+client-
 async barrier/one-live-grab PASS. Отчёт data/wayland-lifecycle-001-result.json.
 Claude5.5 client, Codex server/launcher/review, independent six-file review
 без блокеров. Это не Fcitx fix. Следующий actualfrontend experiment:
-docs/FCITX-DRAIN-EXPERIMENT-PLAN.md (generatedwrapper lifetime, sameeventqueue,
+docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md (generatedwrapper lifetime, sameeventqueue,
 VK readiness, rawkeys/focus/password/keypair gates). Сборка/патч ещё не сделаны. Никаких raw-proxy hooks под
 освобождённым C++ объектом, replay/sleep/clipboard или system config changes.
 Нового host допуска после010 нет. Slack/native integration ещё не готова;
@@ -468,7 +468,7 @@ tests pass; private headless Sway baseline17/focus4/4 pass. Native late-wait
 data/space-telemetry-v2-preflight-003.json. Следующий шаг — одна отдельно
 согласованная exact Hyprland проба v2 до75s с тем же ограниченным scope.
 
-Коллективное ревью следующего этапа: docs/SPACE-DELIVERY-REVIEW-002.md.
+Коллективное ревью следующего этапа: docs/research/SPACE-DELIVERY-REVIEW-002.md.
 Три независимых reviewer + фактический Claude Opus5.5 разобрали пути Space;
 vkReady-гипотеза понижена из-за keymap/key FIFO, новые core/config fixes
 не обоснованы. Дополнительный rAF/sleep не end-to-end barrier. Следующим
@@ -484,7 +484,7 @@ Optional bounded Space telemetry Claude готова и независимо п�
 45 Python guards, 19 Node oracle, 10 telemetry tests проходят; instrumented
 private Sway baseline17 + focus4/4 pass, trace показывает Space input в prose.
 Агрегат data/space-telemetry-preflight-001.json; ограничения и следующая
-команда в docs/HYPRLAND-FOCUS-STRESS-001.md. Нужен один отдельно согласованный
+команда в docs/research/HYPRLAND-FOCUS-STRESS-001.md. Нужен один отдельно согласованный
 exact Hyprland diagnostic trial до75s. Инструментация может менять timing;
 не считать её успех исправлением. Исходный строгий тест не ослаблять,
 не добавлять sleep/retry Space. Slack и host IME не подключены.
@@ -498,7 +498,7 @@ aftercallbacks. data/focus-stress-before-fix-001.json и focus-stress-reference-
 17baseline +4focus cases Swaypass; GTK17pass; Qtpass.19Node oracle faulttests,
 43Wayland+8Chromium+10Fcitxguards. Newbaselineoriginalword preservation REQUIRED.
 Explicitend policy onlyclosedreviewedChrome155 fixture withrealVKpositivecontrol;
-не genericDOMtrust. Подробно docs/FOCUS-STRESS-PLAN.md. AGENTS.md сохраняет роли.
+не genericDOMtrust. Подробно docs/research/FOCUS-STRESS-PLAN.md. AGENTS.md сохраняет роли.
 Следующий шаг согласованный exactHyprland --focus-stress сновымaddon, до75s.
 Новыхhostокон вэтойработе не было; oldsinglelivegrant consumed. Потом genuine
 cross-surface stale-serial test (DOMfocus != protocolserialproof), Slackstilloff.
@@ -508,7 +508,7 @@ SUCCESS exact Hyprland INPUT: отдельно согласованный dbd221
 две коррекции/EnglishKeep,Undo,password,blur,mixed/long,Backspace/Escape,
 postIMEdeath input и сохранениеpendingword подтверждены для этойfixture.
 Compositor stayedalive; ownIME stayedstopped; DBusinputfrontend absent; noCDPtyping.
-data/hyprland-ime-001-result.json + docs/HYPRLAND-IME-001.md. readyForLiveUse=false,
+data/hyprland-ime-001-result.json + docs/research/HYPRLAND-IME-001.md. readyForLiveUse=false,
 Slackunconnected. Следующий шаг adversarial focus/serial suite на samefixture,
 не detector research и не немедленное подключение Slack. Единственная разрешённая
 live input проба использована; новых окон без нового согласованного scope нет.
@@ -518,14 +518,14 @@ live input проба использована; новых окон без но�
 Swayregression16pass; fakeparent fullrunner negativecontrol pass; privatebus
 positive smoke pass без GPU/display.41Waylandguards. Live target ещё не выполнен,
 нужен отдельный допуск (предыдущая startupсерия3/3 исчерпана). Подробнее
-docs/HYPRLAND-IME-001.md. Не трогать Slack/hostIME и не менятьprogramgates заранее.
+docs/research/HYPRLAND-IME-001.md. Не трогать Slack/hostIME и не менятьprogramgates заранее.
 
 SUCCESS startup smoke: серияGDB3/3 использована; third probe со generated
 node-level DEVNAME прошёл private_socket_ready +1s liveness, exit0. Причина
 SIGSEGV локализована CGBMAllocator constructor; наш snapshot давал
 drmGetDeviceNameFromFd2=null из-за отсутствующего node/uevent DEVNAME. No-GPU
 контроль подтвердил null→expectedname; host/installedlibs не менялись.
-data/hyprland-debugger-001-result.json, docs/HYPRLAND-BACKEND-DIAGNOSIS.md.
+data/hyprland-debugger-001-result.json, docs/research/HYPRLAND-BACKEND-DIAGNOSIS.md.
 Следующий шаг: подготовить exact Hyprland + existing Chromium/Fcitx fixture
 без debugger, затем focus/serial adversarial suite. Это ещё не поддержка ввода
 или Slack. Серия3liveпроб исчерпана; новых окон пока не запускать.
@@ -591,7 +591,7 @@ Native Wayland reference прошёл 16 checks +8 guards с полным лок
 
 Следующая контрольная точка: Chromium155 + настоящий GTK/Fcitx transport прошёл
 в private signed Xvfb без CDP typing. Точный Undo, mixed/long/password и blur
-проверены. См. docs/CHROMIUM-IME-001.md. Xvfb находится только в ignored build/,
+проверены. См. docs/research/CHROMIUM-IME-001.md. Xvfb находится только в ignored build/,
 подпись проверена; в систему ничего не установлено. Следующий незавершённый шаг:
 подключить существующее локальное evidence core вместо фиксированного правила,
 не заявляя качество по transport-тесту; затем exact Slack trial.
@@ -626,7 +626,7 @@ LD_PRELOAD только в собственном Fcitx child внутри bwrap
 проходят. Настоящий headless Sway baseline17/focus4 PASS; own и Core дали7/7,
 Space1/1, фактическая preemption подтверждена активным baseline. Данные:
 data/core-entry-witness-preflight-001.json; контракт/границы/авторство:
-docs/CORE-ENTRY-WITNESS-001.md. Независимое C++/ABI/JS ревью без блокеров;
+docs/research/CORE-ENTRY-WITNESS-001.md. Независимое C++/ABI/JS ревью без блокеров;
 reviewer самостоятельно тесты не запускали. Первый полный запрос Claude
 имел timeout и не считается реализацией; меньший запрос дал предложение,
 которое Codex исправил и интегрировал.

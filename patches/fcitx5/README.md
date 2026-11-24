@@ -41,7 +41,7 @@ retirement. Apply after `0001`; hashes: `retirement-lock.json`.
 Retired input and reentrant key/repeat handoff deliberately abort the lab125.
 The initial raw-forward proposal was rejected on independent review; this
 candidate must not be presented as a lossless correction fix.
-Current evidence/next decision: `docs/FCITX-RETIREMENT-REVIEW-001.md`.
+Current evidence/next decision: `docs/research/FCITX-RETIREMENT-REVIEW-001.md`.
 Checks: `python3 tests/fcitx_drain_server/check_wrapper.py --run --depth` and
 `python3 tools/fcitx_retirement_candidate.py --syntax`.
 
@@ -51,7 +51,7 @@ Checks: `python3 tests/fcitx_drain_server/check_wrapper.py --run --depth` and
 pinned original Fcitx tree, separately from patches0001–0003. They retain upstream
 LGPL-2.1-or-later licensing. Source/patch hashes: `keep-grab-lock.json`.
 This private candidate passed actual peer and closed native app controls;
-`docs/FCITX-KEEP-GRAB-001.md` records scope and open release gates. Build using
+`docs/research/FCITX-KEEP-GRAB-001.md` records scope and open release gates. Build using
 `python3 tools/fcitx_frontend_build.py --build --variant keep-grab`.
 `keep-grab-control` omits cancellation and intentionally reproduces duplicate up;
 it is an experimental negative control, never a release candidate.

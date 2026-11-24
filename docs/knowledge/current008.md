@@ -6,11 +6,11 @@ Exact010 split-generation pair observed. Real-wire toy contrast PASS: drop0/1 vs
 
 ## Файлы
 
-- `docs/INPUT-GRAB-RACE-001.md`
+- `docs/research/INPUT-GRAB-RACE-001.md`
 - `data/hyprland-grab-epoch-010-result.json`
 - `data/hyprland-server-route-009-result.json`
-- `docs/GRAB-ENTRY-WITNESS-001.md`
-- `docs/SERVER-ROUTE-WITNESS-001.md`
+- `docs/research/GRAB-ENTRY-WITNESS-001.md`
+- `docs/research/SERVER-ROUTE-WITNESS-001.md`
 
 ## Связи
 

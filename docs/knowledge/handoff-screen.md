@@ -11,7 +11,7 @@ Claude model draft; Codex ownership fixes/oracle. 3 accepted delivery cases and6
 - `tests/handoff_screen/test_model.py`
 - `tests/handoff_screen/run.py`
 - `data/handoff-screen-001-result.json`
-- `docs/HANDOFF-PROTOCOL-MAPPING-001.md`
+- `docs/research/HANDOFF-PROTOCOL-MAPPING-001.md`
 
 ## Связи
 

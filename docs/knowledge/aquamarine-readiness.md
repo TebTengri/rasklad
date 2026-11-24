@@ -9,8 +9,8 @@ Actual noGPU baseline distinguishes immediate/deferred feedback; Claude patch pr
 - `tools/aquamarine_readiness_patch.py`
 - `tools/hyprland_feedback_parent.py`
 - `tests/aquamarine_readiness/test_patch_confinement.py`
-- `docs/AQUAMARINE-READINESS-EXPERIMENT.md`
-- `docs/PARALLEL-REVIEW-001.md`
+- `docs/research/AQUAMARINE-READINESS-EXPERIMENT.md`
+- `docs/research/PARALLEL-REVIEW-001.md`
 - `data/parallel-review-001-result.json`
 - `data/hyprland-feedback-parent-001-result.json`
 

@@ -8,7 +8,7 @@ Keep/Correct/Suggest/Abstain; safeConfirmed decision rules.
 
 - `src/decisionrouter.cpp`
 - `src/decisionrouter.h`
-- `docs/ADR-001-DETECTOR-ROUTING.md`
+- `docs/research/ADR-001-DETECTOR-ROUTING.md`
 
 ## Связи
 

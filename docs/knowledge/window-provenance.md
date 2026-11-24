@@ -6,7 +6,7 @@ Two same-appid native windows on owned Sway; stable IDs agree across observer co
 
 ## Файлы
 
-- `docs/WINDOW-PROVENANCE-001.md`
+- `docs/research/WINDOW-PROVENANCE-001.md`
 - `tests/window_provenance/README.md`
 - `tests/window_provenance/run.py`
 - `tests/window_provenance/native_windows.cpp`

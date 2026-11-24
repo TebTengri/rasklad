@@ -13,7 +13,7 @@ namespace inputlab {
 // Strict: reference server that honours the commit serial rule of
 // input-method-unstable-v2 (commit serial must equal the number of done events).
 // UncheckedModel: deliberately unchecked MODEL of the forwarding pattern read in
-// public Hyprland sources (see docs/INPUT-LAB-001.md). It is not Hyprland and
+// public Hyprland sources (see docs/research/INPUT-LAB-001.md). It is not Hyprland and
 // does not run Hyprland code.
 enum class SerialPolicy { Strict, UncheckedModel };
 

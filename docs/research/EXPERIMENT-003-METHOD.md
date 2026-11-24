@@ -1,6 +1,6 @@
 # Методика опыта 003 (SYS-235)
 
-[Протокол](../data/experiment-003-protocol.json) и [критерии](EXPERIMENT-003-PREREG.md) зафиксированы до оценки. [Результат](EXPERIMENT-003.md) опубликован отдельно. Это явный offline CLI, не фоновая функция приложения.
+[Протокол](../../data/experiment-003-protocol.json) и [критерии](EXPERIMENT-003-PREREG.md) зафиксированы до оценки. [Результат](EXPERIMENT-003.md) опубликован отдельно. Это явный offline CLI, не фоновая функция приложения.
 
 ## Зависимости и сборка
 
@@ -10,7 +10,7 @@
 
 ## Данные и подготовка
 
-Нужны прежние `.dic` из [sources.json](../data/sources.json), подготовленные `en.tsv`/`ru.tsv` из [evaluation-002-sources.json](../data/evaluation-002-sources.json), а также `.aff` того же pinned LibreOffice commit. Первичные условия .aff и Hunspell проверены отдельно в [review](../data/notices/MORPHOLOGY-003-REVIEW.md). Все размеры, хеши, библиотека и notices — в [morphology-003-sources.json](../data/morphology-003-sources.json). Release approval отсутствует. Получение файлов — отдельное явное действие; этот документ не является командой фонового скачивания. Mutable Tatoeba export URL не гарантирует старый snapshot: нужны байты с указанными хешами.
+Нужны прежние `.dic` из [sources.json](../../data/sources.json), подготовленные `en.tsv`/`ru.tsv` из [evaluation-002-sources.json](../../data/evaluation-002-sources.json), а также `.aff` того же pinned LibreOffice commit. Первичные условия .aff и Hunspell проверены отдельно в [review](../../data/notices/MORPHOLOGY-003-REVIEW.md). Все размеры, хеши, библиотека и notices — в [morphology-003-sources.json](../../data/morphology-003-sources.json). Release approval отсутствует. Получение файлов — отдельное явное действие; этот документ не является командой фонового скачивания. Mutable Tatoeba export URL не гарантирует старый snapshot: нужны байты с указанными хешами.
 
 Control готовится только в новый файл внутри `build/`:
 

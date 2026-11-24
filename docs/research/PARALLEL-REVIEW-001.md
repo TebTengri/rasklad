@@ -24,4 +24,4 @@ The patched Aquamarine build, symbol/SONAME compatibility and immediate/deferred
 never control matrix remain separate pending gates; no patched runtime success
 is claimed by this review. Aggregate: data/parallel-review-001-result.json.
 
-Claude implementation changes and critique dispositions: docs/AQUAMARINE-READINESS-EXPERIMENT.md §3.1. Codex reran the changed applier regression suite after the defensive guard:8/8passed.
+Claude implementation changes and critique dispositions: docs/research/AQUAMARINE-READINESS-EXPERIMENT.md §3.1. Codex reran the changed applier regression suite after the defensive guard:8/8passed.

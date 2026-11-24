@@ -42,5 +42,5 @@ that context. Synthetic identity files resolve private D-Bus without host /etc.
 The actual rebuilt unmodified frontend ran: original mode0/1, ack-gated mode1/1,
 same artifacts, module mapping confirmed. The latter holds a NEW fixed pair
 until second grab plus current commit, not replaying already-forwarded input.
-Seven launcher controls pass. See docs/ACTUAL-FCITX-HANDOFF-001.md for exact
+Seven launcher controls pass. See docs/research/ACTUAL-FCITX-HANDOFF-001.md for exact
 scope; no Hyprland/GUI/generalqueue/held-key fix claim. `drain` still refuses.

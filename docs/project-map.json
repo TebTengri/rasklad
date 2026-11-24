@@ -28,8 +28,8 @@
       "id": "architecture",
       "kind": "decision",
       "paths": [
-        "docs/ADR-001-DETECTOR-ROUTING.md",
-        "docs/ADR-001-input-boundary.md"
+        "docs/research/ADR-001-DETECTOR-ROUTING.md",
+        "docs/research/ADR-001-input-boundary.md"
       ],
       "title": "Architecture",
       "notes": "Recognition and safe execution are separate.",
@@ -57,7 +57,7 @@
       "paths": [
         "src/decisionrouter.cpp",
         "src/decisionrouter.h",
-        "docs/ADR-001-DETECTOR-ROUTING.md"
+        "docs/research/ADR-001-DETECTOR-ROUTING.md"
       ],
       "title": "Router",
       "notes": "Keep/Correct/Suggest/Abstain; safeConfirmed decision rules.",
@@ -222,11 +222,11 @@
       "id": "server",
       "kind": "diagnostic",
       "paths": [
-        "docs/SERVER-GRAB-EPOCH-001.md",
+        "docs/research/SERVER-GRAB-EPOCH-001.md",
         "tools/server_grab_epoch.h",
         "tools/server_route_witness_guard.py",
         "tests/chromium_ime/server-route-witness.mjs",
-        "docs/SERVER-ROUTE-WITNESS-001.md"
+        "docs/research/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Server",
       "notes": "Exact010: old-after-done press1, current release1, callback0/1. No current host approval. Next closed wire lifetime primitive, not another unchanged trial.",
@@ -266,11 +266,11 @@
       "id": "current008",
       "kind": "evidence_summary",
       "paths": [
-        "docs/INPUT-GRAB-RACE-001.md",
+        "docs/research/INPUT-GRAB-RACE-001.md",
         "data/hyprland-grab-epoch-010-result.json",
         "data/hyprland-server-route-009-result.json",
-        "docs/GRAB-ENTRY-WITNESS-001.md",
-        "docs/SERVER-ROUTE-WITNESS-001.md"
+        "docs/research/GRAB-ENTRY-WITNESS-001.md",
+        "docs/research/SERVER-ROUTE-WITNESS-001.md"
       ],
       "title": "Current010",
       "notes": "Exact010 split-generation pair observed. Real-wire toy contrast PASS: drop0/1 vsdrain1/1. ActualFcitx repair pending; no unused host approval.",
@@ -285,7 +285,7 @@
         "tests/wayland_lifecycle/run.py",
         "tests/wayland_lifecycle/wire_client.cpp",
         "tests/wayland_lifecycle/wire_lifecycle.cpp",
-        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+        "docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md",
         "data/wayland-lifecycle-001-result.json"
       ],
       "tests": [
@@ -314,31 +314,31 @@
         "patches/fcitx5/0002-lab-track-listener-depth.patch",
         "patches/fcitx5/0003-lab-bounded-grab-retirement.patch",
         "tools/fcitx_retirement_candidate.py",
-        "docs/FCITX-RETIREMENT-REVIEW-001.md",
+        "docs/research/FCITX-RETIREMENT-REVIEW-001.md",
         "data/retirement-review-001-result.json",
-        "docs/ACTUAL-FCITX-HANDOFF-001.md",
+        "docs/research/ACTUAL-FCITX-HANDOFF-001.md",
         "data/actual-fcitx-handoff-001-result.json",
         "data/fcitx-frontend-baseline-build-001-result.json",
         "patches/fcitx5/keep-grab-lab.patch",
         "patches/fcitx5/keep-grab-cancellation.patch",
         "patches/fcitx5/keep-grab-lock.json",
-        "docs/FCITX-KEEP-GRAB-001.md",
+        "docs/research/FCITX-KEEP-GRAB-001.md",
         "data/fcitx-keep-grab-001-result.json",
         "data/native-private-frontend-001-result.json",
         "tests/wayland_ime/test_private_frontend.py",
         "tests/wayland_ime/test_hyprland_private_frontend.py",
         "data/fcitx-keep-grab-modifier-001-result.json",
         "data/hyprland-keep-grab-011-result.json",
-        "docs/SLACK-DESKTOP-001.md",
+        "docs/research/SLACK-DESKTOP-001.md",
         "data/slack-native-002-result.json",
         "data/slack-native-003-result.json",
         "tools/a11y_bridge_lab.py",
         "tests/slack_probe/test_private_bridge_lab.py",
-        "docs/A11Y-BRIDGE-CONTROL-001.md",
+        "docs/research/A11Y-BRIDGE-CONTROL-001.md",
         "data/a11y-bridge-control-001-result.json",
         "tools/slack_https_bridge.py",
         "tests/slack_probe/test_https_bridge.py",
-        "docs/SLACK-ISOLATED-001.md",
+        "docs/research/SLACK-ISOLATED-001.md",
         "data/slack-isolated-001-result.json"
       ],
       "tests": [
@@ -360,7 +360,7 @@
         "tests/handoff_screen/test_model.py",
         "tests/handoff_screen/run.py",
         "data/handoff-screen-001-result.json",
-        "docs/HANDOFF-PROTOCOL-MAPPING-001.md"
+        "docs/research/HANDOFF-PROTOCOL-MAPPING-001.md"
       ],
       "tests": [
         "python3 -m unittest discover -s tests/handoff_screen -v",
@@ -386,7 +386,7 @@
         "tests/fcitx_transport/disable_reentry_tests.cpp",
         "data/disable-adapter-001-result.json",
         "data/disable-receipt-001-result.json",
-        "docs/ADR-003-OFF-SUBMISSION.md",
+        "docs/research/ADR-003-OFF-SUBMISSION.md",
         "data/disable-submission-001-result.json",
         "tools/fcitx_disable_lab.pro",
         "tests/wayland_ime/test_disable_suite_guards.py",
@@ -397,7 +397,7 @@
         "tests/fcitx_transport/application_off_tests.cpp",
         "data/application-off-001-result.json",
         "data/application-on-001-result.json",
-        "docs/ADR-004-CONTEXT-RESOURCES.md",
+        "docs/research/ADR-004-CONTEXT-RESOURCES.md",
         "data/context-resources-001-result.json"
       ],
       "title": "Default-deny application policy",
@@ -440,7 +440,7 @@
       "kind": "experiment",
       "title": "Native window provenance",
       "paths": [
-        "docs/WINDOW-PROVENANCE-001.md",
+        "docs/research/WINDOW-PROVENANCE-001.md",
         "tests/window_provenance/README.md",
         "tests/window_provenance/run.py",
         "tests/window_provenance/native_windows.cpp",
@@ -461,7 +461,7 @@
         "tools/closed_hyprland_mapping.py",
         "tests/closed_mapping/test_boundary.py",
         "tests/window_provenance/MAPPING.md",
-        "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md",
+        "docs/research/CLOSED-HYPRLAND-MAPPING-PLAN.md",
         "data/closed-mapping-preparation-001-result.json",
         "vendor/wayland/sources.json",
         "data/closed-mapping-001-result.json",
@@ -481,7 +481,7 @@
       "paths": [
         "tools/hyprland_mapping_probe.py",
         "tests/closed_mapping/test_direct_mapping.py",
-        "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
+        "docs/research/HYPRLAND-DIRECT-MAPPING-PROBE.md",
         "data/direct-mapping-fd-control-001-result.json",
         "data/direct-hyprland-mapping-001-result.json"
       ],
@@ -499,8 +499,8 @@
         "tools/aquamarine_readiness_patch.py",
         "tools/hyprland_feedback_parent.py",
         "tests/aquamarine_readiness/test_patch_confinement.py",
-        "docs/AQUAMARINE-READINESS-EXPERIMENT.md",
-        "docs/PARALLEL-REVIEW-001.md",
+        "docs/research/AQUAMARINE-READINESS-EXPERIMENT.md",
+        "docs/research/PARALLEL-REVIEW-001.md",
         "data/parallel-review-001-result.json",
         "data/hyprland-feedback-parent-001-result.json"
       ],
@@ -515,7 +515,7 @@
       "kind": "experiment",
       "title": "Existing Fcitx field lifecycle seam",
       "paths": [
-        "docs/FCITX-FIELD-SEAM-001.md",
+        "docs/research/FCITX-FIELD-SEAM-001.md",
         "data/field-lifecycle-current-001-result.json",
         "data/field-lifecycle-build-001-result.json",
         "src/fcitxlab.cpp",
@@ -530,12 +530,12 @@
       "kind": "experiment",
       "title": "Real-profile Slack bootstrap feasibility (step 0)",
       "paths": [
-        "docs/SLACK-BOOTSTRAP-PROBE.md",
+        "docs/research/SLACK-BOOTSTRAP-PROBE.md",
         "tools/slack_bootstrap_probe.py",
         "tools/slack_https_bridge.py",
         "tests/slack_probe/test_bootstrap_probe.py",
         "data/slack-bootstrap-dryrun-001-result.json",
-        "docs/SLACK-SUPERVISED-SESSION-PLAN.md"
+        "docs/research/SLACK-SUPERVISED-SESSION-PLAN.md"
       ],
       "notes": "Dry runs PASS: Chromium control maps window 0.44s; empty-profile offline Slack registry only. Live real-profile run needs one-shot owner approval.",
       "tests": [
@@ -548,8 +548,8 @@
       "kind": "plan",
       "title": "Steps 1-3 blueprint: real Slack in nested Hyprland with private Fcitx",
       "paths": [
-        "docs/SLACK-SESSION-BLUEPRINT.md",
-        "docs/SLACK-SUPERVISED-SESSION-PLAN.md",
+        "docs/research/SLACK-SESSION-BLUEPRINT.md",
+        "docs/research/SLACK-SUPERVISED-SESSION-PLAN.md",
         "tools/slack_bootstrap_probe.py",
         "tools/hyprland_ime_lab.py",
         "tools/hyprland_mapping_probe.py",
@@ -701,8 +701,8 @@
       "to": "server",
       "relation": "motivates next boundary observation",
       "evidence": [
-        "docs/GRAB-ENTRY-WITNESS-001.md",
-        "docs/SERVER-ROUTE-WITNESS-001.md"
+        "docs/research/GRAB-ENTRY-WITNESS-001.md",
+        "docs/research/SERVER-ROUTE-WITNESS-001.md"
       ],
       "confidence": "explicit",
       "evidence_kind": "documented_evidence"
@@ -712,8 +712,8 @@
       "to": "fcitx",
       "relation": "missing press observed before callback; cause unresolved",
       "evidence": [
-        "docs/GRAB-ENTRY-WITNESS-001.md",
-        "docs/SERVER-ROUTE-WITNESS-001.md"
+        "docs/research/GRAB-ENTRY-WITNESS-001.md",
+        "docs/research/SERVER-ROUTE-WITNESS-001.md"
       ],
       "confidence": "explicit",
       "evidence_kind": "documented_evidence"
@@ -765,7 +765,7 @@
       "to": "fcitx",
       "relation": "candidate retirement primitive; actualfrontend repair not implemented",
       "evidence": [
-        "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md"
+        "docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md"
       ],
       "confidence": "explicit",
       "evidence_kind": "planned"
@@ -775,7 +775,7 @@
       "to": "application-policy",
       "relation": "candidate lifecycle seam, production join unimplemented",
       "evidence": [
-        "docs/WINDOW-PROVENANCE-001.md"
+        "docs/research/WINDOW-PROVENANCE-001.md"
       ],
       "confidence": "explicit",
       "evidence_kind": "design_requirement"

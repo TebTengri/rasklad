@@ -1,6 +1,6 @@
 # Методика опыта 004 (SYS-236)
 
-Offline-проверка зафиксированных политик на другом жанре. [Протокол](../data/experiment-004-protocol.json), [предрегистрация](EXPERIMENT-004-PREREG.md), [паспорт](../data/evaluation-004-sources.json), [проверка условий](../data/notices/TECHNICAL-004-REVIEW.md). Системный ввод не используется.
+Offline-проверка зафиксированных политик на другом жанре. [Протокол](../../data/experiment-004-protocol.json), [предрегистрация](EXPERIMENT-004-PREREG.md), [паспорт](../../data/evaluation-004-sources.json), [проверка условий](../../data/notices/TECHNICAL-004-REVIEW.md). Системный ввод не используется.
 
 ## Подготовка
 
@@ -61,4 +61,4 @@ Audit получает ANSI base/Shift mapping из установленного
 
 Исследовательский budget применён ко всем9 вариантам без выбора лучшего порога; отсутствие ошибок не доказывает безопасность. Нет IID confidence и оценки deployment precision. Для изолированного прогона используется внешняя bwrap оболочка с `--unshare-all`, read-only `/usr` и проектом, отдельными proc/dev/tmp и HOME=/tmp; home/соседние проекты не монтируются. CLI сам namespace не создаёт и сеть не использует.
 
-Для replay опубликован [candidate-only pool](../data/experiment-004-document-pool.json) с путями/Git blob IDs исходных pre-outcome деревьев. Это экспорт метаданных после оценки, без новых текстов/выбора; исходные hashes tree cache и выборка остаются в паспорте. Он позволяет не зависеть от будущего порядка JSON-полей GitHub API. Подготовка проверяет hash pool и заново ранжирует те же пути; производные case bytes повторно сверены с первоначальным SHA-256 без изменения корпуса или политик.
+Для replay опубликован [candidate-only pool](../../data/experiment-004-document-pool.json) с путями/Git blob IDs исходных pre-outcome деревьев. Это экспорт метаданных после оценки, без новых текстов/выбора; исходные hashes tree cache и выборка остаются в паспорте. Он позволяет не зависеть от будущего порядка JSON-полей GitHub API. Подготовка проверяет hash pool и заново ранжирует те же пути; производные case bytes повторно сверены с первоначальным SHA-256 без изменения корпуса или политик.

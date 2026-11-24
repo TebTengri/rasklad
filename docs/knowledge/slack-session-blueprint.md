@@ -6,8 +6,8 @@ Steps 1-3 done offline incl. gate test 5/5 with negative control; next: supervis
 
 ## Файлы
 
-- `docs/SLACK-SESSION-BLUEPRINT.md`
-- `docs/SLACK-SUPERVISED-SESSION-PLAN.md`
+- `docs/research/SLACK-SESSION-BLUEPRINT.md`
+- `docs/research/SLACK-SUPERVISED-SESSION-PLAN.md`
 - `tools/slack_bootstrap_probe.py`
 - `tools/hyprland_ime_lab.py`
 - `tools/hyprland_mapping_probe.py`

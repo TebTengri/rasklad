@@ -65,4 +65,4 @@ scope and identified reporting/oracle limits. Codex strengthened the oracle to
 include grab identity; reviewer executed no tests.
 
 Existing protocol/source mapping and the missing-ack gap:
-`docs/HANDOFF-PROTOCOL-MAPPING-001.md`. Pending is not successful delivery.
+`docs/research/HANDOFF-PROTOCOL-MAPPING-001.md`. Pending is not successful delivery.

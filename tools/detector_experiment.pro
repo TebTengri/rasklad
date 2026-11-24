@@ -1,6 +1,6 @@
 # Offline CLI эксперимента детектора (SYS-232). Не GUI, не служба, не
 # устанавливается; не входит в runtime приложения. Данные и отчёты — только
-# в build/, см. docs/DETECTOR_EXPERIMENT.md.
+# в build/, см. docs/research/DETECTOR_EXPERIMENT.md.
 TEMPLATE = app
 TARGET = detector_experiment
 

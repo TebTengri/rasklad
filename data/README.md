@@ -1,6 +1,6 @@
 # Данные offline-экспериментов
 
-Для отдельной оценки опыта 002 см. [evaluation-002-sources.json](evaluation-002-sources.json), [проверку CC0-источника](notices/Tatoeba-CC0-REVIEW.md) и [предварительный протокол](../docs/EXPERIMENT-002-PREREG.md). Этот набор не используется для обучения или калибровки. Подготовка из отдельно скачанных CC0-only архивов выполняется явно через `python3 tools/prepare_cc0_evaluation.py`; сборка и тесты ничего не скачивают.
+Для отдельной оценки опыта 002 см. [evaluation-002-sources.json](evaluation-002-sources.json), [проверку CC0-источника](notices/Tatoeba-CC0-REVIEW.md) и [предварительный протокол](../docs/research/EXPERIMENT-002-PREREG.md). Этот набор не используется для обучения или калибровки. Подготовка из отдельно скачанных CC0-only архивов выполняется явно через `python3 tools/prepare_cc0_evaluation.py`; сборка и тесты ничего не скачивают.
 
 Статус допуска: **approved-local-experiment**, не разрешение на выпуск словаря или обученных weights в составе приложения.
 
@@ -29,7 +29,7 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 
 ## Морфологический контроль 003
 
-Отдельно допущены pinned .aff той же версии LibreOffice и уже установленная Hunspell 1.7.5 для локального spell-эксперимента. См. [паспорт](morphology-003-sources.json), [первичный review](notices/MORPHOLOGY-003-REVIEW.md), [команды](../docs/EXPERIMENT-003-METHOD.md). Общий допуск .dic не использовался вместо проверки .aff/библиотеки. Сохранены полные MPL 1.1 и MySpell notices; библиотека не модифицируется и не распространяется. Control удаляет только PFX/SFX строки, остальные bytes сохранены; исходники не меняются. Всё в build/, с notices и MODIFICATIONS; release_approved=false. Тест — новый блок прежнего CC0 snapshot, без обучения/калибровки.
+Отдельно допущены pinned .aff той же версии LibreOffice и уже установленная Hunspell 1.7.5 для локального spell-эксперимента. См. [паспорт](morphology-003-sources.json), [первичный review](notices/MORPHOLOGY-003-REVIEW.md), [команды](../docs/research/EXPERIMENT-003-METHOD.md). Общий допуск .dic не использовался вместо проверки .aff/библиотеки. Сохранены полные MPL 1.1 и MySpell notices; библиотека не модифицируется и не распространяется. Control удаляет только PFX/SFX строки, остальные bytes сохранены; исходники не меняются. Всё в build/, с notices и MODIFICATIONS; release_approved=false. Тест — новый блок прежнего CC0 snapshot, без обучения/калибровки.
 
 ## Технический домен 004
 
@@ -41,7 +41,7 @@ sources.json содержит commit, конкретные URL, SHA-256 файл
 
 ## Естественные префиксы 006
 
-[Паспорт](evaluation-006-sources.json) и [review](notices/NATURAL-CONTEXT-006-REVIEW.md): новые ranks20..39 того же pinned Rust Book pool, disjoint документы развития/контроля и исключение старых20. Истинный предыдущий текст сохранён, ответы не выводятся из context vote. Single/burst/unknown — явно искусственные сценарии. Features и labels разделены по shards и остаются в build/. Обновления источников/обучение/выпуск не разрешены этим local-only допуском. [Методика](../docs/EXPERIMENT-006-METHOD.md), [принятый ADR](../docs/ADR-001-DETECTOR-ROUTING.md).
+[Паспорт](evaluation-006-sources.json) и [review](notices/NATURAL-CONTEXT-006-REVIEW.md): новые ranks20..39 того же pinned Rust Book pool, disjoint документы развития/контроля и исключение старых20. Истинный предыдущий текст сохранён, ответы не выводятся из context vote. Single/burst/unknown — явно искусственные сценарии. Features и labels разделены по shards и остаются в build/. Обновления источников/обучение/выпуск не разрешены этим local-only допуском. [Методика](../docs/research/EXPERIMENT-006-METHOD.md), [принятый ADR](../docs/research/ADR-001-DETECTOR-ROUTING.md).
 
 ## Языковые пакеты
 
