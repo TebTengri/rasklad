@@ -198,7 +198,8 @@ try{
   toggle();const w1=parse(await nextLine(2000));report.watchFollowsSwitch=!!w0&&!!w1&&['keyboard-us','keyboard-ru'].includes(w1.method)&&w1.method!==w0.method&&w1.correction==='on';
   // The widget's middle click: rasklad-pause-toggle flips AutoCorrect on the same Fcitx.
   const pauseToggle=()=>{try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});return true;}catch(e){return false;}};
-  const p1=pauseToggle();const w2=parse(await nextLine(2000));const p2=pauseToggle();const w3=parse(await nextLine(2000));
+  // SYS-272: within 1 s, though the status is read every 2 s: the toggle's Poke wakes the helper.
+  const p1=pauseToggle();const w2=parse(await nextLine(1000));const p2=pauseToggle();const w3=parse(await nextLine(1000));
   report.watchFollowsPause=p1&&p2&&!!w2&&w2.correction==='paused'&&!!w3&&w3.correction==='on';
   report.watchQuietWithoutChange=(await nextLine(1200))===null;
   // The widget closing its end must stop the helper even while nothing changes.

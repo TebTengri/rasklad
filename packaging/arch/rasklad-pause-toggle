@@ -41,6 +41,12 @@ def main():
     call("SetConfig", GLib.Variant("(sv)", ("fcitx://config/addon/%s" % addon, value)), "()")
   except GLib.Error:
     return 1
+  # SYS-272: the bar widget's helper reads the new status now, not on its next poll.
+  try:
+    bus.emit_signal(None, "/org/rasklad/Widget", "org.rasklad.Widget1", "Poke", None)
+    bus.flush_sync(None)
+  except GLib.Error:
+    pass
   return 0
 
 

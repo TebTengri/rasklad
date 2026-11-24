@@ -14,3 +14,5 @@ case $(call CurrentInputMethod 2>/dev/null) in
 esac
 # Fcitx ignores a method that is not in the current group.
 call SetCurrentIM s "$next" >/dev/null 2>&1 || exit 0
+# SYS-272: the bar widget's helper shows the new layout now, not on its next poll.
+busctl --user emit /org/rasklad/Widget org.rasklad.Widget1 Poke >/dev/null 2>&1 || true

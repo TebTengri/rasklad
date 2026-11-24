@@ -22,7 +22,7 @@ local function tap()
   end
   if armed then
     armed = false
-    hl.exec_cmd("rasklad-layout-toggle")
+    hl.exec_cmd("/usr/bin/rasklad-layout-toggle")
     return
   end
   armed = true
