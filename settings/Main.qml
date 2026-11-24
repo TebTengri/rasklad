@@ -104,7 +104,7 @@ ApplicationWindow {
         autoRepeat: false // a held Esc takes one step, never clear-then-quit
         onActivated: {
             if (help.opened) help.close()
-            else if (addBox.visible) { addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
+            else if (addBox.visible) { window.pendingReveal = null; addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
             else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
             else if (window.typing) window.tabHeader().forceActiveFocus() // out of the field, still on its tab
             else Qt.quit()
@@ -119,7 +119,7 @@ ApplicationWindow {
             addField.forceActiveFocus()
             // The page height settles after layout: reveal again once it has.
             window.pendingReveal = addBox
-            Qt.callLater(() => { if (window.pendingReveal) window.reveal(window.pendingReveal) })
+            Qt.callLater(() => { if (window.pendingReveal && window.pendingReveal.visible) window.reveal(window.pendingReveal) })
             revealExpiry.restart() // never a stale reveal on a later, unrelated height change
         }
     }

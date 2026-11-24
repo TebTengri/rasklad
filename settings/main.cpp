@@ -14,6 +14,7 @@
 #include "themewatcher.h"
 
 #include <QCoreApplication>
+#include <QDeadlineTimer>
 #include <QFile>
 #include <QGuiApplication>
 #include <QLocalServer>
@@ -89,22 +90,25 @@ int main(int argc, char *argv[])
         bool owner = lock.tryLock(0);
         if (!owner && lock.error() == QLockFile::LockFailedError) {
             // Another window holds the lock; it may still be starting, or closing.
-            // Try for up to two seconds: bring it forward, or take the lock it left.
-            for (int attempt = 0; attempt < 10 && !owner; ++attempt) {
+            // Until the deadline: bring it forward, or take the lock it left.
+            const QDeadlineTimer deadline(5000);
+            while (!owner && !deadline.hasExpired()) {
                 QLocalSocket probe;
                 probe.connectToServer(socketPath);
-                if (probe.waitForConnected(200)) {
-                    // Done only when the window answers: one that is closing may still
-                    // accept the connection, and then this start takes its place.
-                    probe.write("focus\n");
-                    if (probe.waitForBytesWritten(200) && probe.waitForReadyRead(1000) &&
-                        probe.readAll().startsWith("ok"))
-                        return 0;
-                }
+                // The connection itself is the request. Done only when the window
+                // answers: one that is closing may still accept it, and then this
+                // start takes its place.
+                if (probe.waitForConnected(200) && probe.waitForReadyRead(1000) &&
+                    probe.readAll().startsWith("ok"))
+                    return 0;
                 QThread::msleep(100);
                 owner = lock.tryLock(0);
             }
-            if (!owner) return 0; // a window holds the lock but does not answer: never a second one
+            if (!owner) {
+                // A window holds the lock but neither answers nor closes: never a second one.
+                QTextStream(stderr) << "rasklad-settings: another settings window holds the lock but does not answer\n";
+                return 1;
+            }
         }
         // We hold the lock: no live window owns the socket path. Listen only when the
         // path is free or a leftover socket (never replace another file); if listening
@@ -158,11 +162,11 @@ int main(int argc, char *argv[])
     QObject::connect(&app, &QCoreApplication::aboutToQuit, &single, &QLocalServer::close);
     QObject::connect(&single, &QLocalServer::newConnection, &app, [&single, window] {
         while (QLocalSocket *peer = single.nextPendingConnection()) {
-            // The message is only "come forward"; the answer says this window is alive.
+            // A connection means "come forward"; the answer says this window is alive.
+            QObject::connect(peer, &QLocalSocket::disconnected, peer, &QObject::deleteLater);
             peer->write("ok\n");
             peer->flush();
             peer->disconnectFromServer();
-            QObject::connect(peer, &QLocalSocket::disconnected, peer, &QObject::deleteLater);
         }
         if (!window) return;
         window->show();
