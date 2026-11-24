@@ -75,6 +75,31 @@ class Refresh(Base):
         self.assertIn('Nothing changed', out)
         self.assertEqual(self.setup.load_state()['files'], before)
 
+    def test_restored_during_the_prompt_keeps_the_record(self):
+        from unittest import mock
+        self.quiet(self.setup.install, True)
+        installed = self.bindings.read_bytes()
+        before = self.setup.load_state()['files']
+        self.refresh()
+        def restore_then_yes(prompt):
+            self.bindings.write_bytes(installed)  # omarchy's backup put back meanwhile
+            return 'y'
+        with mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=True), \
+             mock.patch('builtins.input', side_effect=restore_then_yes):
+            code, out = self.quiet(self.setup.install, False)
+        self.assertIn('edited while waiting', out)
+        self.assertEqual(self.setup.load_state()['files'][self.setup.BINDINGS], before[self.setup.BINDINGS])
+
+    def test_declining_writes_no_copies(self):
+        from unittest import mock
+        Path(str(self.bindings) + '.rasklad.bak').write_bytes(b'-- older\n')
+        self.quiet(self.setup.install, True)
+        self.refresh()
+        with mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=True), \
+             mock.patch('builtins.input', return_value='n'):
+            self.quiet(self.setup.install, False)
+        self.assertEqual([p for p in Path(self.setup.BACKUP_DIR).iterdir() if 'before-reset' in p.name], [])
+
     def test_revert_after_refresh_is_clean(self):
         self.quiet(self.setup.install, True)
         self.refresh()
