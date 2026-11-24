@@ -4,6 +4,7 @@
 #include <QDeadlineTimer>
 #include <QFileInfo>
 #include <QProcess>
+#include <QTimer>
 
 #include "settingscore.h"
 
@@ -157,37 +158,83 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
     return r.type() == QDBusMessage::ReplyMessage;
 }
 
-std::optional<QByteArray> RaskladSetup::check()
+namespace {
+const QString kSetupTool = QStringLiteral("/usr/bin/rasklad-setup");
+constexpr qsizetype kMaxSetupOutput = 8192;
+constexpr int kSetupTimeoutMs = 3000;
+} // namespace
+
+RaskladSetup::RaskladSetup() = default;
+
+RaskladSetup::~RaskladSetup()
 {
-    // Fixed program and argument, no shell, no input, bounded time and output.
-    const QString tool = QStringLiteral("/usr/bin/rasklad-setup");
-    if (!QFileInfo(tool).isExecutable()) return std::nullopt;
-    QProcess p;
-    p.setProgram(tool);
-    p.setArguments({QStringLiteral("--check")});
-    p.setStandardInputFile(QProcess::nullDevice());
-    p.setStandardErrorFile(QProcess::nullDevice());
-    p.start(QIODevice::ReadOnly);
-    if (!p.waitForFinished(3000)) {
-        p.kill();
-        p.waitForFinished(500);
-        return std::nullopt;
+    if (m_process && m_process->state() != QProcess::NotRunning) {
+        m_process->disconnect();
+        m_process->kill();
+        m_process->waitForFinished(200);
     }
-    if (p.exitStatus() != QProcess::NormalExit) return std::nullopt;
-    return p.readAllStandardOutput().left(8192); // exit 1 only means "not all ok"
+}
+
+void RaskladSetup::finish(std::optional<QByteArray> result)
+{
+    m_last = std::move(result);
+    m_out.clear();
+    if (m_process) m_process.release()->deleteLater(); // never deleted inside its own signal
+    if (updated) updated();
+}
+
+void RaskladSetup::requestCheck()
+{
+    // Fixed program and argument, no shell, no input; asynchronous, so a stuck
+    // tool never freezes the window: killed after 3 s or 8 KiB of output.
+    if (m_process) return;
+    if (!QFileInfo(kSetupTool).isExecutable()) {
+        finish(std::nullopt);
+        return;
+    }
+    m_process = std::make_unique<QProcess>();
+    QProcess *p = m_process.get();
+    p->setProgram(kSetupTool);
+    p->setArguments({QStringLiteral("--check")});
+    p->setStandardInputFile(QProcess::nullDevice());
+    p->setStandardErrorFile(QProcess::nullDevice());
+    QObject::connect(p, &QProcess::readyReadStandardOutput, p, [this, p] {
+        m_out += p->readAllStandardOutput();
+        if (m_out.size() > kMaxSetupOutput) p->kill();
+    });
+    QObject::connect(p, &QProcess::finished, p, [this, p](int, QProcess::ExitStatus status) {
+        m_out += p->readAllStandardOutput();
+        // Exit 1 only means "not all ok"; a crash, a kill or too much output means no answer.
+        const bool good = status == QProcess::NormalExit && m_out.size() <= kMaxSetupOutput;
+        finish(good ? std::optional<QByteArray>(m_out) : std::nullopt);
+    });
+    QObject::connect(p, &QProcess::errorOccurred, p, [this, p](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart) finish(std::nullopt);
+        else if (error == QProcess::Timedout) p->kill();
+    });
+    QTimer::singleShot(kSetupTimeoutMs, p, [p] { p->kill(); });
+    p->start(QIODevice::ReadOnly);
 }
 
 bool RaskladSetup::open(const QString &action)
 {
     if (action != QLatin1String("install") && action != QLatin1String("revert")) return false;
-    const QString command = QStringLiteral("rasklad-setup --") + action; // one of two fixed strings
+    // A double click opens one terminal, not two.
+    if (m_lastOpen.isValid() && m_lastOpen.elapsed() < 2000) return true;
+    // One of two fixed strings, the tool by absolute path (the launcher runs it with bash -c).
+    const QString command = kSetupTool + QStringLiteral(" --") + action;
     // Omarchy's own way to run a setup step: a floating terminal with Done/Failed.
     const QString omarchy = QStringLiteral("/usr/bin/omarchy-launch-floating-terminal-with-presentation");
-    if (QFileInfo(omarchy).isExecutable()) return QProcess::startDetached(omarchy, {command});
-    const QString terminal = QStringLiteral("/usr/bin/xdg-terminal-exec");
-    if (QFileInfo(terminal).isExecutable())
-        return QProcess::startDetached(terminal, {QStringLiteral("/usr/bin/rasklad-setup"), QStringLiteral("--") + action});
-    return false;
+    bool started = false;
+    if (QFileInfo(omarchy).isExecutable()) {
+        started = QProcess::startDetached(omarchy, {command});
+    } else {
+        const QString terminal = QStringLiteral("/usr/bin/xdg-terminal-exec");
+        if (QFileInfo(terminal).isExecutable())
+            started = QProcess::startDetached(terminal, {kSetupTool, QStringLiteral("--") + action});
+    }
+    if (started) m_lastOpen.start();
+    return started;
 }
 
 int hyprlandRounding()

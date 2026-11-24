@@ -9,7 +9,19 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
                                  QObject *parent)
     : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names), m_setupTool(setup)
 {
+    if (m_setupTool) {
+        m_setupTool->updated = [this] {
+            const auto out = m_setupTool->lastCheck();
+            m_setup = out ? setupFromCheck(*out) : QVariantMap{};
+            Q_EMIT changed();
+        };
+    }
     refresh();
+}
+
+SettingsBackend::~SettingsBackend()
+{
+    if (m_setupTool) m_setupTool->updated = nullptr;
 }
 
 void SettingsBackend::reloadConfig()
@@ -46,10 +58,7 @@ void SettingsBackend::refresh()
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
     if (m_names) m_names->reload();
-    if (m_setupTool) {
-        const auto out = m_setupTool->check();
-        m_setup = out ? setupFromCheck(*out) : QVariantMap{};
-    }
+    if (m_setupTool) m_setupTool->requestCheck(); // answers later through updated()
     m_groups.clear(); // regrouped only here, never on a switch
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();

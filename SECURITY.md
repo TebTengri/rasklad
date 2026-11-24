@@ -350,16 +350,21 @@ read. Do not add applications that open the owner's data.
 
 ## Programs the settings app starts (SYS-254, SYS-260)
 
-The settings window starts no shell of its own and passes it no text the user typed. It starts two kinds of programs, both by fixed absolute path:
+The settings window starts no shell of its own and passes no text the user typed to a program.
 
-- `/usr/bin/rasklad-setup --check` runs on each refresh, and at most once every 3 s on window focus.
-  - stdin and stderr are closed, and stdout is capped at 8 KiB.
-  - It is killed after 3 s.
-  - The output is reduced to known step and state words; notes are dropped.
-  - It reads the user's own Hyprland, bar and Fcitx settings, reads no input, and changes nothing.
-- «Подключить…» and «Вернуть как было…» start `/usr/bin/omarchy-launch-floating-terminal-with-presentation` with one of two fixed strings, `rasklad-setup --install` or `rasklad-setup --revert`. Without that program, `/usr/bin/xdg-terminal-exec` is used.
-  - The changes happen in that terminal.
-  - `rasklad-setup` shows each change and applies it only after the user answers yes.
-  - The window itself writes no Hyprland, bar or Fcitx group file.
+**`/usr/bin/rasklad-setup --check`** (absolute path) runs on each refresh.
+- A refresh happens on window focus, at most once every 3 s while Fcitx answers. While Fcitx is down, a refresh can happen on every focus.
+- The check runs asynchronously and never blocks the window. Only one runs at a time.
+- stdin and stderr go to `/dev/null`.
+- The tool is killed after 3 s, or as soon as its output passes 8 KiB. A killed or crashed check counts as no answer, and the section hides.
+- The output is reduced to known step and state words; notes are dropped.
+- The tool reads the user's own Hyprland, bar and Fcitx settings, reads no input, and changes nothing.
+- Only the direct child is killed. A helper the tool starts, such as `hyprctl`, is not killed and can outlive the timeout.
 
-It also reads Hyprland's `decoration:rounding` once, over the Hyprland request socket. It does not run `hyprctl` for this. The read is non-blocking and bounded by an 800 ms deadline.
+**«Подключить…» and «Вернуть как было…»** start `/usr/bin/omarchy-launch-floating-terminal-with-presentation` with one of two fixed strings, `/usr/bin/rasklad-setup --install` or `/usr/bin/rasklad-setup --revert`. That Omarchy script runs the string with `bash -c`, and it finds its own helpers (`omarchy-show-logo`, `omarchy-restart-gum`) through PATH.
+- Without that script, `/usr/bin/xdg-terminal-exec /usr/bin/rasklad-setup --install` (or `--revert`) is used.
+- Clicks less than 2 s apart open one terminal, not several.
+- The changes happen in that terminal. `rasklad-setup` (SYS-252) shows the diff and asks before applying. It applies nothing when stdin is not a terminal.
+- The window itself writes no Hyprland, bar or Fcitx group file.
+
+**Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.

@@ -64,7 +64,11 @@ class FakeSetup final : public SetupTool
 public:
     std::optional<QByteArray> out = QByteArray("ok       package\nmissing  double-alt\nok       bar-widget\n");
     QStringList opened;
-    std::optional<QByteArray> check() override { return out; }
+    void requestCheck() override
+    {
+        if (updated) updated(); // answers at once
+    }
+    std::optional<QByteArray> lastCheck() const override { return out; }
     bool open(const QString &action) override
     {
         opened.append(action);

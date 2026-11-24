@@ -36,6 +36,7 @@ public:
     // names may be null: rows then show program names (tests, or no .desktop entries).
     SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names = nullptr, SetupTool *setup = nullptr,
                     QObject *parent = nullptr);
+    ~SettingsBackend() override;
 
     bool fcitxRunning() const { return m_running; }
     bool addonEnabled() const { return m_addon; }
