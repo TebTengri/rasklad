@@ -1,34 +1,40 @@
 // SPDX-License-Identifier: MIT
 #include "applicationpolicy.h"
+#include "configrules.h"
 
 namespace rasklad::policy {
 namespace {
-constexpr std::size_t kMaxAdapters = 64;
-bool identifier(std::string_view value) noexcept
-{
-    if (value.empty() || value.size() > 128) return false;
-    for (const unsigned char c : value) {
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-              (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) return false;
-    }
-    return true;
-}
+constexpr std::size_t kMaxAdapters = config::kMaxApps;
+bool identifier(std::string_view value) noexcept { return config::appIdentifier(value); }
 bool validDomain(Domain domain) noexcept
 {
     return domain == Domain::RegularApplication || domain == Domain::OwnedFixture;
 }
 struct Match { Reason reason; std::size_t index = 0; };
-Match inspect(Registry registry, const Context &context, Mode mode) noexcept
+bool registryValid(Registry registry) noexcept
 {
     if (!registry.revision || registry.size > kMaxAdapters ||
-        (registry.size && !registry.entries)) return {Reason::InvalidRegistry};
+        (registry.size && !registry.entries)) return false;
+    // SYS-255: a snapshot never changes under its revision (the Registry contract),
+    // so its structure is checked once, not on every key: with 64 entries the
+    // repeat check alone is ~2000 comparisons. Keyed by all three fields.
+    struct Seen { const Adapter *entries = nullptr; std::size_t size = 0; std::uint64_t revision = 0; };
+    thread_local Seen valid;
+    if (valid.revision == registry.revision && valid.entries == registry.entries && valid.size == registry.size)
+        return true;
     for (std::size_t i = 0; i < registry.size; ++i) {
         const auto &entry = registry.entries[i];
         if (!identifier(entry.id) || !identifier(entry.applicationId) || !validDomain(entry.domain))
-            return {Reason::InvalidRegistry};
+            return false;
         for (std::size_t j = 0; j < i; ++j)
-            if (entry.id == registry.entries[j].id) return {Reason::InvalidRegistry};
+            if (entry.id == registry.entries[j].id) return false;
     }
+    valid = {registry.entries, registry.size, registry.revision};
+    return true;
+}
+Match inspect(Registry registry, const Context &context, Mode mode) noexcept
+{
+    if (!registryValid(registry)) return {Reason::InvalidRegistry};
     std::size_t index = 0;
     while (index < registry.size && registry.entries[index].id != context.adapterId) ++index;
     if (index == registry.size) return {Reason::UnknownAdapter};

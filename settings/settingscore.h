@@ -3,6 +3,8 @@
 // tests run without Fcitx or Hyprland.
 #pragma once
 
+#include "configrules.h"
+
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>
@@ -11,8 +13,9 @@
 
 namespace rasklad::settings {
 
-inline constexpr int kMaxApps = 64; // same cap as the addon
-inline constexpr int kMaxExceptions = 256; // same cap as the addon
+// The addon's own caps (src/configrules.h), so the two never disagree.
+inline constexpr int kMaxApps = static_cast<int>(rasklad::config::kMaxApps);
+inline constexpr int kMaxExceptions = static_cast<int>(rasklad::config::kMaxExceptions);
 
 // Same character rules as the addon: [A-Za-z0-9._-], 1..128.
 bool validAppId(const QString &id);
