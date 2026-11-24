@@ -9,6 +9,9 @@ LibreOffice/dictionaries at commit c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb:
   ru_RU  Copyright (c) 1997-2008, Alexander I. Lebedev; full notice in
          ru_RU.README.txt.
 
+In the package metadata these are LicenseRef-hunspell-en-US and
+LicenseRef-hunspell-ru-RU; the full terms are the two notice files.
+
 These notices are not covered by the MIT license of Rasklad's own code, and
 the MIT license grants no rights in this data.
 

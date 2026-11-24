@@ -10,7 +10,7 @@ pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
-license=('MIT' 'LicenseRef-hunspell-en_US' 'LicenseRef-hunspell-ru_RU')
+license=('MIT' 'LicenseRef-hunspell-en-US' 'LicenseRef-hunspell-ru-RU')
 depends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib' 'python-gobject')
 optdepends=('fcitx5-configtool: generic Fcitx settings'
             'hyprland: list open windows in rasklad-settings')

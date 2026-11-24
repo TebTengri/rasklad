@@ -11,7 +11,9 @@ owner decides. Flipping it is one separate change: passports, the profile's
 
 ## Exact contents
 
-Package 0.5.16, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes):
+Package 0.5.17, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
+hashes are of the profile the owner's packages are built from; any rebuilt
+profile must be compared again.
 
 | File | SHA-256 | Bytes | Status |
 | --- | --- | --- | --- |
@@ -21,6 +23,7 @@ Package 0.5.16, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes):
 | build/experiment-003-data/ru.aff | 38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7 | 71236 | upstream, unmodified |
 | build/experiment-003-data/control/en.aff | 60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f | 1460 | **modified**: PFX/SFX removed |
 | build/experiment-003-data/control/ru.aff | 097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19 | 162 | **modified**: PFX/SFX removed |
+| build/experiment-003-data/control/MODIFIED.txt | — | — | Rasklad marker, a copy of `packaging/arch/DATA-NOTICE.txt`; not part of the verified profile |
 | build/experiment-002-artifacts/detector-model.rskn | e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8 | 88290 | **derived**: model weights |
 | build/experiment-002-artifacts/exact-full-lexicons.rskp | 3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871 | 1200379 | **derived**: word list |
 | build/experiment-002-artifacts/artifact-metadata.json | 9a55205497c9cea58a157b83a3eeca3d66be899679265888443d1f18fee79612 | 1827 | Rasklad metadata |
@@ -28,20 +31,30 @@ Package 0.5.16, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes):
 | build/experiment-002-artifacts/en_US.NOTICE.txt | 168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371 | 15732 | upstream notice, unmodified |
 | build/experiment-002-artifacts/ru_RU.NOTICE.txt | 262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52 | 1886 | upstream notice, unmodified |
 
+What the addon enforces at load time (`src/profileverify.cpp`): size and SHA-256 of
+the dictionaries, `.aff`, control `.aff`, model and word list; the notice copies by
+SHA-256; `artifact-metadata.json` by its fields and `MODIFICATIONS.txt` by content
+(UTF-8, the `release_approved=false` marker). The hashes of those two files above
+are recorded here, not enforced by the addon.
+
 The notice hashes equal `data/notices/en_US.README.txt` and `ru_RU.README.txt`,
 which [LANGUAGE-PACKS-REVIEW](LANGUAGE-PACKS-REVIEW.md) matched against upstream.
 The package also carries `data/` passports and notices under `profile/data/`.
 
 ## Obligations and how the package meets them
 
-| Obligation (source) | Where it is met |
-| --- | --- |
-| Keep the copyright, conditions and disclaimer in source and binary distributions (ru_RU; SCOWL/Ispell/WordNet/VarCon terms in en_US) | Full notices in `/usr/share/licenses/rasklad-fcitx5/en_US.README.txt`, `ru_RU.README.txt`, also in the profile directory; shown in the settings window, «Лицензии» |
-| Modified versions clearly marked (ru_RU) | `DATA-NOTICE.txt` in the licenses directory and as `control/MODIFIED.txt` next to the modified `.aff`; the «Что изменил Rasklad» page; `MODIFICATIONS.txt` in the profile |
-| No use of an author's name to endorse (ru_RU, WordNet, en_US terms) | No author is named in descriptions or promotion; `DATA-NOTICE.txt` says so |
-| UKACD copyright displayed prominently (en_US README) | UKACD line on the «Лицензии» page itself and at the top of `DATA-NOTICE.txt` |
-| Derived data keeps the source terms (LANGUAGE-PACKS-REVIEW) | `DATA-NOTICE.txt` lists the model and word list as derived; `license=` in PKGBUILD names both dictionary licenses next to MIT |
-| Project MIT does not cover the data | LICENSE, README, THIRD_PARTY.md, `DATA-NOTICE.txt` |
+"Shipped" means what the package does. "Conclusion" is this review's reading, for
+the owner to accept or not.
+
+| Obligation (source) | Shipped | Conclusion |
+| --- | --- | --- |
+| Keep copyright, conditions and disclaimer in source and binary distributions (ru_RU; SCOWL, Ispell, WordNet, VarCon and others in en_US) | Full notices in `/usr/share/licenses/rasklad-fcitx5/en_US.README.txt`, `ru_RU.README.txt` and in the profile directory; shown on the settings page «Лицензии» | Met for every file, unmodified or derived |
+| Modified versions clearly marked (ru_RU) and binary redistributions of modified source marked as modified in the documentation (Ispell clause 3, en_US) | `DATA-NOTICE.txt` in the licenses directory names each modified and derived file; the same text sits next to the control `.aff` as `MODIFIED.txt`; the «Что изменил Rasklad» page | Met in the documentation, which is what Ispell clause 3 asks for binaries. For ru_RU, whether a marker next to the file is enough or each control `.aff` needs its own header line is **open** (see below) |
+| No endorsement or promotion with an author's name (ru_RU: Lebedev; Ispell: Kuenning) | No author is named in descriptions or promotion; `DATA-NOTICE.txt` says so | Met, as long as release texts keep it so |
+| No use of Princeton's name in advertising or publicity about distribution (WordNet) | Princeton appears only inside the full notice | Met, as long as release texts keep it so; a separate rule from non-endorsement |
+| UKACD copyright displayed prominently (en_US) | UKACD line on the «Лицензии» page itself and at the top of `DATA-NOTICE.txt` | Met |
+| Derived data keeps the source terms (LANGUAGE-PACKS-REVIEW) | `DATA-NOTICE.txt` lists the model and word list as derived; `license=` names MIT and `LicenseRef-hunspell-en-US`, `LicenseRef-hunspell-ru-RU` | Met for the record. The model weights and the word list are derivatives of both dictionaries; every term above applies to them, and the permissive terms allow distributing modified and derived forms with notices |
+| Project MIT does not cover the data | LICENSE, README, THIRD_PARTY.md, `DATA-NOTICE.txt` | Met |
 
 ## Not covered by this review
 
@@ -60,5 +73,6 @@ The package also carries `data/` passports and notices under `profile/data/`.
 
 1. Whether the package may be published (GitHub release, AUR) with this data, or
    stays for personal installation.
-2. If yes: whether the adjacent marker is enough for the control `.aff`.
+2. If yes: whether the adjacent marker is enough for the control `.aff`, or each
+   gets a header line (new pins, rebuilt profile).
 3. Then one change flips `release_approved` with the verifier and pins.

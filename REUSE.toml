@@ -1,10 +1,10 @@
-# Licensing of files that carry no SPDX header (https://reuse.software).
-# Rasklad's own code and documentation are MIT (LICENSE). Third-party files keep
-# their own terms; the notices are in data/notices/ and THIRD_PARTY.md.
+# Licensing of the repository (https://reuse.software). License texts: LICENSES/.
+# Rasklad's own code and documentation are MIT. Third-party files keep their own
+# terms (overrides below); the notices are in data/notices/ and THIRD_PARTY.md.
 version = 1
 
 [[annotations]]
-path = ["packaging/arch/rasklad-settings.desktop", "packaging/arch/rasklad-settings.svg", "packaging/omarchy/**", "settings/i18n/**", "docs/**", "*.md"]
+path = "**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 TebTengri and Rasklad contributors"
 SPDX-License-Identifier = "MIT"
@@ -14,11 +14,10 @@ SPDX-License-Identifier = "MIT"
 [[annotations]]
 path = "patches/fcitx5/*.patch"
 precedence = "override"
-SPDX-FileCopyrightText = "Fcitx 5 authors; changes 2026 Rasklad contributors"
+SPDX-FileCopyrightText = ["Fcitx 5 authors", "2026 TebTengri and Rasklad contributors"]
 SPDX-License-Identifier = "LGPL-2.1-or-later"
 
-# Upstream Wayland protocol descriptions used only by development fixtures; the
-# full terms are inside each XML (vendor/wayland/README.md).
+# Upstream Wayland protocol descriptions; the full terms are inside each XML.
 [[annotations]]
 path = "vendor/wayland/hyprland-toplevel-mapping-v1.xml"
 precedence = "override"
@@ -31,9 +30,21 @@ precedence = "override"
 SPDX-FileCopyrightText = "2018 Ilia Bozhinov"
 SPDX-License-Identifier = "HPND-sell-variant"
 
-# Dictionary notices and other third-party license texts, kept byte for byte.
 [[annotations]]
-path = "data/notices/*.txt"
+path = ["tests/input_lab/protocol/input-method-unstable-v2.xml", "tests/wayland_ime/protocol/virtual-keyboard-unstable-v1.xml"]
 precedence = "override"
-SPDX-FileCopyrightText = "see each file"
+SPDX-FileCopyrightText = "Wayland protocol authors (see the copyright block in each file)"
+SPDX-License-Identifier = "MIT"
+
+# Third-party license and notice texts, kept byte for byte.
+[[annotations]]
+path = [
+  "data/notices/en_US.README.txt", "data/notices/ru_RU.README.txt",
+  "data/notices/Hunspell-COPYING.MPL.txt", "data/notices/Hunspell-license.myspell.txt",
+  "data/notices/CC0-1.0.txt", "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
+  "data/notices/OrderedMap-MIT.txt", "data/notices/ProseMirror-MIT.txt", "data/notices/RopeSequence-MIT.txt",
+  "data/notices/RustBook-*.txt",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "the authors named in each file"
 SPDX-License-Identifier = "LicenseRef-upstream-notice"

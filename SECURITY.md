@@ -382,5 +382,6 @@ The settings window starts no shell of its own and passes no text the user typed
 
 The «Лицензии» page reads only four fixed file names (`LICENSE`, `en_US.README.txt`,
 `ru_RU.README.txt`, `DATA-NOTICE.txt`) from `/usr/share/licenses/rasklad-fcitx5/`.
-QML passes a key, never a path. A symlink, a non-regular file or a file larger than
-64 KiB is not read. The texts are shown as plain text, never as rich text or links.
+QML passes a key, never a path. Before opening, the named file is checked: a
+symlink, a non-regular file or a file larger than 64 KiB is not read, and at most
+64 KiB + 1 bytes are read. The texts are shown as plain text, never as rich text or links.

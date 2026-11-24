@@ -89,8 +89,8 @@ ApplicationWindow {
     }
 
     Shortcut { sequences: ["Ctrl+R", "F5"]; onActivated: backend.refresh() }
-    Shortcut { sequence: "F1"; enabled: !licenses.opened; onActivated: help.opened ? help.close() : help.open() }
-    Shortcut { sequence: "?"; enabled: !window.typing && !licenses.opened; onActivated: help.opened ? help.close() : help.open() }
+    Shortcut { sequence: "F1"; enabled: !licenses.visible; onActivated: help.opened ? help.close() : help.open() }
+    Shortcut { sequence: "?"; enabled: !window.typing && !licenses.visible; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
     Shortcut { sequence: "Ctrl+1"; onActivated: window.showTab(0) }
     Shortcut { sequence: "Ctrl+2"; onActivated: window.showTab(1) }
@@ -98,13 +98,13 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+Tab"; onActivated: window.showTab((window.tab + 1) % 3) }
     Shortcut { sequence: "Ctrl+Shift+Tab"; onActivated: window.showTab((window.tab + 2) % 3) }
     // Й is Q in the Russian layout: the keys work in either layout.
-    Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.opened && !licenses.opened; onActivated: Qt.quit() }
+    Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.visible && !licenses.visible; onActivated: Qt.quit() }
     Shortcut {
         sequence: "Escape"
         autoRepeat: false // a held Esc takes one step, never clear-then-quit
         onActivated: {
             if (help.opened) help.close()
-            else if (licenses.opened) licenses.close()
+            else if (licenses.visible) { if (licenses.opened) licenses.close() } // still animating: just this step
             else if (addBox.visible) { window.pendingReveal = null; addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
             else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
             else if (window.typing) window.tabHeader().forceActiveFocus() // out of the field, still on its tab
@@ -908,7 +908,8 @@ ApplicationWindow {
         property Item returnTo: null
         property string key: "rasklad"
         onOpened: licensesClose.forceActiveFocus()
-        onClosed: if (returnTo) returnTo.forceActiveFocus(); else window.restoreFocus()
+        // The row may have gone or been hidden meanwhile: then the usual recovery.
+        onClosed: if (returnTo && returnTo.visible && returnTo.enabled) returnTo.forceActiveFocus(); else window.restoreFocus()
         background: Rectangle {
             color: theme.background
             radius: window.small
