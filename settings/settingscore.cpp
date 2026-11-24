@@ -151,6 +151,27 @@ QStringList seenAppsFromStatus(const QVariantMap &status)
     return out;
 }
 
+QVariantMap setupFromCheck(const QByteArray &output)
+{
+    static const QStringList steps{QStringLiteral("package"),         QStringLiteral("fcitx-addon"),
+                                   QStringLiteral("auto-correction"), QStringLiteral("fcitx-group"),
+                                   QStringLiteral("double-alt"),      QStringLiteral("hyprland-layout"),
+                                   QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")};
+    static const QStringList states{QStringLiteral("ok"),      QStringLiteral("missing"), QStringLiteral("broken"),
+                                    QStringLiteral("other"),   QStringLiteral("changed"), QStringLiteral("symlink"),
+                                    QStringLiteral("unknown"), QStringLiteral("on"),      QStringLiteral("paused")};
+    QVariantMap result;
+    if (output.size() > 4096) return result;
+    for (const QByteArray &raw : output.split('\n')) {
+        const QList<QByteArray> words = raw.simplified().split(' ');
+        if (words.size() < 2) continue;
+        const QString state = QString::fromLatin1(words.at(0));
+        const QString step = QString::fromLatin1(words.at(1));
+        if (steps.contains(step) && states.contains(state)) result.insert(step, state);
+    }
+    return result;
+}
+
 int roundingFromReply(const QByteArray &json)
 {
     const QJsonDocument doc = QJsonDocument::fromJson(json.left(4096));

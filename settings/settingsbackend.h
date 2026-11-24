@@ -29,10 +29,13 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(QVariantList apps READ apps NOTIFY changed)
     Q_PROPERTY(int enabledCount READ enabledCount NOTIFY changed)
     Q_PROPERTY(QString error READ error NOTIFY changed)
+    // SYS-260: {step: state} from rasklad-setup --check; empty hides the section.
+    Q_PROPERTY(QVariantMap setup READ setup NOTIFY changed)
 
 public:
     // names may be null: rows then show program names (tests, or no .desktop entries).
-    SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names = nullptr, QObject *parent = nullptr);
+    SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names = nullptr, SetupTool *setup = nullptr,
+                    QObject *parent = nullptr);
 
     bool fcitxRunning() const { return m_running; }
     bool addonEnabled() const { return m_addon; }
@@ -48,8 +51,11 @@ public:
     int enabledCount() const { return static_cast<int>(m_config.apps.size()); }
     // "", "fcitx", "write", "invalid", "terminal", "full", "word", "words-full"
     QString error() const { return m_error; }
+    QVariantMap setup() const { return m_setup; }
 
     Q_INVOKABLE void refresh();
+    // Opens rasklad-setup --install or --revert in a terminal; false if it could not.
+    Q_INVOKABLE bool openSetup(const QString &action);
     Q_INVOKABLE void refreshIfStale();
     Q_INVOKABLE void setAppEnabled(const QString &id, bool enabled);
     Q_INVOKABLE bool addApp(const QString &id);
@@ -70,6 +76,8 @@ private:
     FcitxSource *m_fcitx;
     AppSource *m_appSource;
     AppNames *m_names;
+    SetupTool *m_setupTool;
+    QVariantMap m_setup;
     bool m_running = false;
     bool m_addon = false;
     bool m_loaded = false;

@@ -5,8 +5,9 @@
 
 namespace rasklad::settings {
 
-SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, QObject *parent)
-    : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names)
+SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, SetupTool *setup,
+                                 QObject *parent)
+    : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names), m_setupTool(setup)
 {
     refresh();
 }
@@ -20,6 +21,12 @@ void SettingsBackend::reloadConfig()
     // Asked again on every read (refresh and before each change), so a restarted
     // Fcitx never keeps showing the previous daemon's warning.
     m_profileBroken = m_running && m_fcitx->profileReady() == std::optional<bool>(false);
+}
+
+bool SettingsBackend::openSetup(const QString &action)
+{
+    // The window learns the result on its next focus refresh, after the terminal.
+    return m_setupTool && m_setupTool->open(action);
 }
 
 void SettingsBackend::refreshIfStale()
@@ -39,6 +46,10 @@ void SettingsBackend::refresh()
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
     if (m_names) m_names->reload();
+    if (m_setupTool) {
+        const auto out = m_setupTool->check();
+        m_setup = out ? setupFromCheck(*out) : QVariantMap{};
+    }
     m_groups.clear(); // regrouped only here, never on a switch
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();

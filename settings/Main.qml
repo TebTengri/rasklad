@@ -560,6 +560,96 @@ ApplicationWindow {
                 visible: ["word", "words-full"].includes(backend.error)
                 text: window.errorText(backend.error)
             }
+
+            // ---- Omarchy connection (SYS-260): states from rasklad-setup --check.
+            // The window never edits these files; the buttons open rasklad-setup in
+            // a terminal, where the user sees the changes and agrees to them.
+            SectionHeader {
+                visible: setupBox.visible
+                text: qsTr("OMARCHY CONNECTION")
+            }
+            ColumnLayout {
+                id: setupBox
+                visible: Object.keys(backend.setup).length > 0
+                spacing: 8
+                Layout.fillWidth: true
+                // One state for several steps: any gap shows, hand-made setups are left alone.
+                function combined(steps) {
+                    const states = steps.map(s => backend.setup[s]).filter(s => s !== undefined && s !== "unknown")
+                    if (states.length === 0) return "unknown"
+                    if (states.every(s => s === "ok")) return "ok"
+                    if (states.some(s => s === "missing" || s === "broken")) return "missing"
+                    return "manual"
+                }
+                readonly property var rows: [
+                    { title: qsTr("Layout icon at the top right"), state: combined(["bar-widget-link", "bar-widget"]) },
+                    { title: qsTr("Double Alt switches the layout"), state: combined(["double-alt"]) },
+                    { title: qsTr("English and Russian layouts in Fcitx"), state: combined(["fcitx-group", "hyprland-layout"]) }
+                ]
+                readonly property bool anyMissing: rows.some(r => r.state === "missing")
+                readonly property bool anyOk: rows.some(r => r.state === "ok")
+                Hint { text: qsTr("Connecting changes the Hyprland and bar settings. A terminal shows each change and asks first.") }
+                Repeater {
+                    model: setupBox.rows
+                    delegate: Rectangle {
+                        id: stateRow
+                        required property var modelData
+                        Layout.fillWidth: true
+                        implicitHeight: Math.max(44, stateTexts.implicitHeight + 16)
+                        radius: window.small
+                        color: window.tint(0.04)
+                        border.color: window.tint(0.4)
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: modelData.title + ": " + stateLabel.text
+                        RowLayout {
+                            id: stateTexts
+                            anchors.fill: parent
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 12
+                            Label {
+                                text: stateRow.modelData.title
+                                font.pixelSize: 13
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                Accessible.ignored: true
+                            }
+                            Label {
+                                id: stateLabel
+                                Accessible.ignored: true
+                                font.pixelSize: 11
+                                font.bold: stateRow.modelData.state === "ok"
+                                color: stateRow.modelData.state === "ok" ? window.fg
+                                     : stateRow.modelData.state === "missing" ? theme.error : window.secondary
+                                text: stateRow.modelData.state === "ok" ? qsTr("connected")
+                                    : stateRow.modelData.state === "missing" ? qsTr("not connected")
+                                    : stateRow.modelData.state === "manual" ? qsTr("set up by hand")
+                                    : qsTr("unknown")
+                            }
+                        }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Button {
+                        visible: setupBox.anyMissing
+                        text: qsTr("Connect…")
+                        onClicked: setupError.visible = !backend.openSetup("install")
+                    }
+                    Button {
+                        visible: setupBox.anyOk
+                        flat: true
+                        text: qsTr("Restore Omarchy defaults…")
+                        onClicked: setupError.visible = !backend.openSetup("revert")
+                    }
+                }
+                InlineError {
+                    id: setupError
+                    visible: false
+                    text: qsTr("Could not open a terminal. Run rasklad-setup --install in one.")
+                }
+            }
         }
     }
 

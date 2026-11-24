@@ -347,3 +347,19 @@ its own Fcitx and a throwaway HOME, with an environment reduced to `PATH` and
 `nautilus`) and reads only program names, frontend, capability flags and Sway
 app ids. It does not use bwrap, so those applications can read what the user can
 read. Do not add applications that open the owner's data.
+
+## Programs the settings app starts (SYS-254, SYS-260)
+
+The settings window starts no shell of its own and passes it no text the user typed. It starts two kinds of programs, both by fixed absolute path:
+
+- `/usr/bin/rasklad-setup --check` runs on each refresh, and at most once every 3 s on window focus.
+  - stdin and stderr are closed, and stdout is capped at 8 KiB.
+  - It is killed after 3 s.
+  - The output is reduced to known step and state words; notes are dropped.
+  - It reads the user's own Hyprland, bar and Fcitx settings, reads no input, and changes nothing.
+- «Подключить…» and «Вернуть как было…» start `/usr/bin/omarchy-launch-floating-terminal-with-presentation` with one of two fixed strings, `rasklad-setup --install` or `rasklad-setup --revert`. Without that program, `/usr/bin/xdg-terminal-exec` is used.
+  - The changes happen in that terminal.
+  - `rasklad-setup` shows each change and applies it only after the user answers yes.
+  - The window itself writes no Hyprland, bar or Fcitx group file.
+
+It also reads Hyprland's `decoration:rounding` once, over the Hyprland request socket. It does not run `hyprctl` for this. The read is non-blocking and bounded by an 800 ms deadline.

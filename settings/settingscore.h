@@ -57,6 +57,11 @@ QStringList seenAppsFromStatus(const QVariantMap &status);
 // capped at 24 so a stray value cannot distort the window.
 int roundingFromReply(const QByteArray &json);
 
+// SYS-260: `rasklad-setup --check` output ("<state> <step> [note]" per line) as
+// {step: state}, known steps and states only; notes are dropped. Empty for
+// anything else, so the section hides instead of guessing.
+QVariantMap setupFromCheck(const QByteArray &output);
+
 // True if the current input-method group has both keyboard-us and keyboard-ru.
 bool layoutsReady(const QStringList &groupMethods);
 

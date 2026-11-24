@@ -66,6 +66,24 @@ private:
     DesktopIndex m_index;
 };
 
+// SYS-260: the packaged rasklad-setup. check() runs `--check` (read-only, a
+// few lines of states); open() shows `--install` or `--revert` in Omarchy's
+// floating terminal, where the user sees the changes and answers the prompt.
+class SetupTool
+{
+public:
+    virtual ~SetupTool() = default;
+    virtual std::optional<QByteArray> check() = 0; // nullopt: not installed or no answer
+    virtual bool open(const QString &action) = 0;  // "install" or "revert"
+};
+
+class RaskladSetup final : public SetupTool
+{
+public:
+    std::optional<QByteArray> check() override;
+    bool open(const QString &action) override;
+};
+
 class DBusFcitx final : public FcitxSource
 {
 public:

@@ -59,6 +59,19 @@ public:
     QStringList seenApps() override { return open; }
 };
 
+class FakeSetup final : public SetupTool
+{
+public:
+    std::optional<QByteArray> out = QByteArray("ok       package\nmissing  double-alt\nok       bar-widget\n");
+    QStringList opened;
+    std::optional<QByteArray> check() override { return out; }
+    bool open(const QString &action) override
+    {
+        opened.append(action);
+        return true;
+    }
+};
+
 QVariantMap entry(const SettingsBackend &b, const QString &id)
 {
     for (const QVariant &v : b.apps())
@@ -215,6 +228,35 @@ private Q_SLOTS:
         QVERIFY(configFromMap(f.stored)->apps.isEmpty());
         b.refresh();
         QVERIFY(entry(b, QStringLiteral("quickshell")).isEmpty()); // off: hidden again
+    }
+    void setupCheckParse()
+    {
+        const QVariantMap m = setupFromCheck("ok       package\non       auto-correction\n"
+                                             "other    double-alt         something else is there\n"
+                                             "unknown  hyprland-layout    Hyprland not running\n"
+                                             "ok       made-up-step\nweird    bar-widget\n\n");
+        QCOMPARE(m.value(QStringLiteral("package")).toString(), QStringLiteral("ok"));
+        QCOMPARE(m.value(QStringLiteral("double-alt")).toString(), QStringLiteral("other"));
+        QCOMPARE(m.value(QStringLiteral("hyprland-layout")).toString(), QStringLiteral("unknown"));
+        QVERIFY(!m.contains(QStringLiteral("made-up-step")));
+        QVERIFY(!m.contains(QStringLiteral("bar-widget"))); // unknown state word
+        QVERIFY(setupFromCheck(QByteArray(5000, 'x')).isEmpty());
+    }
+    void setupShownAndOpened()
+    {
+        FakeFcitx f;
+        FakeApps w;
+        FakeSetup t;
+        SettingsBackend b(&f, &w, nullptr, &t);
+        QCOMPARE(b.setup().value(QStringLiteral("double-alt")).toString(), QStringLiteral("missing"));
+        QVERIFY(b.openSetup(QStringLiteral("install")));
+        QCOMPARE(t.opened, QStringList{QStringLiteral("install")});
+        t.out.reset(); // no tool: the section hides
+        b.refresh();
+        QVERIFY(b.setup().isEmpty());
+        SettingsBackend none(&f, &w);
+        QVERIFY(none.setup().isEmpty());
+        QVERIFY(!none.openSetup(QStringLiteral("install")));
     }
     void roundingReply()
     {

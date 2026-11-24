@@ -2,6 +2,8 @@
 #include "sources.h"
 
 #include <QDeadlineTimer>
+#include <QFileInfo>
+#include <QProcess>
 
 #include "settingscore.h"
 
@@ -153,6 +155,39 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
 {
     const QDBusMessage r = call(QStringLiteral("SetConfig"), {kUri, QVariant::fromValue(QDBusVariant(config))});
     return r.type() == QDBusMessage::ReplyMessage;
+}
+
+std::optional<QByteArray> RaskladSetup::check()
+{
+    // Fixed program and argument, no shell, no input, bounded time and output.
+    const QString tool = QStringLiteral("/usr/bin/rasklad-setup");
+    if (!QFileInfo(tool).isExecutable()) return std::nullopt;
+    QProcess p;
+    p.setProgram(tool);
+    p.setArguments({QStringLiteral("--check")});
+    p.setStandardInputFile(QProcess::nullDevice());
+    p.setStandardErrorFile(QProcess::nullDevice());
+    p.start(QIODevice::ReadOnly);
+    if (!p.waitForFinished(3000)) {
+        p.kill();
+        p.waitForFinished(500);
+        return std::nullopt;
+    }
+    if (p.exitStatus() != QProcess::NormalExit) return std::nullopt;
+    return p.readAllStandardOutput().left(8192); // exit 1 only means "not all ok"
+}
+
+bool RaskladSetup::open(const QString &action)
+{
+    if (action != QLatin1String("install") && action != QLatin1String("revert")) return false;
+    const QString command = QStringLiteral("rasklad-setup --") + action; // one of two fixed strings
+    // Omarchy's own way to run a setup step: a floating terminal with Done/Failed.
+    const QString omarchy = QStringLiteral("/usr/bin/omarchy-launch-floating-terminal-with-presentation");
+    if (QFileInfo(omarchy).isExecutable()) return QProcess::startDetached(omarchy, {command});
+    const QString terminal = QStringLiteral("/usr/bin/xdg-terminal-exec");
+    if (QFileInfo(terminal).isExecutable())
+        return QProcess::startDetached(terminal, {QStringLiteral("/usr/bin/rasklad-setup"), QStringLiteral("--") + action});
+    return false;
 }
 
 int hyprlandRounding()
