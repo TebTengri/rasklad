@@ -36,7 +36,7 @@ HYPRCTL = "/usr/bin/hyprctl"
 BEGIN = "-- BEGIN rasklad-setup"
 END = "-- END rasklad-setup"
 # SYS-268: in every input.lua block this version writes (us kept, by choice).
-LAYOUT_MARK = "-- rasklad-setup layout 2: us kept for the lock screen, chosen by the user"
+LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
@@ -45,11 +45,15 @@ XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
 # SYS-268: us variants that type Latin letters (the lock screen keeps only us).
 LATIN_US = {"", "intl", "altgr-intl", "alt-intl", "euro", "mac", "colemak", "dvorak", "workman"}
 # SYS-268: the input.lua block, from BEGIN up to END, exactly as written.
+# SYS-270: applied only while the package is installed; after pacman -R Hyprland
+# is back on the lines above it (its own layouts and switch) at the next reload.
 LAYOUT_BLOCK = (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
                 "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
                 + LAYOUT_MARK + "\n"
-                "hl.config({\n  input = {\n    kb_layout = \"us\",\n    kb_variant = \"{variant}\",\n"
-                "    kb_options = \"{options}\",\n  },\n})\n")
+                "local rasklad_package = io.open(\"" + RULE + "\", \"r\")\n"
+                "if rasklad_package then\n  rasklad_package:close()\n"
+                "  hl.config({\n    input = {\n      kb_layout = \"us\",\n      kb_variant = \"{variant}\",\n"
+                "      kb_options = \"{options}\",\n    },\n  })\nend\n")
 LAYOUT_BLOCK_RE = re.compile(re.escape(LAYOUT_BLOCK).replace(re.escape("{variant}"), XKB.pattern)
                              .replace(re.escape("{options}"), r"(?![^\"]*grp:)" + XKB.pattern).encode())
 
@@ -502,8 +506,37 @@ def remember_file(state, path, old, new):
   entry["written"] = sha(new)
 
 
+def ours_in(path, data):
+  """Does this file still carry our change? (SYS-270)"""
+  if path == SHELL_JSON:
+    return bool(OUR_ID.search(data))
+  return BEGIN.encode() in data
+
+
+def drop_stale(state, paths):
+  """SYS-270: a tracked file that no longer carries our change (omarchy refresh,
+  or reset by hand) has nothing of ours to undo: its entry and private copy go,
+  the .rasklad.bak beside it stays. Otherwise --install and --revert would stop
+  on it for good."""
+  dropped = False
+  for path in paths:
+    if path not in state["files"] or file_state(path) is not None:
+      continue
+    data = read(path)
+    if data is None or ours_in(path, data):
+      continue
+    entry = state["files"].pop(path)
+    state.setdefault("_drop", []).append(entry["backup"])
+    say("reset", os.path.basename(path),
+        "our change is gone (omarchy refresh?); nothing to undo (old copy: %s)" % entry["bak"])
+    dropped = True
+  if dropped:
+    save_and_drop(state)
+
+
 def install(assume_yes, single_layout=False):
   state = load_state()
+  drop_stale(state, FILES)
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
@@ -724,6 +757,13 @@ def hypr_layouts_back(state):
   return toggle and (recorded is None or layout == recorded)
 
 
+def shell_uses_widget():
+  if file_state(SHELL_JSON) is not None:
+    return False
+  data = read(SHELL_JSON)
+  return data is not None and bool(OUR_ID.search(data))
+
+
 def input_block_present():
   # Opened without blocking and checked on the open file: a path swapped for a
   # FIFO in between cannot stall revert.
@@ -749,6 +789,9 @@ def revert():
     print("Nothing to revert.")
     return 0
   state = load_state()
+  # SYS-270: input.lua is left to the SYS-268 checks below, which keep the
+  # controls until Hyprland shows the user's layouts.
+  drop_stale(state, (BINDINGS, SHELL_JSON))
   clean = True
   restored_hypr = False
   # SYS-268: input.lua first. While it still keeps one Hyprland layout, the
@@ -793,6 +836,11 @@ def revert():
       restored_hypr = restored_hypr or (done and path == BINDINGS)
   if input_kept:
     pass
+  elif state.get("link") and shell_uses_widget():
+    # SYS-270: the bar still lists the widget; without the link it would show
+    # an empty slot. The link goes once shell.json no longer names it.
+    say("kept", "bar-widget-link", "shell.json still uses the widget; link kept")
+    clean = False
   elif state.get("link"):
     if os.path.islink(PLUGIN_LINK) and os.readlink(PLUGIN_LINK) == WIDGET:
       os.unlink(PLUGIN_LINK)

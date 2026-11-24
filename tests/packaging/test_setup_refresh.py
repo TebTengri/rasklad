@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: MIT
+"""SYS-270: rasklad-setup after omarchy refresh and after pacman -R.
+
+Stand-ins for hyprctl and Fcitx, in a temporary XDG_CONFIG_HOME and
+XDG_STATE_HOME: the user's own files are never touched.
+"""
+import contextlib
+import io
+import os
+import shutil
+import subprocess
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from test_setup_layouts import Base, FakeFcitx, load_setup  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
+SHELL = b'{"bar": {"layout": {"right": [{"id": "omarchy.keyboard-layout"}]}}}\n'
+
+
+class Refresh(Base):
+    def setUp(self):
+        super().setUp()
+        config = Path(self.tmp.name) / 'config'
+        self.bindings = config / 'hypr' / 'bindings.lua'
+        self.bindings.write_bytes(b'-- user bindings\n')
+        (config / 'omarchy').mkdir()
+        self.shell = config / 'omarchy' / 'shell.json'
+        self.shell.write_bytes(SHELL)
+        # Base stubs these two plans out; here they are the real ones.
+        real = load_setup(self.tmp.name)
+        real.lua_ok = lambda data: True
+        self.setup.bindings_plan = real.bindings_plan
+        self.setup.shell_plan = real.shell_plan
+        self.hypr('us', options='compose:caps')  # nothing for input.lua
+        self.fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
+        self.setup.fcitx = lambda: self.fake.bus()
+
+    def quiet(self, fn, *args, **kw):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = fn(*args, **kw)
+        return code, out.getvalue()
+
+    def refresh(self):
+        # omarchy refresh: both files back to Omarchy's own.
+        self.bindings.write_bytes(b'-- omarchy bindings\n')
+        self.shell.write_bytes(SHELL)
+
+    def test_install_after_refresh_starts_over(self):
+        self.assertEqual(self.quiet(self.setup.install, True)[0], 0)
+        self.assertIn(self.setup.BEGIN.encode(), self.bindings.read_bytes())
+        self.assertIn(b'rasklad.layout', self.shell.read_bytes())
+        self.refresh()
+        code, out = self.quiet(self.setup.install, True)
+        self.assertEqual(code, 0, out)
+        self.assertIn('omarchy refresh', out)
+        self.assertNotIn('run --revert first', out)
+        self.assertIn(self.setup.BEGIN.encode(), self.bindings.read_bytes())
+        # Revert goes back to the refreshed files, not the ones from before.
+        self.quiet(self.setup.revert)
+        self.assertEqual(self.bindings.read_bytes(), b'-- omarchy bindings\n')
+        self.assertEqual(self.shell.read_bytes(), SHELL)
+
+    def test_revert_after_refresh_is_clean(self):
+        self.quiet(self.setup.install, True)
+        self.refresh()
+        code, out = self.quiet(self.setup.revert)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.bindings.read_bytes(), b'-- omarchy bindings\n')
+        self.assertFalse(os.path.exists(self.setup.STATE_FILE))
+
+    def test_widget_link_stays_while_shell_json_uses_it(self):
+        self.quiet(self.setup.install, True)
+        state = self.setup.load_state()
+        state['link'] = self.setup.WIDGET
+        self.setup.save_state(state)
+        self.shell.write_bytes(self.shell.read_bytes() + b'\n')  # edited: cannot be restored
+        code, out = self.quiet(self.setup.revert)
+        self.assertEqual(code, 1)
+        self.assertIn('shell.json still uses the widget', out)
+        self.assertEqual(self.setup.load_state()['link'], self.setup.WIDGET)
+
+    def test_input_block_is_off_without_the_package(self):
+        self.hypr('ru,us', variant=',')
+        status, new = self.setup.input_plan(b'-- user file\n')
+        self.assertEqual(status, 'missing')
+        text = new.decode()
+        self.assertIn('io.open("%s", "r")' % self.setup.RULE, text)
+        self.assertLess(text.index('if rasklad_package then'), text.index('hl.config'))
+        self.assertEqual(self.setup.input_plan(new)[0], 'ok')  # still recognised as ours
+        lua = shutil.which('lua') or shutil.which('lua5.4')
+        if lua:
+            # Without the package file the block calls nothing.
+            # The package file is looked up under a path that does not exist here.
+            gone = text.replace(self.setup.RULE, str(Path(self.tmp.name) / 'removed' / 'double-alt.lua'))
+            stub = 'hl = {config = function() error("applied") end}\n'
+            done = subprocess.run([lua, '-'], input=(stub + gone).encode(), capture_output=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            present = text.replace(self.setup.RULE, str(self.input))  # any readable file
+            done = subprocess.run([lua, '-'], input=(stub + present).encode(), capture_output=True)
+            self.assertNotEqual(done.returncode, 0)  # applied while the package is there
+            done = subprocess.run([lua, '-'], input=(stub + gone).encode(), capture_output=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+
+
+class Package(unittest.TestCase):
+    def test_pkgbuild_ships_the_removal_notice(self):
+        pkgbuild = (ROOT / 'packaging/arch/PKGBUILD').read_text()
+        self.assertIn('install=rasklad-fcitx5.install', pkgbuild)
+        self.assertIn('rasklad-fcitx5.install', (ROOT / 'tools/build_arch_package.sh').read_text())
+        path = ROOT / 'packaging/arch/rasklad-fcitx5.install'
+        notice = path.read_text()
+        self.assertIn('pre_remove()', notice)
+        self.assertIn('rasklad-setup --revert', notice)
+        self.assertEqual(subprocess.run(['bash', '-n', str(path)]).returncode, 0)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -110,6 +110,13 @@ rasklad-setup --install                            # подключить к р�
 rasklad-setup --revert && sudo pacman -R rasklad-fcitx5 && fcitx5 -rd
 ```
 
+Если пакет удалили без отката, двойной Alt и блок одной раскладки в `input.lua`
+сами перестают действовать (после `hyprctl reload`), а на панели может остаться
+пустое место виджета: верните `omarchy.keyboard-layout` в
+`~/.config/omarchy/shell.json` (копия — `shell.json.rasklad.bak`). Об этом же
+напоминает `pacman -R`. После `omarchy refresh` достаточно снова запустить
+`rasklad-setup --install`: записи о сброшенных файлах он снимает сам.
+
 ## Ограничения
 
 - Только пара раскладок `us` ↔ `ru` (стандартные варианты). Фонетическая,
