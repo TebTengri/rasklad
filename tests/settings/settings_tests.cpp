@@ -275,6 +275,11 @@ private Q_SLOTS:
         QCOMPARE(b.setupRows().value(QStringLiteral("alt")).toString(), QStringLiteral("missing"));
         QCOMPARE(b.setupRows().value(QStringLiteral("icon")).toString(), QStringLiteral("unknown")); // link step absent
         QVERIFY(b.setupInstalled());
+        t.out = QByteArray("ok fcitx-group\n");
+        b.refresh(); // FakeFcitx has both layouts; a check saying so keeps the banner off
+        QVERIFY(b.layoutsReady());
+        t.out = QByteArray("ok package\nmissing double-alt\nok bar-widget\n");
+        b.refresh();
         QVERIFY(b.openSetup(QStringLiteral("install")));
         QCOMPARE(t.opened, QStringList{QStringLiteral("install")});
         t.out.reset(); // no tool: the section hides

@@ -18,6 +18,9 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
             // focus (Hyprland returns it when the terminal closes) re-reads Fcitx for
             // the banner. Never a blocking call or a new check from here.
             if (next != m_setup || installed != m_setupInstalled) m_lastRefresh.invalidate();
+            // rasklad-setup's fcitx-group "ok" is the banner's own condition (both
+            // layouts in the current Fcitx group): take it without a blocking call.
+            if (m_running && next.value(QStringLiteral("fcitx-group")) == QStringLiteral("ok")) m_layouts = true;
             m_setup = next;
             m_setupInstalled = installed;
             Q_EMIT changed();
