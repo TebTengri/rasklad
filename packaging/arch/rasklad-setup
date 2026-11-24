@@ -697,6 +697,12 @@ def revert():
   # switch, so they all stay until a later --revert restores it.
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
+  input_left = False
+  if input_kept and BEGIN.encode() not in (read(INPUT) or b""):
+    # Edited, but our block is gone: Hyprland has the user's own layouts again
+    # once it has taken the file. input.lua stays as the user left it.
+    input_kept, input_left = False, True
+    del state["files"][INPUT]
   restored_hypr = had_input and not input_kept
   session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
   if session != "none":
@@ -708,6 +714,8 @@ def revert():
       save_and_drop(state)
       return 1
     state.pop("await_hypr", None)
+  if input_left:
+    clean = False  # input.lua left as is; its backup stays beside it
   if input_kept:
     clean = False
     say("kept", "rasklad-controls", "input.lua not restored; double Alt, bar widget and Fcitx layouts kept")

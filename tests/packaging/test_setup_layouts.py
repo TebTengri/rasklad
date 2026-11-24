@@ -289,6 +289,19 @@ class Install(Base):
         os.environ['HYPRLAND_INSTANCE_SIGNATURE'] = 'abc'
         self.assertEqual(self.setup.hypr_session(), 'unknown')
 
+    def test_block_removed_by_hand_releases_the_controls(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.write_bytes(b'-- user file\n-- my own edit\n')  # our block taken out
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda: True
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 1)  # input.lua left as the user has it
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n-- my own edit\n')
+        self.assertEqual(fake.calls, 2)  # Fcitx back as it was
+        self.assertNotIn(self.setup.INPUT, self.setup.load_state()['files'])
+
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(self.setup.main(['--check', '--single-layout']), 2)
