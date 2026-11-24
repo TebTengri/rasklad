@@ -41,7 +41,7 @@ flowchart TD
 `safeConfirmed` сохраняет известное исходное слово. При расхождении/неизвестности
 автоматическое решение может быть Abstain; Suggest не применяется автоматически.
 Контекст прошлых слов и online learning не являются обязательными этапами.
-Точная политика: `docs/ADR-001-DETECTOR-ROUTING.md` и `src/decisionrouter.cpp`.
+Точная политика: `docs/research/ADR-001-DETECTOR-ROUTING.md` и `src/decisionrouter.cpp`.
 Явный ручной converter не обязан угадывать намерение через этот pipeline.
 Распознавание слова не даёт права изменять поле другого приложения.
 
@@ -50,17 +50,17 @@ flowchart TD
 | Задача | Прочитать сначала (2–4 файла) |
 | --- | --- |
 | Исправить US/RU mapping | `src/layoutconverter.h`, `src/layoutconverter.cpp`, `tests/rasklad_tests.cpp` |
-| Изменить решение ядра | `docs/ADR-001-DETECTOR-ROUTING.md`, `src/decisionrouter.h`, `src/decisionrouter.cpp` |
+| Изменить решение ядра | `docs/research/ADR-001-DETECTOR-ROUTING.md`, `src/decisionrouter.h`, `src/decisionrouter.cpp` |
 | Проверить словари/модель | `src/localprofile.h`, `src/localprofile.cpp`, `src/profileverify.cpp`, `THIRD_PARTY.md` |
 | Изменить Qt preview | `src/documentcontroller.cpp`, `src/analysisservice.cpp`, `src/Main.qml` |
 | Browser input/revision | `browser/README.md`, `browser/adapter.js`, `browser/session.js`, `browser/prosemirror.js` |
-| Fcitx composition/commit | product: `src/raskladproduct.cpp`, `src/configrules.h`, `src/wordrules.h`; lab (frozen): `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/FCITX-TRANSPORT-001.md` |
-| Focus regression | `tests/chromium_ime/adversarial-focus.mjs`, `tests/chromium_ime/driver.mjs`, `docs/HYPRLAND-FOCUS-STRESS-001.md` |
-| Missing Space /010 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
-| Диагностика маршрута server | `docs/SERVER-ROUTE-WITNESS-001.md`, `tools/server_route_witness_guard.py`, `tests/chromium_ime/server-route-witness.mjs` |
-| Разрешения exact trial | `tools/hyprland_ime_lab.py`, `docs/HYPRLAND-IME-001.md`, `SECURITY.md` |
+| Fcitx composition/commit | product: `src/raskladproduct.cpp`, `src/configrules.h`, `src/wordrules.h`; lab (frozen): `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/research/FCITX-TRANSPORT-001.md` |
+| Focus regression | `tests/chromium_ime/adversarial-focus.mjs`, `tests/chromium_ime/driver.mjs`, `docs/research/HYPRLAND-FOCUS-STRESS-001.md` |
+| Missing Space /010 | `docs/research/GRAB-ENTRY-WITNESS-001.md`, `docs/research/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
+| Диагностика маршрута server | `docs/research/SERVER-ROUTE-WITNESS-001.md`, `tools/server_route_witness_guard.py`, `tests/chromium_ime/server-route-witness.mjs` |
+| Разрешения exact trial | `tools/hyprland_ime_lab.py`, `docs/research/HYPRLAND-IME-001.md`, `SECURITY.md` |
 | Лицензии/новый язык | `LICENSE`, `THIRD_PARTY.md`, `docs/DATA_POLICY.md` |
-| Поддержка нового приложения | `docs/APPLICATION-POLICY.md`, `docs/ADR-001-input-boundary.md`, `browser/README.md` |
+| Поддержка нового приложения | `docs/APPLICATION-POLICY.md`, `docs/research/ADR-001-input-boundary.md`, `browser/README.md` |
 
 ## Реальный статус адаптеров
 
@@ -83,7 +83,7 @@ client callback/Core/addon0/1. Остальные3focus/baseline17/cleanup/alive
 Закрытый real-libwayland toy control воспроизводит drop0/1 и drain1/1 при
 server1/1, one-live-grab и async barrier. Это object-lifetime primitive,
 НЕ Fcitx fix и не доказательство его client discard. Следующий actualfrontend
-experiment: `docs/FCITX-DRAIN-EXPERIMENT-PLAN.md`. Нет нового host допуска.
+experiment: `docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md`. Нет нового host допуска.
 
 ## Проверки и их зависимости
 

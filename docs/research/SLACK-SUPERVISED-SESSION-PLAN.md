@@ -177,4 +177,4 @@ dry-run IC-reset gate; contradictions removed. Rejected — ephemeral profile
 Binding rules in force: no clicks or typing by the owner after F10; no Ctrl+Z
 live; BackSpace by committed grapheme count; protected purposes deny; commits
 with controls/newlines rejected; Slack sees no host bus if the dry run confirms
-`basic_text`. Implementation follows docs/SLACK-SESSION-BLUEPRINT.md.
+`basic_text`. Implementation follows docs/research/SLACK-SESSION-BLUEPRINT.md.

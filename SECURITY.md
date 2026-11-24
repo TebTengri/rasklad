@@ -16,15 +16,15 @@ SYS-239 добавляет собственное окно Qt Quick (manual prev
 
 Тема Omarchy, выбранный язык `omarchy/language` и fallback `locale.conf` читаются только на чтение, обычными файлами до 64 KiB, по событиям QFileSystemWatcher без опроса. Флаг разработчика `--local-profile <корень>` читает только закреплённые по SHA-256 и размеру файлы под `<корень>/data` и `<корень>/build` без symlink-компонентов, сверяет паспорта, notices, отметки модификаций и загруженную системную Hunspell. Это проверка воспроизводимости доверенных локальных данных, не sandbox: Hunspell (C-код) разбирает локальные .aff/.dic, dynamic loader работает до проверки, а TOCTOU-подмена файлов процессом того же пользователя между проверкой и чтением не исключена (после загрузки файлы перепроверяются). Провайдер создаётся, опрашивается и уничтожается одним рабочим потоком; при завершении поток дожидается окончания запроса.
 
-Ограничения: текст остаётся в памяти процесса (без гарантированного затирания) до очистки или выхода; скопированный текст попадает в системный буфер обмена, где его могут сохранить менеджеры истории буфера; средства доступности рабочего стола видят содержимое окна как у любого приложения. Это не аудит всей ОС. Первый offscreen-замер ресурсов опубликован в docs/MVP-001-REVIEW.md; реальные задержки desktop ввода не измерены. Решение маршрутизатора — подсказка в собственном окне, не разрешение на автоматический системный ввод (SYS-223).
+Ограничения: текст остаётся в памяти процесса (без гарантированного затирания) до очистки или выхода; скопированный текст попадает в системный буфер обмена, где его могут сохранить менеджеры истории буфера; средства доступности рабочего стола видят содержимое окна как у любого приложения. Это не аудит всей ОС. Первый offscreen-замер ресурсов опубликован в docs/research/MVP-001-REVIEW.md; реальные задержки desktop ввода не измерены. Решение маршрутизатора — подсказка в собственном окне, не разрешение на автоматический системный ввод (SYS-223).
 
 В Qt TextEdit выделение обычно может автоматически публиковаться в PRIMARY. До QGuiApplication приложение добавляет primary-selection/data-control Wayland interfaces в собственный `QT_WAYLAND_DISABLED_INTERFACES`, сохраняя ранее заданные ограничения. Системные настройки не меняются. Если после инициализации `QClipboard::supportsSelection()` остаётся true, приложение завершается до открытия редактора. `--self-check` возвращает только backend/capability JSON, не создаёт окно, не загружает профиль и не читает содержимое clipboard. Проверено с установленным Qt 6.12/Wayland; изменение реализации Qt требует повторной проверки. Qt IME получает hints SensitiveData/NoPredictiveText; это подсказки, а не изоляция от IME, accessibility или других процессов пользователя.
 
-SYS-223 добавляет отдельную developer-лабораторию `tests/input_lab` (`bin/test-input-lab`, не входит в `bin/build`/`bin/test` и не связана с приложением). Фейковый сервер libwayland и IM-клиент работают в одном тестовом процессе через socketpair: без слушающего сокета, `wl_display_connect` и сеанса рабочего стола; `wl_seat` без устройств; захвата клавиатуры, popup, виртуальной клавиатуры, clipboard, evdev и uinput нет, такие запросы отклоняются. Только синтетическое состояние и вымышленный текст. Результаты не являются доказательством безопасности реального композитора или приложений (docs/INPUT-LAB-001.md).
+SYS-223 добавляет отдельную developer-лабораторию `tests/input_lab` (`bin/test-input-lab`, не входит в `bin/build`/`bin/test` и не связана с приложением). Фейковый сервер libwayland и IM-клиент работают в одном тестовом процессе через socketpair: без слушающего сокета, `wl_display_connect` и сеанса рабочего стола; `wl_seat` без устройств; захвата клавиатуры, popup, виртуальной клавиатуры, clipboard, evdev и uinput нет, такие запросы отклоняются. Только синтетическое состояние и вымышленный текст. Результаты не являются доказательством безопасности реального композитора или приложений (docs/research/INPUT-LAB-001.md).
 
-INPUT-LAB-002 — отдельный developer runner для уже установленного Hyprland. По умолчанию только проверяет план, явный `--smoke` использует закрытые namespaces bwrap, фиксированные окружение/config, без host HOME/runtime, GPU/input/DBus/сети, с лимитами и остановкой собственных процессов. Это не backend приложения и не sandbox для произвольного кода. Первый изолированный запуск не дошёл до наблюдения сокета; автоматический ввод не допущен. См. docs/INPUT-LAB-002.md.
+INPUT-LAB-002 — отдельный developer runner для уже установленного Hyprland. По умолчанию только проверяет план, явный `--smoke` использует закрытые namespaces bwrap, фиксированные окружение/config, без host HOME/runtime, GPU/input/DBus/сети, с лимитами и остановкой собственных процессов. Это не backend приложения и не sandbox для произвольного кода. Первый изолированный запуск не дошёл до наблюдения сокета; автоматический ввод не допущен. См. docs/research/INPUT-LAB-002.md.
 
-Общая ревизия и границы доказательств: docs/PROJECT-AUDIT-001.md; лицензии: THIRD_PARTY.md. 65 536 UTF-16 — предел принятого документа после передачи текста из Qt editor, не жёсткий предел пика памяти при огромной вставке. Само обычное приложение не изолирует себя от остальных файлов пользователя; память может попасть в swap/core dump по политике ОС. Проверка символов ключей в Git не доказывает отсутствие всех секретов. Старые developer profiling helpers не являются supervisor для недоверенных команд и могут не иметь общего timeout.
+Общая ревизия и границы доказательств: docs/research/PROJECT-AUDIT-001.md; лицензии: THIRD_PARTY.md. 65 536 UTF-16 — предел принятого документа после передачи текста из Qt editor, не жёсткий предел пика памяти при огромной вставке. Само обычное приложение не изолирует себя от остальных файлов пользователя; память может попасть в swap/core dump по политике ОС. Проверка символов ключей в Git не доказывает отсутствие всех секретов. Старые developer profiling helpers не являются supervisor для недоверенных команд и могут не иметь общего timeout.
 
 ## Требования к реализации
 
@@ -68,7 +68,7 @@ IPC и не логируется. Реальные profile/model/dictionary фа
 клавиши/раскладка, clipboard, настройки и host browser profile не меняются.
 Тест Chromium — closed bwrap с временным HOME/profile, network namespace, без
 host bus/input/GPU; Chromium sandbox включён, CDP только дочерние pipes. См.
-[Browser adapter](docs/BROWSER-ADAPTER-001.md) и [границы](browser/README.md).
+[Browser adapter](docs/research/BROWSER-ADAPTER-001.md) и [границы](browser/README.md).
 
 Browser core 002 добавляет build-time exporter: он исполняет существующий native
 DecisionRouter на всех 512 состояниях синтетических признаков и canonicalizeToken
@@ -79,7 +79,7 @@ boolean/model поля, синхронность результата и bounds;
 скриптов того же JS realm и не проверка реальной языковой точности. Provenance
 фиксирует хеши исходников developer build, но не заменяет подпись дистрибутива.
 Exporter требует только уже установленный Qt/qmake/C++ toolchain и не устанавливает
-пакеты. Детали: [Browser core 002](docs/BROWSER-CORE-002.md).
+пакеты. Детали: [Browser core 002](docs/research/BROWSER-CORE-002.md).
 
 Browser evidence 003: RSKN loader принимает только фиксированный v1 Uint8Array
 с собственным ограниченным снимком, отвергает shared/detached buffers, неверный
@@ -92,14 +92,14 @@ JS scorer проверен по native gold, ключи не кэшируютс�
 асинхронный lookup даёт отсутствие evidence, а не false membership. В fixture
 только сгенерированные числовые веса и искусственные Set, не замена Hunspell.
 Реальные артефакты не открывались/не допущены к browser distribution, сети/IPC/
-истории/host config нет. См. [Browser evidence 003](docs/BROWSER-EVIDENCE-003.md).
+истории/host config нет. См. [Browser evidence 003](docs/research/BROWSER-EVIDENCE-003.md).
 
 ECC review 004: browser loader теперь допускает только frozen профиль порогов,
 router повторно проверяет canonical соответствие кандидата, evidence снимает
 конфигурацию одним чтением. Независимый native oracle передаёт явные evidence
 поля, а не ожидаемый индекс browser table. Контракт owner-registration не
 заменяется поиском password по всей странице. Статическое ECC-review и отдельно
-исполненные Codex тесты разделены: [ECC review 004](docs/ECC-REVIEW-004.md).
+исполненные Codex тесты разделены: [ECC review 004](docs/research/ECC-REVIEW-004.md).
 
 RSKF browser stem-reader: фиксированный ограниченный снимок Uint8Array, проверка
 всех смещений/префиксов/сортировки и точной длины файла до использования; shared,
@@ -204,7 +204,7 @@ boundaries provide Undo/Redo without execCommand/replay. WeakMap records contain
 only busy/disabled flags, no queries/documents. Stale/unexpected owner changes are
 not rolled back; an exceptional Space may be consumed rather than misapplied.
 The verified third-party editor is executed only in the closed fixture; it is not
-installed into Slack. Details: docs/PROSEMIRROR-ADAPTER-005.md.
+installed into Slack. Details: docs/research/PROSEMIRROR-ADAPTER-005.md.
 
 ## Native Slack target
 
@@ -220,7 +220,7 @@ Slack. Its optional explicit run requests only force-renderer-accessibility, no
 config/app patch or debugging port, and starts no corrector. This exposes UI to
 local assistive clients and uses Slack's normal app profile; it requires owner
 approval before launch. The probe still reads metadata only. Trial/rollback and
-unresolved buffer/Undo/code-role gates: docs/SLACK-DESKTOP-001.md.
+unresolved buffer/Undo/code-role gates: docs/research/SLACK-DESKTOP-001.md.
 
 ## Fcitx transport developer lab (SYS-244)
 
@@ -264,7 +264,7 @@ The separate addon compile variant gates program=chromium, not the default Qt
 fixture. It is synthetic developer code, not a generic context classifier or a
 production app allowlist. Provisional composition text can already exist in DOM.
 No raw dictionaries/model/profile/account/message data are read by this test.
-See docs/CHROMIUM-IME-001.md and data/chromium-ime-001-result.json.
+See docs/research/CHROMIUM-IME-001.md and data/chromium-ime-001-result.json.
 
 ## Optional native evidence bridge in Chromium lab
 
@@ -276,7 +276,7 @@ No new data/training or distribution approval. The bridge has no synthetic
 fallback; a deliberately invalid virtual manifest leaves ordinary input intact.
 Only the explicitly owned lab prose context supplies Prose; program name is not
 a semantic classifier. CPU/RSS and crash-loss limitations are recorded in
-docs/CHROMIUM-IME-PROFILE-001.md. Current composition is lost on abrupt daemon
+docs/research/CHROMIUM-IME-PROFILE-001.md. Current composition is lost on abrupt daemon
 death; live use is not approved by passing the transport scenarios.
 
 ## Native focus stress developer checks
@@ -306,7 +306,7 @@ commits payload before notifying preedit end and guards the remaining call
 with tracked lifetime/focus. Sway, Qt and GTK regression pass; this is not an
 atomic multi-message transaction, stale-serial proof, or generic app guarantee.
 Exact Hyprland revalidation after this change remains pending. See
-docs/FOCUS-STRESS-PLAN.md and data/focus-stress-reference-001.json.
+docs/research/FOCUS-STRESS-PLAN.md and data/focus-stress-reference-001.json.
 
 
 SYS-245 addon witness — отдельный compile-time developer вариант, не рабочая
@@ -315,14 +315,14 @@ readonly GetStats на уже private bus возвращает только fixe
 key callback не делает I/O/логирование и не сохраняет payload. Нет setter/reset
 или input API. Тестовый вариант не устанавливается, требует явных private
 markers и отдельного бинаря. Ограничения корреляции/насыщения и позитивный
-Sway контроль: [Addon witness](docs/ADDON-WITNESS-001.md).
+Sway контроль: [Addon witness](docs/research/ADDON-WITNESS-001.md).
 
 
 Core-entry witness — следующий явно выбранный developer вариант с собственным
 ELF wrapper только в закрытом Fcitx child. ABI закреплён хешами; constructor
 удаляет preload env для потомков. Строгая thread confinement защищает простые
 counters. Default/profile не содержат bridge; runner/Node/Chromium не получают
-preload. Контракт, guards, калибровка и ограничения: [Core entry](docs/CORE-ENTRY-WITNESS-001.md).
+preload. Контракт, guards, калибровка и ограничения: [Core entry](docs/research/CORE-ENTRY-WITNESS-001.md).
 
 ## Program names on offer in the settings app (SYS-253)
 

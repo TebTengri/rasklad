@@ -1,6 +1,6 @@
 # Предрегистрация006: естественный контекст и выбор маршрута
 
-SYS-238,2026-11-11. [Протокол](../data/experiment-006-protocol.json) и [права](../data/notices/NATURAL-CONTEXT-006-REVIEW.md) до загрузки новых глав. Пул004/те же pinned Rust Book versions, ranks20..29 development,30..39holdout каждого языка;004ranks0..19 исключены. Новые документы, тот же переводной технический домен. Все8политик и критерии архитектуры фиксируются сейчас; development тоже без настройки порогов.
+SYS-238,2026-11-11. [Протокол](../../data/experiment-006-protocol.json) и [права](../../data/notices/NATURAL-CONTEXT-006-REVIEW.md) до загрузки новых глав. Пул004/те же pinned Rust Book versions, ranks20..29 development,30..39holdout каждого языка;004ranks0..19 исключены. Новые документы, тот же переводной технический домен. Все8политик и критерии архитектуры фиксируются сейчас; development тоже без настройки порогов.
 
 Источники дают реальные4предыдущих prose tokens; original text Keep, corruption single-target и burst-prefix получают Correct независимо от контекстного признака. Code/unknown отдельные Keep. Префиксы causal, границыparagraph/protected очищают контекст; actual English terms в RUprose сохраняются. Unsupported long targets представлены sentinel с оригинальным hash в labels, не исключаются из полных totals. Oracle field/layout metadata не равны готовому safe-input backend.
 

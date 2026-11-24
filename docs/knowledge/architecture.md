@@ -6,8 +6,8 @@ Recognition and safe execution are separate.
 
 ## Файлы
 
-- `docs/ADR-001-DETECTOR-ROUTING.md`
-- `docs/ADR-001-input-boundary.md`
+- `docs/research/ADR-001-DETECTOR-ROUTING.md`
+- `docs/research/ADR-001-input-boundary.md`
 
 ## Связи
 

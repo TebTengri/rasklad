@@ -19,7 +19,7 @@ Shared Off/On, safe resume, lazy holders and terminal Off cleanup verified in ow
 - `tests/fcitx_transport/disable_reentry_tests.cpp`
 - `data/disable-adapter-001-result.json`
 - `data/disable-receipt-001-result.json`
-- `docs/ADR-003-OFF-SUBMISSION.md`
+- `docs/research/ADR-003-OFF-SUBMISSION.md`
 - `data/disable-submission-001-result.json`
 - `tools/fcitx_disable_lab.pro`
 - `tests/wayland_ime/test_disable_suite_guards.py`
@@ -30,7 +30,7 @@ Shared Off/On, safe resume, lazy holders and terminal Off cleanup verified in ow
 - `tests/fcitx_transport/application_off_tests.cpp`
 - `data/application-off-001-result.json`
 - `data/application-on-001-result.json`
-- `docs/ADR-004-CONTEXT-RESOURCES.md`
+- `docs/research/ADR-004-CONTEXT-RESOURCES.md`
 - `data/context-resources-001-result.json`
 
 ## Связи

@@ -6,9 +6,9 @@
 | --- | --- | --- |
 | Claude Code | основной сеанс | ведущий: план, делегирование, основной код, приём работы, Linear/GitHub |
 | Субагенты ecc | Agent tool в сеансе Claude | узкие задачи: architect, tdd-guide, cpp-reviewer, security-reviewer, silent-failure-hunter, cpp-build-resolver, doc-updater |
-| Grok | `cursor-agent -p --model grok-4.7-high` | независимая критика: гонки фокуса, пароли, блокировка, время жизни, отзыв прав |
+| Grok | `cursor-agent -p --model grok-4.7-high` | независимая критика и тексты: гонки фокуса, пароли, блокировка, время жизни, отзыв прав |
 | Gemini | `agy -p --model gemini-3.8-flash-high` | независимая критика: упрощение, альтернативы, варианты интерфейса; код не поручать |
-| Codex | `codex` | резервный независимый проверяющий |
+| Codex | `codex exec "…" < /dev/null` | основной независимый проверяющий кода; без `< /dev/null` зависает на чтении stdin |
 | Владелец | — | продуктовые решения и разовые разрешения на host/GPU/Slack/IME |
 
 Правила:

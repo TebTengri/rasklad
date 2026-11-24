@@ -268,4 +268,4 @@ existing editor/history instances; there is no global app discovery or injection
 Real-profile tests passed 12 base cases +25 rich-editor/adversarial checks, plus
 10 new Node privacy/lifecycle tests. This is not Slack compatibility yet. Sources,
 full MIT notice handling, reproduction, exact result and exceptional Space behavior:
-[ProseMirror adapter](../docs/PROSEMIRROR-ADAPTER-005.md).
+[ProseMirror adapter](../docs/research/PROSEMIRROR-ADAPTER-005.md).

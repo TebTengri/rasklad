@@ -6,7 +6,7 @@ Current noGPU reference fixture18+4 PASS, existingfocus/caps lease invalidation.
 
 ## Файлы
 
-- `docs/FCITX-FIELD-SEAM-001.md`
+- `docs/research/FCITX-FIELD-SEAM-001.md`
 - `data/field-lifecycle-current-001-result.json`
 - `data/field-lifecycle-build-001-result.json`
 - `src/fcitxlab.cpp`

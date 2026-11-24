@@ -6,12 +6,12 @@ Dry runs PASS: Chromium control maps window 0.44s; empty-profile offline Slack r
 
 ## Файлы
 
-- `docs/SLACK-BOOTSTRAP-PROBE.md`
+- `docs/research/SLACK-BOOTSTRAP-PROBE.md`
 - `tools/slack_bootstrap_probe.py`
 - `tools/slack_https_bridge.py`
 - `tests/slack_probe/test_bootstrap_probe.py`
 - `data/slack-bootstrap-dryrun-001-result.json`
-- `docs/SLACK-SUPERVISED-SESSION-PLAN.md`
+- `docs/research/SLACK-SUPERVISED-SESSION-PLAN.md`
 
 ## Связи
 

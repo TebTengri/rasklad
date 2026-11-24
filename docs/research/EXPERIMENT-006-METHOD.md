@@ -1,6 +1,6 @@
 # Методика006: естественные префиксы и выбор архитектуры
 
-[Протокол](../data/experiment-006-protocol.json), [предрегистрация](EXPERIMENT-006-PREREG.md), [паспорт](../data/evaluation-006-sources.json), [review](../data/notices/NATURAL-CONTEXT-006-REVIEW.md). Итог — [ADR-001](ADR-001-DETECTOR-ROUTING.md), а не включение глобального ввода.
+[Протокол](../../data/experiment-006-protocol.json), [предрегистрация](EXPERIMENT-006-PREREG.md), [паспорт](../../data/evaluation-006-sources.json), [review](../../data/notices/NATURAL-CONTEXT-006-REVIEW.md). Итог — [ADR-001](ADR-001-DETECTOR-ROUTING.md), а не включение глобального ввода.
 
 ## Источники и подготовка
 

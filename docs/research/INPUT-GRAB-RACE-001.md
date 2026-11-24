@@ -77,4 +77,4 @@ destroy и без ожидания нового grab при удержанном
 One-live invariant и async barrier выполнены, protocolError0. Без Fcitx,
 compositor, реального ввода или пользовательского сеанса. Отчёт:
 `data/wayland-lifecycle-001-result.json`. Следующий реальный frontend experiment
-и его gates: `docs/FCITX-DRAIN-EXPERIMENT-PLAN.md`. Это ещё не Fcitx fix.
+и его gates: `docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md`. Это ещё не Fcitx fix.

@@ -6,11 +6,11 @@ Exact010: old-after-done press1, current release1, callback0/1. No current host 
 
 ## Файлы
 
-- `docs/SERVER-GRAB-EPOCH-001.md`
+- `docs/research/SERVER-GRAB-EPOCH-001.md`
 - `tools/server_grab_epoch.h`
 - `tools/server_route_witness_guard.py`
 - `tests/chromium_ime/server-route-witness.mjs`
-- `docs/SERVER-ROUTE-WITNESS-001.md`
+- `docs/research/SERVER-ROUTE-WITNESS-001.md`
 
 ## Связи
 

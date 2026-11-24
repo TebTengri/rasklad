@@ -2,7 +2,7 @@
 
 2026-11-20. Source: ecc:code-architect read-only analysis (file:line citations
 in the agent report), accepted by Claude with the decisions marked DECISION.
-Supersedes nothing; implements docs/SLACK-SUPERVISED-SESSION-PLAN.md.
+Supersedes nothing; implements docs/research/SLACK-SUPERVISED-SESSION-PLAN.md.
 
 ## Composition
 

@@ -10,7 +10,7 @@
 // against a fixed, named test harness. This is NOT a corrector, NOT a context
 // classifier and NOT installable product code.
 //
-// Safety boundaries (see SECURITY.md, docs/ARCHITECTURE-RESET-001.md):
+// Safety boundaries (see SECURITY.md, docs/research/ARCHITECTURE-RESET-001.md):
 //  * Active only when ALL metadata gates hold, checked before any buffering:
 //      - fixed lab identity (rasklad-ime-lab, or the explicitly compiled
 //        Chromium backend identifiers in separate lab variants;

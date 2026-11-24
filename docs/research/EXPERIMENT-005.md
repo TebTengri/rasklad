@@ -1,6 +1,6 @@
 # Опыт 005: что даёт контекст и чего он не может сообщить
 
-SYS-237, 2026-11-11. [Предрегистрация](EXPERIMENT-005-PREREG.md), [протокол](../data/experiment-005-protocol.json), [команды/границы](EXPERIMENT-005-METHOD.md), [агрегаты](results/experiment-005.json), [проверки](results/experiment-005-validation.json).
+SYS-237, 2026-11-11. [Предрегистрация](EXPERIMENT-005-PREREG.md), [протокол](../../data/experiment-005-protocol.json), [команды/границы](EXPERIMENT-005-METHOD.md), [агрегаты](../results/experiment-005.json), [проверки](../results/experiment-005-validation.json).
 
 **Простой языковой контекст даёт исправления, но не позволяет отличить ошибку раскладки от намеренного заимствования при одинаковом видимом вводе.** На синтетическом holdout contextAuto восстановил240 из348 заданных ambiguous Correct и ошибочно изменил240 парных borrow Keep. Veto неоднозначности убрал ошибки и все эти исправления. Suggest сохранил текст, но получил нежелательные предложения.
 

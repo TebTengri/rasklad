@@ -8,7 +8,7 @@ One separately approved direct installedHyprland trial passed2windows/2observers
 
 - `tools/hyprland_mapping_probe.py`
 - `tests/closed_mapping/test_direct_mapping.py`
-- `docs/HYPRLAND-DIRECT-MAPPING-PROBE.md`
+- `docs/research/HYPRLAND-DIRECT-MAPPING-PROBE.md`
 - `data/direct-mapping-fd-control-001-result.json`
 - `data/direct-hyprland-mapping-001-result.json`
 

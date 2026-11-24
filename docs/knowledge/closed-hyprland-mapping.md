@@ -9,7 +9,7 @@ Three individually approved GPU trials consumed. Parent feedback resolves fixed 
 - `tools/closed_hyprland_mapping.py`
 - `tests/closed_mapping/test_boundary.py`
 - `tests/window_provenance/MAPPING.md`
-- `docs/CLOSED-HYPRLAND-MAPPING-PLAN.md`
+- `docs/research/CLOSED-HYPRLAND-MAPPING-PLAN.md`
 - `data/closed-mapping-preparation-001-result.json`
 - `vendor/wayland/sources.json`
 - `data/closed-mapping-001-result.json`

@@ -1,7 +1,7 @@
 # Step 0: real-profile Slack bootstrap feasibility (prepared, NOT run)
 
 Question: does the owner's real desktop Slack map a Wayland window inside our
-closed sandbox? Every later step of docs/SLACK-SUPERVISED-SESSION-PLAN.md depends
+closed sandbox? Every later step of docs/research/SLACK-SUPERVISED-SESSION-PLAN.md depends
 on it; earlier empty-profile offline runs never produced a window.
 
 Tool: `python3 -I tools/slack_bootstrap_probe.py` (plan only).

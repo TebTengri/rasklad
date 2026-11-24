@@ -2,7 +2,7 @@
 # Не GUI, не служба, не устанавливается и не входит в runtime приложения.
 # Собирается только при наличии pkg-config hunspell (см. rasklad.pro);
 # использует уже установленную системную библиотеку и ничего не скачивает.
-# См. docs/EXPERIMENT-003-METHOD.md.
+# См. docs/research/EXPERIMENT-003-METHOD.md.
 TEMPLATE = app
 TARGET = morphology_benchmark
 

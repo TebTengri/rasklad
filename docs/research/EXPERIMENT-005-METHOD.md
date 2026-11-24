@@ -1,6 +1,6 @@
 # Методика 005: контекстные признаки и совпадение намерений
 
-[Протокол](../data/experiment-005-protocol.json) и [предрегистрация](EXPERIMENT-005-PREREG.md) фиксируют правила до новых context outcomes. [Паспорт](../data/evaluation-005-sources.json), [проверка источников](../data/notices/CONTEXT-005-REVIEW.md). Синтетический механизм не является новым естественным holdout.
+[Протокол](../../data/experiment-005-protocol.json) и [предрегистрация](EXPERIMENT-005-PREREG.md) фиксируют правила до новых context outcomes. [Паспорт](../../data/evaluation-005-sources.json), [проверка источников](../../data/notices/CONTEXT-005-REVIEW.md). Синтетический механизм не является новым естественным holdout.
 
 ## Подготовка и разделение ответов
 

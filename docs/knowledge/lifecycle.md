@@ -9,7 +9,7 @@ Private actual libwayland socketpair; expected drop0/1 vsdrain1/1; one-server-gr
 - `tests/wayland_lifecycle/run.py`
 - `tests/wayland_lifecycle/wire_client.cpp`
 - `tests/wayland_lifecycle/wire_lifecycle.cpp`
-- `docs/FCITX-DRAIN-EXPERIMENT-PLAN.md`
+- `docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md`
 - `data/wayland-lifecycle-001-result.json`
 
 ## Связи

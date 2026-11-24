@@ -1,6 +1,6 @@
 # Сторонние компоненты и данные
 
-Проверка 2026-11-12, [PROJECT-AUDIT-001](docs/PROJECT-AUDIT-001.md). Это инвентаризация текущего исходного проекта и локальной сборки, не готовый комплект лицензий бинарного релиза. Обновление 2026-11-13: владелец выбрал [MIT](LICENSE) для собственного кода и документации. Условия сторонних файлов действуют независимо; лицензия проекта их не заменяет.
+Проверка 2026-11-12, [PROJECT-AUDIT-001](docs/research/PROJECT-AUDIT-001.md). Это инвентаризация текущего исходного проекта и локальной сборки, не готовый комплект лицензий бинарного релиза. Обновление 2026-11-13: владелец выбрал [MIT](LICENSE) для собственного кода и документации. Условия сторонних файлов действуют независимо; лицензия проекта их не заменяет.
 
 | Компонент | Использование | Условия и состояние |
 | --- | --- | --- |
@@ -13,7 +13,7 @@
 | Rust Book EN/RU | Локальная оценка; главы и производные случаи в `build/` | MIT/Apache-2.0 и сохранённые copyright notices; версии/допуск в `data/evaluation-004-sources.json`. Не разрешение публиковать корпус/weights |
 | Python, qmake, компилятор, bubblewrap, Hyprland | Уже установленные средства разработки/тестирования | Не поставляются с rasklad. Запуск бинарника не означает копирования его реализации в наш проект |
 
-Таблица раскладки написана вручную по стандартным клавишам XKB; реализации WaySwitch/goswitch/xremap/keyd/XNeur не переносились. Архитектурная разведка и её ограничения: [OPEN_SOURCE_REVIEW](docs/OPEN_SOURCE_REVIEW.md).
+Таблица раскладки написана вручную по стандартным клавишам XKB; реализации WaySwitch/goswitch/xremap/keyd/XNeur не переносились. Архитектурная разведка и её ограничения: [OPEN_SOURCE_REVIEW](docs/research/OPEN_SOURCE_REVIEW.md).
 
 ## До бинарного выпуска
 
@@ -50,7 +50,7 @@ cached/derived code. ESM specifier/source-map rewriting is marked in the fixture
 MODIFICATIONS. No npm install/scripts or third-party code vendoring. Registry
 reported gitHead is provenance metadata; archive/code pins are the tested identity.
 These permissions do not relicense model/dictionary/Hunspell components or approve
-real artifact distribution. See docs/PROSEMIRROR-ADAPTER-005.md.
+real artifact distribution. See docs/research/PROSEMIRROR-ADAPTER-005.md.
 
 ## Fcitx transport developer lab (SYS-244)
 
@@ -80,7 +80,7 @@ installed public Arch keyring and exact signer, with immutable SHA/size pins.
 Only Xvfb and its unmodified full COPYING are extracted into ignored build/.
 No system installation or redistribution. Scripts/package/runtime dependencies
 are not relicensed by own MIT code; shipping requires a separate component audit.
-Pins/source: data/xvfb-lab-lock.json, docs/CHROMIUM-IME-001.md.
+Pins/source: data/xvfb-lab-lock.json, docs/research/CHROMIUM-IME-001.md.
 
 
 ## Private Fcitx frontend source and patch experiment (SYS-245)

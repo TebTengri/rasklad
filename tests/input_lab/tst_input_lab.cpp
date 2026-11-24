@@ -1,7 +1,7 @@
 // SYS-223 input-method-v2 wire laboratory tests. Real libwayland wire between a
 // fake server and an IM client over a socketpair; synthetic protocol state and
 // invented text only. Results say nothing about real compositors, applications,
-// field purposes or Hyprland compatibility (docs/INPUT-LAB-001.md).
+// field purposes or Hyprland compatibility (docs/research/INPUT-LAB-001.md).
 #include <QtTest>
 
 #include "labharness.h"

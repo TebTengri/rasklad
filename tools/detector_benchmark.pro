@@ -1,6 +1,6 @@
 # Offline CLI независимой оценки детектора (SYS-233). Не GUI, не служба, не
 # устанавливается; не входит в runtime приложения. Данные, отчёты и
-# артефакты — только в build/, см. docs/EXPERIMENT-002-METHOD.md.
+# артефакты — только в build/, см. docs/research/EXPERIMENT-002-METHOD.md.
 TEMPLATE = app
 TARGET = detector_benchmark
 

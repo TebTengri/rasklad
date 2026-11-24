@@ -1,6 +1,6 @@
 # Опыт 006: естественные префиксы и принятое решение
 
-SYS-238, 2026-11-11. [Протокол](../data/experiment-006-protocol.json), [предрегистрация](EXPERIMENT-006-PREREG.md), [методика](EXPERIMENT-006-METHOD.md), [агрегаты](results/experiment-006.json), [проверки](results/experiment-006-validation.json), [ресурсы](results/experiment-006-provider-resource.json).
+SYS-238, 2026-11-11. [Протокол](../../data/experiment-006-protocol.json), [предрегистрация](EXPERIMENT-006-PREREG.md), [методика](EXPERIMENT-006-METHOD.md), [агрегаты](../results/experiment-006.json), [проверки](../results/experiment-006-validation.json), [ресурсы](../results/experiment-006-provider-resource.json).
 
 **Выбрана схема для реализации: [ADR-001 — словарь, подтверждение моделью, отдельные отказ и предложение](ADR-001-DETECTOR-ROUTING.md).** Язык предыдущих символов не становится обязательным условием исправления. Первый пользовательский MVP — собственное окно с preview, явным применением и Undo. Для автоматических действий в других приложениях ещё требуется независимо проверенный адаптер безопасного ввода.
 

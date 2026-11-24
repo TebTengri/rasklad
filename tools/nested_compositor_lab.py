@@ -9,7 +9,7 @@ stops its own process group. No fallback launch without bwrap exists.
 
 A "ready" result only means a socket appeared. It is not evidence that the sandbox
 is safe, that text-input fields are protected, or that SYS-223 is complete.
-See docs/INPUT-LAB-002.md.
+See docs/research/INPUT-LAB-002.md.
 """
 import argparse, json, os, resource, shutil, signal, stat, subprocess, sys, tempfile, time
 from pathlib import Path

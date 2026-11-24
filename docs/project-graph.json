@@ -1,14 +1,14 @@
 {
   "schema": 1,
   "scope": "File index and literal references, NOT exhaustive call graph. Python symbols from AST; no execution.",
-  "curatedSha256": "da045f0226bf90fcfec35fdcef835281dcbd25919ccf04df345fc2ccd0432c28",
+  "curatedSha256": "5285345c19bfb69751baa758a6a2e9aee487e3d84bf5aeb697f55bde702ec5db",
   "sourceSha256": {
-    "AGENTS.md": "f3269a4521f8b8ec1963eb169290557fad5bd1a275a549c323fb8b43cd9dc3c2",
-    "CLAUDE.md": "604e8f99ff6dfc2dc9a72c1760f2968344ae35278eed32f63e0da9d96b382a78",
+    "AGENTS.md": "b9607dfd8376d2c0b3a3d9183f2b3b5289b4c15e74fbc5760b1440889a4bee2e",
+    "CLAUDE.md": "fb498b745a6ebebf321ba3163d86f91f67cb5c4dd5953f59c6aa7e6f399e84b4",
     "LICENSE": "cbcea74632d9225584ae7b24a788eb50144ebe1a75d58a1f78138ec1f44f3726",
-    "README.md": "4678a10a9cd3efb5623fb61fe631c3f613a663158784e3688befe1a67d59716e",
-    "SECURITY.md": "9438a266a0f437fba6b7c2d8d47493ce07a097298b7c2e1b8ba9c1bae91d2098",
-    "THIRD_PARTY.md": "f8cac7b41f7509826f06aa3ce5b9ed736bf2829d787b80bf79cbaccd0eb0f129",
+    "README.md": "18ca586b9b861737f2ccb1dba51a2f006df585b62e5cf99b1a0c1e5d270bbf38",
+    "SECURITY.md": "8db2db28a421ba03b2047cdd712c5edb4ec421bd452b9a08f74bd02266ec7e23",
+    "THIRD_PARTY.md": "83818da72ce92f825787e20b673ad238c3ec7f3ec7b107f0cfd2bc28f2d6f816",
     "bin/build": "c83f73f226860f68bc6b301e6830b98f271d27d41a0051a44027b16af9704e31",
     "bin/build-browser-fixture": "4c970d7435a06c9c890ecf79e1c5322622bab5046124185d257fae34f1f35656",
     "bin/build-browser-hunspell": "eee8aee22b3e5393ccd2928b86c6f96aa3b129421a1861b96cc1b490be93e319",
@@ -29,98 +29,100 @@
     "bin/test-input-lab": "b9f0accbba63fa706230753e2dd0f9c95451064f8188a1ca9f9d8dce17caa596",
     "bin/test-reviewed-dictionaries": "c44a7450c30cc40d3582f0326cf43ab697a7b8d418ffa06c2980ef55fe6ca0f7",
     "bin/test-wayland-ime": "92b3bc2fcc9713fb02c6c7b3827cae6dee7c33d7a51b2d5bcd2dd690d08b362a",
-    "docs/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
-    "docs/ACTIVE-PLAN.md": "d3039feb8bfb586cbe8218aa42a864319b8c76c525bafa007625934ce93f77e7",
-    "docs/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
-    "docs/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
-    "docs/ADR-001-DETECTOR-ROUTING.md": "a26ae5699d8795035751c8d0b2d5aaac51cea34384f2d36b98a42e25381cfadf",
-    "docs/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
-    "docs/ADR-003-OFF-SUBMISSION.md": "1789d0fcfa84bf3d3d73f2d6ed0bd1e5e04d86518fdbf82d834c31cdfe3aa426",
-    "docs/ADR-004-CONTEXT-RESOURCES.md": "4c621e68a69203f9a233b5144a110c6e7740d6ac094f071374192a6f0cf267c9",
-    "docs/AGENT_SETUP.md": "bb9a31dc257bf42183c6965d1b72cb79c4883c35f71231be148e0e323a303d20",
+    "docs/ACTIVE-PLAN.md": "6c58af56b5442533661dbf6e1484bc822da278be150a98cb9605497291c2f8c2",
+    "docs/AGENT_SETUP.md": "236323d030b65cd94d8327b43375880c3b86cdf33b9cfb1c77f6d488d889fd30",
     "docs/APPLICATION-POLICY.md": "a0c712b635124f137b1993d18c01d8335a779dee31bab6774b0dc4d548520b39",
-    "docs/AQUAMARINE-READINESS-EXPERIMENT.md": "ce042447f172d07151667614b79e516bac33e0fb18bf799e381f55ad761bc43f",
-    "docs/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
-    "docs/BROWSER-ADAPTER-001.md": "e64c845884b50ecd956b21bf41d2faf1984f71f1caea86fc60b0e82518628af1",
-    "docs/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
-    "docs/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
-    "docs/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
-    "docs/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
-    "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md": "6c95b30c0e09fbfbe191eaaf48c8939ef702f8b11f29188a0b8224209394bb27",
-    "docs/CODE-REVIEW-002.md": "f43bafbe173d66f16a47187164e581b178a4a30fc0120a6d79e59c586ae0c742",
-    "docs/CONTINUATION-PLAN.md": "665b4bc54234d005165c2e0e693b943bf494efd8210cc5a56d4cadd57b6375fa",
-    "docs/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
+    "docs/CONTINUATION-PLAN.md": "bdff6296eb286e3e43c10c282389cc40133bd99525665a4018fe478433be67ef",
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
-    "docs/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
-    "docs/DETECTOR_RESEARCH.md": "616afef0d593e79c4db4a4ef77be8438fc0c5a0535e48842a136bd8bb9e1f146",
-    "docs/ECC-REVIEW-004.md": "3bbfc7535270c67c0c32ca14272f4a6b26e0d8d38ba6a9e7736d41ee6301e463",
-    "docs/EXPERIMENT-001.md": "385ec612b6f0fc9b4a00acbe42c10ffd501d21733aa4f944b021bc068ace7f97",
-    "docs/EXPERIMENT-002-METHOD.md": "67508091d357ff10b55d53c503b1582197c9adf4c0701753cd25fc149fa33e27",
-    "docs/EXPERIMENT-002-PREREG.md": "0f11bf5262b760377f02f37788a796f52caa0df9c0a0ff2706a1110f10ce91d5",
-    "docs/EXPERIMENT-002.md": "a86ee07d2b815d87718b5e47ce36aa96ea388b9d6a0c3def79562db97a95feed",
-    "docs/EXPERIMENT-003-METHOD.md": "5939bc250d5445065bb27c213d9e025111dc4c8a1f04099ce44794556adaab42",
-    "docs/EXPERIMENT-003-PREREG.md": "50e6e9faa6d79bfd750fcb2299670f1946b426b924da352acf9931eacf99499e",
-    "docs/EXPERIMENT-003.md": "1dae2a3d7047a3a7857238e05cd24d0b76645ab343db70b3f933e0063b38472c",
-    "docs/EXPERIMENT-004-METHOD.md": "bfc4098313f3ab2bc33dc586b3e881bd208945a05d5cde2f8282b59b1a20fff1",
-    "docs/EXPERIMENT-004-PREREG.md": "31d577abf23cc43389604c3e925e781ab8c551876489e820f634b0b14771a8a6",
-    "docs/EXPERIMENT-004.md": "c35191db2773d17ea8a986833caefe6cf21a903a7fdb2dba536a61df9d5bc481",
-    "docs/EXPERIMENT-005-METHOD.md": "4f1b82e18b3709b5c4de71e15c6f24574ea15415339b346d324a69754e1e5499",
-    "docs/EXPERIMENT-005-PREREG.md": "0a5f272d31bfbc3b40de84c4f11e55abba172e007b500ab65378e2873cfd8f7a",
-    "docs/EXPERIMENT-005.md": "cea6651d448042a99cd214f25b38282b7addb2a669816d7ade44cf281d10c6c0",
-    "docs/EXPERIMENT-006-METHOD.md": "c1db14177f9376f4c3a036a2bc0433bcb881a929aaa6a8e36d653693a53df6a6",
-    "docs/EXPERIMENT-006-PREREG.md": "7b8b63d34c154ed8f87d632d3ffb7dff13032d8460bd3f9baa1f72e628aad45b",
-    "docs/EXPERIMENT-006.md": "9e6a067346f0bb9d482ebef9d62247422baf14868cc56f0d711c3d720ae32f1b",
-    "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md": "5dffcd11d89121a3c8e5c65789f1237378ff926cc25973254996000a83340d92",
-    "docs/FCITX-FIELD-SEAM-001.md": "ff7ca13eeff248b681feaf4d80df5342505356d0eef818e866fb8e56d32fdca4",
-    "docs/FCITX-KEEP-GRAB-001.md": "46c3d7879307042288d9f9f631649d79d82fbb9892a1ae513740934385da0d2c",
-    "docs/FCITX-RETIREMENT-REVIEW-001.md": "ea1b405b6034eadd8736d603ab2c5b19adfe2cbf42047e85d0e20e541d515dac",
-    "docs/FCITX-TRANSPORT-001.md": "6ea5b3f33cd342d5484fbdae8ccd8c267a9aa501993da77ad49d3afafc91a2cf",
-    "docs/FOCUS-STRESS-PLAN.md": "ea3702e1c6421716eb4625931911daec6938d78fda7b63b59e4cf8a1b9f1ba77",
     "docs/GITHUB_SECURITY.md": "d734268c2c3faf7a67c7ebb2eece700fb4b0e002453a60961c2f3ec018dc3e6f",
-    "docs/GRAB-ENTRY-WITNESS-001.md": "4d74cdc97ff913475bf5a57bfbd5bb46337e48668bf1095948a7810d6ceccca7",
-    "docs/HANDOFF-PROTOCOL-MAPPING-001.md": "457598557041f29fc96a33d8e324f9329cab5c4304cd777d270dedd05a34d9e8",
-    "docs/HOST-REGISTRY-PROBE-PLAN.md": "7ee79cc311cd3656677e01ef8d8da3a03b1c858fe8e1f3613509df33f3eaf3f5",
-    "docs/HYPRLAND-BACKEND-DIAGNOSIS.md": "9b5a7ca45c17a7a89d87e30e7790c918a8a0541f945f3f6f6335b9152ab8c401",
-    "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md": "ae25fd69e7c1470073f3658627861756ea962114c5b108f3169c1f81a0f47d23",
-    "docs/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
-    "docs/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
-    "docs/HYPRLAND-NESTED-PROBE.md": "a80c6a46c9d4445eea2805593b728f523049c294bde161216204e16c0b406459",
-    "docs/INPUT-GRAB-RACE-001.md": "b8dfa881c8edb224c96f86dd617e6a49bccc01b8f2ba60f7cb991509bc8b76c7",
-    "docs/INPUT-LAB-001.md": "b34e6588ee761b03a8d2f5de0bbe26f8c26a34492063208d8afac787b0845d1a",
-    "docs/INPUT-LAB-002.md": "6d722f2deba59a06c192f7f54d49d1271d613703913c7daa2826d167939d2122",
-    "docs/MULTI-MODEL-REVIEW-002.md": "40d09ad9e4c551ac0f998e43f917f805291f565b5cf8b124be2fb92ee8d1ce85",
-    "docs/MVP-001-REVIEW.md": "339a1447dc9415b5fb05778b5575d4d675d81e4f5c4ecda9111caad76ed3cb8a",
-    "docs/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "1b51b087c17512f753f6e5b69be2434ce40d94a4c4aa9a8219328166f1dff397",
-    "docs/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
-    "docs/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
+    "docs/NEXT.md": "e8c4a2614f2b5d3d11d57f9aad86e483c4b05e8e4c7e1d97736335289587141c",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
-    "docs/PARALLEL-REVIEW-001.md": "3bc3c6a397efeea3f39a6b27a7b41dd52226f8a6362ef3dd681adff41b276d38",
-    "docs/PROJECT-AUDIT-001.md": "7947a2e885c2b4fc8f8f588f5a389638d28b425ecc68888cd18d179ba04dd5c8",
-    "docs/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
-    "docs/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
-    "docs/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
-    "docs/SLACK-BOOTSTRAP-PROBE.md": "14fb8c764c199ccb8476eaeebaca840d62b2a0c5fc11aa6c252e47c52d8aad04",
-    "docs/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
-    "docs/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
-    "docs/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
-    "docs/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
-    "docs/SLACK-SESSION-BLUEPRINT.md": "9a41f7fc35f2cf096637aa26b6ea4b252d64d7e6354d956b1ff56330180eee2d",
-    "docs/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
-    "docs/SLACK-SUPERVISED-SESSION-PLAN.md": "97905b52d59db7ea444e2087016458764641debbbd904dbdec5c6d47ddaf7e1b",
-    "docs/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
-    "docs/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
     "docs/SYS-225-MANUAL-GESTURE.md": "1e1b9ba9dd2107f279c8f20854ebe627a295a3209a983e859bd2ff4c89270a2c",
     "docs/SYS-226-AUTO-CORRECTION.md": "9c91c782ac3ef22f780695a6a6cce2122d895ce5696151c24ff5bc9f20128d9c",
     "docs/SYS-246-PRODUCT-ADDON.md": "d9b40b9ddb874741a92c8ff400100bfff1856916b9a8c9fd891d2cea965ff85d",
     "docs/SYS-254-SETTINGS-DESIGN.md": "ab2e69bf5a684123798ef2c4a21d91bff8024e08d7f7187f9049e4dfdb770eb5",
-    "docs/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
-    "docs/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
-    "docs/WAYLAND-IME-001.md": "37e61bb4ae84110956bf85a88d6347a1cdd3bea291937505ff82a8c85e723de4",
-    "docs/WINDOW-MAPPING-NEXT.md": "c6a3b749ba142a54a1e900ebdde7eb5cf4c9ab49c1c8011ec557c118d8f4b5fc",
-    "docs/WINDOW-PROVENANCE-001.md": "cb929db6030b1379f3613a094609aa918662d165dff5ac86424d9a19b3677a07",
+    "docs/research/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
+    "docs/research/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
+    "docs/research/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
+    "docs/research/ADR-001-DETECTOR-ROUTING.md": "41d69f52fc2e0f05a13b1181967a02c4427a8d20d6e1dcc53ed68e7d655cb2cb",
+    "docs/research/ADR-001-input-boundary.md": "fa9513a28bc5bea568f123ab76a0e50b4139f6a39858c2cda424d2fe7b0a80fe",
+    "docs/research/ADR-003-OFF-SUBMISSION.md": "1789d0fcfa84bf3d3d73f2d6ed0bd1e5e04d86518fdbf82d834c31cdfe3aa426",
+    "docs/research/ADR-004-CONTEXT-RESOURCES.md": "4c621e68a69203f9a233b5144a110c6e7740d6ac094f071374192a6f0cf267c9",
+    "docs/research/AQUAMARINE-READINESS-EXPERIMENT.md": "ce042447f172d07151667614b79e516bac33e0fb18bf799e381f55ad761bc43f",
+    "docs/research/ARCHITECTURE-RESET-001.md": "fc2a91c353e74ae9bc90a64d9d0da6a032b54914c4a30d8986a7f4126de1499d",
+    "docs/research/BROWSER-ADAPTER-001.md": "ad909ae8ed0aec1d17de0b9b28dccb8740279b86783197074aa8eacf85165a52",
+    "docs/research/BROWSER-CORE-002.md": "a30280990554062e147f5d157da878d32f85a1bae107e3a4a96d4118e68543d7",
+    "docs/research/BROWSER-EVIDENCE-003.md": "d85904c5daabfa2ddaa5b6f6dfa68bf19c3859385877c9ae8f48884f1fc25ac7",
+    "docs/research/CHROMIUM-IME-001.md": "b2c4e319f79ab5dd66b0c7e94eb1b37d11fec6332bd4c6c0fa8ef2db6ff0cefa",
+    "docs/research/CHROMIUM-IME-PROFILE-001.md": "202fe809ad02b067fc69c8bf793f75e24c40e6b8c6ea282b819f638d72f9568a",
+    "docs/research/CLOSED-HYPRLAND-MAPPING-PLAN.md": "6c95b30c0e09fbfbe191eaaf48c8939ef702f8b11f29188a0b8224209394bb27",
+    "docs/research/CODE-REVIEW-002.md": "f43bafbe173d66f16a47187164e581b178a4a30fc0120a6d79e59c586ae0c742",
+    "docs/research/CORE-ENTRY-WITNESS-001.md": "76821340676166ef79d1acc84c4ecbf1f512331545a5eb286ffb6e3232cf05bd",
+    "docs/research/DETECTOR_EXPERIMENT.md": "f877e7db0289f3b4ced858a07aa7c175b9c201710a79b69228054bc879bfb95a",
+    "docs/research/DETECTOR_RESEARCH.md": "19b628bca8d7527bdbb296cd29255dea66e151309c4e40d916e1a26f1da38850",
+    "docs/research/ECC-REVIEW-004.md": "45b46d66423d0508c7349294d89cfe04ca754194ec10b120dea4327748ae40bc",
+    "docs/research/EXPERIMENT-001.md": "60f794872a8179820c0f1327b2f36a16ba0a42d085a6c44dcf714ac89c6f941f",
+    "docs/research/EXPERIMENT-002-METHOD.md": "6b2c9a73eccd3df26d3eb9bf7994563b6cea040e0eb02ea6d04f6b1ceaa0b129",
+    "docs/research/EXPERIMENT-002-PREREG.md": "c7b33d319882e63b3dc2ae93345cf7c86dedc1bdda65bc3b1e4fc822baa05af4",
+    "docs/research/EXPERIMENT-002.md": "63938e5a6b7aa00d3e7cb19eaa17223d8a4448ea25fe2f12d0d61dcdbaf9571f",
+    "docs/research/EXPERIMENT-003-METHOD.md": "45baadd91741ea46b6d989c0d220ef77b9560c1379d8579dabf8f7d7957c1fc4",
+    "docs/research/EXPERIMENT-003-PREREG.md": "b815fd229f3faf0a294459159e060a43dd624e91c4a2c08c9d1a35cd447c830c",
+    "docs/research/EXPERIMENT-003.md": "e08ed0345405aa2daf1197412522e0c6de409cf955c744b4d6f9a9f63d433cd4",
+    "docs/research/EXPERIMENT-004-METHOD.md": "df5fccc724134511b5e8f873b8e4f3e264de2f497d7d4a837b359afd8d16a7b0",
+    "docs/research/EXPERIMENT-004-PREREG.md": "f87b3b12c654ae277f360812abada5d8f383310b27f61f72db431ff9d652e956",
+    "docs/research/EXPERIMENT-004.md": "3f47ce92bc8a406f427edefbe725d492a033a9cfff78a45294edb7e9acc017d1",
+    "docs/research/EXPERIMENT-005-METHOD.md": "8fe992b77872b3715d5531c0995776664fec4e9f23c345338209ff581a5c6656",
+    "docs/research/EXPERIMENT-005-PREREG.md": "2b0ca16f89e3566a36cc62992a676bec890b34029ae1eda127c9a7e6f50aebbc",
+    "docs/research/EXPERIMENT-005.md": "153af37759a0fbb9d20cbfcd46af30aec5ad730f57eec81d11cfb1190220324f",
+    "docs/research/EXPERIMENT-006-METHOD.md": "87b400b98ac67ab3a754b802543e68e2a8c36d2266dc1557f6993b5c700aeb9e",
+    "docs/research/EXPERIMENT-006-PREREG.md": "a2f56606fbf246e976bda43801375b40287f854fe78b491171accac05a888e8d",
+    "docs/research/EXPERIMENT-006.md": "e835dcc2a67fc772d396737c5617479b5f281264a13c3c5448cc8d97619c3f42",
+    "docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md": "5dffcd11d89121a3c8e5c65789f1237378ff926cc25973254996000a83340d92",
+    "docs/research/FCITX-FIELD-SEAM-001.md": "ff7ca13eeff248b681feaf4d80df5342505356d0eef818e866fb8e56d32fdca4",
+    "docs/research/FCITX-KEEP-GRAB-001.md": "46c3d7879307042288d9f9f631649d79d82fbb9892a1ae513740934385da0d2c",
+    "docs/research/FCITX-RETIREMENT-REVIEW-001.md": "ea1b405b6034eadd8736d603ab2c5b19adfe2cbf42047e85d0e20e541d515dac",
+    "docs/research/FCITX-TRANSPORT-001.md": "6ea5b3f33cd342d5484fbdae8ccd8c267a9aa501993da77ad49d3afafc91a2cf",
+    "docs/research/FOCUS-STRESS-PLAN.md": "ea3702e1c6421716eb4625931911daec6938d78fda7b63b59e4cf8a1b9f1ba77",
+    "docs/research/GRAB-ENTRY-WITNESS-001.md": "4d74cdc97ff913475bf5a57bfbd5bb46337e48668bf1095948a7810d6ceccca7",
+    "docs/research/HANDOFF-2026-11-21.md": "d5ffa32e3492a6706f202d27c5b8ac30c76504bd2918d292bd36b29eb55e70ef",
+    "docs/research/HANDOFF-PROTOCOL-MAPPING-001.md": "457598557041f29fc96a33d8e324f9329cab5c4304cd777d270dedd05a34d9e8",
+    "docs/research/HOST-REGISTRY-PROBE-PLAN.md": "7ee79cc311cd3656677e01ef8d8da3a03b1c858fe8e1f3613509df33f3eaf3f5",
+    "docs/research/HYPRLAND-BACKEND-DIAGNOSIS.md": "9b5a7ca45c17a7a89d87e30e7790c918a8a0541f945f3f6f6335b9152ab8c401",
+    "docs/research/HYPRLAND-DIRECT-MAPPING-PROBE.md": "ae25fd69e7c1470073f3658627861756ea962114c5b108f3169c1f81a0f47d23",
+    "docs/research/HYPRLAND-FOCUS-STRESS-001.md": "e5d00c26595e8442554fdef392d7e8fb134ef5e9874d28a3eb819fa1e9c2bc9e",
+    "docs/research/HYPRLAND-IME-001.md": "1cb5bf46d434a0f98329f1aae70cc45a480ecb47303aa919ffe30ba552432470",
+    "docs/research/HYPRLAND-NESTED-PROBE.md": "a80c6a46c9d4445eea2805593b728f523049c294bde161216204e16c0b406459",
+    "docs/research/INPUT-GRAB-RACE-001.md": "c8f0f7136468dbdb0403bd945323e50d4987641c37ba9cee7648e233198b9695",
+    "docs/research/INPUT-LAB-001.md": "d143308c12fc08fdc6e3a2df517c33467aa80666d7a1cf6f4a022650875b9cd7",
+    "docs/research/INPUT-LAB-002.md": "fcce7aee03f3317798be178e42b72e889a0bc18b37d8f8a7c75975bf062ef02a",
+    "docs/research/MULTI-MODEL-REVIEW-002.md": "40d09ad9e4c551ac0f998e43f917f805291f565b5cf8b124be2fb92ee8d1ce85",
+    "docs/research/MVP-001-REVIEW.md": "12f70c9f0c65d9d211997c82d39cac93dd8ade1a9c74442541f3c0d8b4cf7c31",
+    "docs/research/MVP-THREAT-MODEL.md": "16620a10d31a1613ce5f3122df4de78e2fb3492098f7d1f9c5173fda8d91effc",
+    "docs/research/OPEN_SOURCE_REVIEW.md": "212b960aab77e56df69ac472fab9fca7256ca8ae95dc28e33653055af8e218a5",
+    "docs/research/OPUS_DETECTOR_REVIEW.md": "e7a3576ca36837bca28956fdc7489ad590e9beac3886ba5f37c99117c1c1d943",
+    "docs/research/PARALLEL-REVIEW-001.md": "9d958f7b0c9e5a8ebd03862815a64a6d5dd5f2c84d3a5bbaf10b3ce13a08283b",
+    "docs/research/PROJECT-AUDIT-001.md": "52ae4384b0887a75ea9a05b4855467f83136bad780ae84dbf945a1c32dd4153b",
+    "docs/research/PROSEMIRROR-ADAPTER-005.md": "f2419d9db9a2d78dfb512bec22ce72c5d0f0970469ce06c6fc50013889ded4af",
+    "docs/research/README.md": "3f25017ea69ddf7f46350066e1964f0a11905b45062898069215422bb7b422c5",
+    "docs/research/SERVER-GRAB-EPOCH-001.md": "0a3a18c2afd2cecd6d70e09bb150f7c40a0452ff763c9793186baa5984bab0d3",
+    "docs/research/SERVER-ROUTE-WITNESS-001.md": "febfe60c12c256d91dce7c825d4809a884f73cad9c9a6f179b8f928ecb8f63ac",
+    "docs/research/SLACK-BOOTSTRAP-PROBE.md": "ecb83fba02db8866ffc51d457ce2d60e471768e727a3f242abfab0744cf51a47",
+    "docs/research/SLACK-DESKTOP-001.md": "8c05da33c1a4c425bf021d574e2d479fd62e85e458ea7225980ff5abf2c2d427",
+    "docs/research/SLACK-EDITOR-METADATA-001.md": "0c0a2c0da78326027b25de679e7f77d0f2f1adf0322db0538c3f42a827202339",
+    "docs/research/SLACK-ISOLATED-001.md": "472dd74bcc173f40d6673b5a240efb197831c14290d0c1a70ae78d0b261e36ab",
+    "docs/research/SLACK-LIVE-STATUS-PLAN.md": "52358b01e9d07ed804ba717a1b95401e24f64ab7aa85230e8e1f1facd5802ec8",
+    "docs/research/SLACK-SESSION-BLUEPRINT.md": "a49dd26b1e8499d54a053e10202e2f700f262739e24b61b3983b25f6d6f8a757",
+    "docs/research/SLACK-STARTUP-STAGE-001.md": "7daba2be379a0a8093048444aa9fe50694833990464cd4ff903b65fd16c74327",
+    "docs/research/SLACK-SUPERVISED-SESSION-PLAN.md": "3c8c9149bf99db03c48bed53a67316104e78dba48addaf2500f0876ce5ddbf56",
+    "docs/research/SLACK-WAYLAND-BOOTSTRAP-001.md": "599fbcdc28e6e5a2ecb47aff30305c09e901557ebe4c1f09cdb01a160e6db233",
+    "docs/research/SPACE-DELIVERY-REVIEW-002.md": "0af48a403121143f4cc99824c8c38178b17fc0af1cc4f6c859da08c30da4bbbb",
+    "docs/research/UI-DIRECTION.md": "3e08d3d4736fabd63635f0530b1b69e3c9d208c4115cf65c663ea47c6801e911",
+    "docs/research/VALIDATION-CORE.md": "1947412cd9300c6b4ebabc51a7e70b550c67384691f47194686d8a2da030862c",
+    "docs/research/WAYLAND-IME-001.md": "37e61bb4ae84110956bf85a88d6347a1cdd3bea291937505ff82a8c85e723de4",
+    "docs/research/WINDOW-MAPPING-NEXT.md": "c6a3b749ba142a54a1e900ebdde7eb5cf4c9ab49c1c8011ec557c118d8f4b5fc",
+    "docs/research/WINDOW-PROVENANCE-001.md": "cb929db6030b1379f3613a094609aa918662d165dff5ac86424d9a19b3677a07",
     "rasklad.pro": "cc746f9acb89186e1dd905c1638211f8b43af246adf5c93e3cfb98084a4ad4e3",
     "src/Main.qml": "bd61a1cef9b41d373abcf3424793b48bd73fab4bf3a3b45c2a5f83f4c4d2bc5a",
     "src/analysisservice.cpp": "9979c961d2b7f940dd8b22889657ead75735aab0d5107ea1b1159bfe808074a6",
@@ -140,7 +142,7 @@
     "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
     "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
     "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
-    "src/fcitxlab.cpp": "51d992fe9123c03351b2a514d4dbee5f314236370964e468621444c8ec63e953",
+    "src/fcitxlab.cpp": "f6da3844e01685407f1201adebac2cad2b9d0ab32e085961c817fc3025211ba8",
     "src/fcitxlabprofile.cpp": "d827457e7053419cd5cddd96ebb5888f427aa7d222ed878fdfe240582f0cfd28",
     "src/fcitxlabprofile.h": "60a6b3000f9d48e0e9bd2cabf5fb5d437f3a1cf88d04529a222f04792536c7da",
     "src/frequentwords.h": "ed66b2de3fde09eea3210cd47d804f6bd63449a8f17f0a01d553d377cf704b68",
@@ -160,7 +162,7 @@
     "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
     "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
-    "src/raskladproduct.cpp": "784b6c58694d140178f87e6ef44c165a27deab01cc238062a04a13fa9025ae6b",
+    "src/raskladproduct.cpp": "78d84f48d0ed5f25ce397c13720c3b21c3da412564125a5582f0967f3f7ce8fe",
     "src/seenprograms.h": "f7313e3bbaef0e1da0f460c28c076a23fc931b4c09277f0192af8854f674be87",
     "src/sessionarm.h": "f99322ce2080acc41cd1b7ac50fdc287ad9b49b3405876579cc6ddd37288ed94",
     "src/spellengine.cpp": "871150bc102e188d7a612fc12c898d9f368efe2b7fac1f60a58acedb72ca7b74",
@@ -217,7 +219,7 @@
     "tests/detector/detector_tests.pro": "fe0ffe8d8f95ccc2a8a34559a78382c35e04db37d1f0db8b6c381984a4bcccc1",
     "tests/domain/domain_tests.cpp": "b66e742b9f90ffd15bc5458e8022c247effa0cfdb4dd04325330dc78c489bdaf",
     "tests/domain/domain_tests.pro": "947393ae0be0b22d8200d4e0075a532ee005707ef3606a47b6a869db486f1109",
-    "tests/fcitx_drain_server/README.md": "356982ba9f318a68b135e8c3321ad034986a2da6288c687843cbc4eb3dae1772",
+    "tests/fcitx_drain_server/README.md": "ec94aa3d7ccd8687c677ac6ee1afcb574542864a7a03a078d5d1235602a3f4d3",
     "tests/fcitx_drain_server/check_wrapper.py": "3e48124ecf2c544213063c9904631d974f45867402da5b9cadee1c10b8eaeeb1",
     "tests/fcitx_drain_server/run.py": "5f99cce9ba14276c6852d420a96f459564629baba013ef6d9d29bee0d3d145f1",
     "tests/fcitx_drain_server/server.cpp": "7fa54710ea37f02cf3e1319064f38299929d5b634011c33b227626368a3d0468",
@@ -253,7 +255,7 @@
     "tests/fcitx_transport/server_route_unit.py": "5e704aff0aea66fae740bfe3ee8d3ed4bdd0e73904eaee1e26d728ce900ea9fc",
     "tests/fcitx_transport/test_runner.py": "f7ef659357d8911495c67fb24c6da32de8d86c373474bbce80ce77ca1ff5fc13",
     "tests/fcitx_transport/witness_guard.cpp": "8f7ae9296aaefe3e52887ab99bfbc8a27dc0e6c07b29615ee71883fb358511c2",
-    "tests/handoff_screen/README.md": "a0c6d090462df39e59449d3644ec47e76d4abc5a27213785984c4e1bd4768a53",
+    "tests/handoff_screen/README.md": "5ff750775ddebfa483baf238b34580eb3d5ab7496a0300e32fcdd9a82e004af9",
     "tests/handoff_screen/model.py": "a993d324562924c5fa3b12a1f73c4c82d886a707433aafc4ee40324597f0e06c",
     "tests/handoff_screen/run.py": "437ae859c54742815c2600c4cd1b257891543cb5ddb845df7dafec2495c6682f",
     "tests/handoff_screen/test_model.py": "63799b6fb40e9e4b4ea8edbdad4ad5a2ca98a46fc77e9ae62c496d5cd9d44fcb",
@@ -263,11 +265,11 @@
     "tests/input_lab/labharness.cpp": "410521721a41721a906e82066b9ba3d367b6cf5be3965b7bcfa961beda2c9aa5",
     "tests/input_lab/labharness.h": "c5b183b8a08f643cb12ebc195f048e876ac453ae7f751ca65d0fb6d2b155f0d0",
     "tests/input_lab/labmodel.cpp": "f2601695cec9c0a3a1b3d566821630aa5dbe4a1c331128a8990a1a5cd2cd800a",
-    "tests/input_lab/labmodel.h": "4ad5312a327f5fbc83acd994f1834f05c337ba5e78ec4f1b3a343a814b8b2577",
+    "tests/input_lab/labmodel.h": "0b646b3d23258f05b3b2b92b1893ad9978cb6bd8a60acfaa7edbd08bc7a776d4",
     "tests/input_lab/labserver.cpp": "6939a17448ad95218dfb9ee260ac9e80ceb7a14a07eb090c664752abcb2f0bef",
     "tests/input_lab/labserver.h": "d1a0540955fd950ba40e739f99e0df5c4b54c8e306fdb77ae260b7f3742dcaa3",
     "tests/input_lab/protocol/README.md": "8fd3e1adfcb36a18200e2a4b32a97aa557959ef7e0b1a146a4cb41b6ea62a8da",
-    "tests/input_lab/tst_input_lab.cpp": "d01fe78589c06e46e6280b491f4db13e325edfb597436490577ef72ddddb2a38",
+    "tests/input_lab/tst_input_lab.cpp": "617d9558467e2b1f018557c5b419b9d604dce1e02de9d706e62d5b07f12d207c",
     "tests/language_pack/test_dictionary_smoke.py": "287a17ea951d01d5eb2c6bb05a509564d51e9bb345d0337fdae83e2cc18bd7a8",
     "tests/language_pack/test_language_pack.py": "ec427fd33b1c03e239b92c9cdd2948712f4090f4bd0c1f1174b90f265b95e77c",
     "tests/layout_cue/layout_cue.pro": "c4d610fd99e67cecac9f56c5994477d5d2715ef437566e842382eacfcc226da2",
@@ -375,9 +377,9 @@
     "tools/core_entry_witness.pro": "8d27b1d9ee7733d5fc198341a7cc76d5d6abc6e70736b13c3f236097e9b7ba2d",
     "tools/core_entry_witness_guard.py": "89a20ec8044d5d88c46245ebdd665d811cc4012a4495e43772d76f8fe670a888",
     "tools/detector_benchmark.cpp": "dd59b774320ff691f6a8c4067b89bdcb8fbd5a98ca4a919b2ab8e41bca7c19f7",
-    "tools/detector_benchmark.pro": "b839c11fdb6ddb1a6a309cf03c121c2712e044a4401541f2eca5a08a32a90fff",
+    "tools/detector_benchmark.pro": "f2d8ea68d8c3000387e108069015ee4ec26b012e0760102955309908b9b4e659",
     "tools/detector_experiment.cpp": "139e548f9f99ca38d91bb57be6231fd22c67806a4fc4d7318ff2ec666dbf9b11",
-    "tools/detector_experiment.pro": "7a9534aa8cd89de0b686ab579c1ebbdd548cdfcd677a5f45fd42be82ffbe7bfd",
+    "tools/detector_experiment.pro": "11557cd27e160a05995c5058f6b8fb8582999b3bd1cd5e03edb91b748ff0c329",
     "tools/detectordataset.cpp": "32227d8ee1e587785334d8d8033c985022a575e4b0a223dca67e98e3be6f51e2",
     "tools/detectordataset.h": "69f65b1fa30efd879102400f33f99354c982b8acf39d20e8f87fe4b5d6f93143",
     "tools/detectormanifest.cpp": "500ad0804e1262d6d3a01d6f7c36acd05b78e3aa240ca069479cc03c30a9664e",
@@ -427,13 +429,13 @@
     "tools/language_pack.py": "90063b8bd26ac7038cfd629e53a170a7b24e910822ec2fa2d0cdeaf5260aaf33",
     "tools/measure_probe_resources.py": "1f6e0390d0f1b315e3d1e9e9b253ffe73115c92a0c9c7d93ba7caf2e05edc2f8",
     "tools/morphology_benchmark.cpp": "f441c920addaad74a7e3dbe763ce6cc567ae2a4c94bed2318a09a75bcf4899de",
-    "tools/morphology_benchmark.pro": "9594e702a91de9ce99162adf816e5ee2d0f0bd7d72461808627c005c9ac3ec86",
+    "tools/morphology_benchmark.pro": "b21f42fd639b4131642cb63a20983c70d363dee29b2013c2e978e4e265f1ed6a",
     "tools/morphologydata.cpp": "25a999f6a14a979e1d4db048f4c5f22c74d743633015a0feff160c2b5d918ada",
     "tools/morphologydata.h": "80ab3a46ffd705bf444f553c8b6fa2b9656d54f5d7accd775fe2aecd0784faa6",
     "tools/morphologyeval.cpp": "4bdbf2380af337f6277f80d86ab53fbe0c6d15388a9fb55448c7824a87885402",
     "tools/morphologyeval.h": "deb5cedc81baadcfca2fe420a413949b937ebb40b934ffcdd8f6d33958059748",
     "tools/native_ime_clients.py": "3feb26f4f2f656caecef9ce39c9b77f1ceb9dbb5634e0681259f69f62491bdc5",
-    "tools/nested_compositor_lab.py": "e7000104bb806ca8df9e50179cd0f4ce2a694d20c1925d85a18138f8fc250850",
+    "tools/nested_compositor_lab.py": "a2858baa975986c9332ca5801cd878701fdf282dd425aec96511e33a0b1af8b3",
     "tools/owner_alert_audio.py": "33d6fcb6c1231feb7851d6d68b14a974279f89fab08421a88401b9faae6ccf4b",
     "tools/prepare_affix_control.py": "c3357ee1ef3054f2259b28dad54af212bf1347f06a340f12608711b6ea89f4b7",
     "tools/prepare_cc0_evaluation.py": "47146bc4f7d70290eb4313771c8a9e894bd92ac71aedf0b6226dd750fac7e99e",
@@ -569,35 +571,7 @@
       "symbols": []
     },
     {
-      "path": "docs/A11Y-BRIDGE-CONTROL-001.md",
-      "symbols": []
-    },
-    {
       "path": "docs/ACTIVE-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ACTUAL-FCITX-HANDOFF-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ADDON-WITNESS-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ADR-001-DETECTOR-ROUTING.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ADR-001-input-boundary.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ADR-003-OFF-SUBMISSION.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ADR-004-CONTEXT-RESOURCES.md",
       "symbols": []
     },
     {
@@ -609,47 +583,7 @@
       "symbols": []
     },
     {
-      "path": "docs/AQUAMARINE-READINESS-EXPERIMENT.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ARCHITECTURE-RESET-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/BROWSER-ADAPTER-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/BROWSER-CORE-002.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/BROWSER-EVIDENCE-003.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/CHROMIUM-IME-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/CHROMIUM-IME-PROFILE-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/CLOSED-HYPRLAND-MAPPING-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/CODE-REVIEW-002.md",
-      "symbols": []
-    },
-    {
       "path": "docs/CONTINUATION-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/CORE-ENTRY-WITNESS-001.md",
       "symbols": []
     },
     {
@@ -657,163 +591,7 @@
       "symbols": []
     },
     {
-      "path": "docs/DETECTOR_EXPERIMENT.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/DETECTOR_RESEARCH.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/ECC-REVIEW-004.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-002-METHOD.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-002-PREREG.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-002.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-003-METHOD.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-003-PREREG.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-003.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-004-METHOD.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-004-PREREG.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-004.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-005-METHOD.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-005-PREREG.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-005.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-006-METHOD.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-006-PREREG.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/EXPERIMENT-006.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FCITX-DRAIN-EXPERIMENT-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FCITX-FIELD-SEAM-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FCITX-KEEP-GRAB-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FCITX-RETIREMENT-REVIEW-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FCITX-TRANSPORT-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/FOCUS-STRESS-PLAN.md",
-      "symbols": []
-    },
-    {
       "path": "docs/GITHUB_SECURITY.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/GRAB-ENTRY-WITNESS-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HANDOFF-PROTOCOL-MAPPING-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HOST-REGISTRY-PROBE-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HYPRLAND-BACKEND-DIAGNOSIS.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HYPRLAND-DIRECT-MAPPING-PROBE.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HYPRLAND-FOCUS-STRESS-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HYPRLAND-IME-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/HYPRLAND-NESTED-PROBE.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/INPUT-GRAB-RACE-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/INPUT-LAB-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/INPUT-LAB-002.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/MULTI-MODEL-REVIEW-002.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/MVP-001-REVIEW.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/MVP-THREAT-MODEL.md",
       "symbols": []
     },
     {
@@ -825,79 +603,11 @@
       "symbols": []
     },
     {
-      "path": "docs/OPEN_SOURCE_REVIEW.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/OPUS_DETECTOR_REVIEW.md",
-      "symbols": []
-    },
-    {
       "path": "docs/OWNER-ALERTS.md",
       "symbols": []
     },
     {
-      "path": "docs/PARALLEL-REVIEW-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/PROJECT-AUDIT-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/PROSEMIRROR-ADAPTER-005.md",
-      "symbols": []
-    },
-    {
       "path": "docs/ROADMAP.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SERVER-GRAB-EPOCH-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SERVER-ROUTE-WITNESS-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-BOOTSTRAP-PROBE.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-DESKTOP-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-EDITOR-METADATA-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-ISOLATED-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-LIVE-STATUS-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-SESSION-BLUEPRINT.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-STARTUP-STAGE-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-SUPERVISED-SESSION-PLAN.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SLACK-WAYLAND-BOOTSTRAP-001.md",
-      "symbols": []
-    },
-    {
-      "path": "docs/SPACE-DELIVERY-REVIEW-002.md",
       "symbols": []
     },
     {
@@ -917,23 +627,323 @@
       "symbols": []
     },
     {
-      "path": "docs/UI-DIRECTION.md",
+      "path": "docs/research/A11Y-BRIDGE-CONTROL-001.md",
       "symbols": []
     },
     {
-      "path": "docs/VALIDATION-CORE.md",
+      "path": "docs/research/ACTUAL-FCITX-HANDOFF-001.md",
       "symbols": []
     },
     {
-      "path": "docs/WAYLAND-IME-001.md",
+      "path": "docs/research/ADDON-WITNESS-001.md",
       "symbols": []
     },
     {
-      "path": "docs/WINDOW-MAPPING-NEXT.md",
+      "path": "docs/research/ADR-001-DETECTOR-ROUTING.md",
       "symbols": []
     },
     {
-      "path": "docs/WINDOW-PROVENANCE-001.md",
+      "path": "docs/research/ADR-001-input-boundary.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/ADR-003-OFF-SUBMISSION.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/ADR-004-CONTEXT-RESOURCES.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/AQUAMARINE-READINESS-EXPERIMENT.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/ARCHITECTURE-RESET-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/BROWSER-ADAPTER-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/BROWSER-CORE-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/BROWSER-EVIDENCE-003.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/CHROMIUM-IME-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/CHROMIUM-IME-PROFILE-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/CLOSED-HYPRLAND-MAPPING-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/CODE-REVIEW-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/CORE-ENTRY-WITNESS-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/DETECTOR_EXPERIMENT.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/DETECTOR_RESEARCH.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/ECC-REVIEW-004.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-002-METHOD.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-002-PREREG.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-003-METHOD.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-003-PREREG.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-003.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-004-METHOD.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-004-PREREG.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-004.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-005-METHOD.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-005-PREREG.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-005.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-006-METHOD.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-006-PREREG.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/EXPERIMENT-006.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FCITX-DRAIN-EXPERIMENT-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FCITX-FIELD-SEAM-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FCITX-KEEP-GRAB-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FCITX-RETIREMENT-REVIEW-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FCITX-TRANSPORT-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/FOCUS-STRESS-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/GRAB-ENTRY-WITNESS-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HANDOFF-2026-11-21.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HANDOFF-PROTOCOL-MAPPING-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HOST-REGISTRY-PROBE-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HYPRLAND-BACKEND-DIAGNOSIS.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HYPRLAND-DIRECT-MAPPING-PROBE.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HYPRLAND-FOCUS-STRESS-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HYPRLAND-IME-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/HYPRLAND-NESTED-PROBE.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/INPUT-GRAB-RACE-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/INPUT-LAB-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/INPUT-LAB-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/MULTI-MODEL-REVIEW-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/MVP-001-REVIEW.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/MVP-THREAT-MODEL.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/OPEN_SOURCE_REVIEW.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/OPUS_DETECTOR_REVIEW.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/PARALLEL-REVIEW-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/PROJECT-AUDIT-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/PROSEMIRROR-ADAPTER-005.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/README.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SERVER-GRAB-EPOCH-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SERVER-ROUTE-WITNESS-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-BOOTSTRAP-PROBE.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-DESKTOP-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-EDITOR-METADATA-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-ISOLATED-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-LIVE-STATUS-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-SESSION-BLUEPRINT.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-STARTUP-STAGE-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-SUPERVISED-SESSION-PLAN.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SLACK-WAYLAND-BOOTSTRAP-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/SPACE-DELIVERY-REVIEW-002.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/UI-DIRECTION.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/VALIDATION-CORE.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/WAYLAND-IME-001.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/WINDOW-MAPPING-NEXT.md",
+      "symbols": []
+    },
+    {
+      "path": "docs/research/WINDOW-PROVENANCE-001.md",
       "symbols": []
     },
     {
@@ -8689,67 +8699,67 @@
       "from": "src/raskladproduct.cpp",
       "to": "src/applicationpolicy.h",
       "kind": "literal_include_or_import",
-      "line": 18
+      "line": 26
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/applicationpermissions.h",
       "kind": "literal_include_or_import",
-      "line": 20
+      "line": 28
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/compositiondisable.h",
       "kind": "literal_include_or_import",
-      "line": 21
+      "line": 29
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/manualgesture.h",
       "kind": "literal_include_or_import",
-      "line": 27
+      "line": 35
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/wordrules.h",
       "kind": "literal_include_or_import",
-      "line": 28
+      "line": 36
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/fcitxlabprofile.h",
       "kind": "literal_include_or_import",
-      "line": 37
+      "line": 45
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/frequentwords.h",
       "kind": "literal_include_or_import",
-      "line": 38
+      "line": 46
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/layoutcue.h",
       "kind": "literal_include_or_import",
-      "line": 39
+      "line": 47
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/configrules.h",
       "kind": "literal_include_or_import",
-      "line": 40
+      "line": 48
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/seenprograms.h",
       "kind": "literal_include_or_import",
-      "line": 41
+      "line": 49
     },
     {
       "from": "src/raskladproduct.cpp",
       "to": "src/terminalapps.h",
       "kind": "literal_include_or_import",
-      "line": 42
+      "line": 50
     },
     {
       "from": "src/seenprograms.h",
@@ -9865,34 +9875,34 @@
   "vaultSha256": {
     "docs/knowledge/Start.md": "1ba7f35f585739d97221d0a8a6811e6a723e67d2128d6ee8edfb76812468132d",
     "docs/knowledge/app_policy.md": "cd7ee10bdeef475eb6186845c4dfef562e40d43cb18c1e0aea27a56764cc318a",
-    "docs/knowledge/application-policy.md": "91e60c54f921c56325cb71cdf25e57b96eb70f6dae3c95ed9a8015335bc474b5",
-    "docs/knowledge/aquamarine-readiness.md": "18d5628e82f72985634df4fc98ee8cb0a57b36f00bddecaa72d7072d36f3c321",
-    "docs/knowledge/architecture.md": "8991925bf2ad891f0046e6ae8904049e4dc0105977105001c0503ca02e602def",
+    "docs/knowledge/application-policy.md": "df9a3858792d14d318b60ec08a336ce56e029acef7aff485035b34d3bb17af15",
+    "docs/knowledge/aquamarine-readiness.md": "de3b0adaf835b6724137293850fc699ce928a8195af9ae6920034bfe0a883962",
+    "docs/knowledge/architecture.md": "4a0b9f2a582a9eabed1ec881349b4bd2dd8e78e960573d33b69883c17c125226",
     "docs/knowledge/browser.md": "4560129dd9774e4b925f175f32f590966cf0005717e8e7e51808d311b6827e5e",
-    "docs/knowledge/closed-hyprland-mapping.md": "d674dc77ffd6aabd5dac8204f42ffb8dbdbebee342f26598a0c518b01dff8a45",
+    "docs/knowledge/closed-hyprland-mapping.md": "31e13df566af2aa430230c68c9119dc7b2f5dc06e5a1b02aec2d022fd4e907e9",
     "docs/knowledge/converter.md": "75d6ca506e289d660ab5bbea71a4968ee4e99bfd25d8fb4e63187f0a8722f85f",
     "docs/knowledge/current-handoff.md": "f6b2ada0e8982b7b45f86b46c5592537e440c250943d5c1d875b254a6fd39c1a",
-    "docs/knowledge/current008.md": "53ea42b79064d882779a7d53abf53a269d3e3423eaba195175de3d310e9bd3cc",
-    "docs/knowledge/direct-hyprland-mapping.md": "63ac5a277a91926d7326d19d34439a26398ee44465c964f7a00b4ff534fa0fe0",
+    "docs/knowledge/current008.md": "fb0f16e58817bdd82b05c6a248d4aab6e997ec23abd8fba80304f0d74fce0c55",
+    "docs/knowledge/direct-hyprland-mapping.md": "7d004a4f7ebb9aa69fbb2993733cfed964a0b9609b13dbdf3c1b66b747fe5d0f",
     "docs/knowledge/evidence.md": "6e1d6c18944e44f0b932b8d90e541f04e3f02dde0e85996c6630806060b17feb",
     "docs/knowledge/exact.md": "b98aeeda354f4994149a1d737189add4f0aa5b02b997cf0f078a9d48fcac5827",
-    "docs/knowledge/fcitx-drain-fixture.md": "dfbad37f880a434a9a3e394077edc9c9792756eaeab226ad858bb6b6b8e52c4f",
-    "docs/knowledge/fcitx-field-seam.md": "94cd4ec9f8b7589574bf56e28f46bfcbe243f73c32ca1f1f00080c1b1e4d1411",
+    "docs/knowledge/fcitx-drain-fixture.md": "ae3df28fd7776c47e1818619f95f54ff7d3f32b057e29b199b119c4d7a17f3a0",
+    "docs/knowledge/fcitx-field-seam.md": "b2b681a528aec6b5e6bb63777fbd910e5fcb2ec068701c781131a4a758a0f80d",
     "docs/knowledge/fcitx.md": "b45d4f6dd1d95305417a407802c15a525251a269a28b88f11ee11d88920da81c",
     "docs/knowledge/fixture.md": "71e53e9a0451c0b89229e863aaeb13ec8b0e63ae54c151c90ba86da0ed8e219e",
     "docs/knowledge/gui.md": "a024d630c290a6443375ebb365e66f94cd8355d40cd1039c40bce4e28f269a56",
-    "docs/knowledge/handoff-screen.md": "b3b532b4747cc4faca38e4070eee025681782995c0864e21adf1305a6333bde4",
+    "docs/knowledge/handoff-screen.md": "54de62dc8b867ae0536028bf9addcb4ca96a7faf2b9ae50fcc1ef8af8424d4bc",
     "docs/knowledge/licensing.md": "af3f11c1e18622f33869d9f55c59528fa8f160d6574d76a2cbe97fd2cc0b6d6d",
-    "docs/knowledge/lifecycle.md": "50885f98a7d4943a430318cfa158626921209a78cf40959a0598faec0fcf31e6",
+    "docs/knowledge/lifecycle.md": "f4710680c74928db82e2626c998dbae0b17c68cd4c9e2d11faaed79f6eb133dc",
     "docs/knowledge/policy.md": "47372520210b00cbcfb58309d9f7c022f01c8958fb890b279201be4f61eda53c",
     "docs/knowledge/product-addon.md": "08eb56d838b4e3bc85c38c0e8bf997c9652c0a8388882bfe61f38df72001f9cc",
     "docs/knowledge/reference.md": "e13df26340daf1a2ea625ad5d05aaad9fedcab48c27c3b627a76fbc4eb5328b4",
-    "docs/knowledge/router.md": "285ce8447c3ae6cf73034ab4448cf204234964a1fd5b61448651c49242db5ac9",
-    "docs/knowledge/server.md": "bafd07c3dae0ec3ee612ea02e1f0018276b338223b4abc05236f74a860420d20",
-    "docs/knowledge/slack-bootstrap.md": "ebe24773264407c6849214d76b28b9330eba7e9354801e615bce61a461122348",
-    "docs/knowledge/slack-session-blueprint.md": "85394384a2810d8f7de26738d420431fa53a1170d8614e8b4ad20ce14571f31b",
+    "docs/knowledge/router.md": "7a3430aa9cad5db12239289de18baa85bbcf34dc21b13e3d1d727458b80ac0a5",
+    "docs/knowledge/server.md": "a6d24c23ccdd8ae81e8db536686956d13d45e3009014c3ffe83f18aa77cf29c8",
+    "docs/knowledge/slack-bootstrap.md": "ded897cf2fd8518e643dfc045ca7ab15c883065ec79b3fa31be8465bd818f464",
+    "docs/knowledge/slack-session-blueprint.md": "5dfa102efdef6ab6aaf5775fa3ae718c5c8da03094cc76c76c067b9b834101a6",
     "docs/knowledge/wayland-object-id-scope.md": "3d3cfae2dabc50e352f30c49ccde20ac739d5785ae6023b9256eba57e31d3955",
-    "docs/knowledge/window-provenance.md": "030755dc724a501d5d5da7fccfbe6518eebae1cc064601795dd57b1b691b5a30",
+    "docs/knowledge/window-provenance.md": "58b05349c4aa33c2364af66b61c469b5791883a38b3ed3fd9a67d123bc4131a7",
     "docs/knowledge/witness.md": "9a865c06ee0bab49b715578faafe6ef32a7d1b2eac0de60e6c001e83d963e945"
   }
 }
