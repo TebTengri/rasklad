@@ -48,7 +48,7 @@ LAYOUT_BLOCK = (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so
                 "hl.config({\n  input = {\n    kb_layout = \"us\",\n    kb_variant = \"{variant}\",\n"
                 "    kb_options = \"{options}\",\n  },\n})\n")
 LAYOUT_BLOCK_RE = re.compile(re.escape(LAYOUT_BLOCK).replace(re.escape("{variant}"), XKB.pattern)
-                             .replace(re.escape("{options}"), XKB.pattern).encode())
+                             .replace(re.escape("{options}"), r"(?![^\"]*grp:)" + XKB.pattern).encode())
 
 HOME = os.path.expanduser("~")
 CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
@@ -208,7 +208,17 @@ def hypr_session():
   not answer: it may still run with one layout)."""
   if hypr_running():
     return "running"
-  return "unknown" if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE") else "none"
+  if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+    return "unknown"
+  # From a TTY or SSH: hyprctl finds instances by their sockets, so do we.
+  runtime = os.environ.get("XDG_RUNTIME_DIR") or "/run/user/%d" % os.getuid()
+  try:
+    names = os.listdir(os.path.join(runtime, "hypr"))
+  except OSError:
+    names = []
+  if any(os.path.exists(os.path.join(runtime, "hypr", n, ".socket.sock")) for n in names):
+    return "unknown"
+  return "none"
 
 
 def hypr_errors():
@@ -593,12 +603,13 @@ def install(assume_yes, single_layout=False):
       say("skipped", os.path.basename(path), "Fcitx does not have both layouts; Hyprland layouts left as is")
       failed = True
       continue
-    if file_state(path) is not None or read(path) != old:
-      say("changed", os.path.basename(path), "edited while waiting; left as is")
-      failed = True
-      continue
     if path == INPUT and input_plan(old) != ("missing", new):
       say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
+      failed = True
+      continue
+    # After the Hyprland queries above: a save made meanwhile is not overwritten.
+    if file_state(path) is not None or read(path) != old:
+      say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
     remember_file(state, path, old, new)

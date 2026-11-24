@@ -137,6 +137,10 @@ class Plan(Base):
         edited = new.replace(b'    kb_layout = "us",\n', b"    -- kb_layout = \"us\",\n    kb_layout = 'ru',\n")
         self.assertNotEqual(edited, new)
         self.assertEqual(self.setup.input_plan(edited)[0], 'legacy')
+        # A group toggle put back in.
+        toggled = new.replace(b'kb_options = "compose:caps"', b'kb_options = "compose:caps,grp:alts_toggle"')
+        self.assertNotEqual(toggled, new)
+        self.assertEqual(self.setup.input_plan(toggled)[0], 'legacy')
 
     def test_spaces_in_options_are_ignored(self):
         status, new = self.plan('us,ru', options='compose:caps, grp:alt_shift_toggle', variant=',')
@@ -252,6 +256,38 @@ class Install(Base):
         self.assertIn('has not taken the restored input.lua', out)
         self.assertEqual(self.input.read_bytes(), b'-- user file\n')
         self.assertTrue(self.setup.load_state().get('await_hypr'))
+
+    def test_save_during_the_last_check_is_kept(self):
+        self.hypr('us,ru', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        real = self.setup.input_plan
+        calls = []
+        def plan_and_save(data=None):
+            calls.append(1)
+            if len(calls) == 2:  # the re-check just before writing
+                self.input.write_bytes(b'-- saved meanwhile\n')
+            return real(data)
+        self.setup.input_plan = plan_and_save
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertIn('edited while waiting', out)
+        self.assertEqual(self.input.read_bytes(), b'-- saved meanwhile\n')
+
+    def test_session_from_a_tty_needs_proof_hyprland_is_gone(self):
+        self.setup = load_setup(self.tmp.name)
+        self.setup.hypr_running = lambda: False
+        runtime = Path(self.tmp.name) / 'run'
+        saved = {k: os.environ.get(k) for k in ('XDG_RUNTIME_DIR', 'HYPRLAND_INSTANCE_SIGNATURE')}
+        self.addCleanup(lambda: [os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+                                 for k, v in saved.items()])
+        os.environ['XDG_RUNTIME_DIR'] = str(runtime)
+        os.environ.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
+        self.assertEqual(self.setup.hypr_session(), 'none')
+        (runtime / 'hypr' / 'abc').mkdir(parents=True)
+        (runtime / 'hypr' / 'abc' / '.socket.sock').write_bytes(b'')
+        self.assertEqual(self.setup.hypr_session(), 'unknown')
+        os.environ['HYPRLAND_INSTANCE_SIGNATURE'] = 'abc'
+        self.assertEqual(self.setup.hypr_session(), 'unknown')
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
