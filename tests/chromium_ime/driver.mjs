@@ -221,7 +221,26 @@ try{
   await reset();await type('poyucomma');report.exceptLetterKeyValue=await v();report.exceptLetterKey=report.exceptLetterKeyValue==='gj., ';
   phase='exception_others';await reset();await type('zhurnal');await type('space');report.exceptOtherValue=await v();report.exceptOtherCorrected=report.exceptOtherValue==='журнал ';
   phase='exception_gesture';await reset();await type('word');await type('shift2');await type('space');report.exceptGestureValue=await v();report.exceptGesture=report.exceptGestureValue==='привет ';
-  const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture'];
+  // SYS-272: an oversized SetConfig is refused whole; a normal one still applies.
+  // The Exceptions list sent replaces the configured one only if accepted.
+  const setExceptions=(words)=>{try{execFileSync('/usr/bin/python3',['-I','-c',`
+import json,sys
+from gi.repository import Gio,GLib
+words=json.loads(sys.argv[1])
+bus=Gio.bus_get_sync(Gio.BusType.SESSION,None)
+value=GLib.Variant('a{sv}',{'Exceptions':GLib.Variant('a{sv}',{str(i):GLib.Variant('s',w) for i,w in enumerate(words)})})
+bus.call_sync('org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig',GLib.Variant('(sv)',('fcitx://config/addon/raskladlab',value)),None,Gio.DBusCallFlags.NO_AUTO_START,3000,None)
+`,JSON.stringify(words)],{stdio:['ignore','ignore','ignore'],timeout:5000});return true;}catch(e){return false;}};
+  const junk=Array.from({length:2000},(_,i)=>'w'+i);
+  phase='config_oversized';report.configOversizedSent=setExceptions(['журнал',...junk]);await new Promise(r=>setTimeout(r,300));
+  await reset();await type('word');await type('space');const o1=await v();
+  await reset();await type('zhurnal');await type('space');const o2=await v();
+  report.configOversizedRefused=report.configOversizedSent&&o1==='ghbdtn '&&o2==='журнал ';
+  phase='config_normal';report.configNormalSent=setExceptions(['журнал']);await new Promise(r=>setTimeout(r,300));
+  await reset();await type('word');await type('space');const n1=await v();
+  await reset();await type('zhurnal');await type('space');const n2=await v();
+  report.configNormalApplied=report.configNormalSent&&n1==='привет '&&n2===';ehyfk ';
+  const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture','configOversizedRefused','configNormalApplied'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='focus'){
   // SYS-271: focus moves to another field right after the key that makes the
