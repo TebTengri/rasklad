@@ -252,9 +252,16 @@ try{
   // Same-field control: undo must really run on this stack (Sway's Chromium never
   // confirms the word, so there undo is refused and its race is not exercised).
   phase='focus_undo_control';await seed();await type('word');await type('space');
+  report.focusUndoControlCorrected=(await fields()).prose===SEED_P+'привет ';
   await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,400));
   report.focusUndoControl=(await fields()).prose;
-  report.focusUndoExercised=report.focusUndoControl===SEED_P+'ghbdtn ';
+  report.focusUndoExercised=report.focusUndoControlCorrected&&report.focusUndoControl===SEED_P+'ghbdtn ';
+  // Typing 60 ms after the gesture: the undo has run, and the next word is typed
+  // in the restored form's layout (us).
+  phase='focus_undo_then_type';await seed();await type('word');await type('space');
+  await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,60));await type('hello');
+  report.focusUndoThenTypeValue=(await fields()).prose;
+  report.focusUndoThenType=report.focusUndoThenTypeValue===SEED_P+'ghbdtn hello ';
   const runs=[];
   for(const ms of [0,0,0,0,1,1,2,5,20,50,80]){
    phase='focus_space_'+ms;await seed();await type('word');
@@ -279,7 +286,7 @@ try{
   report.focusProseConsistent=runs.every(r=>[SEED_P+'привет ',SEED_P+'ghbdtn ',SEED_P+'привет',SEED_P+'ghbdtn'].includes(r.prose));
   phase='focus_after';await reset('other');await type('word');await type('space');
   report.focusAfterWorks=await ev(`document.getElementById('other').value==='привет '`);
-  const required=['focusUndoNeverInOther','focusProseConsistent','focusAfterWorks',...(strictUndo?['focusUndoExercised']:[])];
+  const required=['focusUndoNeverInOther','focusProseConsistent','focusAfterWorks',...(strictUndo?['focusUndoExercised','focusUndoThenType']:[])];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='gestures'){
   // SYS-227: automatic correction switched off: words stay as typed on every word end,

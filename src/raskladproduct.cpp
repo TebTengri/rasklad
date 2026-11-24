@@ -1260,7 +1260,9 @@ private:
         const auto epoch = s.epoch;
         const auto generation = s.lastGeneration;
         undoEvent_ = instance_->eventLoop().addTimeEvent(
-            CLOCK_MONOTONIC, fcitx::now(CLOCK_MONOTONIC) + kUndoDelayUs, 0,
+            // Explicit 1 ms tolerance: with 0, sd-event allows 250 ms of slack, and a key
+            // typed in that time would silently cancel the undo.
+            CLOCK_MONOTONIC, fcitx::now(CLOCK_MONOTONIC) + kUndoDelayUs, 1000,
             [this, ref, epoch, generation](fcitx::EventSourceTime *, std::uint64_t) {
                 auto *c = ref.get();
                 if (!c) return true;
