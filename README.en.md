@@ -102,13 +102,13 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 `rasklad-setup --install --yes --single-layout`.
 
 `rasklad-setup --revert` puts back what it changed. A file or Fcitx layout group
-you changed yourself after the last install is left as it is, with a notice, and
-the revert ends with an error so that you can sort it out. Known gaps: an edit
+you changed yourself after the last install is normally left as it is, with a
+notice. Known gaps: an edit
 made in the instant between its check and the replacement is not caught, and if
 you change the Fcitx group and `--install` then adds a missing layout again,
 `--revert` can return the group to how it was before the first install, dropping
 your change. Only one `--install` or `--revert`
-runs at a time. The same actions are in the settings window, section "Connection to
+runs at a time for the same state directory. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
 
