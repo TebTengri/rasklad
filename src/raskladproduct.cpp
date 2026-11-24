@@ -175,7 +175,10 @@ constexpr const char kPropertyName[] = "raskladlabState";
 constexpr const char kRuleFrom[] = "ghbdtn";
 constexpr const char kRuleTo[] = "привет";
 
+// Wipes the whole buffer, not just the current length: a string shortened in
+// place (the double-Shift swap) keeps older bytes past size() (SYS-272).
 void wipeString(std::string &s) {
+    s.resize(s.capacity()); // no reallocation; the tail becomes addressable
     volatile char *p = s.empty() ? nullptr : &s[0];
     for (std::size_t i = 0; p && i < s.size(); ++i) {
         p[i] = '\0';
@@ -247,11 +250,7 @@ public:
     bool lastExpired() const { return !lastValid || fcitx::now(CLOCK_MONOTONIC) - lastAtUs > kLastLifetimeUs; }
     void forgetLast() {
         ++lastGeneration;
-        for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) {
-            volatile char *p = text->data();
-            for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
-            text->clear();
-        }
+        for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) wipeString(*text);
         lastOtherRu = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
         lastRule = Confirm::Never; lastPreCursor = 0;
     }
