@@ -384,6 +384,18 @@ class Install(Base):
         self.assertEqual(clean.read_bytes(), b'-- dotfiles\n')
         self.assertEqual(fake.calls, 2)  # Fcitx back
 
+    def test_input_deleted_releases_the_controls(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.unlink()  # settings moved to another include
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda *a: True
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.revert()
+        self.assertFalse(self.input.exists())  # not recreated
+        self.assertEqual(fake.calls, 2)
+
     def test_block_removed_without_hyprland_keeps_the_controls(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])

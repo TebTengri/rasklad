@@ -472,7 +472,7 @@ def check():
   elif state == "lua-error":
     say("optional", "hyprland-layout", "Hyprland keeps its layouts; input.lua would not compile with the block")
   elif state == "other-layouts":
-    say("other-layouts", "hyprland-layout", "the layouts are not exactly us and ru; Hyprland keeps them")
+    say("other-layouts", "hyprland-layout", "not exactly us and ru, or a us variant that is not Latin; Hyprland keeps them")
   elif state == "legacy":
     report("legacy", "hyprland-layout", "an older or edited layout block: run --revert; if it is left, remove the rasklad-setup block from input.lua, then --install")
   else:
@@ -529,7 +529,7 @@ def install(assume_yes, single_layout=False):
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
     elif status == "other-layouts":
       say("other-layouts", os.path.basename(path),
-          "the layouts are not exactly us and ru: Hyprland keeps its layouts and switch; left as is")
+          "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path),
           "an older or edited layout block: run --revert; if it is left, remove the rasklad-setup block from input.lua, then --install")
@@ -738,7 +738,9 @@ def revert():
   input_kept = had_input and not restore(state, INPUT)
   input_left = False
   current = None
-  if input_kept and file_state(INPUT) in (None, "symlink"):
+  if input_kept and file_state(INPUT) == "missing-file":
+    current = b""  # removed by the user: no block of ours left either
+  elif input_kept and file_state(INPUT) in (None, "symlink"):
     # Read only, through a dotfiles symlink too; never written here.
     try:
       if stat.S_ISREG(os.stat(INPUT).st_mode):
