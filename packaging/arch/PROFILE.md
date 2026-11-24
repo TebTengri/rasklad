@@ -57,14 +57,16 @@ tools/build_arch_package.sh <каталог профиля>
 3. **Модель и словарь стеблей.** Модель обучается только на словарях. Но стенд,
    который её пишет, требует ещё и проверочные выборки Tatoeba.
 
-   Выборки готовятся так: выгрузку Tatoeba по адресу из
-   [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json)
-   распаковать и пропустить через `tools/prepare_cc0_evaluation.py` (он убирает
-   столбец времени). Получится `build/experiment-002-data/en.tsv` и `ru.tsv`. Их хеш
-   должен совпасть с полем `sha256` паспорта. Адрес выгрузки не закреплён и со
-   временем отдаёт другие байты, поэтому без снимка от 2026-11-07 этот шаг не
-   пройдёт. Со снимком:
+   Выборки готовятся из сжатых выгрузок Tatoeba (`*_sentences_CC0.tsv.bz2`, адреса —
+   в [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json)).
+   Распаковывать их не нужно: скрипт сам читает `.bz2` и убирает столбец времени.
+   Хеш результата должен совпасть с полем `sha256` паспорта. Адрес выгрузки не
+   закреплён и со временем отдаёт другие байты, поэтому без снимка от 2026-11-07
+   этот шаг не пройдёт. Со снимком:
    ```sh
+   mkdir -p build/experiment-002-data
+   python3 tools/prepare_cc0_evaluation.py --language eng --input <путь>/eng_sentences_CC0.tsv.bz2 --output build/experiment-002-data/en.tsv
+   python3 tools/prepare_cc0_evaluation.py --language rus --input <путь>/rus_sentences_CC0.tsv.bz2 --output build/experiment-002-data/ru.tsv
    bin/build
    mkdir -p build/experiment-002-artifacts
    build/tools/detector_benchmark \
