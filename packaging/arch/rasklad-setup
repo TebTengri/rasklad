@@ -786,6 +786,10 @@ def install(assume_yes, single_layout=False):
     else:
       say("failed", "fcitx-group")
       failed = True
+      if prior and saved is not prior and saved["before"] != prior["before"]:
+        # The new record was never earned: keep the earlier install's one.
+        state["fcitx"] = prior
+        save_state(state)
   for path, old, new in input_change:
     # The group as Fcitx has it now, not the snapshot from before the question:
     # a successful reply does not prove both layouts are there.
