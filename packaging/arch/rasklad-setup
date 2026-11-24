@@ -23,6 +23,7 @@ import hashlib
 import json
 import os
 import re
+import socket
 import stat
 import subprocess
 import sys
@@ -216,8 +217,21 @@ def hypr_session():
     names = os.listdir(os.path.join(runtime, "hypr"))
   except OSError:
     names = []
-  if any(os.path.exists(os.path.join(runtime, "hypr", n, ".socket.sock")) for n in names):
-    return "unknown"
+  for n in names:
+    path = os.path.join(runtime, "hypr", n, ".socket.sock")
+    if not os.path.exists(path):
+      continue
+    probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    probe.settimeout(1)
+    try:
+      probe.connect(path)
+    except (ConnectionRefusedError, FileNotFoundError):
+      continue  # left behind by a Hyprland that is gone
+    except OSError:
+      return "unknown"
+    finally:
+      probe.close()
+    return "unknown"  # a live Hyprland this shell cannot query
   return "none"
 
 
@@ -451,7 +465,7 @@ def check():
   elif state == "other-layouts":
     say("other-layouts", "hyprland-layout", "the layouts are not exactly us and ru; Hyprland keeps them")
   elif state == "legacy":
-    report("legacy", "hyprland-layout", "an older or edited layout block: run --revert, then --install")
+    report("legacy", "hyprland-layout", "an older or edited layout block: remove the rasklad-setup block from input.lua, then run --install")
   else:
     report(state, "hyprland-layout")
   report(link_state(), "bar-widget-link")
@@ -509,7 +523,7 @@ def install(assume_yes, single_layout=False):
           "the layouts are not exactly us and ru: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path),
-          "an older or edited layout block: run --revert, then --install")
+          "an older or edited layout block: remove the rasklad-setup block from input.lua, then run --install")
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
   link = link_state()
@@ -550,10 +564,11 @@ def install(assume_yes, single_layout=False):
     show_diff(path, old, new)
     print("  Hyprland keeps only the us layout; Fcitx switches layouts in apps.\n"
           "  The lock screen then takes the password in the us (Latin) layout only.")
-    if assume_yes:
-      if not single_layout:
-        say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
-        layout_change = []
+    if single_layout:
+      pass  # asked for on the command line
+    elif assume_yes:
+      say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
+      layout_change = []
     elif not sys.stdin.isatty():
       raise Refused("not a terminal: pass --yes --single-layout to keep only us")
     elif input("Keep only the us layout in Hyprland? [y/N] ").strip().lower() not in ("y", "yes"):
@@ -710,7 +725,7 @@ def revert():
       # The file is back, but Hyprland still runs with one layout: the controls
       # stay until it has taken the restored file; a later --revert checks again.
       state["await_hypr"] = True
-      say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert again")
+      say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert again inside the Hyprland session")
       save_and_drop(state)
       return 1
     state.pop("await_hypr", None)
@@ -718,7 +733,7 @@ def revert():
     clean = False  # input.lua left as is; its backup stays beside it
   if input_kept:
     clean = False
-    say("kept", "rasklad-controls", "input.lua not restored; double Alt, bar widget and Fcitx layouts kept")
+    say("kept", "rasklad-controls", "input.lua edited; remove the rasklad-setup block from it and run --revert again")
   else:
     for path in list(state["files"]):
       done = restore(state, path)

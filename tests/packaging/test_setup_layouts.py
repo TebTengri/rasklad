@@ -9,6 +9,7 @@ import importlib.machinery
 import importlib.util
 import io
 import os
+import socket
 import sys
 import tempfile
 import unittest
@@ -284,7 +285,16 @@ class Install(Base):
         os.environ.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
         self.assertEqual(self.setup.hypr_session(), 'none')
         (runtime / 'hypr' / 'abc').mkdir(parents=True)
-        (runtime / 'hypr' / 'abc' / '.socket.sock').write_bytes(b'')
+        path = str(runtime / 'hypr' / 'abc' / '.socket.sock')
+        stale = socket.socket(socket.AF_UNIX)
+        stale.bind(path)
+        stale.close()  # left behind by a crash: connections refused
+        self.assertEqual(self.setup.hypr_session(), 'none')
+        os.unlink(path)
+        live = socket.socket(socket.AF_UNIX)
+        self.addCleanup(live.close)
+        live.bind(path)
+        live.listen(1)
         self.assertEqual(self.setup.hypr_session(), 'unknown')
         os.environ['HYPRLAND_INSTANCE_SIGNATURE'] = 'abc'
         self.assertEqual(self.setup.hypr_session(), 'unknown')
@@ -301,6 +311,14 @@ class Install(Base):
         self.assertEqual(self.input.read_bytes(), b'-- user file\n-- my own edit\n')
         self.assertEqual(fake.calls, 2)  # Fcitx back as it was
         self.assertNotIn(self.setup.INPUT, self.setup.load_state()['files'])
+
+    def test_single_layout_flag_is_the_answer(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])  # only the layout step left
+        self.setup.fcitx = lambda: fake.bus()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.install(False, single_layout=True), 0)
+        self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
