@@ -717,11 +717,11 @@ def hypr_layouts_back(state):
   layout = "".join(layout.split())
   if "," in layout:
     return True
-  if state.get("hypr_layout") is not None:
-    return layout == state["hypr_layout"]
-  # A state written before hypr_layout: the block was only ever written over
-  # several layouts or a group toggle, so one of them back is the user's own.
-  return any(o.strip().startswith("grp:") for o in options.split(","))
+  # One layout: the block was only ever written over it with a group toggle
+  # (input_plan), and the block removes that toggle, so the toggle must be back.
+  toggle = any(o.strip().startswith("grp:") for o in options.split(","))
+  recorded = state.get("hypr_layout")
+  return toggle and (recorded is None or layout == recorded)
 
 
 def input_block_present():

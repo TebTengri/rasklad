@@ -346,6 +346,8 @@ class Install(Base):
         self.assertTrue(self.setup.hypr_layouts_back(state))
         self.hypr('us', options='grp:alts_toggle')
         self.assertTrue(self.setup.hypr_layouts_back({'hypr_layout': 'us'}))  # what they had
+        self.hypr('us', options='compose:caps')  # our block still loaded: toggle gone
+        self.assertFalse(self.setup.hypr_layouts_back({'hypr_layout': 'us'}))
 
     def test_state_from_before_hypr_layout_still_reverts(self):
         self.setup.run = lambda argv, timeout=5: mock.Mock(returncode=0)
