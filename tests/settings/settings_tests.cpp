@@ -59,6 +59,24 @@ public:
     QStringList seenApps() override { return open; }
 };
 
+class FakeSetup final : public SetupTool
+{
+public:
+    std::optional<QByteArray> out = QByteArray("ok       package\nmissing  double-alt\nok       bar-widget\n");
+    QStringList opened;
+    void requestCheck() override
+    {
+        if (updated) updated(); // answers at once
+    }
+    std::optional<QByteArray> lastCheck() const override { return out; }
+    bool installed() const override { return true; }
+    bool open(const QString &action) override
+    {
+        opened.append(action);
+        return true;
+    }
+};
+
 QVariantMap entry(const SettingsBackend &b, const QString &id)
 {
     for (const QVariant &v : b.apps())
@@ -215,6 +233,70 @@ private Q_SLOTS:
         QVERIFY(configFromMap(f.stored)->apps.isEmpty());
         b.refresh();
         QVERIFY(entry(b, QStringLiteral("quickshell")).isEmpty()); // off: hidden again
+    }
+    void setupCheckParse()
+    {
+        const QVariantMap m = setupFromCheck("ok       package\non       auto-correction\n"
+                                             "other    double-alt         something else is there\n"
+                                             "unknown  hyprland-layout    Hyprland not running\n"
+                                             "ok       made-up-step\nweird    bar-widget\n\n");
+        QCOMPARE(m.value(QStringLiteral("package")).toString(), QStringLiteral("ok"));
+        QCOMPARE(m.value(QStringLiteral("double-alt")).toString(), QStringLiteral("other"));
+        QCOMPARE(m.value(QStringLiteral("hyprland-layout")).toString(), QStringLiteral("unknown"));
+        QVERIFY(!m.contains(QStringLiteral("made-up-step")));
+        QVERIFY(!m.contains(QStringLiteral("bar-widget"))); // unknown state word
+        QVERIFY(setupFromCheck(QByteArray(5000, 'x')).isEmpty());
+    }
+    void setupRowStates()
+    {
+        const auto row = [](const QVariantMap &m, QStringList steps) { return setupRowState(m, steps); };
+        const QVariantMap m{{QStringLiteral("a"), QStringLiteral("ok")},       {QStringLiteral("b"), QStringLiteral("unknown")},
+                            {QStringLiteral("c"), QStringLiteral("missing-file")}, {QStringLiteral("d"), QStringLiteral("symlink")},
+                            {QStringLiteral("e"), QStringLiteral("no-slot")},  {QStringLiteral("f"), QStringLiteral("no-fcitx")},
+                            {QStringLiteral("g"), QStringLiteral("unparsable")}};
+        QCOMPARE(row(m, {QStringLiteral("a")}), QStringLiteral("ok"));
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("b")}), QStringLiteral("unknown")); // never "ok" with an unknown
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("zz")}), QStringLiteral("unknown")); // absent step
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("c")}), QStringLiteral("missing"));
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("d")}), QStringLiteral("other"));
+        QCOMPARE(row(m, {QStringLiteral("c"), QStringLiteral("e")}), QStringLiteral("problem"));
+        QCOMPARE(row(m, {QStringLiteral("f")}), QStringLiteral("unknown"));
+        QCOMPARE(row(m, {QStringLiteral("g")}), QStringLiteral("problem"));
+        QCOMPARE(setupFromCheck("unparsable bar-widget\n").value(QStringLiteral("bar-widget")).toString(),
+                 QStringLiteral("unparsable"));
+    }
+    void setupShownAndOpened()
+    {
+        FakeFcitx f;
+        FakeApps w;
+        FakeSetup t;
+        SettingsBackend b(&f, &w, nullptr, &t);
+        QCOMPARE(b.setup().value(QStringLiteral("double-alt")).toString(), QStringLiteral("missing"));
+        QCOMPARE(b.setupRows().value(QStringLiteral("alt")).toString(), QStringLiteral("missing"));
+        QCOMPARE(b.setupRows().value(QStringLiteral("icon")).toString(), QStringLiteral("unknown")); // link step absent
+        QVERIFY(b.setupInstalled());
+        // The check's fcitx-group answer moves the layouts banner without a Fcitx call.
+        f.group = {QStringLiteral("keyboard-us")};
+        t.out.reset();
+        b.refresh();
+        QVERIFY(!b.layoutsReady());
+        t.out = QByteArray("ok fcitx-group\n");
+        t.updated();
+        QVERIFY(b.layoutsReady());
+        t.out = QByteArray("missing fcitx-group\n");
+        t.updated();
+        QVERIFY(!b.layoutsReady());
+        f.group = {QStringLiteral("keyboard-us"), QStringLiteral("keyboard-ru")};
+        t.out = QByteArray("ok package\nmissing double-alt\nok bar-widget\n");
+        b.refresh();
+        QVERIFY(b.openSetup(QStringLiteral("install")));
+        QCOMPARE(t.opened, QStringList{QStringLiteral("install")});
+        t.out.reset(); // no tool: the section hides
+        b.refresh();
+        QVERIFY(b.setup().isEmpty());
+        SettingsBackend none(&f, &w);
+        QVERIFY(none.setup().isEmpty());
+        QVERIFY(!none.openSetup(QStringLiteral("install")));
     }
     void roundingReply()
     {

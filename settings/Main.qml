@@ -50,7 +50,7 @@ ApplicationWindow {
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
-        if (help.visible) return false // help keeps its own focus, also while it animates in
+        if (help.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -560,7 +560,122 @@ ApplicationWindow {
                 visible: ["word", "words-full"].includes(backend.error)
                 text: window.errorText(backend.error)
             }
+
+            // ---- Omarchy connection (SYS-260): states from rasklad-setup --check.
+            // The window never edits these files; the buttons open rasklad-setup in
+            // a terminal, where the user sees the changes and agrees to them.
+            SectionHeader {
+                visible: setupBox.visible
+                text: qsTr("OMARCHY CONNECTION")
+            }
+            ColumnLayout {
+                id: setupBox
+                // Shown while there are states, or something to revert even if the check gave no answer.
+                readonly property bool hasRows: Object.keys(backend.setupRows).length > 0
+                visible: hasRows || backend.setupInstalled
+                spacing: 8
+                Layout.fillWidth: true
+                readonly property var rows: !hasRows ? [] : [
+                    { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
+                    { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
+                    { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }
+                ]
+                readonly property bool anyMissing: rows.some(r => r.state === "missing")
+                Hint { text: qsTr("Connecting changes the Hyprland, bar and Fcitx settings. A terminal shows each change and asks first.") }
+                Repeater {
+                    model: setupBox.rows
+                    delegate: Rectangle {
+                        id: stateRow
+                        required property var modelData
+                        Layout.fillWidth: true
+                        implicitHeight: Math.max(44, stateTexts.implicitHeight + 16)
+                        radius: window.small
+                        color: window.tint(0.04)
+                        border.color: window.tint(0.4)
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: modelData.title + ": " + stateLabel.text
+                        RowLayout {
+                            id: stateTexts
+                            anchors.fill: parent
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 12
+                            Label {
+                                text: stateRow.modelData.title
+                                font.pixelSize: 13
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                Accessible.ignored: true
+                            }
+                            Label {
+                                id: stateLabel
+                                Accessible.ignored: true
+                                font.pixelSize: 11
+                                font.bold: stateRow.modelData.state === "ok"
+                                color: stateRow.modelData.state === "ok" ? window.fg
+                                     : (stateRow.modelData.state === "missing" || stateRow.modelData.state === "problem")
+                                       ? theme.error : window.secondary
+                                text: stateRow.modelData.state === "ok" ? qsTr("connected")
+                                    : stateRow.modelData.state === "missing" ? qsTr("not connected")
+                                    : stateRow.modelData.state === "problem" ? qsTr("error")
+                                    : stateRow.modelData.state === "other" ? qsTr("set up differently")
+                                    : qsTr("unknown")
+                            }
+                        }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Button {
+                        visible: setupBox.anyMissing || setupBox.rows.some(r => r.state === "problem")
+                        text: qsTr("Connect…")
+                        onClicked: setupError.failed = backend.openSetup("install") ? "" : "install"
+                    }
+                    Button {
+                        visible: backend.setupInstalled
+                        flat: true
+                        text: qsTr("Restore Omarchy defaults…")
+                        onClicked: revertConfirm.open()
+                    }
+                }
+                InlineError {
+                    id: setupError
+                    property string failed: ""
+                    visible: failed !== ""
+                    text: qsTr("Could not open a terminal. Run rasklad-setup --%1 in one.").arg(failed)
+                }
+            }
         }
+    }
+
+    // Reverting puts back saved files: ask first, as rasklad-setup --install does.
+    Dialog {
+        id: revertConfirm
+        modal: true
+        anchors.centerIn: Overlay.overlay
+        width: Math.min(window.width - 32, 440)
+        title: qsTr("Restore Omarchy defaults?")
+        background: Rectangle {
+            color: theme.background
+            radius: window.small
+            border.color: window.tint(0.4)
+        }
+        contentItem: Hint {
+            text: qsTr("The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.")
+            font.pixelSize: 12
+        }
+        footer: DialogButtonBox {
+            Button {
+                text: qsTr("Restore")
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            }
+            Button {
+                text: qsTr("Cancel")
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            }
+        }
+        onAccepted: setupError.failed = backend.openSetup("revert") ? "" : "revert"
     }
 
     // ---- Help (? or F1) ------------------------------------------------------------
@@ -601,6 +716,7 @@ ApplicationWindow {
                     font.bold: true
                 }
                 Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
+                Hint { text: qsTr("To turn off automatic correction for a while, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
                 Hint { text: qsTr("An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts."); font.pixelSize: 12 }
                 Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
                 GridLayout {

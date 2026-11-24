@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
     settings::FcitxSeenApps seen;
     // SYS-254: human names from .desktop entries, in the window's language.
     settings::DesktopAppNames names([&theme] { return theme.language(); });
-    settings::SettingsBackend backend(&fcitx, &seen, &names);
+    settings::RaskladSetup setup;
+    settings::SettingsBackend backend(&fcitx, &seen, &names, &setup);
 
     QQmlApplicationEngine engine;
     app::JsonTranslator ru;

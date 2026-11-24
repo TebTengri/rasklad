@@ -151,6 +151,53 @@ QStringList seenAppsFromStatus(const QVariantMap &status)
     return out;
 }
 
+QVariantMap setupFromCheck(const QByteArray &output)
+{
+    static const QStringList steps{QStringLiteral("package"),         QStringLiteral("fcitx-addon"),
+                                   QStringLiteral("auto-correction"), QStringLiteral("fcitx-group"),
+                                   QStringLiteral("double-alt"),      QStringLiteral("hyprland-layout"),
+                                   QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")};
+    // Exactly the words `rasklad-setup --check` prints (SYS-252).
+    static const QStringList states{QStringLiteral("ok"),       QStringLiteral("missing"),     QStringLiteral("broken"),
+                                    QStringLiteral("other"),    QStringLiteral("symlink"),     QStringLiteral("unknown"),
+                                    QStringLiteral("no-fcitx"), QStringLiteral("missing-file"), QStringLiteral("lua-error"),
+                                    QStringLiteral("no-slot"),  QStringLiteral("not-a-file"),  QStringLiteral("unparsable"),
+                                    QStringLiteral("on"),       QStringLiteral("paused")};
+    QVariantMap result;
+    if (output.size() > 4096) return result;
+    for (const QByteArray &raw : output.split('\n')) {
+        const QList<QByteArray> words = raw.simplified().split(' ');
+        if (words.size() < 2) continue;
+        const QString state = QString::fromLatin1(words.at(0));
+        const QString step = QString::fromLatin1(words.at(1));
+        if (steps.contains(step) && states.contains(state)) result.insert(step, state);
+    }
+    return result;
+}
+
+QString setupRowState(const QVariantMap &setup, const QStringList &steps)
+{
+    bool problem = false, missing = false, unknown = false, other = false;
+    for (const QString &step : steps) {
+        const QString s = setup.value(step).toString();
+        if (s == QLatin1String("ok")) continue;
+        if (s == QLatin1String("lua-error") || s == QLatin1String("no-slot") || s == QLatin1String("broken") ||
+            s == QLatin1String("not-a-file") || s == QLatin1String("unparsable"))
+            problem = true;
+        else if (s == QLatin1String("missing") || s == QLatin1String("missing-file"))
+            missing = true;
+        else if (s == QLatin1String("other") || s == QLatin1String("symlink"))
+            other = true;
+        else
+            unknown = true; // "unknown", "no-fcitx", or absent
+    }
+    if (problem) return QStringLiteral("problem");
+    if (missing) return QStringLiteral("missing");
+    if (unknown) return QStringLiteral("unknown");
+    if (other) return QStringLiteral("other");
+    return QStringLiteral("ok");
+}
+
 int roundingFromReply(const QByteArray &json)
 {
     const QJsonDocument doc = QJsonDocument::fromJson(json.left(4096));

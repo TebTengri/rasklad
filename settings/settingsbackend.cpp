@@ -5,10 +5,42 @@
 
 namespace rasklad::settings {
 
-SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, QObject *parent)
-    : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names)
+SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, SetupTool *setup,
+                                 QObject *parent)
+    : QObject(parent), m_fcitx(fcitx), m_appSource(apps), m_names(names), m_setupTool(setup)
 {
+    if (m_setupTool) {
+        m_setupTool->updated = [this] {
+            const auto out = m_setupTool->lastCheck();
+            const QVariantMap next = out ? setupFromCheck(*out) : QVariantMap{};
+            const bool installed = m_setupTool->installed();
+            // Something outside changed the desktop (the terminal): the next window
+            // focus (Hyprland returns it when the terminal closes) re-reads Fcitx for
+            // the banner. Never a blocking call or a new check from here.
+            if (next != m_setup || installed != m_setupInstalled) m_lastRefresh.invalidate();
+            // rasklad-setup's fcitx-group "ok" is the banner's own condition (both
+            // layouts in the current Fcitx group): take it without a blocking call.
+            const QString group = next.value(QStringLiteral("fcitx-group")).toString();
+            if (m_running && group == QLatin1String("ok")) m_layouts = true;
+            else if (group == QLatin1String("missing")) m_layouts = false;
+            m_setup = next;
+            m_setupInstalled = installed;
+            Q_EMIT changed();
+        };
+    }
+    // The terminal gives no completion signal: every 4 s for 3 minutes, start the
+    // asynchronous check (no blocking call here); a changed answer refreshes once.
+    m_setupPoll.setInterval(4000);
+    connect(&m_setupPoll, &QTimer::timeout, this, [this] {
+        if (++m_setupPolls >= 45) m_setupPoll.stop();
+        if (m_setupTool) m_setupTool->requestCheck();
+    });
     refresh();
+}
+
+SettingsBackend::~SettingsBackend()
+{
+    if (m_setupTool) m_setupTool->updated = nullptr;
 }
 
 void SettingsBackend::reloadConfig()
@@ -20,6 +52,25 @@ void SettingsBackend::reloadConfig()
     // Asked again on every read (refresh and before each change), so a restarted
     // Fcitx never keeps showing the previous daemon's warning.
     m_profileBroken = m_running && m_fcitx->profileReady() == std::optional<bool>(false);
+}
+
+bool SettingsBackend::openSetup(const QString &action)
+{
+    // The window learns the result on its next focus refresh, after the terminal.
+    if (!m_setupTool || !m_setupTool->open(action)) return false;
+    m_lastRefresh.invalidate(); // the next focus refreshes everything
+    m_setupPolls = 0;
+    m_setupPoll.start();
+    return true;
+}
+
+QVariantMap SettingsBackend::setupRows() const
+{
+    if (m_setup.isEmpty()) return {};
+    return {{QStringLiteral("icon"), setupRowState(m_setup, {QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")})},
+            {QStringLiteral("alt"), setupRowState(m_setup, {QStringLiteral("double-alt")})},
+            {QStringLiteral("layouts"),
+             setupRowState(m_setup, {QStringLiteral("fcitx-group"), QStringLiteral("hyprland-layout")})}};
 }
 
 void SettingsBackend::refreshIfStale()
@@ -39,6 +90,7 @@ void SettingsBackend::refresh()
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
     if (m_names) m_names->reload();
+    if (m_setupTool) m_setupTool->requestCheck(); // answers later through updated()
     m_groups.clear(); // regrouped only here, never on a switch
     // Only a good refresh pauses the focus refresh, so recovery is retried at once.
     if (m_loaded) m_lastRefresh.start();

@@ -12,7 +12,12 @@
 
 #include "desktopindex.h"
 
+#include <QElapsedTimer>
+#include <QHash>
+#include <QProcess>
+
 #include <functional>
+#include <memory>
 #include <optional>
 
 namespace rasklad::settings {
@@ -64,6 +69,41 @@ public:
 private:
     std::function<QString()> m_language;
     DesktopIndex m_index;
+};
+
+// SYS-260: the packaged rasklad-setup. requestCheck() starts `--check`
+// (read-only, a few lines of states) without blocking the window; when it ends,
+// lastCheck() holds the output and updated() is called. open() shows `--install`
+// or `--revert` in Omarchy's floating terminal, where the user sees the changes
+// and answers the prompt.
+class SetupTool
+{
+public:
+    virtual ~SetupTool() = default;
+    virtual void requestCheck() = 0;                          // no-op while one runs
+    virtual std::optional<QByteArray> lastCheck() const = 0; // nullopt: not installed or no answer
+    virtual bool open(const QString &action) = 0;            // "install" or "revert"
+    virtual bool installed() const = 0; // --install recorded changes that --revert can undo
+    std::function<void()> updated;
+};
+
+class RaskladSetup final : public SetupTool
+{
+public:
+    RaskladSetup();
+    ~RaskladSetup() override;
+    void requestCheck() override;
+    std::optional<QByteArray> lastCheck() const override { return m_last; }
+    bool open(const QString &action) override;
+    bool installed() const override;
+
+private:
+    void finish(std::optional<QByteArray> result);
+    std::unique_ptr<QProcess> m_process;
+    bool m_again = false; // asked again while one ran: its answer may predate the request
+    QByteArray m_out;
+    std::optional<QByteArray> m_last;
+    QHash<QString, QElapsedTimer> m_opened; // per action: a double click opens one terminal
 };
 
 class DBusFcitx final : public FcitxSource
