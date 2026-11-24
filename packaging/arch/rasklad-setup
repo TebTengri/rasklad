@@ -133,9 +133,13 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if set(state) - {"version", "files", "link", "fcitx", "await_hypr"} or not isinstance(state.get("files"), dict):
+  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout"} or \
+     not isinstance(state.get("files"), dict):
     raise bad
   if not isinstance(state.get("await_hypr", False), bool):
+    raise bad
+  hl = state.get("hypr_layout")
+  if hl is not None and not (isinstance(hl, str) and hl and XKB.fullmatch(hl)):
     raise bad
   for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
@@ -564,16 +568,19 @@ def install(assume_yes, single_layout=False):
     show_diff(path, old, new)
     print("  Hyprland keeps only the us layout; Fcitx switches layouts in apps.\n"
           "  The lock screen then takes the password in the us (Latin) layout only.")
-    if single_layout:
-      pass  # asked for on the command line
-    elif assume_yes:
-      say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
-      layout_change = []
+    if assume_yes:
+      if not single_layout:
+        say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
+        layout_change = []
     elif not sys.stdin.isatty():
       raise Refused("not a terminal: pass --yes --single-layout to keep only us")
-    elif input("Keep only the us layout in Hyprland? [y/N] ").strip().lower() not in ("y", "yes"):
-      say("skipped", os.path.basename(path), "Hyprland keeps its layouts")
-      layout_change = []
+    else:
+      # Asked even with --single-layout; the flag only makes yes the default.
+      answer = input("Keep only the us layout in Hyprland? [%s] " % ("Y/n" if single_layout else "y/N"))
+      answer = answer.strip().lower()
+      if not (answer in ("y", "yes") or (single_layout and answer == "")):
+        say("skipped", os.path.basename(path), "Hyprland keeps its layouts")
+        layout_change = []
 
   # Each step is recorded before it is done, so a crash in between leaves a
   # state --revert can reconcile (an unwritten file still equals its copy).
@@ -628,6 +635,9 @@ def install(assume_yes, single_layout=False):
       failed = True
       continue
     remember_file(state, path, old, new)
+    if path == INPUT:
+      # What "the user's layouts are back" means for --revert (SYS-268).
+      state["hypr_layout"] = (hypr_option("input:kb_layout") or "").replace(" ", "") or None
     save_state(state)
     write_atomic(path, new)
     say("done", os.path.basename(path))
@@ -644,7 +654,7 @@ def install(assume_yes, single_layout=False):
       # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
       if INPUT in hypr and not restore(state, INPUT):
         say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
-      elif INPUT in hypr and not hypr_layouts_back():
+      elif INPUT in hypr and not hypr_layouts_back(state):
         state["await_hypr"] = True
         say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert")
       else:
@@ -687,17 +697,18 @@ def restore(state, path):
   return True
 
 
-def hypr_layouts_back():
+def hypr_layouts_back(state):
   """After restoring input.lua: Hyprland reloaded and runs with the user's own
-  layouts again. The block was only written when they had several layouts or a
-  group switch (input_plan), so one of the two must be back."""
+  layouts again: the ones it had when the block was written, or several. One us
+  with only a group toggle left would not type Cyrillic."""
   done = run([HYPRCTL, "reload"])
   if done is None or done.returncode != 0:
     return False
-  layout, options = hypr_option("input:kb_layout"), hypr_option("input:kb_options")
-  if layout is None or options is None:
+  layout = hypr_option("input:kb_layout")
+  if layout is None:
     return False
-  return "," in layout or any(o.strip().startswith("grp:") for o in options.split(","))
+  layout = layout.replace(" ", "")
+  return "," in layout or (state.get("hypr_layout") is not None and layout == state["hypr_layout"])
 
 
 def revert():
@@ -713,15 +724,17 @@ def revert():
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
   input_left = False
-  if input_kept and BEGIN.encode() not in (read(INPUT) or b""):
-    # Edited, but our block is gone: Hyprland has the user's own layouts again
-    # once it has taken the file. input.lua stays as the user left it.
+  current = read(INPUT)
+  if input_kept and current is not None and BEGIN.encode() not in current and \
+     hypr_session() == "running" and hypr_layouts_back(state):
+    # Edited, our block gone, and Hyprland runs with the user's layouts again:
+    # input.lua stays as the user left it (its .rasklad.bak stays beside it).
     input_kept, input_left = False, True
-    del state["files"][INPUT]
-  restored_hypr = had_input and not input_kept
+    state.setdefault("_drop", []).append(state["files"].pop(INPUT)["backup"])
+  restored_hypr = had_input and not input_kept and not input_left
   session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
   if session != "none":
-    if session == "unknown" or not hypr_layouts_back():
+    if session == "unknown" or not hypr_layouts_back(state):
       # The file is back, but Hyprland still runs with one layout: the controls
       # stay until it has taken the restored file; a later --revert checks again.
       state["await_hypr"] = True

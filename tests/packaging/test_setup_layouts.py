@@ -8,6 +8,7 @@ import contextlib
 import importlib.machinery
 import importlib.util
 import io
+from unittest import mock
 import os
 import socket
 import sys
@@ -206,7 +207,7 @@ class Install(Base):
         fake = FakeFcitx([('keyboard-us', '')])
         self.assertEqual(self.install(fake, single_layout=True)[0], 0)
         self.setup.hypr_session = lambda: 'running'
-        self.setup.hypr_layouts_back = lambda: False  # reload failed or still one layout
+        self.setup.hypr_layouts_back = lambda *a: False  # reload failed or still one layout
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(self.setup.revert(), 1)
@@ -214,7 +215,7 @@ class Install(Base):
         self.assertEqual(self.input.read_bytes(), b'-- user file\n')  # the file is back
         self.assertTrue(self.setup.load_state().get('await_hypr'))
         self.assertEqual(fake.calls, 1)  # Fcitx's layouts still there
-        self.setup.hypr_layouts_back = lambda: True
+        self.setup.hypr_layouts_back = lambda *a: True
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.setup.revert(), 0)
         self.assertEqual(fake.calls, 2)  # now Fcitx goes back too
@@ -250,7 +251,7 @@ class Install(Base):
         self.setup.hypr_running = lambda: True
         errors = iter([[], ['new error']])
         self.setup.hypr_errors = lambda: next(errors)
-        self.setup.hypr_layouts_back = lambda: False
+        self.setup.hypr_layouts_back = lambda *a: False
         self.setup.run = lambda argv, timeout=5: None
         code, out = self.install(fake, single_layout=True)
         self.assertEqual(code, 1)
@@ -305,20 +306,53 @@ class Install(Base):
         self.assertEqual(self.install(fake, single_layout=True)[0], 0)
         self.input.write_bytes(b'-- user file\n-- my own edit\n')  # our block taken out
         self.setup.hypr_session = lambda: 'running'
-        self.setup.hypr_layouts_back = lambda: True
+        self.setup.hypr_layouts_back = lambda *a: True
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.setup.revert(), 1)  # input.lua left as the user has it
         self.assertEqual(self.input.read_bytes(), b'-- user file\n-- my own edit\n')
         self.assertEqual(fake.calls, 2)  # Fcitx back as it was
         self.assertNotIn(self.setup.INPUT, self.setup.load_state()['files'])
 
-    def test_single_layout_flag_is_the_answer(self):
+    def test_single_layout_flag_still_asks(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])  # only the layout step left
         self.setup.fcitx = lambda: fake.bus()
-        with contextlib.redirect_stdout(io.StringIO()):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=False):
+            with self.assertRaises(self.setup.Refused):  # a script needs --yes as well
+                self.setup.install(False, single_layout=True)
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+        with contextlib.redirect_stdout(out), mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=True), \
+             mock.patch('builtins.input', return_value='n') as asked:
             self.assertEqual(self.setup.install(False, single_layout=True), 0)
+        self.assertIn('[Y/n]', asked.call_args[0][0])
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+        with contextlib.redirect_stdout(out), mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=True), \
+             mock.patch('builtins.input', return_value=''):
+            self.assertEqual(self.setup.install(False, single_layout=True), 0)  # Enter: the flag's default
         self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
+        self.assertEqual(self.setup.load_state()['hypr_layout'], 'ru,us')
+
+    def test_layouts_back_means_the_recorded_ones(self):
+        state = {'hypr_layout': 'ru,us'}
+        self.setup.run = lambda argv, timeout=5: mock.Mock(returncode=0)
+        self.hypr('us', options='grp:alts_toggle')  # one layout and a toggle: no Cyrillic
+        self.assertFalse(self.setup.hypr_layouts_back(state))
+        self.hypr('ru,us')
+        self.assertTrue(self.setup.hypr_layouts_back(state))
+        self.hypr('us', options='grp:alts_toggle')
+        self.assertTrue(self.setup.hypr_layouts_back({'hypr_layout': 'us'}))  # what they had
+
+    def test_block_removed_without_hyprland_keeps_the_controls(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.write_bytes(b'-- user file\n-- my own edit\n')
+        self.setup.hypr_session = lambda: 'none'  # cannot prove the layouts are back
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertEqual(fake.calls, 1)
+        self.assertIn(self.setup.INPUT, self.setup.load_state()['files'])
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
