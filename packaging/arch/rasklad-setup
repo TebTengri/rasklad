@@ -724,6 +724,16 @@ def hypr_layouts_back(state):
   return any(o.strip().startswith("grp:") for o in options.split(","))
 
 
+def input_block_present():
+  try:
+    if not stat.S_ISREG(os.stat(INPUT).st_mode):
+      return False
+    with open(INPUT, "rb") as f:
+      return BEGIN.encode() in f.read()
+  except OSError:
+    return False
+
+
 def revert():
   if read(STATE_FILE) is None:
     print("Nothing to revert.")
@@ -737,18 +747,10 @@ def revert():
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
   input_left = False
-  current = None
-  if input_kept and file_state(INPUT) == "missing-file":
-    current = b""  # removed by the user: no block of ours left either
-  elif input_kept and file_state(INPUT) in (None, "symlink"):
-    # Read only, through a dotfiles symlink too; never written here.
-    try:
-      if stat.S_ISREG(os.stat(INPUT).st_mode):
-        with open(INPUT, "rb") as f:
-          current = f.read()
-    except OSError:
-      current = None
-  if current is not None and BEGIN.encode() not in current and \
+  # Kept only while a readable regular input.lua (through a dotfiles symlink
+  # too) still holds our block. Gone, a dangling link, a directory, unreadable:
+  # the live layouts decide. The path itself is never written here.
+  if input_kept and not input_block_present() and \
      hypr_session() == "running" and hypr_layouts_back(state):
     # Edited, our block gone, and Hyprland runs with the user's layouts again:
     # input.lua stays as the user left it (its .rasklad.bak stays beside it).

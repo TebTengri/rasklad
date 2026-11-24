@@ -396,6 +396,25 @@ class Install(Base):
         self.assertFalse(self.input.exists())  # not recreated
         self.assertEqual(fake.calls, 2)
 
+    def test_odd_input_paths_release_the_controls(self):
+        for kind in ('dangling', 'directory'):
+            with self.subTest(kind):
+                self.setUp()
+                self.hypr('ru,us', variant=',')
+                fake = FakeFcitx([('keyboard-us', '')])
+                self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+                self.input.unlink()
+                if kind == 'dangling':
+                    self.input.symlink_to(Path(self.tmp.name) / 'gone.lua')
+                else:
+                    self.input.mkdir()
+                self.setup.hypr_session = lambda: 'running'
+                self.setup.hypr_layouts_back = lambda *a: True
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.setup.revert()
+                self.assertEqual(fake.calls, 2, kind)
+                self.assertTrue(self.input.is_symlink() if kind == 'dangling' else self.input.is_dir())
+
     def test_block_removed_without_hyprland_keeps_the_controls(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
