@@ -88,7 +88,7 @@ from and how to reproduce it from a clean clone:
 [packaging/arch/PROFILE.md](packaging/arch/PROFILE.md).
 
 The package does not change your settings by itself. `rasklad-setup --install`
-shows every change and asks first. It adds:
+shows the changes and asks first. It adds:
 - the double Alt in Hyprland;
 - the Rasklad icon in place of the standard layout icon;
 - the EN and RU layouts in Fcitx.
@@ -102,9 +102,11 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 `rasklad-setup --install --yes --single-layout`.
 
 `rasklad-setup --revert` puts back what it changed. A file or Fcitx layout group
-you changed yourself after installing is left as it is, with a notice, and the
-revert ends with an error so that you can sort it out. An edit made in the instant
-between its check and the replacement is not caught. Only one `--install` or `--revert`
+you changed yourself after the last install is left as it is, with a notice, and
+the revert ends with an error so that you can sort it out. Known gaps: an edit
+made in the instant between its check and the replacement is not caught, and if
+you change the Fcitx group and then run `--install` again, `--revert` returns the
+group to how it was before the first install. Only one `--install` or `--revert`
 runs at a time. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
@@ -163,7 +165,8 @@ out counts as your own configuration.
 - The add-on keeps in memory, per field, only the word being typed and the last
   finished word. The last word is dropped at the next key other than Shift, or at
   a focus change; after
-  15 seconds it can no longer be swapped and is then wiped.
+  15 seconds it can no longer be swapped, and its stored copy is then wiped
+  (temporary copies made while correcting may linger in freed memory).
 - The settings window stores only the application list, the exceptions and the
   switches, in `~/.config/fcitx5/conf/rasklad.conf`.
 - The names of programs where you placed the cursor, without any text, are kept

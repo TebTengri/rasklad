@@ -769,14 +769,10 @@ def install(assume_yes, single_layout=False):
     say("done", "bar-widget-link")
   if group[0] == "missing":
     name, layout, before, after = group[1]
-    # A retry after a write that never landed keeps the group as it was before the
-    # first attempt. If the group has changed since (the user replaced a layout),
-    # this run starts from the group as it is now, so --revert never takes away
-    # a layout the user added after the first install.
+    # A retry keeps the group as it was before the first attempt.
     saved = state.get("fcitx")
     prior = dict(saved) if saved else None  # put back as is if this run is rolled back
-    rebased = not (saved and saved["group"] == name and saved["layout"] == layout and saved["before"] == before)
-    if rebased:
+    if not (saved and saved["group"] == name):
       saved = {"group": name, "layout": layout, "before": before}
     saved["after"] = after
     saved["after_layout"] = layout  # the layout this write used
@@ -787,10 +783,6 @@ def install(assume_yes, single_layout=False):
     else:
       say("failed", "fcitx-group")
       failed = True
-      if prior and rebased:
-        # The new record was never earned: keep the earlier install's one.
-        state["fcitx"] = prior
-        save_state(state)
   for path, old, new in input_change:
     # The group as Fcitx has it now, not the snapshot from before the question:
     # a successful reply does not prove both layouts are there.
