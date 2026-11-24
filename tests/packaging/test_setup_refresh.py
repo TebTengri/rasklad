@@ -153,6 +153,15 @@ class Refresh(Base):
         self.input.write_bytes(new.replace(self.setup.BEGIN.encode(), b'-- (edited)'))
         self.assertTrue(self.setup.input_block_present())
 
+    def test_any_trace_counts_in_every_version(self):
+        v2 = (b'-- user\n-- rasklad-setup layout 2: us kept for the lock screen\n'
+              b'hl.config({input = {kb_layout = "us"}})\n')  # BEGIN taken out of a 0.5.21 block
+        self.input.write_bytes(v2)
+        self.assertTrue(self.setup.input_block_present())
+        loader = ('-- user\nlocal rasklad = "%s"\ndofile(rasklad)\n' % self.setup.RULE).encode()
+        self.assertTrue(self.setup.ours_in(self.setup.BINDINGS, loader))
+        self.assertFalse(self.setup.ours_in(self.setup.BINDINGS, b'-- omarchy bindings\n'))
+
     def test_reload_with_config_errors_does_not_count(self):
         self.setup = load_setup(self.tmp.name)
         self.setup.run = lambda argv, timeout=5: type('Done', (), {'returncode': 0})()

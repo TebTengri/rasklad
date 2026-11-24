@@ -525,10 +525,15 @@ def names_widget(data):
 
 
 def ours_in(path, data):
-  """Does this file still carry our change? (SYS-270)"""
+  """Does this file still carry our change? (SYS-270) Any trace counts: the
+  BEGIN comment alone may have been taken out while what follows still runs."""
   if path == SHELL_JSON:
     return names_widget(data)
-  return BEGIN.encode() in data
+  if path == BINDINGS:
+    return BEGIN.encode() in data or RULE.encode() in data  # the rule loader
+  # input.lua: every block version names rasklad-setup in its comments, and the
+  # current one also checks rasklad_package.
+  return b"rasklad-setup" in data or b"rasklad_package" in data
 
 
 def forget_entry(state, path):
@@ -842,9 +847,7 @@ def input_block_present():
     with os.fdopen(fd, "rb") as f:
       fd = None
       data = f.read()
-    # Any trace of it: the BEGIN comment alone may have been taken out while the
-    # override below it still runs.
-    return any(t in data for t in (BEGIN.encode(), LAYOUT_MARK.encode(), b"rasklad_package"))
+    return ours_in(INPUT, data)
   except OSError:
     return False
   finally:
