@@ -2,10 +2,10 @@
 # SYS-227: rasklad-settings, the settings window for the rasklad Fcitx addon.
 TEMPLATE = app
 TARGET = rasklad-settings
-QT = core gui qml quick quickcontrols2 dbus
+QT = core gui qml quick quickcontrols2 dbus network
 CONFIG += c++17 warn_on
 CONFIG -= app_bundle
-DEFINES += QT_NO_KEYWORDS RASKLAD_VERSION=\\\"0.5.12\\\"
+DEFINES += QT_NO_KEYWORDS RASKLAD_VERSION=\\\"0.5.13\\\"
 INCLUDEPATH += $$PWD $$PWD/../src
 include(../src/rasklad_hardening.pri)
 HEADERS += settingsbackend.h settingscore.h sources.h desktopindex.h appiconprovider.h \

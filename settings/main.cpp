@@ -14,14 +14,49 @@
 #include "themewatcher.h"
 
 #include <QCoreApplication>
+#include <QDeadlineTimer>
 #include <QFile>
 #include <QGuiApplication>
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QLockFile>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QTextStream>
+#include <QThread>
+#include <QWindow>
+
+#include <cerrno>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace rasklad;
+
+namespace {
+// $XDG_RUNTIME_DIR only when it is an absolute, real directory owned by this user
+// and closed to group and others (mode 0700); otherwise empty: no single-instance.
+QString privateRuntimeDir()
+{
+    const QByteArray dir = qgetenv("XDG_RUNTIME_DIR");
+    if (dir.isEmpty() || !dir.startsWith('/')) return {};
+    struct stat st {};
+    if (::lstat(dir.constData(), &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != ::getuid() ||
+        (st.st_mode & 07777) != 0700)
+        return {};
+    return QString::fromLocal8Bit(dir);
+}
+
+// Frees the socket path for a new listener: true when nothing is there, or when
+// it held a leftover socket of ours and that is now removed. Never touches another file.
+bool removeStaleSocket(const QString &path)
+{
+    struct stat st {};
+    const QByteArray p = QFile::encodeName(path);
+    if (::lstat(p.constData(), &st) != 0) return errno == ENOENT;
+    return S_ISSOCK(st.st_mode) && st.st_uid == ::getuid() && ::unlink(p.constData()) == 0;
+}
+} // namespace
 
 int main(int argc, char *argv[])
 {
@@ -42,6 +77,53 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationName(QStringLiteral("rasklad-settings"));
     QGuiApplication::setApplicationVersion(QStringLiteral(RASKLAD_VERSION));
     QGuiApplication::setDesktopFileName(QStringLiteral("rasklad-settings"));
+
+    // SYS-261: one settings window. The first start holds a lock file for its whole
+    // life and listens on a socket; a later start finds the lock taken, asks the
+    // first window to come forward over the socket, and exits. Only in a runtime
+    // directory that is this user's own and closed to others (XDG basedir rules).
+    const QString runtime = privateRuntimeDir();
+    QLockFile lock(runtime + QStringLiteral("/rasklad-settings.lock"));
+    QLocalServer single;
+    if (!runtime.isEmpty()) {
+        const QString socketPath = runtime + QStringLiteral("/rasklad-settings.socket");
+        bool owner = lock.tryLock(0);
+        if (!owner && lock.error() == QLockFile::LockFailedError) {
+            // Another window holds the lock; it may still be starting, or closing.
+            // Until the deadline: bring it forward, or take the lock it left.
+            const QDeadlineTimer deadline(5000);
+            // Every wait is capped by what is left, so the deadline holds.
+            const auto left = [&deadline](int ms) { return int(qMin<qint64>(ms, deadline.remainingTime())); };
+            while (!owner && !deadline.hasExpired()) {
+                QLocalSocket probe;
+                probe.connectToServer(socketPath);
+                // The connection itself is the request. Done only when the window
+                // answers: one that is closing may still accept it, and then this
+                // start takes its place.
+                if (probe.waitForConnected(left(200)) && !deadline.hasExpired() &&
+                    probe.waitForReadyRead(left(1000)) && probe.readAll().startsWith("ok"))
+                    return 0;
+                if (deadline.hasExpired()) break;
+                QThread::msleep(static_cast<unsigned long>(left(100)));
+                owner = lock.tryLock(0);
+            }
+            if (!owner) owner = lock.tryLock(0); // a last try: the budget may end just as it is released
+            if (!owner) {
+                // A window holds the lock but neither answers nor closes: never a second one.
+                QTextStream(stderr) << "rasklad-settings: another settings window holds the lock but does not answer\n";
+                return 1;
+            }
+        }
+        // We hold the lock: no live window owns the socket path. Listen only when the
+        // path is free or a leftover socket (never replace another file); if listening
+        // fails, give the lock up so a later start opens its own window.
+        if (owner && !(removeStaleSocket(socketPath) && [&] {
+                single.setSocketOptions(QLocalServer::UserAccessOption);
+                return single.listen(socketPath);
+            }()))
+            lock.unlock();
+        // Any other lock error (unwritable dir): run without single-instance.
+    }
 
     app::ThemeWatcher theme(app::defaultThemeSources(), QString(), true);
     settings::DBusFcitx fcitx;
@@ -79,6 +161,24 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.load(QUrl(QStringLiteral("qrc:/Main.qml")));
     if (engine.rootObjects().isEmpty()) return 1;
+    auto *window = qobject_cast<QWindow *>(engine.rootObjects().constFirst());
+    // Closing: stop answering at once, so a new start opens its own window.
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, &single, &QLocalServer::close);
+    QObject::connect(&single, &QLocalServer::newConnection, &app, [&single, window] {
+        while (QLocalSocket *peer = single.nextPendingConnection()) {
+            // A connection means "come forward"; the answer says this window is alive.
+            QObject::connect(peer, &QLocalSocket::disconnected, peer, &QObject::deleteLater);
+            peer->write("ok\n");
+            peer->flush();
+            peer->disconnectFromServer();
+        }
+        if (!window) return;
+        window->show();
+        window->raise();
+        // Wayland lets a compositor refuse requestActivate; Hyprland focuses on request.
+        if (!settings::hyprlandFocusPid(QCoreApplication::applicationPid()))
+            window->requestActivate(); // outside Hyprland: ask the compositor, the window stays open either way
+    });
     const int code = app.exec();
     if (installed) QCoreApplication::removeTranslator(&ru);
     return code;

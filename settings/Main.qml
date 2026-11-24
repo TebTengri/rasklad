@@ -36,6 +36,17 @@ ApplicationWindow {
 
     // The app row that had keyboard focus: a list rebuild (after a switch or a
     // refresh) recreates the rows, and the new one takes the focus back.
+    property int tab: 0
+    // Focus always moves to the shown tab's header: keys never reach a hidden page.
+    function showTab(index) {
+        pendingReveal = null // a reveal belongs to the tab it was asked on
+        tab = index
+        page.contentY = Math.min(page.contentY, Math.max(0, tabs.y + content.y - 20))
+        tabHeader().forceActiveFocus()
+    }
+    function tabHeader() { return tabRepeater.itemAt(tab) }
+    // A control the keyboard may land on: shown on screen and usable.
+    function reachable(item) { return item !== null && item !== undefined && item.visible && item.enabled }
     property string rowFocus: ""
     property var rowItems: Object.create(null) // key -> live row; no prototype keys
     property string limitApp: "" // the app whose switch-on hit the 64-app limit
@@ -44,13 +55,16 @@ ApplicationWindow {
     function restoreFocus() {
         const row = Object.prototype.hasOwnProperty.call(rowItems, rowFocus) ? rowItems[rowFocus] : null
         if (!focusLost()) return
-        if (rowFocus !== "" && row) row.forceActiveFocus()
-        else firstRow.forceActiveFocus() // the row went away (a component switched off)
+        if (rowFocus !== "" && reachable(row)) row.forceActiveFocus()
+        else if (tab === 0 && reachable(firstRow)) firstRow.forceActiveFocus()
+        else tabHeader().forceActiveFocus() // the row went away, or it is on another tab
     }
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
         if (help.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
+        // Focus on a hidden page (its row was rebuilt there) counts as lost too.
+        if (!activeFocusItem || !activeFocusItem.visible) return true
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -64,6 +78,8 @@ ApplicationWindow {
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) { reveal(activeFocusItem); return }
     }
+    property Item pendingReveal: null // shown again once the page height settles (Ctrl+N)
+    Timer { id: revealExpiry; interval: 500; onTriggered: window.pendingReveal = null }
     function reveal(item) {
         const y = item.mapToItem(content, 0, 0).y + content.y
         const max = Math.max(0, page.contentHeight - page.height)
@@ -76,6 +92,11 @@ ApplicationWindow {
     Shortcut { sequence: "F1"; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "?"; enabled: !window.typing; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
+    Shortcut { sequence: "Ctrl+1"; onActivated: window.showTab(0) }
+    Shortcut { sequence: "Ctrl+2"; onActivated: window.showTab(1) }
+    Shortcut { sequence: "Ctrl+3"; onActivated: window.showTab(2) }
+    Shortcut { sequence: "Ctrl+Tab"; onActivated: window.showTab((window.tab + 1) % 3) }
+    Shortcut { sequence: "Ctrl+Shift+Tab"; onActivated: window.showTab((window.tab + 2) % 3) }
     // Й is Q in the Russian layout: the keys work in either layout.
     Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
     Shortcut {
@@ -83,16 +104,24 @@ ApplicationWindow {
         autoRepeat: false // a held Esc takes one step, never clear-then-quit
         onActivated: {
             if (help.opened) help.close()
-            else if (addBox.visible) { addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
+            else if (addBox.visible) { window.pendingReveal = null; addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
             else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
-            else if (window.typing) firstRow.forceActiveFocus()
+            else if (window.typing) window.tabHeader().forceActiveFocus() // out of the field, still on its tab
             else Qt.quit()
         }
     }
     Shortcut {
         sequence: "Ctrl+N"
         enabled: backend.configLoaded
-        onActivated: { addBox.visible = true; window.reveal(addBox); addField.forceActiveFocus() }
+        onActivated: {
+            window.showTab(1)
+            addBox.visible = true
+            addField.forceActiveFocus()
+            // The page height settles after layout: reveal again once it has.
+            window.pendingReveal = addBox
+            Qt.callLater(() => { if (window.pendingReveal && window.pendingReveal.visible) window.reveal(window.pendingReveal) })
+            revealExpiry.restart() // never a stale reveal on a later, unrelated height change
+        }
     }
 
     function errorText(code) {
@@ -121,10 +150,11 @@ ApplicationWindow {
 
     component SectionHeader: ColumnLayout {
         property alias text: headerLabel.text
+        property bool rule: true // off for the first section of a tab: the tab row has its own line
         spacing: 8
         Layout.fillWidth: true
         Layout.topMargin: 10
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.tint(0.12) }
+        Rectangle { visible: parent.rule; Layout.fillWidth: true; implicitHeight: 1; color: window.tint(0.12) }
         Label {
             id: headerLabel
             font.pixelSize: 10
@@ -304,6 +334,8 @@ ApplicationWindow {
     // The whole page scrolls, so a small tiled window still reaches every row.
     Flickable {
         id: page
+        // A tab switch changes the height after layout: finish a pending reveal then.
+        onContentHeightChanged: if (window.pendingReveal && window.pendingReveal.visible) { const it = window.pendingReveal; window.pendingReveal = null; window.reveal(it) }
         anchors.fill: parent
         contentWidth: width
         contentHeight: content.implicitHeight + 36
@@ -374,276 +406,374 @@ ApplicationWindow {
                 }
             }
 
-            // ---- Correction
-            SectionHeader { text: qsTr("CORRECTION") }
-            ToggleRow {
-                id: firstRow
-                title: qsTr("Automatic correction")
-                detail: qsTr("When off, double Shift still fixes a word.")
-                checked: backend.autoCorrect
-                available: backend.wordOptions
-                onToggled: on => backend.setAutoCorrect(on)
-            }
-            ToggleRow {
-                title: qsTr("Sound on layout switch")
-                checked: backend.sound
-                available: backend.configLoaded
-                onToggled: on => backend.setSound(on)
-            }
-
-            // ---- Applications
-            SectionHeader { text: qsTr("APPLICATIONS") }
-            Hint { text: qsTr("Rasklad works only in the applications switched on here. Terminals are not supported.") }
-
-            TextField {
-                id: filter
-                visible: backend.apps.length > 12
-                placeholderText: qsTr("Find an application")
-                placeholderTextColor: window.secondary
+            // SYS-261: three tabs, so a long app list never pushes the other settings
+            // out of reach. Ctrl+1/2/3 or Ctrl+Tab switch; ←/→ on the focused tab too.
+            RowLayout {
+                id: tabs
                 Layout.fillWidth: true
-                Accessible.name: placeholderText
-            }
-
-            Repeater {
-                model: [
-                    { key: "on", title: qsTr("On") },
-                    { key: "recent", title: qsTr("Recently used") },
-                    { key: "recommended", title: qsTr("Recommended") }
-                ]
-                delegate: ColumnLayout {
-                    id: group
-                    required property var modelData
-                    readonly property var rows: backend.apps.filter(a => {
-                        if (a.group !== modelData.key) return false
-                        const q = filter.visible ? filter.text.trim().toLowerCase() : ""
-                        return q === "" || a.name.toLowerCase().includes(q) || a.id.toLowerCase().includes(q)
-                    })
-                    visible: rows.length > 0
-                    spacing: 6
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
-                    Label {
-                        text: group.modelData.title
-                        font.pixelSize: 11
-                        color: window.secondary
-                    }
-                    Repeater {
-                        model: group.rows
-                        delegate: ToggleRow {
-                            required property var modelData
-                            key: modelData.id
-                            showIcon: true
-                            iconName: modelData.icon
-                            title: modelData.name
-                            // The limit is said at the row that hit it, not only below the list.
-                            detail: backend.error === "full" && modelData.id === window.limitApp && !modelData.enabled
-                                    ? window.errorText("full")
-                                  : modelData.partial ? qsTr("On only for part of its program names.")
-                                  : modelData.description !== "" ? modelData.description
-                                  : modelData.webApp ? qsTr("Web app") : ""
-                            tip: qsTr("Program name: %1").arg(modelData.names.join(", "))
-                            Accessible.description: detail === "" ? tip : detail + ". " + tip
-                            checked: modelData.enabled
-                            available: backend.configLoaded
-                            onToggled: on => { window.limitApp = modelData.id; backend.setAppEnabled(modelData.id, on) }
+                Layout.topMargin: 10
+                spacing: 4
+                Repeater {
+                    id: tabRepeater
+                    model: [qsTr("General"), qsTr("Applications"), qsTr("Exceptions")]
+                    delegate: Rectangle {
+                        id: tab
+                        required property string modelData
+                        required property int index
+                        readonly property bool current: window.tab === index
+                        implicitWidth: tabLabel.implicitWidth + 24
+                        implicitHeight: 34
+                        color: tabMouse.containsMouse || activeFocus ? window.tint(0.08) : "transparent"
+                        radius: window.small
+                        activeFocusOnTab: current
+                        Accessible.role: Accessible.PageTab
+                        Accessible.name: modelData
+                        Accessible.selected: current
+                        Accessible.onPressAction: window.showTab(index)
+                        Keys.onLeftPressed: window.showTab((window.tab + 2) % 3)
+                        Keys.onRightPressed: window.showTab((window.tab + 1) % 3)
+                        Label {
+                            id: tabLabel
+                            anchors.centerIn: parent
+                            text: tab.modelData
+                            font.pixelSize: 13
+                            font.bold: tab.current
+                            color: tab.current ? window.fg : window.secondary
+                        }
+                        Rectangle { // the current tab's underline
+                            visible: tab.current
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: 2
+                            color: theme.accent
+                        }
+                        MouseArea {
+                            id: tabMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: window.showTab(tab.index)
                         }
                     }
                 }
+                Item { Layout.fillWidth: true }
             }
+            Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: window.tint(0.12); Layout.topMargin: -8 }
 
-            RowLayout {
-                visible: !addBox.visible
+            StackLayout {
+                id: pages
+                currentIndex: window.tab
                 Layout.fillWidth: true
-                Layout.topMargin: 4
-                spacing: 10
-                Button {
-                    id: addButton
-                    text: qsTr("Add manually…")
-                    flat: true
-                    enabled: backend.configLoaded
-                    onClicked: { addBox.visible = true; addField.forceActiveFocus() }
-                }
-                Hint { text: qsTr("Not in the list? Click a text field in the application.") }
-            }
-            ColumnLayout {
-                id: addBox
-                visible: false
-                spacing: 4
-                Layout.fillWidth: true
-                RowLayout {
+                // Only the current page counts, so a short page never scrolls into a long one's space.
+                Layout.preferredHeight: currentIndex === 0 ? generalPage.implicitHeight
+                                      : currentIndex === 1 ? appsPage.implicitHeight : wordsPage.implicitHeight
+
+                ColumnLayout {
+                    id: generalPage
+                    enabled: pages.currentIndex === 0 // a hidden page takes no keys
+                    spacing: 8
                     Layout.fillWidth: true
-                    TextField {
-                        id: addField
+                    // ---- Correction
+                    SectionHeader { text: qsTr("CORRECTION"); rule: false }
+                    ToggleRow {
+                        id: firstRow
+                        title: qsTr("Automatic correction")
+                        detail: qsTr("When off, double Shift still fixes a word.")
+                        checked: backend.autoCorrect
+                        available: backend.wordOptions
+                        onToggled: on => backend.setAutoCorrect(on)
+                    }
+                    ToggleRow {
+                        title: qsTr("Sound on layout switch")
+                        checked: backend.sound
+                        available: backend.configLoaded
+                        onToggled: on => backend.setSound(on)
+                    }
+
+                    // ---- Omarchy connection (SYS-260): states from rasklad-setup --check.
+                    // The window never edits these files; the buttons open rasklad-setup in
+                    // a terminal, where the user sees the changes and agrees to them.
+                    SectionHeader {
+                        visible: setupBox.visible
+                        text: qsTr("OMARCHY CONNECTION")
+                    }
+                    ColumnLayout {
+                        id: setupBox
+                        // Shown while there are states, or something to revert even if the check gave no answer.
+                        readonly property bool hasRows: Object.keys(backend.setupRows).length > 0
+                        visible: hasRows || backend.setupInstalled
+                        spacing: 8
                         Layout.fillWidth: true
-                        placeholderText: qsTr("Program name, e.g. Telegram")
+                        readonly property var rows: !hasRows ? [] : [
+                            { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
+                            { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
+                            { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }
+                        ]
+                        readonly property bool anyMissing: rows.some(r => r.state === "missing")
+                        // All connected: one line instead of three rows with nothing to do.
+                        readonly property bool allOk: rows.length > 0 && rows.every(r => r.state === "ok")
+                        Label {
+                            visible: setupBox.allOk
+                            text: "✓ " + qsTr("Connected: the layout icon, double Alt and the EN and RU layouts.")
+                            wrapMode: Text.WordWrap
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                        Hint {
+                            visible: !setupBox.allOk
+                            text: qsTr("Connecting changes the Hyprland, bar and Fcitx settings. A terminal shows each change and asks first.")
+                        }
+                        Repeater {
+                            model: setupBox.allOk ? [] : setupBox.rows
+                            delegate: Rectangle {
+                                id: stateRow
+                                required property var modelData
+                                Layout.fillWidth: true
+                                implicitHeight: Math.max(44, stateTexts.implicitHeight + 16)
+                                radius: window.small
+                                color: window.tint(0.04)
+                                border.color: window.tint(0.4)
+                                Accessible.role: Accessible.StaticText
+                                Accessible.name: modelData.title + ": " + stateLabel.text
+                                RowLayout {
+                                    id: stateTexts
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 14
+                                    anchors.rightMargin: 14
+                                    spacing: 12
+                                    Label {
+                                        text: stateRow.modelData.title
+                                        font.pixelSize: 13
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                        Accessible.ignored: true
+                                    }
+                                    Label {
+                                        id: stateLabel
+                                        Accessible.ignored: true
+                                        font.pixelSize: 11
+                                        font.bold: stateRow.modelData.state === "ok"
+                                        color: stateRow.modelData.state === "ok" ? window.fg
+                                             : (stateRow.modelData.state === "missing" || stateRow.modelData.state === "problem")
+                                               ? theme.error : window.secondary
+                                        text: stateRow.modelData.state === "ok" ? qsTr("connected")
+                                            : stateRow.modelData.state === "missing" ? qsTr("not connected")
+                                            : stateRow.modelData.state === "problem" ? qsTr("error")
+                                            : stateRow.modelData.state === "other" ? qsTr("set up differently")
+                                            : qsTr("unknown")
+                                    }
+                                }
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+                            Button {
+                                visible: setupBox.anyMissing || setupBox.rows.some(r => r.state === "problem")
+                                text: qsTr("Connect…")
+                                onClicked: setupError.failed = backend.openSetup("install") ? "" : "install"
+                            }
+                            Button {
+                                visible: backend.setupInstalled
+                                flat: true
+                                text: qsTr("Restore Omarchy defaults…")
+                                onClicked: revertConfirm.open()
+                            }
+                        }
+                        InlineError {
+                            id: setupError
+                            property string failed: ""
+                            visible: failed !== ""
+                            text: qsTr("Could not open a terminal. Run rasklad-setup --%1 in one.").arg(failed)
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    id: appsPage
+                    enabled: pages.currentIndex === 1
+                    spacing: 8
+                    Layout.fillWidth: true
+                    // ---- Applications
+                    Hint { text: qsTr("Rasklad works only in the applications switched on here. Terminals are not supported.") }
+
+                    TextField {
+                        id: filter
+                        visible: backend.apps.length > 12
+                        placeholderText: qsTr("Find an application")
                         placeholderTextColor: window.secondary
-                        enabled: backend.configLoaded
-                        onAccepted: if (window.addTyped(text)) { text = ""; addBox.visible = false; addButton.forceActiveFocus() }
+                        Layout.fillWidth: true
                         Accessible.name: placeholderText
                     }
-                    Button {
-                        text: qsTr("Add")
-                        enabled: backend.configLoaded && addField.text.trim() !== ""
-                        onClicked: if (window.addTyped(addField.text)) { addField.text = ""; addBox.visible = false; addButton.forceActiveFocus() }
-                    }
-                }
-                InlineError {
-                    visible: ["invalid", "terminal"].includes(backend.error)
-                    text: window.errorText(backend.error)
-                }
-            }
-            InlineError { // a switched row can hit the limit too, with the form closed
-                visible: backend.error === "full"
-                text: window.errorText(backend.error)
-            }
 
-            // ---- Exceptions
-            SectionHeader { text: qsTr("EXCEPTIONS") }
-            Hint { text: qsTr("Never correct these words automatically, in either layout.") }
-            Flow {
-                id: words
-                visible: backend.exceptions.length > 0
-                spacing: 6
-                Layout.fillWidth: true
-                Repeater {
-                    model: backend.exceptions
-                    delegate: Rectangle {
-                        id: chip
-                        required property string modelData
-                        radius: window.small
-                        color: window.tint(0.04)
-                        border.color: window.tint(0.4)
-                        width: Math.min(chipRow.implicitWidth + 8, words.width)
-                        height: 28
-                        RowLayout {
-                            id: chipRow
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: 8
-                            width: parent.width - 8
-                            spacing: 0
+                    Repeater {
+                        model: [
+                            { key: "on", title: qsTr("On") },
+                            { key: "recent", title: qsTr("Recently used") },
+                            { key: "recommended", title: qsTr("Recommended") }
+                        ]
+                        delegate: ColumnLayout {
+                            id: group
+                            required property var modelData
+                            readonly property var rows: backend.apps.filter(a => {
+                                if (a.group !== modelData.key) return false
+                                const q = filter.visible ? filter.text.trim().toLowerCase() : ""
+                                return q === "" || a.name.toLowerCase().includes(q) || a.id.toLowerCase().includes(q)
+                            })
+                            visible: rows.length > 0
+                            spacing: 6
+                            Layout.fillWidth: true
+                            Layout.topMargin: 6
                             Label {
-                                text: chip.modelData
-                                textFormat: Text.PlainText
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                            ToolButton {
-                                text: "×"
-                                implicitWidth: 32
-                                implicitHeight: 28
-                                enabled: backend.wordOptions
-                                onClicked: backend.removeException(chip.modelData)
-                                Accessible.name: qsTr("Remove %1").arg(chip.modelData)
-                            }
-                        }
-                    }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                TextField {
-                    id: wordField
-                    Layout.fillWidth: true
-                    placeholderText: qsTr("Word, e.g. kek")
-                    placeholderTextColor: window.secondary
-                    enabled: backend.wordOptions
-                    onAccepted: if (backend.addException(text)) text = ""
-                    Accessible.name: placeholderText
-                }
-                Button {
-                    text: qsTr("Add")
-                    enabled: backend.wordOptions && wordField.text.trim() !== ""
-                    onClicked: if (backend.addException(wordField.text)) wordField.text = ""
-                }
-            }
-            InlineError {
-                visible: ["word", "words-full"].includes(backend.error)
-                text: window.errorText(backend.error)
-            }
-
-            // ---- Omarchy connection (SYS-260): states from rasklad-setup --check.
-            // The window never edits these files; the buttons open rasklad-setup in
-            // a terminal, where the user sees the changes and agrees to them.
-            SectionHeader {
-                visible: setupBox.visible
-                text: qsTr("OMARCHY CONNECTION")
-            }
-            ColumnLayout {
-                id: setupBox
-                // Shown while there are states, or something to revert even if the check gave no answer.
-                readonly property bool hasRows: Object.keys(backend.setupRows).length > 0
-                visible: hasRows || backend.setupInstalled
-                spacing: 8
-                Layout.fillWidth: true
-                readonly property var rows: !hasRows ? [] : [
-                    { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
-                    { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
-                    { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }
-                ]
-                readonly property bool anyMissing: rows.some(r => r.state === "missing")
-                Hint { text: qsTr("Connecting changes the Hyprland, bar and Fcitx settings. A terminal shows each change and asks first.") }
-                Repeater {
-                    model: setupBox.rows
-                    delegate: Rectangle {
-                        id: stateRow
-                        required property var modelData
-                        Layout.fillWidth: true
-                        implicitHeight: Math.max(44, stateTexts.implicitHeight + 16)
-                        radius: window.small
-                        color: window.tint(0.04)
-                        border.color: window.tint(0.4)
-                        Accessible.role: Accessible.StaticText
-                        Accessible.name: modelData.title + ": " + stateLabel.text
-                        RowLayout {
-                            id: stateTexts
-                            anchors.fill: parent
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 12
-                            Label {
-                                text: stateRow.modelData.title
-                                font.pixelSize: 13
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                Accessible.ignored: true
-                            }
-                            Label {
-                                id: stateLabel
-                                Accessible.ignored: true
+                                text: group.modelData.title
                                 font.pixelSize: 11
-                                font.bold: stateRow.modelData.state === "ok"
-                                color: stateRow.modelData.state === "ok" ? window.fg
-                                     : (stateRow.modelData.state === "missing" || stateRow.modelData.state === "problem")
-                                       ? theme.error : window.secondary
-                                text: stateRow.modelData.state === "ok" ? qsTr("connected")
-                                    : stateRow.modelData.state === "missing" ? qsTr("not connected")
-                                    : stateRow.modelData.state === "problem" ? qsTr("error")
-                                    : stateRow.modelData.state === "other" ? qsTr("set up differently")
-                                    : qsTr("unknown")
+                                color: window.secondary
+                            }
+                            Repeater {
+                                model: group.rows
+                                delegate: ToggleRow {
+                                    required property var modelData
+                                    key: modelData.id
+                                    showIcon: true
+                                    iconName: modelData.icon
+                                    title: modelData.name
+                                    // The limit is said at the row that hit it, not only below the list.
+                                    detail: backend.error === "full" && modelData.id === window.limitApp && !modelData.enabled
+                                            ? window.errorText("full")
+                                          : modelData.partial ? qsTr("On only for part of its program names.")
+                                          : modelData.description !== "" ? modelData.description
+                                          : modelData.webApp ? qsTr("Web app") : ""
+                                    tip: qsTr("Program name: %1").arg(modelData.names.join(", "))
+                                    Accessible.description: detail === "" ? tip : detail + ". " + tip
+                                    checked: modelData.enabled
+                                    available: backend.configLoaded
+                                    onToggled: on => { window.limitApp = modelData.id; backend.setAppEnabled(modelData.id, on) }
+                                }
                             }
                         }
                     }
+
+                    ColumnLayout { // button, then the hint under it: both readable in a narrow window
+                        visible: !addBox.visible
+                        Layout.fillWidth: true
+                        Layout.topMargin: 4
+                        spacing: 2
+                        Button {
+                            id: addButton
+                            text: qsTr("Add manually…")
+                            flat: true
+                            enabled: backend.configLoaded
+                            onClicked: { addBox.visible = true; addField.forceActiveFocus() }
+                        }
+                        Hint {
+                            text: qsTr("Not in the list? Click a text field in the application.")
+                            Layout.leftMargin: 12 // under the flat button's text
+                        }
+                    }
+                    ColumnLayout {
+                        id: addBox
+                        visible: false
+                        // However the form closes (Enter, Add, Esc), a pending reveal of it ends.
+                        onVisibleChanged: if (!visible) window.pendingReveal = null
+                        spacing: 4
+                        Layout.fillWidth: true
+                        RowLayout {
+                            Layout.fillWidth: true
+                            TextField {
+                                id: addField
+                                Layout.fillWidth: true
+                                placeholderText: qsTr("Program name, e.g. Telegram")
+                                placeholderTextColor: window.secondary
+                                enabled: backend.configLoaded
+                                onAccepted: if (window.addTyped(text)) { text = ""; addBox.visible = false; addButton.forceActiveFocus() }
+                                Accessible.name: placeholderText
+                            }
+                            Button {
+                                text: qsTr("Add")
+                                enabled: backend.configLoaded && addField.text.trim() !== ""
+                                onClicked: if (window.addTyped(addField.text)) { addField.text = ""; addBox.visible = false; addButton.forceActiveFocus() }
+                            }
+                        }
+                        InlineError {
+                            visible: ["invalid", "terminal"].includes(backend.error)
+                            text: window.errorText(backend.error)
+                        }
+                    }
+                    InlineError { // a switched row can hit the limit too, with the form closed
+                        visible: backend.error === "full"
+                        text: window.errorText(backend.error)
+                    }
+
                 }
-                RowLayout {
+
+                ColumnLayout {
+                    id: wordsPage
+                    enabled: pages.currentIndex === 2
+                    spacing: 8
                     Layout.fillWidth: true
-                    spacing: 10
-                    Button {
-                        visible: setupBox.anyMissing || setupBox.rows.some(r => r.state === "problem")
-                        text: qsTr("Connect…")
-                        onClicked: setupError.failed = backend.openSetup("install") ? "" : "install"
+                    // ---- Exceptions
+                    Hint { text: qsTr("Never correct these words automatically, in either layout.") }
+                    Flow {
+                        id: words
+                        visible: backend.exceptions.length > 0
+                        spacing: 6
+                        Layout.fillWidth: true
+                        Repeater {
+                            model: backend.exceptions
+                            delegate: Rectangle {
+                                id: chip
+                                required property string modelData
+                                radius: window.small
+                                color: window.tint(0.04)
+                                border.color: window.tint(0.4)
+                                width: Math.min(chipRow.implicitWidth + 8, words.width)
+                                height: 28
+                                RowLayout {
+                                    id: chipRow
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: 8
+                                    width: parent.width - 8
+                                    spacing: 0
+                                    Label {
+                                        text: chip.modelData
+                                        textFormat: Text.PlainText
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                    ToolButton {
+                                        text: "×"
+                                        implicitWidth: 32
+                                        implicitHeight: 28
+                                        enabled: backend.wordOptions
+                                        onClicked: backend.removeException(chip.modelData)
+                                        Accessible.name: qsTr("Remove %1").arg(chip.modelData)
+                                    }
+                                }
+                            }
+                        }
                     }
-                    Button {
-                        visible: backend.setupInstalled
-                        flat: true
-                        text: qsTr("Restore Omarchy defaults…")
-                        onClicked: revertConfirm.open()
+                    RowLayout {
+                        Layout.fillWidth: true
+                        TextField {
+                            id: wordField
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("Word, e.g. kek")
+                            placeholderTextColor: window.secondary
+                            enabled: backend.wordOptions
+                            onAccepted: if (backend.addException(text)) text = ""
+                            Accessible.name: placeholderText
+                        }
+                        Button {
+                            text: qsTr("Add")
+                            enabled: backend.wordOptions && wordField.text.trim() !== ""
+                            onClicked: if (backend.addException(wordField.text)) wordField.text = ""
+                        }
                     }
-                }
-                InlineError {
-                    id: setupError
-                    property string failed: ""
-                    visible: failed !== ""
-                    text: qsTr("Could not open a terminal. Run rasklad-setup --%1 in one.").arg(failed)
+                    InlineError {
+                        visible: ["word", "words-full"].includes(backend.error)
+                        text: window.errorText(backend.error)
+                    }
+
                 }
             }
         }
@@ -728,6 +858,7 @@ ApplicationWindow {
                         model: [
                             "Space, Enter", qsTr("switch the selected row"),
                             "j, k, ↓, ↑", qsTr("next or previous row"),
+                            "Ctrl+1, 2, 3", qsTr("General, Applications, Exceptions"),
                             "Tab", qsTr("next control"),
                             "Ctrl+N", qsTr("add an application"),
                             "Ctrl+R, F5", qsTr("refresh"),

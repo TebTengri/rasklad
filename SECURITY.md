@@ -368,3 +368,12 @@ The settings window starts no shell of its own and passes no text the user typed
 - The window itself writes no Hyprland, bar or Fcitx group file.
 
 **Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.
+
+**One window (SYS-261).** Only when `$XDG_RUNTIME_DIR` is an absolute directory owned by this user with mode 0700; otherwise every start is a separate window.
+- The first window holds `rasklad-settings.lock` there for its whole life (`QLockFile`, which detects a lock left by a crashed process) and listens on `rasklad-settings.socket` (`UserAccessOption`).
+- Only the lock holder removes a leftover socket, and only when it is a socket owned by this user.
+- A later start finds the lock taken and connects; the connection itself is the request. It never opens a second window while the first holds the lock.
+- The first window ignores what it receives and asks Hyprland, over the request socket, to focus its own pid: `hl.dsp.focus({ window = "pid:<n>" })`, then the classic `focuswindow pid:<n>`, as Omarchy's own scripts do. The pid is a number the window gets from its own process.
+- Nothing received on the socket reaches a command or a setting.
+- The first window answers `ok` and stops listening as it closes. A later start that gets no answer keeps trying for 5 seconds: once the closing window releases the lock, it takes it and opens its own window. If the lock is still held after 5 seconds, it reports an error and exits with status 1.
+- Residual risk: between the check of the socket path and Qt publishing the socket (by `rename`), a file created there could be replaced. Only this user can create files in the 0700 runtime directory, so only the user's own processes can race it.
