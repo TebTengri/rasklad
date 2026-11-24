@@ -915,49 +915,63 @@ ApplicationWindow {
             radius: window.small
             border.color: window.tint(0.4)
         }
-        contentItem: ColumnLayout {
-            spacing: 10
+        contentItem: Flickable {
+            // The whole page scrolls, so it fits the smallest window too.
+            contentHeight: licensesBody.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            ScrollBar.vertical: ScrollBar {}
             Accessible.role: Accessible.Dialog
             Accessible.name: qsTr("Licenses")
-            Label {
-                text: qsTr("Licenses")
-                font.pixelSize: 16
-                font.bold: true
-            }
-            Hint { text: qsTr("Rasklad's own code is under the MIT license. The dictionaries and the model made from them keep their authors' terms."); font.pixelSize: 12 }
-            Label {
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                textFormat: Text.PlainText
-                font.pixelSize: 12
-                text: qsTr("English dictionary: SCOWL and other sources. UKACD: Copyright (c) J Ross Beresford 1993-1999. All Rights Reserved.") + "\n"
-                      + qsTr("Russian dictionary: Copyright (c) 1997-2008, Alexander I. Lebedev.")
-            }
-            Hint { text: qsTr("Qt, Fcitx 5 and Hunspell are system libraries with their own licenses."); font.pixelSize: 12 }
-            Flow {
-                Layout.fillWidth: true
-                spacing: 6
-                Repeater {
-                    model: [
-                        { key: "rasklad", label: qsTr("Rasklad (MIT)") },
-                        { key: "en", label: qsTr("English dictionary") },
-                        { key: "ru", label: qsTr("Russian dictionary") },
-                        { key: "data", label: qsTr("What Rasklad changed") }
-                    ]
-                    delegate: Button {
-                        required property var modelData
-                        text: modelData.label
-                        checkable: true
-                        checked: licenses.key === modelData.key
-                        onClicked: licenses.key = modelData.key
+            ColumnLayout {
+                id: licensesBody
+                width: parent.width
+                spacing: 10
+                RowLayout {
+                    Layout.fillWidth: true
+                    Label {
+                        text: qsTr("Licenses")
+                        font.pixelSize: 16
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+                    Button {
+                        id: licensesClose
+                        text: qsTr("Close")
+                        onClicked: licenses.close()
                     }
                 }
-            }
-            ScrollView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
+                Hint { text: qsTr("Rasklad's own code is under the MIT license. The dictionaries and the model made from them keep their authors' terms."); font.pixelSize: 12 }
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    textFormat: Text.PlainText
+                    font.pixelSize: 12
+                    text: qsTr("English dictionary: SCOWL and other sources. UKACD: Copyright (c) J Ross Beresford 1993-1999. All Rights Reserved.") + "\n"
+                          + qsTr("Russian dictionary: Copyright (c) 1997-2008, Alexander I. Lebedev.")
+                }
+                Hint { text: qsTr("Qt, Fcitx 5 and Hunspell are system libraries with their own licenses."); font.pixelSize: 12 }
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Repeater {
+                        model: [
+                            { key: "rasklad", label: qsTr("Rasklad (MIT)") },
+                            { key: "en", label: qsTr("English dictionary") },
+                            { key: "ru", label: qsTr("Russian dictionary") },
+                            { key: "data", label: qsTr("What Rasklad changed") }
+                        ]
+                        delegate: Button {
+                            required property var modelData
+                            text: modelData.label
+                            checkable: true
+                            checked: licenses.key === modelData.key
+                            onClicked: licenses.key = modelData.key
+                        }
+                    }
+                }
                 TextArea {
+                    Layout.fillWidth: true
                     readOnly: true
                     selectByMouse: true
                     wrapMode: TextEdit.Wrap
@@ -967,12 +981,6 @@ ApplicationWindow {
                           || qsTr("The text is not installed. It is in /usr/share/licenses/rasklad-fcitx5/ of the package.")
                     Accessible.name: qsTr("License text")
                 }
-            }
-            Button {
-                id: licensesClose
-                text: qsTr("Close")
-                Layout.alignment: Qt.AlignRight
-                onClicked: licenses.close()
             }
         }
     }
