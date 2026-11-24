@@ -1,6 +1,0 @@
-Upstream notice files
-
-Files marked LicenseRef-upstream-notice are third-party license and notice texts
-kept byte for byte as published by their authors (see data/README.md and
-THIRD_PARTY.md). Each file is its own terms; Rasklad's MIT license does not apply
-to them.

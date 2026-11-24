@@ -36,15 +36,59 @@ precedence = "override"
 SPDX-FileCopyrightText = "Wayland protocol authors (see the copyright block in each file)"
 SPDX-License-Identifier = "MIT"
 
-# Third-party license and notice texts, kept byte for byte.
+# Third-party license and notice texts, kept byte for byte. Each is labelled with
+# the license it states; the dictionary and MySpell notices are their own
+# LicenseRef texts (copies in LICENSES/).
 [[annotations]]
-path = [
-  "data/notices/en_US.README.txt", "data/notices/ru_RU.README.txt",
-  "data/notices/Hunspell-COPYING.MPL.txt", "data/notices/Hunspell-license.myspell.txt",
-  "data/notices/CC0-1.0.txt", "data/notices/Fcitx5-LGPL-2.1-or-later.txt",
-  "data/notices/OrderedMap-MIT.txt", "data/notices/ProseMirror-MIT.txt", "data/notices/RopeSequence-MIT.txt",
-  "data/notices/RustBook-*.txt",
-]
+path = "data/notices/en_US.README.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Kevin Atkinson and the other authors named in the file"
+SPDX-License-Identifier = "LicenseRef-hunspell-en-US"
+
+[[annotations]]
+path = "data/notices/ru_RU.README.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "1997-2008 Alexander I. Lebedev"
+SPDX-License-Identifier = "LicenseRef-hunspell-ru-RU"
+
+[[annotations]]
+path = "data/notices/Hunspell-license.myspell.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "the MySpell authors named in the file"
+SPDX-License-Identifier = "LicenseRef-myspell"
+
+[[annotations]]
+path = "data/notices/Hunspell-COPYING.MPL.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Netscape Communications Corporation"
+SPDX-License-Identifier = "MPL-1.1"
+
+[[annotations]]
+path = "data/notices/CC0-1.0.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Creative Commons"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "data/notices/Fcitx5-LGPL-2.1-or-later.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Free Software Foundation, Inc."
+SPDX-License-Identifier = "LGPL-2.1-or-later"
+
+[[annotations]]
+path = ["data/notices/OrderedMap-MIT.txt", "data/notices/ProseMirror-MIT.txt", "data/notices/RopeSequence-MIT.txt", "data/notices/RustBook-*-LICENSE-MIT.txt"]
 precedence = "override"
 SPDX-FileCopyrightText = "the authors named in each file"
-SPDX-License-Identifier = "LicenseRef-upstream-notice"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "data/notices/RustBook-*-LICENSE-APACHE.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "The Apache Software Foundation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "data/notices/RustBook-*-COPYRIGHT.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "The Rust Project Developers"
+SPDX-License-Identifier = "MIT OR Apache-2.0"
