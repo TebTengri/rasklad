@@ -311,7 +311,7 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     frontend_selection(frontend_variant)
     if manual_suite and (slack_supervised or slack_launch or slack_live or seat_probe or focus_stress or space_telemetry or addon_witness or server_route_witness or frontend_variant!='system'):
         raise base.Refused('manual_suite_alone_only')
-    if product_suite not in (None, 'listed', 'unlisted'):
+    if product_suite not in (None, 'listed', 'unlisted', 'focus'):
         raise base.Refused('product_suite_mode')
     if product_suite and (manual_suite or slack_supervised or slack_launch or slack_live or seat_probe or focus_stress or space_telemetry or addon_witness or server_route_witness or frontend_variant!='system'):
         raise base.Refused('product_suite_alone_only')
@@ -370,6 +370,8 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
         # SYS-246 product addon (no lab environment), mounted under the lab library name.
         paths['addon'] = ROOT/'build/product-addon/rasklad.so'
         paths['addon_conf'] = ROOT/'tests/fcitx_transport/raskladproduct.conf'
+        if os.environ.get('RASKLAD_PRODUCT_PACKAGED_CLI') == '1':
+            paths['addon'] = ROOT/'build/arch-package/x/usr/lib/fcitx5/rasklad.so'  # the library extracted from the built package
     if slack_supervised and os.environ.get('RASKLAD_MANUAL_GESTURE_CLI') == '1':
         paths['addon'] = ROOT/'build/chromium-ime/slack-manual-gate-addon/raskladslackmanualgatetest.so'
         MANUAL_SUITE = True  # the helper accepts shift2; the driver runs the manual cases
@@ -401,6 +403,8 @@ def run(input_root, focus_stress=False, space_telemetry=False, addon_witness=Fal
     base.regular_file(keys, True)
     profile = {} if slack_supervised or slack_launch or manual_suite else {relative: (ROOT if relative.startswith('data/') else Path(input_root).absolute())/relative
                for relative in chrome.PROFILE_PATHS}
+    if product_suite and os.environ.get('RASKLAD_PRODUCT_PACKAGED_CLI') == '1':
+        profile = {relative: ROOT/'build/arch-package/x/usr/share/fcitx5/rasklad/profile'/relative for relative in chrome.PROFILE_PATHS}
     for path in profile.values():
         base.regular_file(path)
     collector = load('metadata_snapshot', ROOT/'tools/drm_metadata_snapshot.py')
@@ -510,7 +514,8 @@ def main():
     parser.add_argument('--slack-live', action='store_true')
     parser.add_argument('--manual-gesture', action='store_true', help='live only: SYS-225 manual double-Shift cases')
     parser.add_argument('--manual-suite', action='store_true', help='SYS-225 owned Chromium fixture suite (with --run-approved)')
-    parser.add_argument('--product-suite', choices=('listed', 'unlisted'), help='SYS-246 product addon in the owned fixture (with --run-approved)')
+    parser.add_argument('--product-suite', choices=('listed', 'unlisted', 'focus'), help='SYS-246 product addon in the owned fixture (with --run-approved)')
+    parser.add_argument('--packaged', action='store_true', help='with --product-suite: the addon and profile extracted from the built package')
     parser.add_argument('--owner-empty-composer', action='store_true',
                         help='live only: the owner confirms the test-channel composer is empty (used if Slack reports no field state)')
     parser.add_argument('--frontend-variant',choices=('system','baseline','keep-grab'),default='system')
@@ -539,6 +544,11 @@ def main():
         # Only this invocation's flags may select these modes; never an inherited env.
         os.environ.pop('RASKLAD_OWNER_EMPTY_COMPOSER_CLI', None)
         os.environ.pop('RASKLAD_MANUAL_GESTURE_CLI', None)
+        os.environ.pop('RASKLAD_PRODUCT_PACKAGED_CLI', None)
+        if args.packaged and not args.product_suite:
+            raise base.Refused('packaged_requires_product_suite')
+        if args.packaged:
+            os.environ['RASKLAD_PRODUCT_PACKAGED_CLI'] = '1'
         if args.owner_empty_composer:
             os.environ['RASKLAD_OWNER_EMPTY_COMPOSER_CLI'] = '1'
         if args.manual_gesture and (not (args.slack_live or args.slack_supervised) or args.seat_probe):
