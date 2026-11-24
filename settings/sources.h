@@ -82,6 +82,7 @@ public:
     virtual void requestCheck() = 0;                          // no-op while one runs
     virtual std::optional<QByteArray> lastCheck() const = 0; // nullopt: not installed or no answer
     virtual bool open(const QString &action) = 0;            // "install" or "revert"
+    virtual bool installed() const = 0; // --install recorded changes that --revert can undo
     std::function<void()> updated;
 };
 
@@ -93,6 +94,7 @@ public:
     void requestCheck() override;
     std::optional<QByteArray> lastCheck() const override { return m_last; }
     bool open(const QString &action) override;
+    bool installed() const override;
 
 private:
     void finish(std::optional<QByteArray> result);

@@ -2,6 +2,7 @@
 #include "sources.h"
 
 #include <QDeadlineTimer>
+#include <QDir>
 #include <QFileInfo>
 #include <QProcess>
 #include <QTimer>
@@ -214,6 +215,14 @@ void RaskladSetup::requestCheck()
     });
     QTimer::singleShot(kSetupTimeoutMs, p, [p] { p->kill(); });
     p->start(QIODevice::ReadOnly);
+}
+
+bool RaskladSetup::installed() const
+{
+    // Only whether the record exists; its contents are rasklad-setup's business.
+    QString state = qEnvironmentVariable("XDG_STATE_HOME");
+    if (state.isEmpty() || !QDir::isAbsolutePath(state)) state = QDir::homePath() + QStringLiteral("/.local/state");
+    return QFileInfo::exists(state + QStringLiteral("/rasklad-setup/state.json"));
 }
 
 bool RaskladSetup::open(const QString &action)

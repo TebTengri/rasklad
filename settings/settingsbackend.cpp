@@ -13,9 +13,16 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
         m_setupTool->updated = [this] {
             const auto out = m_setupTool->lastCheck();
             m_setup = out ? setupFromCheck(*out) : QVariantMap{};
+            m_setupInstalled = m_setupTool->installed();
             Q_EMIT changed();
         };
     }
+    // The terminal gives no completion signal: check every 4 s for 3 minutes.
+    m_setupPoll.setInterval(4000);
+    connect(&m_setupPoll, &QTimer::timeout, this, [this] {
+        if (++m_setupPolls >= 45) m_setupPoll.stop();
+        if (m_setupTool) m_setupTool->requestCheck();
+    });
     refresh();
 }
 
@@ -38,7 +45,20 @@ void SettingsBackend::reloadConfig()
 bool SettingsBackend::openSetup(const QString &action)
 {
     // The window learns the result on its next focus refresh, after the terminal.
-    return m_setupTool && m_setupTool->open(action);
+    if (!m_setupTool || !m_setupTool->open(action)) return false;
+    m_lastRefresh.invalidate(); // the next focus refreshes everything
+    m_setupPolls = 0;
+    m_setupPoll.start();
+    return true;
+}
+
+QVariantMap SettingsBackend::setupRows() const
+{
+    if (m_setup.isEmpty()) return {};
+    return {{QStringLiteral("icon"), setupRowState(m_setup, {QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")})},
+            {QStringLiteral("alt"), setupRowState(m_setup, {QStringLiteral("double-alt")})},
+            {QStringLiteral("layouts"),
+             setupRowState(m_setup, {QStringLiteral("fcitx-group"), QStringLiteral("hyprland-layout")})}};
 }
 
 void SettingsBackend::refreshIfStale()

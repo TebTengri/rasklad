@@ -157,9 +157,11 @@ QVariantMap setupFromCheck(const QByteArray &output)
                                    QStringLiteral("auto-correction"), QStringLiteral("fcitx-group"),
                                    QStringLiteral("double-alt"),      QStringLiteral("hyprland-layout"),
                                    QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")};
-    static const QStringList states{QStringLiteral("ok"),      QStringLiteral("missing"), QStringLiteral("broken"),
-                                    QStringLiteral("other"),   QStringLiteral("changed"), QStringLiteral("symlink"),
-                                    QStringLiteral("unknown"), QStringLiteral("on"),      QStringLiteral("paused")};
+    // Exactly the words `rasklad-setup --check` prints (SYS-252).
+    static const QStringList states{QStringLiteral("ok"),       QStringLiteral("missing"),     QStringLiteral("broken"),
+                                    QStringLiteral("other"),    QStringLiteral("symlink"),     QStringLiteral("unknown"),
+                                    QStringLiteral("no-fcitx"), QStringLiteral("missing-file"), QStringLiteral("lua-error"),
+                                    QStringLiteral("no-slot"),  QStringLiteral("on"),          QStringLiteral("paused")};
     QVariantMap result;
     if (output.size() > 4096) return result;
     for (const QByteArray &raw : output.split('\n')) {
@@ -170,6 +172,28 @@ QVariantMap setupFromCheck(const QByteArray &output)
         if (steps.contains(step) && states.contains(state)) result.insert(step, state);
     }
     return result;
+}
+
+QString setupRowState(const QVariantMap &setup, const QStringList &steps)
+{
+    bool problem = false, missing = false, unknown = false, other = false;
+    for (const QString &step : steps) {
+        const QString s = setup.value(step).toString();
+        if (s == QLatin1String("ok")) continue;
+        if (s == QLatin1String("lua-error") || s == QLatin1String("no-slot") || s == QLatin1String("broken"))
+            problem = true;
+        else if (s == QLatin1String("missing") || s == QLatin1String("missing-file"))
+            missing = true;
+        else if (s == QLatin1String("other") || s == QLatin1String("symlink"))
+            other = true;
+        else
+            unknown = true; // "unknown", "no-fcitx", or absent
+    }
+    if (problem) return QStringLiteral("problem");
+    if (missing) return QStringLiteral("missing");
+    if (unknown) return QStringLiteral("unknown");
+    if (other) return QStringLiteral("other");
+    return QStringLiteral("ok");
 }
 
 int roundingFromReply(const QByteArray &json)

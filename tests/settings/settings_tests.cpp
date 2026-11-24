@@ -69,6 +69,7 @@ public:
         if (updated) updated(); // answers at once
     }
     std::optional<QByteArray> lastCheck() const override { return out; }
+    bool installed() const override { return true; }
     bool open(const QString &action) override
     {
         opened.append(action);
@@ -246,6 +247,20 @@ private Q_SLOTS:
         QVERIFY(!m.contains(QStringLiteral("bar-widget"))); // unknown state word
         QVERIFY(setupFromCheck(QByteArray(5000, 'x')).isEmpty());
     }
+    void setupRowStates()
+    {
+        const auto row = [](const QVariantMap &m, QStringList steps) { return setupRowState(m, steps); };
+        const QVariantMap m{{QStringLiteral("a"), QStringLiteral("ok")},       {QStringLiteral("b"), QStringLiteral("unknown")},
+                            {QStringLiteral("c"), QStringLiteral("missing-file")}, {QStringLiteral("d"), QStringLiteral("symlink")},
+                            {QStringLiteral("e"), QStringLiteral("no-slot")},  {QStringLiteral("f"), QStringLiteral("no-fcitx")}};
+        QCOMPARE(row(m, {QStringLiteral("a")}), QStringLiteral("ok"));
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("b")}), QStringLiteral("unknown")); // never "ok" with an unknown
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("zz")}), QStringLiteral("unknown")); // absent step
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("c")}), QStringLiteral("missing"));
+        QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("d")}), QStringLiteral("other"));
+        QCOMPARE(row(m, {QStringLiteral("c"), QStringLiteral("e")}), QStringLiteral("problem"));
+        QCOMPARE(row(m, {QStringLiteral("f")}), QStringLiteral("unknown"));
+    }
     void setupShownAndOpened()
     {
         FakeFcitx f;
@@ -253,6 +268,9 @@ private Q_SLOTS:
         FakeSetup t;
         SettingsBackend b(&f, &w, nullptr, &t);
         QCOMPARE(b.setup().value(QStringLiteral("double-alt")).toString(), QStringLiteral("missing"));
+        QCOMPARE(b.setupRows().value(QStringLiteral("alt")).toString(), QStringLiteral("missing"));
+        QCOMPARE(b.setupRows().value(QStringLiteral("icon")).toString(), QStringLiteral("unknown")); // link step absent
+        QVERIFY(b.setupInstalled());
         QVERIFY(b.openSetup(QStringLiteral("install")));
         QCOMPARE(t.opened, QStringList{QStringLiteral("install")});
         t.out.reset(); // no tool: the section hides

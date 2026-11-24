@@ -570,25 +570,16 @@ ApplicationWindow {
             }
             ColumnLayout {
                 id: setupBox
-                visible: Object.keys(backend.setup).length > 0
+                visible: Object.keys(backend.setupRows).length > 0
                 spacing: 8
                 Layout.fillWidth: true
-                // One state for several steps: any gap shows, hand-made setups are left alone.
-                function combined(steps) {
-                    const states = steps.map(s => backend.setup[s]).filter(s => s !== undefined && s !== "unknown")
-                    if (states.length === 0) return "unknown"
-                    if (states.every(s => s === "ok")) return "ok"
-                    if (states.some(s => s === "missing" || s === "broken")) return "missing"
-                    return "manual"
-                }
                 readonly property var rows: [
-                    { title: qsTr("Layout icon at the top right"), state: combined(["bar-widget-link", "bar-widget"]) },
-                    { title: qsTr("Double Alt switches the layout"), state: combined(["double-alt"]) },
-                    { title: qsTr("English and Russian layouts in Fcitx"), state: combined(["fcitx-group", "hyprland-layout"]) }
+                    { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
+                    { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
+                    { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }
                 ]
                 readonly property bool anyMissing: rows.some(r => r.state === "missing")
-                readonly property bool anyOk: rows.some(r => r.state === "ok")
-                Hint { text: qsTr("Connecting changes the Hyprland and bar settings. A terminal shows each change and asks first.") }
+                Hint { text: qsTr("Connecting changes the Hyprland, bar and Fcitx settings. A terminal shows each change and asks first.") }
                 Repeater {
                     model: setupBox.rows
                     delegate: Rectangle {
@@ -620,10 +611,12 @@ ApplicationWindow {
                                 font.pixelSize: 11
                                 font.bold: stateRow.modelData.state === "ok"
                                 color: stateRow.modelData.state === "ok" ? window.fg
-                                     : stateRow.modelData.state === "missing" ? theme.error : window.secondary
+                                     : (stateRow.modelData.state === "missing" || stateRow.modelData.state === "problem")
+                                       ? theme.error : window.secondary
                                 text: stateRow.modelData.state === "ok" ? qsTr("connected")
                                     : stateRow.modelData.state === "missing" ? qsTr("not connected")
-                                    : stateRow.modelData.state === "manual" ? qsTr("set up by hand")
+                                    : stateRow.modelData.state === "problem" ? qsTr("error")
+                                    : stateRow.modelData.state === "other" ? qsTr("set up differently")
                                     : qsTr("unknown")
                             }
                         }
@@ -633,24 +626,54 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     spacing: 10
                     Button {
-                        visible: setupBox.anyMissing
+                        visible: setupBox.anyMissing || setupBox.rows.some(r => r.state === "problem")
                         text: qsTr("Connect…")
-                        onClicked: setupError.visible = !backend.openSetup("install")
+                        onClicked: setupError.failed = backend.openSetup("install") ? "" : "install"
                     }
                     Button {
-                        visible: setupBox.anyOk
+                        visible: backend.setupInstalled
                         flat: true
                         text: qsTr("Restore Omarchy defaults…")
-                        onClicked: setupError.visible = !backend.openSetup("revert")
+                        onClicked: revertConfirm.open()
                     }
                 }
                 InlineError {
                     id: setupError
-                    visible: false
-                    text: qsTr("Could not open a terminal. Run rasklad-setup --install in one.")
+                    property string failed: ""
+                    visible: failed !== ""
+                    text: qsTr("Could not open a terminal. Run rasklad-setup --%1 in one.").arg(failed)
                 }
             }
         }
+    }
+
+    // Reverting puts back saved files: ask first, as rasklad-setup --install does.
+    Dialog {
+        id: revertConfirm
+        modal: true
+        anchors.centerIn: Overlay.overlay
+        width: Math.min(window.width - 32, 440)
+        title: qsTr("Restore Omarchy defaults?")
+        background: Rectangle {
+            color: theme.background
+            radius: window.small
+            border.color: window.tint(0.4)
+        }
+        contentItem: Hint {
+            text: qsTr("The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.")
+            font.pixelSize: 12
+        }
+        footer: DialogButtonBox {
+            Button {
+                text: qsTr("Restore")
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            }
+            Button {
+                text: qsTr("Cancel")
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            }
+        }
+        onAccepted: setupError.failed = backend.openSetup("revert") ? "" : "revert"
     }
 
     // ---- Help (? or F1) ------------------------------------------------------------

@@ -62,6 +62,13 @@ int roundingFromReply(const QByteArray &json);
 // anything else, so the section hides instead of guessing.
 QVariantMap setupFromCheck(const QByteArray &output);
 
+// SYS-260: one row state for several steps, for the window:
+//   "ok" every step ok; "missing" something to connect; "other" set up some
+//   other way (the tool leaves it alone); "problem" the tool reported an error;
+//   "unknown" a step absent or not checkable. Worst first: problem, missing,
+//   unknown, other; never "ok" with an unknown step.
+QString setupRowState(const QVariantMap &setup, const QStringList &steps);
+
 // True if the current input-method group has both keyboard-us and keyboard-ru.
 bool layoutsReady(const QStringList &groupMethods);
 
