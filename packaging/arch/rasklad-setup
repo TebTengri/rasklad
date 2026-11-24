@@ -829,8 +829,13 @@ def install(assume_yes, single_layout=False):
         run([HYPRCTL, "reload"])
         # SYS-272: Fcitx's group goes back to what it was before this run, only
         # if this run changed it and no block of ours still keeps Hyprland at us.
+        # The bar widget switches between the two Fcitx methods: while shell.json
+        # uses it, both stay, or its click would do nothing.
         if group[0] == "missing" and INPUT not in state["files"] and not state.get("await_hypr"):
-          undo_group(state, group[1], prior)
+          if shell_uses_widget():
+            say("kept", "fcitx-group", "the bar widget switches between both layouts; kept")
+          else:
+            undo_group(state, group[1], prior)
       save_and_drop(state)
       return 1
   return 1 if failed else 0

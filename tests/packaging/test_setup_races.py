@@ -124,10 +124,24 @@ class FcitxGroup(Base):
         self.assertEqual(fake.calls, 0)
         self.assertIn('the saved group is empty', out.getvalue())
 
+    def test_group_kept_while_the_bar_widget_is_used(self):
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.hypr('us,ru', variant=',')
+        self.setup.hypr_running = lambda: True
+        errors = iter([[], ['input.lua: error']])
+        self.setup.hypr_errors = lambda: next(errors, [])
+        self.setup.hypr_layouts_back = lambda state: True
+        self.setup.shell_uses_widget = lambda: True
+        code, out = self.install(fake, single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertIn('the bar widget switches between both layouts', out)
+        self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-ru', '')])
+
     def test_group_restored_after_new_hyprland_errors(self):
         # Fcitx had only us; install adds ru, then Hyprland reports a new error:
         # the files and the group both go back.
         fake = FakeFcitx([('keyboard-us', '')])
+        self.setup.shell_uses_widget = lambda: False
         self.hypr('us,ru', variant=',')
         self.setup.hypr_running = lambda: True
         errors = iter([[], ['input.lua: error']])
@@ -158,6 +172,10 @@ class GroupRollbackScope(Base):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertTrue(self.setup.restore_fcitx(state))
         self.assertEqual(fake.items, [('keyboard-de', '')])
+
+    def setUp(self):
+        super().setUp()
+        self.setup.shell_uses_widget = lambda: False
 
     def test_rollback_goes_back_to_this_runs_group(self):
         # Fcitx had us and de (ru taken out since an earlier install); this run adds
