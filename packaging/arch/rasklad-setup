@@ -775,7 +775,8 @@ def install(assume_yes, single_layout=False):
     # a layout the user added after the first install.
     saved = state.get("fcitx")
     prior = dict(saved) if saved else None  # put back as is if this run is rolled back
-    if not (saved and saved["group"] == name and saved["layout"] == layout and saved["before"] == before):
+    rebased = not (saved and saved["group"] == name and saved["layout"] == layout and saved["before"] == before)
+    if rebased:
       saved = {"group": name, "layout": layout, "before": before}
     saved["after"] = after
     saved["after_layout"] = layout  # the layout this write used
@@ -786,7 +787,7 @@ def install(assume_yes, single_layout=False):
     else:
       say("failed", "fcitx-group")
       failed = True
-      if prior and saved is not prior and saved["before"] != prior["before"]:
+      if prior and rebased:
         # The new record was never earned: keep the earlier install's one.
         state["fcitx"] = prior
         save_state(state)
