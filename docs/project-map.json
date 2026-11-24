@@ -135,9 +135,30 @@
         "tools/fcitx_profile_lab.pro"
       ],
       "title": "Fcitx",
-      "notes": "Developer Fcitx composition transport and full local core profile.",
+      "notes": "Lab Fcitx addon variants (frozen since SYS-255): composition transport, witnesses, Slack session, full local core profile. Not the product.",
       "tests": [],
       "status": "implemented_lab"
+    },
+    {
+      "id": "product-addon",
+      "kind": "product",
+      "title": "Product Fcitx addon",
+      "paths": [
+        "src/raskladproduct.cpp",
+        "src/configrules.h",
+        "src/wordrules.h",
+        "src/manualgesture.h",
+        "tools/fcitx_product.pro",
+        "addon/rasklad.conf",
+        "docs/SYS-246-PRODUCT-ADDON.md"
+      ],
+      "notes": "The installed addon (rasklad.so): double-Shift gesture and automatic correction in listed apps. Split from src/fcitxlab.cpp in SYS-255 with identical preprocessed code.",
+      "tests": [
+        "tests/product_core/product_core.pro",
+        "tests/manual_gesture/manual_gesture.pro",
+        "python3 tools/wayland_ime_lab.py --run --product-suite listed --packaged"
+      ],
+      "status": "implemented"
     },
     {
       "id": "fixture",
