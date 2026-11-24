@@ -256,8 +256,9 @@ try{
   await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,400));
   report.focusUndoControl=(await fields()).prose;
   report.focusUndoExercised=report.focusUndoControlCorrected&&report.focusUndoControl===SEED_P+'ghbdtn ';
-  // Typing 60 ms after the gesture: the undo has run, and the next word is typed
-  // in the restored form's layout (us).
+  // Typing right after the gesture (about 85 ms after the release: the helper's
+  // 25 ms pause plus 60 ms): the undo has run first. Follow-up: a layout-sensitive
+  // key, since "hello" can also come out of autocorrection from the ru layout.
   phase='focus_undo_then_type';await seed();await type('word');await type('space');
   await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,60));await type('hello');
   report.focusUndoThenTypeValue=(await fields()).prose;
