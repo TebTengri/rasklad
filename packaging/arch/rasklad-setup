@@ -583,8 +583,7 @@ def install(assume_yes, single_layout=False):
   # comparison, so a "no" or a file restored meanwhile keeps it. input.lua is
   # never among them: its record is what makes --revert check the live layouts
   # before it removes the controls (SYS-268).
-  stale = {p for p in (BINDINGS, SHELL_JSON) if p in state["files"] and file_state(p) is None
-           and read(p) is not None and not ours_in(p, read(p))}
+  stale = set()  # decided from the same bytes the preview shows, below
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
@@ -598,6 +597,8 @@ def install(assume_yes, single_layout=False):
       say("missing-file", os.path.basename(path), "left as is")
       continue
     status, new = plan(old)
+    if path in (BINDINGS, SHELL_JSON) and path in state["files"] and not ours_in(path, old):
+      stale.add(path)
     if status == "missing" and path in state["files"] and path not in stale:
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
