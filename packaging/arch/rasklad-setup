@@ -315,7 +315,15 @@ def input_plan(data=None):
   kept = [o for o in opts if not o.startswith("grp:")]
   if "," not in layout and len(kept) == len(opts):
     return "ok", None
-  values = (layout.split(",")[0], (variant or "").split(",")[0], ",".join(kept))
+  # SYS-268: Hyprland keeps us, wherever it is in the list: the lock screen reads
+  # its password with Hyprland's layout, and Fcitx never reaches it. Any layout
+  # other than us and ru (kz, de, ...) would be lost, so then nothing changes.
+  layouts = [l.strip() for l in layout.split(",")]
+  if "us" not in layouts or any(l not in ("us", "ru") for l in layouts):
+    return "other-layouts", None
+  variants = (variant or "").split(",")
+  i = layouts.index("us")
+  values = ("us", variants[i].strip() if i < len(variants) else "", ",".join(kept))
   if not all(XKB.fullmatch(v) for v in values):
     raise Refused("unexpected characters in the Hyprland keyboard options")
   block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
@@ -448,6 +456,9 @@ def install(assume_yes):
       changes.append((path, old, new))
     elif status == "unknown":
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
+    elif status == "other-layouts":
+      say("other-layouts", os.path.basename(path),
+          "layouts other than us and ru: Hyprland keeps its layouts and switch; left as is")
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
   link = link_state()
@@ -457,12 +468,18 @@ def install(assume_yes):
   group = fcitx_plan(bus)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
+    # SYS-268: without Fcitx nothing else would switch layouts.
+    if any(p == INPUT for p, _, _ in changes):
+      say("skipped", os.path.basename(INPUT), "layouts left as is until Fcitx runs")
+      changes = [c for c in changes if c[0] != INPUT]
 
   if not changes and link != "missing" and group[0] != "missing":
     print("Nothing to change.")
     return 0
   for path, old, new in changes:
     show_diff(path, old, new)
+    if path == INPUT:
+      print("  The lock screen and apps outside Fcitx will use the us layout.")
   if link == "missing":
     print("+ link %s -> %s" % (PLUGIN_LINK, WIDGET))
   if group[0] == "missing":
@@ -479,6 +496,9 @@ def install(assume_yes):
   # state --revert can reconcile (an unwritten file still equals its copy).
   errors_before = hypr_errors()
   failed = False
+  # SYS-268: the Fcitx group first; input.lua only once Fcitx has both layouts.
+  input_change = [c for c in changes if c[0] == INPUT]
+  changes = [c for c in changes if c[0] != INPUT]
   for path, old, new in changes:
     # The file must still be exactly what the diff was made from.
     if file_state(path) is not None or read(path) != old:
@@ -510,6 +530,19 @@ def install(assume_yes):
     else:
       say("failed", "fcitx-group")
       failed = True
+  for path, old, new in input_change:
+    if failed:
+      say("skipped", os.path.basename(path), "Fcitx group not set; layouts left as is")
+      continue
+    if file_state(path) is not None or read(path) != old:
+      say("changed", os.path.basename(path), "edited while waiting; left as is")
+      failed = True
+      continue
+    remember_file(state, path, old, new)
+    save_state(state)
+    write_atomic(path, new)
+    say("done", os.path.basename(path))
+    changes.append((path, old, new))
 
   # Hyprland reloads a saved config by itself. Only errors that were not there
   # before undo our edits, and only the files this run changed.

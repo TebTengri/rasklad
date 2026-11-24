@@ -163,7 +163,8 @@ QVariantMap setupFromCheck(const QByteArray &output)
                                     QStringLiteral("other"),    QStringLiteral("symlink"),     QStringLiteral("unknown"),
                                     QStringLiteral("no-fcitx"), QStringLiteral("missing-file"), QStringLiteral("lua-error"),
                                     QStringLiteral("no-slot"),  QStringLiteral("not-a-file"),  QStringLiteral("unparsable"),
-                                    QStringLiteral("on"),       QStringLiteral("paused")};
+                                    QStringLiteral("on"),       QStringLiteral("paused"),
+                                    QStringLiteral("other-layouts")};
     QVariantMap result;
     if (output.size() > 4096) return result;
     for (const QByteArray &raw : output.split('\n')) {
@@ -187,7 +188,8 @@ QString setupRowState(const QVariantMap &setup, const QStringList &steps)
             problem = true;
         else if (s == QLatin1String("missing") || s == QLatin1String("missing-file"))
             missing = true;
-        else if (s == QLatin1String("other") || s == QLatin1String("symlink"))
+        else if (s == QLatin1String("other") || s == QLatin1String("symlink") ||
+                 s == QLatin1String("other-layouts")) // SYS-268: kz, de, ... left as is
             other = true;
         else
             unknown = true; // "unknown", "no-fcitx", or absent
