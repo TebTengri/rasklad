@@ -124,7 +124,9 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if set(state) - {"version", "files", "link", "fcitx"} or not isinstance(state.get("files"), dict):
+  if set(state) - {"version", "files", "link", "fcitx", "await_hypr"} or not isinstance(state.get("files"), dict):
+    raise bad
+  if not isinstance(state.get("await_hypr", False), bool):
     raise bad
   for path, entry in state["files"].items():
     if path not in FILES or not isinstance(entry, dict) or \
@@ -309,15 +311,21 @@ def input_plan(data=None):
   if data is None:
     data = read(INPUT)
   if BEGIN.encode() in data:
-    # Decided by the file, not by what Hyprland has loaded. A block written
-    # before SYS-268 has no mark: it may have kept ru alone (from ru,us) or
-    # dropped a layout such as kz, so it is reported for a revert and reinstall.
-    block = data[data.index(BEGIN.encode()):]
-    return ("ok", None) if LAYOUT_MARK.encode() in block else ("legacy", None)
+    # Decided by the file, not by what Hyprland has loaded. Only a block this
+    # version wrote is ours as is: the mark and kb_layout = "us" inside the same
+    # BEGIN..END block. Anything else (written before SYS-268, which may have
+    # kept ru or dropped kz, or edited since) is reported for revert and reinstall.
+    start = data.index(BEGIN.encode())
+    end = data.find(END.encode(), start)
+    block = data[start:end] if end != -1 else b""
+    marked = LAYOUT_MARK.encode() in block
+    layouts = re.findall(rb'kb_layout\s*=\s*"([^"]*)"', block)
+    return ("ok", None) if marked and layouts == [b"us"] else ("legacy", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
   if layout is None or options is None or variant is None:
     return "unknown", None
-  opts = [o for o in options.split(",") if o]
+  # XKB ignores spaces around the commas ("compose:caps, grp:alt_shift_toggle").
+  opts = [o.strip() for o in options.split(",") if o.strip()]
   kept = [o for o in opts if not o.startswith("grp:")]
   if "," not in layout and len(kept) == len(opts):
     return "ok", None
@@ -331,7 +339,8 @@ def input_plan(data=None):
   i = layouts.index("us")
   values = ("us", variants[i].strip() if i < len(variants) else "", ",".join(kept))
   if not all(XKB.fullmatch(v) for v in values):
-    raise Refused("unexpected characters in the Hyprland keyboard options")
+    # Only this optional step is affected; the rest of --install goes on.
+    return "unknown", None
   block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
            "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
            + LAYOUT_MARK + "\n"
@@ -422,7 +431,7 @@ def check():
   elif state == "other-layouts":
     say("other-layouts", "hyprland-layout", "the layouts are not exactly us and ru; Hyprland keeps them")
   elif state == "legacy":
-    report("legacy", "hyprland-layout", "an older block keeps a layout other than us: run --revert, then --install")
+    report("legacy", "hyprland-layout", "an older or edited layout block: run --revert, then --install")
   else:
     report(state, "hyprland-layout")
   report(link_state(), "bar-widget-link")
@@ -480,7 +489,7 @@ def install(assume_yes, single_layout=False):
           "the layouts are not exactly us and ru: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path),
-          "an older block keeps a layout other than us: run --revert, then --install")
+          "an older or edited layout block: run --revert, then --install")
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
   link = link_state()
@@ -592,8 +601,13 @@ def install(assume_yes, single_layout=False):
     errors = hypr_errors()
     if errors and errors != errors_before:
       say("error", "hyprland", "new config errors after the change; undoing it")
-      for path in hypr:
-        restore(state, path)
+      # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
+      if INPUT in hypr and not restore(state, INPUT):
+        say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
+      else:
+        for path in hypr:
+          if path != INPUT:
+            restore(state, path)
       save_and_drop(state)
       run([HYPRCTL, "reload"])
       return 1
@@ -630,6 +644,19 @@ def restore(state, path):
   return True
 
 
+def hypr_layouts_back():
+  """After restoring input.lua: Hyprland reloaded and runs with the user's own
+  layouts again. The block was only written when they had several layouts or a
+  group switch (input_plan), so one of the two must be back."""
+  done = run([HYPRCTL, "reload"])
+  if done is None or done.returncode != 0:
+    return False
+  layout, options = hypr_option("input:kb_layout"), hypr_option("input:kb_options")
+  if layout is None or options is None:
+    return False
+  return "," in layout or any(o.strip().startswith("grp:") for o in options.split(","))
+
+
 def revert():
   if read(STATE_FILE) is None:
     print("Nothing to revert.")
@@ -643,6 +670,15 @@ def revert():
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
   restored_hypr = had_input and not input_kept
+  if (restored_hypr or state.get("await_hypr")) and hypr_running():
+    if not hypr_layouts_back():
+      # The file is back, but Hyprland still runs with one layout: the controls
+      # stay until it has taken the restored file; a later --revert checks again.
+      state["await_hypr"] = True
+      say("kept", "rasklad-controls", "Hyprland has not taken the restored input.lua; run --revert again")
+      save_and_drop(state)
+      return 1
+    state.pop("await_hypr", None)
   if input_kept:
     clean = False
     say("kept", "rasklad-controls", "input.lua not restored; double Alt, bar widget and Fcitx layouts kept")

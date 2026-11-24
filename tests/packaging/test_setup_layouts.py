@@ -127,6 +127,19 @@ class Plan(Base):
         status, new = self.plan('ru,us', variant=',')
         self.assertIn(self.setup.LAYOUT_MARK.encode(), new)
         self.assertEqual(self.setup.input_plan(new)[0], 'ok')
+        # A marked block edited to ru, or a mark outside an unmarked block.
+        self.assertEqual(self.setup.input_plan(new.replace(b'kb_layout = "us"', b'kb_layout = "ru"'))[0], 'legacy')
+        old = (b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "us"}})\n'
+               + self.setup.END.encode() + b'\n' + self.setup.LAYOUT_MARK.encode() + b'\n')
+        self.assertEqual(self.setup.input_plan(old)[0], 'legacy')
+
+    def test_spaces_in_options_are_ignored(self):
+        status, new = self.plan('us,ru', options='compose:caps, grp:alt_shift_toggle', variant=',')
+        self.assertEqual(status, 'missing')
+        self.assertIn('kb_options = "compose:caps"', new.decode())
+
+    def test_odd_characters_only_skip_this_step(self):
+        self.assertEqual(self.plan('us,ru', options='compose:caps;rm', variant=',')[0], 'unknown')
 
 
 class Install(Base):
@@ -177,6 +190,25 @@ class Install(Base):
         state = self.setup.load_state()
         self.assertIn(self.setup.INPUT, state['files'])
         self.assertEqual(state['link'], self.setup.WIDGET)
+
+    def test_revert_waits_until_hyprland_takes_the_file(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.setup.hypr_running = lambda: True
+        self.setup.hypr_layouts_back = lambda: False  # reload failed or still one layout
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertIn('has not taken the restored input.lua', out.getvalue())
+        self.assertEqual(self.input.read_bytes(), b'-- user file\n')  # the file is back
+        self.assertTrue(self.setup.load_state().get('await_hypr'))
+        self.assertEqual(fake.calls, 1)  # Fcitx's layouts still there
+        self.setup.hypr_layouts_back = lambda: True
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 0)
+        self.assertEqual(fake.calls, 2)  # now Fcitx goes back too
+        self.assertFalse(os.path.exists(self.setup.STATE_FILE))
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
