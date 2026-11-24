@@ -141,21 +141,22 @@ def private_state_dir():
 
 def lock_state():
   """SYS-272: one rasklad-setup at a time (--install and --revert). The lock is
-  held until the process exits. In the private runtime directory, so a clean
-  --revert leaves nothing behind; without one, in our state directory."""
-  runtime = os.environ.get("XDG_RUNTIME_DIR", "")
-  info = os.lstat(runtime) if runtime and os.path.isabs(runtime) and os.path.lexists(runtime) else None
-  if info and stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid() and not stat.S_IMODE(info.st_mode) & 0o077:
-    where = os.path.join(runtime, "rasklad-setup.lock")
-  else:
-    private_state_dir()
-    where = os.path.join(STATE_DIR, "lock")
-  fd = os.open(where, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+  held until the process exits. One fixed file next to our state directory for
+  every invocation that shares this state; never removed, so no second inode
+  can appear while a run holds the first."""
+  os.makedirs(STATE_HOME, mode=0o700, exist_ok=True)
+  fd = os.open(os.path.join(STATE_HOME, ".rasklad-setup.lock"),
+               os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
   try:
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+      raise Refused("the lock file is not a regular file")
     fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
   except BlockingIOError:
     os.close(fd)
     raise Refused("another rasklad-setup is running")
+  except BaseException:
+    os.close(fd)
+    raise
   return fd
 
 
@@ -555,8 +556,12 @@ def record_then_check(state, path, old, new):
   bak_existed = os.path.lexists(path + ".rasklad.bak")
   remember_file(state, path, old, new)
   save_state(state)
-  if file_state(path) is None and read(path) == old:
-    return True
+  try:
+    same = file_state(path) is None and read(path) == old
+  except OSError:  # swapped for something unreadable meanwhile
+    same = False
+  if same:
+    return True  # only the rename follows; a save in that instant is not seen
   if before is not None:
     state["files"][path] = before
   else:
@@ -821,9 +826,10 @@ def install(assume_yes, single_layout=False):
           if path != INPUT:
             restore(state, path)
         run([HYPRCTL, "reload"])
-        # SYS-272: Hyprland's layouts are back, so Fcitx's group goes back too.
-        if group[0] == "missing":
-          restore_fcitx(state)
+        # SYS-272: Fcitx's group goes back to what it was before this run, only
+        # if this run changed it and no block of ours still keeps Hyprland at us.
+        if group[0] == "missing" and INPUT not in state["files"] and not state.get("await_hypr"):
+          undo_group(state, group[1])
       save_and_drop(state)
       return 1
   return 1 if failed else 0
@@ -933,14 +939,34 @@ def input_block_present():
       os.close(fd)
 
 
+def undo_group(state, planned):
+  """Auto-rollback of this run's Fcitx change: back to the group as this run
+  found it, only while Fcitx still has exactly what this run wrote."""
+  name, layout, before, after = planned
+  bus = fcitx()
+  current = bus["group"]() if bus else None
+  if current is None or current[0] != name or current[1] != layout or current[2] != after:
+    say("kept", "fcitx-group", "changed meanwhile; left as is")
+    return
+  if not bus["set_group"](name, layout, before):
+    say("failed", "fcitx-group")
+    return
+  say("restored", "fcitx-group")
+  saved = state.get("fcitx")
+  if saved and saved["group"] == name and saved["layout"] == layout and saved["before"] == before:
+    state["fcitx"] = None  # this run made the record; nothing of ours is left
+  elif saved:
+    saved["after"], saved["after_layout"] = before, layout  # an earlier install's change stays
+
+
 def restore_fcitx(state):
   """Put the Fcitx group back as it was before install, if it is still exactly
   as install left it. Returns True when nothing of ours is left in it."""
   saved = state["fcitx"]
-  # SYS-272: a saved group without keyboard-us (a damaged or edited state file)
-  # would leave Fcitx with no Latin layout: never written.
-  if "keyboard-us" not in ids(saved["before"]):
-    say("changed", "fcitx-group", "the saved group has no keyboard-us; left as is")
+  # SYS-272: a saved group with no keyboard layout at all (a damaged or edited
+  # state file) would leave Fcitx unable to type: never written.
+  if not any(i.startswith("keyboard-") for i in ids(saved["before"])):
+    say("changed", "fcitx-group", "the saved group has no keyboard layout; left as is")
     return False
   bus = fcitx()
   current = bus["group"]() if bus else None
@@ -1044,10 +1070,6 @@ def revert():
   if clean:
     # Only what this tool made: its state file, then the directories if empty.
     os.unlink(STATE_FILE)
-    try:
-      os.unlink(os.path.join(STATE_DIR, "lock"))  # only made without a runtime directory
-    except FileNotFoundError:
-      pass
     for d in (BACKUP_DIR, STATE_DIR):
       try:
         os.rmdir(d)
