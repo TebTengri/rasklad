@@ -1,16 +1,17 @@
-# SYS-270: pacman runs this as root and cannot undo a user's rasklad-setup
-# --install; it only says what is left and how to undo it. Nothing is changed.
+# SYS-270: pacman runs this as root, after the files are gone, and cannot undo a
+# user's rasklad-setup --install; it only says what is left and what to do.
+# Nothing is changed.
 
-pre_remove() {
-  cat <<'EOF'
-==> rasklad-fcitx5: if you ran rasklad-setup --install, undo it first, as yourself:
-      rasklad-setup --revert
-    If the package is already gone: double Alt and a keep-only-us block written
-    by rasklad-setup 0.5.22 or later switch themselves off, and Hyprland is back
-    on its own layouts after "hyprctl reload". An older block in
-    ~/.config/hypr/input.lua (marked "-- BEGIN rasklad-setup") is removed by hand.
-    The Omarchy bar may show an empty slot where the Rasklad widget was: put
-    "omarchy.keyboard-layout" back in ~/.config/omarchy/shell.json (a copy is in
-    shell.json.rasklad.bak).
-EOF
+post_remove() {
+  cat <<'NOTE'
+==> rasklad-fcitx5 removed. If you had run rasklad-setup --install and not
+    --revert (best done before removing the package):
+    - double Alt and a keep-only-us block written by 0.5.22 or later switch
+      themselves off: run "hyprctl reload". An older block at the end of
+      ~/.config/hypr/input.lua (from "-- BEGIN rasklad-setup" to
+      "-- END rasklad-setup") is removed by hand;
+    - the Omarchy bar may show an empty slot: put "omarchy.keyboard-layout"
+      back in ~/.config/omarchy/shell.json
+      (the copy from before install: ~/.config/omarchy/shell.json.rasklad.bak).
+NOTE
 }

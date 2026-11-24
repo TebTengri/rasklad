@@ -150,8 +150,8 @@ class Package(unittest.TestCase):
         self.assertIn('rasklad-fcitx5.install', (ROOT / 'tools/build_arch_package.sh').read_text())
         path = ROOT / 'packaging/arch/rasklad-fcitx5.install'
         notice = path.read_text()
-        self.assertIn('pre_remove()', notice)
-        self.assertIn('rasklad-setup --revert', notice)
+        self.assertIn('post_remove()', notice)  # read after pacman is done
+        self.assertIn('hyprctl reload', notice)
         self.assertEqual(subprocess.run(['bash', '-n', str(path)]).returncode, 0)
 
 
