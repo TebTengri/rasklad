@@ -20,9 +20,9 @@ tools/build_arch_package.sh "/путь/к/профилю"
 | Файл | Откуда |
 | --- | --- |
 | `build/experiment-data/en.dic`, `ru.dic` | LibreOffice dictionaries, коммит `c0865a85eb67`; адреса и хеши — в [data/sources.json](../../data/sources.json) |
-| `build/experiment-003-data/en.aff`, `ru.aff` | тот же коммит; адреса и хеши — в [data/morphology-003-sources.json](../../data/morphology-003-sources.json) |
-| `build/experiment-003-data/control/en.aff`, `ru.aff` | получаются из `.aff` (шаг 2 ниже) |
-| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp`, `artifact-metadata.json` | создаются стендом опыта 002 (шаг 3) |
+| `build/experiment-003-data/en.aff`, `ru.aff` | тот же коммит; адреса и хеши — в [data/morphology-003-sources.json](../../data/morphology-003-sources.json), закрепления продукта — в [data/product-profile-sources.json](../../data/product-profile-sources.json) |
+| `build/experiment-003-data/control/en.aff`, `ru.aff` | получаются из `.aff` (шаг 2), затем получают пометку об изменении (шаг 5) |
+| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp`, `artifact-metadata.json` | создаются стендом опыта 002 (шаг 3), затем получают уведомления внутри файла (шаг 5) |
 | `build/experiment-002-artifacts/en_US.NOTICE.txt`, `ru_RU.NOTICE.txt` | байт в байт копии `data/notices/en_US.README.txt` и `ru_RU.README.txt` |
 | `build/experiment-002-artifacts/MODIFICATIONS.txt` | пометка о локальных изменениях (шаг 4) |
 
@@ -30,6 +30,9 @@ tools/build_arch_package.sh "/путь/к/профилю"
 
 Аддон проверяет профиль при каждой загрузке (`src/profileverify.cpp`):
 - словари, `.aff`, контрольные `.aff`, модель и словарь стеблей — по размеру и SHA-256;
+- контрольные `.aff` — что это исходный `.aff` без строк PFX/SFX с заголовком-пометкой
+  Rasklad в начале;
+- модель и словарь стеблей — что в начале файла есть уведомления (контейнер RSKX);
 - копии уведомлений — по SHA-256 оригиналов из `data/notices/`;
 - `artifact-metadata.json` — по полям;
 - `MODIFICATIONS.txt` — UTF-8, не пустой, содержит `release_approved=false`.
@@ -92,8 +95,15 @@ tools/build_arch_package.sh "/путь/к/профилю"
        > build/experiment-002-artifacts/MODIFICATIONS.txt
    ```
 
-После четырёх шагов клон сам служит каталогом профиля:
-`tools/build_arch_package.sh .`. Совпадут ли заново созданные модель и словарь
+5. **Пометки и уведомления внутри файлов** (SYS-256). Инструмент сверяет исходный
+   профиль с закреплениями, вписывает заголовок в контрольные `.aff` и уведомления
+   в модель и список слов, и пишет новый каталог профиля:
+   ```sh
+   python3 tools/make_release_profile.py --from . --out build/release-profile
+   ```
+
+После пяти шагов каталог профиля — `build/release-profile`:
+`tools/build_arch_package.sh build/release-profile`. Совпадут ли заново созданные модель и словарь
 стеблей с закреплёнными хешами, не проверялось. Если не совпадут, автоисправление
 не включится (см. ниже).
 

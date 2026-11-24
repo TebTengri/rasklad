@@ -11,7 +11,8 @@ owner decides. Flipping it is one separate change: passports, the profile's
 
 ## Exact contents
 
-Package 0.5.18 (unchanged since 0.5.17), `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
+Package 0.5.19, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes), built by
+`tools/make_release_profile.py` from the reviewed experiment profile. The
 hashes are of the profile the owner's packages are built from; any rebuilt
 profile must be compared again.
 
@@ -21,12 +22,12 @@ profile must be compared again.
 | build/experiment-data/ru.dic | f6047416a0204adbecf3a451b874ec8a97ee37e2cbc714466ef04d8dbcc0d6fc | 3473191 | upstream, unmodified |
 | build/experiment-003-data/en.aff | e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e | 3205 | upstream, unmodified |
 | build/experiment-003-data/ru.aff | 38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7 | 71236 | upstream, unmodified |
-| build/experiment-003-data/control/en.aff | 60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f | 1460 | **modified**: PFX/SFX removed |
-| build/experiment-003-data/control/ru.aff | 097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19 | 162 | **modified**: PFX/SFX removed |
+| build/experiment-003-data/control/en.aff | 4c2ee7fbf1aa4a8ea31503b7a7c4688d4a84d99bcbd9f4a0783842ec333e1b19 | 1618 | **modified**: PFX/SFX removed; marked by a header comment |
+| build/experiment-003-data/control/ru.aff | 2869341971555f4f585e739e911dd4c921f4b636b955c5b06210bb443b49f438 | 320 | **modified**: PFX/SFX removed; marked by a header comment |
 | build/experiment-003-data/control/MODIFIED.txt | — | — | Rasklad marker, a copy of `packaging/arch/DATA-NOTICE.txt`; not part of the verified profile |
-| build/experiment-002-artifacts/detector-model.rskn | e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8 | 88290 | **derived**: model weights |
-| build/experiment-002-artifacts/exact-full-lexicons.rskp | 3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871 | 1200379 | **derived**: word list |
-| build/experiment-002-artifacts/artifact-metadata.json | 9a55205497c9cea58a157b83a3eeca3d66be899679265888443d1f18fee79612 | 1827 | Rasklad metadata |
+| build/experiment-002-artifacts/detector-model.rskn | d30f471a13be898514b030fbab95872b69d431beb8e105bc56b860a3c163509a | 106396 | **derived**: model weights; full notices inside (RSKX) |
+| build/experiment-002-artifacts/exact-full-lexicons.rskp | ff325623b4dd2fe871195138d7b09c1c5dd0384152bca85e8c9f66789dd15da3 | 1218480 | **derived**: word list; full notices inside (RSKX) |
+| build/experiment-002-artifacts/artifact-metadata.json | 6117d5273c24c81d7aefdf472fb46e59b4b446179c14beb93f38db436637cbdf | 1892 | Rasklad metadata |
 | build/experiment-002-artifacts/MODIFICATIONS.txt | e2a4d9b6956c3210d0f60cf65432c7f8bfe3b891852f39832e46e4e6b3408af5 | 182 | Rasklad record |
 | build/experiment-002-artifacts/en_US.NOTICE.txt | 168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371 | 15732 | upstream notice, unmodified |
 | build/experiment-002-artifacts/ru_RU.NOTICE.txt | 262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52 | 1886 | upstream notice, unmodified |
@@ -49,8 +50,8 @@ the owner to accept or not.
 | Obligation (source) | Shipped | Conclusion |
 | --- | --- | --- |
 | Keep copyright, conditions and disclaimer with source and binary distributions and in their documentation (ru_RU; Ispell; the supporting-documentation part of SCOWL, VarCon and WordNet) | Full notices in `/usr/share/licenses/rasklad-fcitx5/en_US.README.txt`, `ru_RU.README.txt` and in the profile directory; shown on the settings page «Лицензии» | Met for the package |
-| The copyright notice in **all copies**, including modifications (SCOWL and VarCon: "appears in all copies"; WordNet: notice, statements and disclaimer "on ALL copies ... including modifications") | Every copy of the data ships in the same package and profile directory as the full en_US notice. The binary model and word list carry no notice inside the file | **Pending.** Whether a notice that accompanies every copy satisfies "in/on all copies" is the owner's decision. The alternative is a notice embedded in the derived files: a format change, new pins and a rebuilt profile |
-| Modified versions clearly marked (ru_RU) and binary redistributions of modified source marked as modified in the documentation (Ispell clause 3, en_US) | `DATA-NOTICE.txt` in the licenses directory names each modified and derived file; the same text sits next to the control `.aff` as `MODIFIED.txt`; the «Что изменил Rasklad» page | Met in the documentation, which is what Ispell clause 3 asks for binaries. For ru_RU, whether a marker next to the file is enough or each control `.aff` needs its own header line is **open** (see below) |
+| The copyright notice in **all copies**, including modifications (SCOWL and VarCon: "appears in all copies"; WordNet: notice, statements and disclaimer "on ALL copies ... including modifications") | The model and the word list begin with the full en_US and ru_RU notices inside the file (RSKX container); the verifier refuses a file without it. Every other file ships next to the full notices | Met: a copy of the derived file carries the notices even when taken out of the package |
+| Modified versions clearly marked (ru_RU) and binary redistributions of modified source marked as modified in the documentation (Ispell clause 3, en_US) | Each control `.aff` starts with a comment: modified by Rasklad, PFX/SFX removed, not an upstream file; the verifier requires it. Also `DATA-NOTICE.txt`, `control/MODIFIED.txt` and the «Что изменил Rasklad» page | Met in the file itself and in the documentation |
 | No endorsement or promotion with an author's name (ru_RU: Lebedev; Ispell: Kuenning) | No author is named in descriptions or promotion; `DATA-NOTICE.txt` says so | Met, as long as release texts keep it so |
 | No use of Princeton's name in advertising or publicity about distribution (WordNet) | Princeton appears only inside the full notice | Met, as long as release texts keep it so; a separate rule from non-endorsement |
 | UKACD copyright displayed prominently (en_US) | UKACD line (1993-2000, from its own document) on the «Лицензии» page itself and at the top of `DATA-NOTICE.txt` | Met |
@@ -73,10 +74,8 @@ the owner to accept or not.
 
 ## What the owner decides
 
-1. Whether the package may be published (GitHub release, AUR) with this data, or
-   stays for personal installation.
-2. If yes: whether the SCOWL, VarCon and WordNet notices accompanying the files
-   are enough, or the model and word list must embed them.
-3. Whether the adjacent marker is enough for the control `.aff`, or each
-   gets a header line (new pins, rebuilt profile).
-4. Then one change flips `release_approved` with the verifier and pins.
+The joint agent plan (Linear SYS-256) closed the open questions in the strictest
+reading: the UKACD document ships, the derived files embed the notices, the
+modified `.aff` carry a mark. What remains is the owner's final "publish", then one
+change flips `release_approved` (passports, `MODIFICATIONS.txt`, metadata scope
+and the verifier) and is checked like any release.

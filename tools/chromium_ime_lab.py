@@ -22,7 +22,7 @@ spec=importlib.util.spec_from_file_location('fcitx_base',base_path)
 base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
 TIMEOUT=60
 PROFILE_PATHS=[
- 'data/morphology-003-sources.json','data/sources.json','data/experiment-002-protocol.json',
+ 'data/product-profile-sources.json','data/sources.json','data/experiment-002-protocol.json',
  'data/notices/MORPHOLOGY-003-REVIEW.md','data/notices/Hunspell-COPYING.MPL.txt',
  'data/notices/Hunspell-license.myspell.txt','data/notices/en_US.README.txt','data/notices/ru_RU.README.txt',
  'build/experiment-data/en.dic','build/experiment-data/ru.dic',

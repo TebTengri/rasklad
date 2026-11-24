@@ -25,9 +25,22 @@ using rasklad::profile::ProfileError;
 
 namespace {
 
+// SYS-256: the research verifier knows the experiment artifacts (bare RSKN/RSKP);
+// the product pins the same data in the RSKX notice container. The parity is about
+// the checking logic, so compare both against the experiment values.
+profile::ProfilePins researchPins()
+{
+    profile::ProfilePins p = profile::productionPins();
+    p.model.sha256 = QStringLiteral("e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8");
+    p.model.bytes = 88290;
+    p.stem.sha256 = QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871");
+    p.stem.bytes = 1200379;
+    return p;
+}
+
 QJsonObject productionMetadata()
 {
-    const profile::ProfilePins &p = profile::productionPins();
+    const profile::ProfilePins p = researchPins();
     auto artifact = [&p](const profile::FilePin &pin) {
         return QJsonObject{{QStringLiteral("file"), pin.path.mid(p.artifactDir.size())},
                            {QStringLiteral("bytes"), double(pin.bytes)},
@@ -114,6 +127,45 @@ private Q_SLOTS:
         }
     }
 
+    void noticeContainer()
+    {
+        using profile::unwrapNoticeContainer;
+        using profile::wrapNoticeContainer;
+        QByteArray notice, payload;
+        const QByteArray file = wrapNoticeContainer(QString::fromUtf8("Лебедев\n").toUtf8(), "RSKN-payload");
+        QVERIFY(unwrapNoticeContainer(file, notice, payload));
+        QCOMPARE(notice, QString::fromUtf8("Лебедев\n").toUtf8());
+        QCOMPARE(payload, QByteArray("RSKN-payload"));
+        QVERIFY(!unwrapNoticeContainer(QByteArray("RSKN-payload"), notice, payload)); // unwrapped file
+        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer(QByteArray(), "p"), notice, payload)); // empty notice
+        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer("n", QByteArray()), notice, payload)); // no payload
+        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer("\xff\xfe", "p"), notice, payload)); // not UTF-8
+        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer(QByteArray(profile::kMaxEmbeddedNoticeBytes + 1, 'n'), "p"),
+                                       notice, payload)); // too large
+        QByteArray truncated = wrapNoticeContainer("notice", "p");
+        truncated.chop(2); // the length now points past the end
+        QVERIFY(!unwrapNoticeContainer(truncated, notice, payload));
+    }
+
+    void controlAffWithoutMarkRejected()
+    {
+        testfixture::ProfileFixture f;
+        QVERIFY(f.build());
+        profile::LanguagePins &l = f.pins.languages[1];
+        QFile file(f.root + QLatin1Char('/') + l.controlAff.path);
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const QByteArray marked = file.readAll();
+        file.close();
+        const QByteArray header(profile::kControlAffHeader);
+        QVERIFY(marked.startsWith(header));
+        const QByteArray unmarked = marked.mid(header.size()); // the pre-SYS-256 control file
+        QVERIFY(testfixture::writeBytes(f.root, l.controlAff.path, unmarked));
+        l.controlAff = testfixture::pinOf(l.controlAff.path, unmarked);
+        QVERIFY(f.writeMorph());
+        profile::VerifiedProfile verified;
+        QCOMPARE(profile::verifyProfileFiles(f.root, f.pins, verified), ProfileError::ControlMismatch);
+    }
+
     void queryableParity()
     {
         const std::vector<QString> tokens{
@@ -134,7 +186,7 @@ private Q_SLOTS:
 
     void artifactMetadataParity()
     {
-        const profile::ProfilePins &pins = profile::productionPins();
+        const profile::ProfilePins pins = researchPins();
         std::array<domain::ExpectedTrainingSource, 2> expected;
         for (std::size_t li = 0; li < 2; ++li)
             expected[li] = {pins.languages[li].dic.sha256, pins.languages[li].notice.path,

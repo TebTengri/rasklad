@@ -76,6 +76,13 @@ inline constexpr qint64 kMaxModificationsBytes = 64LL * 1024;
 inline constexpr qint64 kMaxLibraryBytes = 4LL * 1024 * 1024;
 inline constexpr qint64 kMaxPinnedArtifactBytes = 64LL * 1024 * 1024;
 inline constexpr int kMaxPathChars = 200;
+inline constexpr qint64 kMaxEmbeddedNoticeBytes = 64LL * 1024;
+
+// SYS-256: the first lines of each control .aff, a Hunspell comment that marks the
+// file as modified (the ru_RU and Ispell terms ask for modified files to be marked).
+inline constexpr char kControlAffHeader[] =
+    "# Modified by Rasklad: the PFX and SFX rules of the upstream .aff are removed.\n"
+    "# Not an upstream file. See /usr/share/licenses/rasklad-fcitx5/DATA-NOTICE.txt\n";
 
 struct FilePin {
     QString path;
@@ -143,6 +150,13 @@ struct ProfilePins {
 // a BOM before an affix row, NUL bytes, empty input and inputs without affix
 // rows. Returns false on any rejection.
 [[nodiscard]] bool removePfxSfxRows(const QByteArray &source, QByteArray &out);
+
+// SYS-256: the model and the word list carry the dictionary notices inside the file:
+// "RSKX", notice length (uint32, little endian), the UTF-8 notice, then the unchanged
+// RSKN/RSKP payload. Unwrap rejects another magic, an empty or oversized notice, a
+// notice that is not strict UTF-8 and an empty payload.
+[[nodiscard]] QByteArray wrapNoticeContainer(const QByteArray &notice, const QByteArray &payload);
+[[nodiscard]] bool unwrapNoticeContainer(const QByteArray &file, QByteArray &notice, QByteArray &payload);
 
 // Port of tools/hunspellengine isQueryableToken: 1..32 UTF-16, no Cc, no lone surrogates.
 [[nodiscard]] bool isQueryableToken(QStringView token);
