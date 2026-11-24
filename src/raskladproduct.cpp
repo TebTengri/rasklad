@@ -1290,19 +1290,34 @@ private:
     // expired kept word in all contexts, even if no key follows. Words kept earlier
     // expire earlier, so one timer armed for the latest word covers them all.
     std::unique_ptr<fcitx::EventSourceTime> expireEvent_;
-    void armExpiry(fcitx::InputContext *ic, LabState &s) {
+    // One timer for all fields, always set to the earliest kept word's deadline: a
+    // word kept later in another field never pushes an earlier wipe back (SYS-272).
+    void armExpiry(fcitx::InputContext *, LabState &s) {
         if (!instance_ || !s.lastValid) return;
-        auto ref = ic->watch();
-        const auto generation = s.lastGeneration;
+        const std::uint64_t deadline = s.lastAtUs + LabState::kLastLifetimeUs + 1000;
+        if (expireEvent_ && expireEvent_->isEnabled() && expireEvent_->time() <= deadline) return;
+        if (expireEvent_) {
+            expireEvent_->setTime(deadline);
+            expireEvent_->setOneShot();
+            return;
+        }
         expireEvent_ = instance_->eventLoop().addTimeEvent(
-            CLOCK_MONOTONIC, s.lastAtUs + LabState::kLastLifetimeUs + 1000, 100000,
-            [this, ref, generation](fcitx::EventSourceTime *, std::uint64_t) {
-                if (auto *c = ref.get())
-                    if (auto *s = state(c, false); s && s->lastGeneration == generation) s->forgetLast();
-                instance_->inputContextManager().foreach([this](fcitx::InputContext *c) {
-                    if (auto *s = state(c, false); s && s->lastValid && s->lastExpired()) s->forgetLast();
+            CLOCK_MONOTONIC, deadline, 100000, [this](fcitx::EventSourceTime *src, std::uint64_t) {
+                std::uint64_t next = 0;
+                instance_->inputContextManager().foreach([this, &next](fcitx::InputContext *c) {
+                    if (auto *s = state(c, false); s && s->lastValid) {
+                        if (s->lastExpired()) s->forgetLast();
+                        else {
+                            const std::uint64_t d = s->lastAtUs + LabState::kLastLifetimeUs + 1000;
+                            if (!next || d < next) next = d;
+                        }
+                    }
                     return true;
                 });
+                if (next) {
+                    src->setTime(next);
+                    src->setOneShot();
+                }
                 return true;
             });
     }
