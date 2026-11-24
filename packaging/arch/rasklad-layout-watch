@@ -98,6 +98,7 @@ def main():
     if not state["owner"]:
       # Also covers a Fcitx that appeared before the subscription took effect.
       state["owner"] = owner_of(bus)
+      state["status_now"] = bool(state["owner"])  # a Fcitx just found: its status now
     owner = state["owner"]
     method = current_method(bus, owner) if owner else ""
     if state["status_now"] or now_ms() >= state["status_due"] or not method:
