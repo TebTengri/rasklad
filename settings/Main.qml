@@ -716,7 +716,7 @@ ApplicationWindow {
                     font.bold: true
                 }
                 Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
-                Hint { text: qsTr("To pause automatic correction, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
+                Hint { text: qsTr("To turn off automatic correction for a while, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
                 Hint { text: qsTr("An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts."); font.pixelSize: 12 }
                 Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
                 GridLayout {
