@@ -254,7 +254,7 @@ bool typeFixed(Session &s, std::string_view seq)
     return true;
 }
 
-enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, PoyuComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, WordPeriod, Question, CapsComma, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
+enum class Cmd { Word, Space, XSpace, Hello, Sample2, Mixed, Long, Undo, Backspace, Escape, LabOff, LabOn, Shift2, ShiftSlow, ShiftA, ShiftR2, CtrlShift2, ShiftLR2, Zhurnal, Khorosho, Yolka, HelloComma, RuGroup, UsGroup, WordComma, PoyuComma, Exclaim, Enter, CapWord, ShortWord, Hyphen, WordPeriod, Question, CapsComma, ShiftDown, ShiftUp, Alt1, Alt2, AltR2, AltTab, AltSlow, Unknown };
 
 Cmd parse(std::string_view line)
 {
@@ -276,6 +276,9 @@ Cmd parse(std::string_view line)
     if (envIs("RASKLAD_MANUAL_LAB", "1")) {
         if (line == "shift2") return Cmd::Shift2;
         if (line == "shiftslow") return Cmd::ShiftSlow;
+        // SYS-271: a lone press and a lone release, so a race starts at the release.
+        if (line == "shiftdown") return Cmd::ShiftDown;
+        if (line == "shiftup") return Cmd::ShiftUp;
         if (line == "shifta") return Cmd::ShiftA;
         if (line == "shiftr2") return Cmd::ShiftR2;
         if (line == "ctrlshift2") return Cmd::CtrlShift2;
@@ -332,6 +335,8 @@ bool run(Session &s, Cmd cmd)
         return s.tap(KEY_LEFTSHIFT);
     }
     case Cmd::ShiftA: return s.chord(KEY_LEFTSHIFT, KEY_A);
+    case Cmd::ShiftDown: return s.sendKey(KEY_LEFTSHIFT, true);
+    case Cmd::ShiftUp: return s.sendKey(KEY_LEFTSHIFT, false);
     case Cmd::ShiftR2: return s.tap(KEY_RIGHTSHIFT) && s.tap(KEY_RIGHTSHIFT);
     // Two Shift taps while Ctrl is held: a modifier combination, never the gesture.
     case Cmd::CtrlShift2:
