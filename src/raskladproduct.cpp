@@ -235,7 +235,11 @@ public:
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
     std::string lastText() const { return lastNow + lastSuffix; }
+    // SYS-271: bumped whenever the kept word is forgotten or replaced by another,
+    // so a deferred undo acts only on the very word it was asked for.
+    std::uint64_t lastGeneration = 0;
     void forgetLast() {
+        ++lastGeneration;
         for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) {
             volatile char *p = text->data();
             for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
@@ -1018,12 +1022,8 @@ private:
                     return;
                 }
                 if (s->empty() && s->lastValid) {
-                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
-                        // The restored form's layout becomes current (SYS-226).
-                        const bool toRu = s->lastOtherRu;
-                        auto ref = ic->watch();
-                        if (replaceLast(ic, *s)) switchLayout(ref, toRu);
-                    }
+                    if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time()))
+                        scheduleUndo(ic, *s);
                     return;
                 }
                 if (s->empty() || !validate(ic, *s)) {
@@ -1248,6 +1248,34 @@ private:
     bool applying_ = false;
     std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
     std::unique_ptr<fcitx::EventSource> switchEvent_;
+    // SYS-271: the double-Shift undo waits kUndoDelayUs, then checks the same context
+    // again. A focus change, reset, any key or a new word in the meantime cancels it
+    // (the focus or reset invalidates the state; a key forgets the word). Shift is
+    // never filtered, so the wait delays no typed character.
+    static constexpr std::uint64_t kUndoDelayUs = 40000;
+    std::unique_ptr<fcitx::EventSourceTime> undoEvent_;
+    void scheduleUndo(fcitx::InputContext *ic, LabState &s) {
+        if (!instance_) return;
+        auto ref = ic->watch();
+        const auto epoch = s.epoch;
+        const auto generation = s.lastGeneration;
+        undoEvent_ = instance_->eventLoop().addTimeEvent(
+            // Explicit 1 ms tolerance: with 0, sd-event allows 250 ms of slack, and a key
+            // typed in that time would silently cancel the undo.
+            CLOCK_MONOTONIC, fcitx::now(CLOCK_MONOTONIC) + kUndoDelayUs, 1000,
+            [this, ref, epoch, generation](fcitx::EventSourceTime *, std::uint64_t) {
+                auto *c = ref.get();
+                if (!c) return true;
+                auto *s = state(c, false);
+                if (!s || s->epoch != epoch || s->lastGeneration != generation || !s->lastValid ||
+                    !s->empty() || familyOff_ || !eligible(c) || s->stopping())
+                    return true;
+                // The restored form's layout becomes current (SYS-226).
+                const bool toRu = s->lastOtherRu;
+                if (replaceLast(c, *s)) switchLayout(ref, toRu);
+                return true;
+            });
+    }
     bool selfSwitch_ = false;
     rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's

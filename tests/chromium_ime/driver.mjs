@@ -222,6 +222,73 @@ try{
   phase='exception_gesture';await reset();await type('word');await type('shift2');await type('space');report.exceptGestureValue=await v();report.exceptGesture=report.exceptGestureValue==='привет ';
   const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='focus'){
+  // SYS-271: focus moves to another field right after the key that makes the
+  // addon act: the Space (correction) or the second Shift release (undo). Both
+  // fields hold distinct synthetic text first, so a deletion in either shows.
+  // The delays are requested, not measured at Fcitx: the sweep is telemetry,
+  // and only what must hold at any timing is required.
+  if(!nativeWayland)throw Error('native product suite required');
+  const strictUndo=process.env.RASKLAD_HYPRLAND_IME_LAB==='1';report.strictUndo=strictUndo;
+  const SEED_P='aa ',SEED_O='zz ';
+  async function seed(){
+   await ev(`(()=>{const p=prose,o=document.getElementById('other');p.value=${JSON.stringify(SEED_P)};o.value=${JSON.stringify(SEED_O)};o.setSelectionRange(o.value.length,o.value.length);p.focus();p.setSelectionRange(p.value.length,p.value.length);imeEvents=[];return true})()`);
+   await new Promise(r=>setTimeout(r,150));
+  }
+  const fields=async()=>({prose:await ev('prose.value'),other:await ev(`document.getElementById('other').value`)});
+  async function race(cmd,ms){
+   const ack=nextVkLine(5000);vk.stdin.write(cmd+'\n');
+   if(ms>0)await new Promise(r=>setTimeout(r,ms));
+   await ev(`document.getElementById('other').focus();true`);
+   if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');
+   await new Promise(r=>setTimeout(r,400));
+   return fields();
+  }
+  const word=x=>/ghbdtn|привет/.test(x);
+  // Helper commands without type()'s settle pause: the two Shift releases must stay
+  // inside the gesture's 400 ms window.
+  async function key(cmd){const ack=nextVkLine(5000);vk.stdin.write(cmd+'\n');if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');}
+  const firstShiftThenPress=async()=>{await new Promise(r=>setTimeout(r,150));await key('shiftdown');await key('shiftup');await key('shiftdown');};
+  // Same-field control: undo must really run on this stack (Sway's Chromium never
+  // confirms the word, so there undo is refused and its race is not exercised).
+  phase='focus_undo_control';await seed();await type('word');await type('space');
+  report.focusUndoControlCorrected=(await fields()).prose===SEED_P+'привет ';
+  await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,400));
+  report.focusUndoControl=(await fields()).prose;
+  report.focusUndoExercised=report.focusUndoControlCorrected&&report.focusUndoControl===SEED_P+'ghbdtn ';
+  // Typing right after the gesture (about 85 ms after the release: the helper's
+  // 25 ms pause plus 60 ms): the undo has run first. Follow-up: a layout-sensitive
+  // key, since "hello" can also come out of autocorrection from the ru layout.
+  phase='focus_undo_then_type';await seed();await type('word');await type('space');
+  await firstShiftThenPress();await key('shiftup');await new Promise(r=>setTimeout(r,60));await type('hello');
+  report.focusUndoThenTypeValue=(await fields()).prose;
+  report.focusUndoThenType=report.focusUndoThenTypeValue===SEED_P+'ghbdtn hello ';
+  const runs=[];
+  for(const ms of [0,0,0,0,1,1,2,5,20,50,80]){
+   phase='focus_space_'+ms;await seed();await type('word');
+   runs.push({kind:'space',ms,...await race('space',ms)});
+   phase='focus_undo_'+ms;await seed();await type('word');await type('space');
+   await firstShiftThenPress();
+   runs.push({kind:'undo',ms,...await race('shiftup',ms)});
+  }
+  for(const r of runs){
+   r.otherIntact=r.other===SEED_O;
+   r.wordInOther=word(r.other.slice(SEED_O.length))||!r.other.startsWith(SEED_O);
+   r.spaceOnlyInOther=r.other===SEED_O+' ';
+  }
+  report.focusRuns=runs;
+  report.focusSpaceWordLeaks=runs.filter(r=>r.kind==='space'&&r.wordInOther).map(r=>r.ms);
+  report.focusSpaceOnly=runs.filter(r=>r.kind==='space'&&r.spaceOnlyInOther).map(r=>r.ms);
+  report.focusUndoLeaks=runs.filter(r=>r.kind==='undo'&&!r.otherIntact).map(r=>r.ms);
+  report.focusUndoApplied=runs.filter(r=>r.kind==='undo'&&r.prose===SEED_P+'ghbdtn ').map(r=>r.ms);
+  // Undo never touches the second field, at any timing.
+  report.focusUndoNeverInOther=report.focusUndoLeaks.length===0;
+  // The first field always holds its seed and one whole form of the word.
+  report.focusProseConsistent=runs.every(r=>[SEED_P+'привет ',SEED_P+'ghbdtn ',SEED_P+'привет',SEED_P+'ghbdtn'].includes(r.prose));
+  phase='focus_after';await reset('other');await type('word');await type('space');
+  report.focusAfterWorks=await ev(`document.getElementById('other').value==='привет '`);
+  const required=['focusUndoNeverInOther','focusProseConsistent','focusAfterWorks',...(strictUndo?['focusUndoExercised','focusUndoThenType']:[])];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='gestures'){
   // SYS-227: automatic correction switched off: words stay as typed on every word end,
   // in both layouts; double Shift still converts the word being typed.

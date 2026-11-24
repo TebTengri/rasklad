@@ -168,7 +168,8 @@ rasklad-setup --revert && sudo pacman -R rasklad-fcitx5 && fcitx5 -rd
   python3 tools/wayland_ime_lab.py --run --product-suite listed --packaged --input-root "$profile"
   ```
 
-  Наборы: `listed`, `unlisted`, `layout`, `exceptions`, `gestures`.
+  Наборы: `listed`, `unlisted`, `layout`, `exceptions`, `gestures`, `focus`
+  (смена фокуса сразу после исправления — [docs/SYS-271-FOCUS-RACE.md](docs/SYS-271-FOCUS-RACE.md)).
 - Навигация по проекту: `bin/project-map find <тема>`, обзор — [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md).
 - Правила для людей и агентов: [AGENTS.md](AGENTS.md).
 
