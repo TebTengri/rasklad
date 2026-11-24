@@ -75,14 +75,13 @@ tools/build_arch_package.sh <каталог профиля>
        --json > build/experiment-002-report.json
    ```
    Подробности — в [методике опыта 002](../../docs/research/EXPERIMENT-002-METHOD.md).
-4. **Уведомления и пометка.**
+4. **Уведомления и пометка** (та же строка, что в профиле владельца):
    ```sh
+   mkdir -p build/experiment-002-artifacts
    cp data/notices/en_US.README.txt build/experiment-002-artifacts/en_US.NOTICE.txt
    cp data/notices/ru_RU.README.txt build/experiment-002-artifacts/ru_RU.NOTICE.txt
-   ```
-   `MODIFICATIONS.txt` у владельца содержит одну строку:
-   ```
-   Modified numerical artifacts derived locally from reviewed LibreOffice dictionaries. Local experiment only, release_approved=false. See data/sources.json and experiment002 protocol.
+   printf '%s\n' 'Modified numerical artifacts derived locally from reviewed LibreOffice dictionaries. Local experiment only, release_approved=false. See data/sources.json and experiment002 protocol.' \
+       > build/experiment-002-artifacts/MODIFICATIONS.txt
    ```
 
 После четырёх шагов клон сам служит каталогом профиля: `tools/build_arch_package.sh .`
