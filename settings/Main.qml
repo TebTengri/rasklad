@@ -128,6 +128,7 @@ ApplicationWindow {
     function errorText(code) {
         switch (code) {
         case "write": return qsTr("Fcitx did not accept the change. Nothing was changed.")
+        case "changed": return qsTr("Changed in another program meanwhile. The current list is shown; make the change again.")
         case "invalid": return qsTr("Use Latin letters, digits, dot, dash or underscore.")
         case "terminal": return qsTr("Terminals are not supported.")
         case "full": return qsTr("At most 64 applications can be on.")
@@ -143,7 +144,7 @@ ApplicationWindow {
         if (!backend.wordOptions) return qsTr("The Rasklad addon is older than this window. Update Rasklad and restart Fcitx.")
         if (!backend.layoutsReady) return qsTr("Add the English and Russian layouts (keyboard-us, keyboard-ru) to the Fcitx group.")
         if (backend.profileBroken) return qsTr("Automatic correction is unavailable: the dictionaries did not pass verification. Reinstall Rasklad.")
-        if (backend.error === "write") return errorText("write")
+        if (backend.error === "write" || backend.error === "changed") return errorText(backend.error)
         return ""
     }
 

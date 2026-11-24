@@ -175,7 +175,10 @@ constexpr const char kPropertyName[] = "raskladlabState";
 constexpr const char kRuleFrom[] = "ghbdtn";
 constexpr const char kRuleTo[] = "привет";
 
+// Wipes the whole buffer, not just the current length: a string shortened in
+// place (the double-Shift swap) keeps older bytes past size() (SYS-272).
 void wipeString(std::string &s) {
+    s.resize(s.capacity()); // no reallocation; the tail becomes addressable
     volatile char *p = s.empty() ? nullptr : &s[0];
     for (std::size_t i = 0; p && i < s.size(); ++i) {
         p[i] = '\0';
@@ -219,8 +222,14 @@ public:
     // the client. Confirmed: such an update showed exactly that word + space right
     // before a collapsed cursor at lastCursor; any later update that differs
     // (text or cursor, e.g. a mouse click) forgets it. Only Confirmed may replace.
-    std::string lastNow;
-    std::string lastOther;
+    // Both forms stay in their own strings; a swap flips lastSwapped only. Moving
+    // strings would leave a short form's bytes in an object's inline storage,
+    // where no wipe reaches them (SYS-272).
+    std::string lastFormA;
+    std::string lastFormB;
+    bool lastSwapped = false;
+    const std::string &lastNow() const { return lastSwapped ? lastFormB : lastFormA; }
+    const std::string &lastOther() const { return lastSwapped ? lastFormA : lastFormB; }
     std::string lastSuffix;
     bool lastOtherRu = false; // lastOther is the Cyrillic form
     bool lastValid = false;
@@ -236,7 +245,7 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return lastNow + lastSuffix; }
+    std::string lastText() const { return lastNow() + lastSuffix; }
     // SYS-271: bumped whenever the kept word is forgotten or replaced by another,
     // so a deferred undo acts only on the very word it was asked for.
     std::uint64_t lastGeneration = 0;
@@ -247,12 +256,8 @@ public:
     bool lastExpired() const { return !lastValid || fcitx::now(CLOCK_MONOTONIC) - lastAtUs > kLastLifetimeUs; }
     void forgetLast() {
         ++lastGeneration;
-        for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) {
-            volatile char *p = text->data();
-            for (std::size_t i = 0; i < text->size(); ++i) p[i] = '\0';
-            text->clear();
-        }
-        lastOtherRu = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
+        for (std::string *text : {&lastFormA, &lastFormB, &lastSuffix}) wipeString(*text);
+        lastSwapped = false; lastOtherRu = false; lastValid = false; lastConfirmed = false; lastCursor = 0;
         lastRule = Confirm::Never; lastPreCursor = 0;
     }
     // Keep a just-committed word for the double-Shift swap, only when it can ever
@@ -265,7 +270,7 @@ public:
         const bool keep = pre.isValid() && pre.cursor() == pre.anchor() && now != other;
         if (keep) {
             lastAtUs = fcitx::now(CLOCK_MONOTONIC);
-            lastNow = now; lastOther = other; lastSuffix = suffix;
+            lastFormA = now; lastFormB = other; lastSuffix = suffix;
             lastOtherRu = otherRu;
             lastValid = true; // Pending
             lastRule = Confirm::AfterCommit;
@@ -334,7 +339,11 @@ public:
         }
     }
 
-    void clearPending() { pendingCount_ = 0; }
+    // SYS-272: wipe, not just forget: the codes and keysyms of consumed keys.
+    void clearPending() {
+        for (auto &e : pending_) e = Pending{};
+        pendingCount_ = 0;
+    }
     bool hasPending() const { return pendingCount_ != 0; }
 
     // Remember a consumed press so its release can be swallowed.
@@ -359,7 +368,7 @@ public:
                 for (std::size_t j = i + 1; j < pendingCount_; ++j) {
                     pending_[j - 1] = pending_[j];
                 }
-                --pendingCount_;
+                pending_[--pendingCount_] = Pending{}; // released: nothing kept
                 return true;
             }
         }
@@ -853,7 +862,7 @@ private:
             // Stale pre-commit updates may still arrive: they never confirm and never arm.
             // Fail closed when the pre-commit cursor was unknown.
             const unsigned cursor = ic->surroundingText().cursor();
-            const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
+            const long n = rasklad::manual::codePointCount(s.lastNow()) + rasklad::manual::codePointCount(s.lastSuffix);
             const bool fresh =
                 (s.lastRule == LabState::Confirm::AfterReplace) ||
                 (s.lastRule == LabState::Confirm::AfterCommit && n > 0 &&
@@ -864,16 +873,16 @@ private:
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
     static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
-        std::string newText = s.lastOther + s.lastSuffix;
+        std::string newText = s.lastOther() + s.lastSuffix;
         const auto &st = ic->surroundingText();
-        const long n = rasklad::manual::codePointCount(s.lastNow) + rasklad::manual::codePointCount(s.lastSuffix);
+        const long n = rasklad::manual::codePointCount(s.lastNow()) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
         const bool gated = true;
         if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
-        std::swap(s.lastNow, s.lastOther); s.lastOtherRu = !s.lastOtherRu; s.lastConfirmed = false;
+        s.lastSwapped = !s.lastSwapped; s.lastOtherRu = !s.lastOtherRu; s.lastConfirmed = false;
         s.lastRule = LabState::Confirm::AfterReplace;
         ic->deleteSurroundingText(-static_cast<int>(n), static_cast<unsigned>(n));
         ic->commitString(newText);
@@ -1286,19 +1295,34 @@ private:
     // expired kept word in all contexts, even if no key follows. Words kept earlier
     // expire earlier, so one timer armed for the latest word covers them all.
     std::unique_ptr<fcitx::EventSourceTime> expireEvent_;
-    void armExpiry(fcitx::InputContext *ic, LabState &s) {
+    // One timer for all fields, always set to the earliest kept word's deadline: a
+    // word kept later in another field never pushes an earlier wipe back (SYS-272).
+    void armExpiry(fcitx::InputContext *, LabState &s) {
         if (!instance_ || !s.lastValid) return;
-        auto ref = ic->watch();
-        const auto generation = s.lastGeneration;
+        const std::uint64_t deadline = s.lastAtUs + LabState::kLastLifetimeUs + 1000;
+        if (expireEvent_ && expireEvent_->isEnabled() && expireEvent_->time() <= deadline) return;
+        if (expireEvent_) {
+            expireEvent_->setTime(deadline);
+            expireEvent_->setOneShot();
+            return;
+        }
         expireEvent_ = instance_->eventLoop().addTimeEvent(
-            CLOCK_MONOTONIC, s.lastAtUs + LabState::kLastLifetimeUs + 1000, 100000,
-            [this, ref, generation](fcitx::EventSourceTime *, std::uint64_t) {
-                if (auto *c = ref.get())
-                    if (auto *s = state(c, false); s && s->lastGeneration == generation) s->forgetLast();
-                instance_->inputContextManager().foreach([this](fcitx::InputContext *c) {
-                    if (auto *s = state(c, false); s && s->lastValid && s->lastExpired()) s->forgetLast();
+            CLOCK_MONOTONIC, deadline, 100000, [this](fcitx::EventSourceTime *src, std::uint64_t) {
+                std::uint64_t next = 0;
+                instance_->inputContextManager().foreach([this, &next](fcitx::InputContext *c) {
+                    if (auto *s = state(c, false); s && s->lastValid) {
+                        if (s->lastExpired()) s->forgetLast();
+                        else {
+                            const std::uint64_t d = s->lastAtUs + LabState::kLastLifetimeUs + 1000;
+                            if (!next || d < next) next = d;
+                        }
+                    }
                     return true;
                 });
+                if (next) {
+                    src->setTime(next);
+                    src->setOneShot();
+                }
                 return true;
             });
     }
