@@ -20,7 +20,7 @@ sha256sums=('@SHA256@' '@PROFILE_SHA256@')
 
 build() {
   cd "rasklad-${pkgver}"
-  mkdir -p build/addon build/policy build/permissions build/cue build/settings build/settings-tests build/desktopindex-tests build/core build/gesture
+  mkdir -p build/addon build/policy build/permissions build/cue build/settings build/settings-tests build/desktopindex-tests build/core build/gesture build/profile-gate
   (cd build/addon && qmake6 ../../tools/fcitx_product.pro && make)
   (cd build/policy && qmake6 ../../tests/application_policy/application_policy.pro && make)
   (cd build/permissions && qmake6 ../../tests/application_permissions/application_permissions.pro && make)
@@ -30,6 +30,7 @@ build() {
   (cd build/desktopindex-tests && qmake6 ../../tests/settings/desktopindex_tests.pro && make)
   (cd build/core && qmake6 ../../tests/product_core/product_core.pro && make)
   (cd build/gesture && qmake6 ../../tests/manual_gesture/manual_gesture.pro && make)
+  (cd build/profile-gate && qmake6 ../../tests/profile_gate/profile_gate.pro && make)
 }
 
 check() {
@@ -41,8 +42,9 @@ check() {
   QT_QPA_PLATFORM=offscreen ./build/desktopindex-tests/desktopindex_tests
   ./build/core/product_core_tests
   ./build/gesture/manual_gesture_tests
-  # SYS-256: the staged profile matches the production pins and carries its marks.
-  python3 -I tools/check_profile_pins.py "${srcdir}/profile"
+  # SYS-256: the addon's verifier and production pins accept the staged profile, so
+  # an old, unmarked or altered profile never becomes a package.
+  ./build/profile-gate/profile_gate "${srcdir}/profile"
   # The addon must not read the environment, load code, log, write files, or use D-Bus,
   # the network or processes (libc names, then Qt classes, which nm shows mangled).
   # Reading the pinned profile with QFile is expected; writing through Qt is not.

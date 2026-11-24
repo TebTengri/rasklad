@@ -59,35 +59,14 @@ class ReleaseProfile(unittest.TestCase):
 
 
 class PackagingGate(unittest.TestCase):
-    def setUp(self):
-        spec = importlib.util.spec_from_file_location('pins', ROOT / 'tools/check_profile_pins.py')
-        self.gate = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(self.gate)
-
-    def test_pins_cover_every_pinned_build_file(self):
-        pins = self.gate.production_pins()
-        self.assertEqual(len(pins), 8)  # two .dic, two .aff, two control .aff, model, word list
-        listed = [x for x in (ROOT / 'packaging/arch/profile-files.txt').read_text().splitlines()
-                  if x.startswith('build/')]
-        self.assertTrue(set(pins) <= set(listed))
-        self.assertEqual(self.gate.control_header(), load_tool().CONTROL_AFF_HEADER)
-
-    def test_pre_sys256_profile_refused(self):
-        # The experiment profile: right paths, bare RSKN/RSKP, unmarked control .aff.
-        import tempfile
-        tool = load_tool()
-        pins = self.gate.production_pins()
-        with tempfile.TemporaryDirectory() as tmp:
-            for rel in pins:
-                path = Path(tmp) / rel
-                path.parent.mkdir(parents=True, exist_ok=True)
-                old = {'.rskn': b'RSKN', '.rskp': b'RSKP'}.get(path.suffix, b'SET UTF-8\n')
-                path.write_bytes(old)
-            errors = self.gate.check(tmp)
-        self.assertEqual(sum('no embedded notices' in e for e in errors), 2)
-        self.assertEqual(sum('control .aff not marked' in e for e in errors), 2)
-        self.assertEqual(sum('does not match its pin' in e for e in errors), 8)
-        del tool
+    def test_pkgbuild_check_runs_the_addon_verifier(self):
+        text = (ROOT / 'packaging/arch/PKGBUILD').read_text()
+        check = text[text.index('check() {'):text.index('package() {')]
+        self.assertIn('./build/profile-gate/profile_gate "${srcdir}/profile"', check)
+        self.assertIn('qmake6 ../../tests/profile_gate/profile_gate.pro', text)
+        gate = (ROOT / 'tests/profile_gate/profile_gate.cpp').read_text()
+        self.assertIn('verifyProfileFiles(', gate)
+        self.assertIn('productionPins()', gate)
 
 
 if __name__ == '__main__':

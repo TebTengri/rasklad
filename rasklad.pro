@@ -76,6 +76,9 @@ packagesExist(hunspell) {
     SUBDIRS += profile_tests
     profile_tests.file = tests/profile/profile_tests.pro
     profile_tests.depends = core
+    # SYS-256: the packaging gate (PKGBUILD check()), the addon's verifier as a program.
+    SUBDIRS += profile_gate
+    profile_gate.file = tests/profile_gate/profile_gate.pro
 } else {
     message("rasklad: pkg-config hunspell not found; SYS-235/236 morphology and domain targets are skipped")
 }

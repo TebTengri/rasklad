@@ -182,6 +182,24 @@ private Q_SLOTS:
         QCOMPARE(profile::verifyProfileFiles(f.root, f.pins, verified), ProfileError::ControlMismatch);
     }
 
+    void bareModelRejected()
+    {
+        // The pre-SYS-256 format: an RSKN model without the notice container, even
+        // with a matching pin, is refused (as by tests/profile_gate in PKGBUILD).
+        testfixture::ProfileFixture f;
+        QVERIFY(f.build());
+        QFile file(f.root + QLatin1Char('/') + f.pins.model.path);
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QByteArray notice, bare;
+        QVERIFY(profile::unwrapNoticeContainer(file.readAll(), notice, bare));
+        file.close();
+        QVERIFY(testfixture::writeBytes(f.root, f.pins.model.path, bare));
+        f.pins.model = testfixture::pinOf(f.pins.model.path, bare);
+        QVERIFY(f.writeMetadata());
+        profile::VerifiedProfile verified;
+        QCOMPARE(profile::verifyProfileFiles(f.root, f.pins, verified), ProfileError::FormatMismatch);
+    }
+
     void queryableParity()
     {
         const std::vector<QString> tokens{
