@@ -5,10 +5,12 @@ pre_remove() {
   cat <<'EOF'
 ==> rasklad-fcitx5: if you ran rasklad-setup --install, undo it first, as yourself:
       rasklad-setup --revert
-    If the package is already gone: double Alt and the keep-only-us block in
-    ~/.config/hypr/input.lua switch themselves off, and Hyprland is back on its own
-    layouts after "hyprctl reload". The Omarchy bar may show an empty slot where
-    the Rasklad widget was: put "omarchy.keyboard-layout" back in
-    ~/.config/omarchy/shell.json (a copy is in shell.json.rasklad.bak).
+    If the package is already gone: double Alt and a keep-only-us block written
+    by rasklad-setup 0.5.22 or later switch themselves off, and Hyprland is back
+    on its own layouts after "hyprctl reload". An older block in
+    ~/.config/hypr/input.lua (marked "-- BEGIN rasklad-setup") is removed by hand.
+    The Omarchy bar may show an empty slot where the Rasklad widget was: put
+    "omarchy.keyboard-layout" back in ~/.config/omarchy/shell.json (a copy is in
+    shell.json.rasklad.bak).
 EOF
 }

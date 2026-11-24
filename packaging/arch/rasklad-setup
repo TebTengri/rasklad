@@ -40,7 +40,6 @@ LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
-OUR_ID = re.compile(rb'"id"\s*:\s*"rasklad\.layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
 # SYS-268: us variants that type Latin letters (the lock screen keeps only us).
 LATIN_US = {"", "intl", "altgr-intl", "alt-intl", "euro", "mac", "colemak", "dvorak", "workman"}
@@ -407,7 +406,7 @@ def shell_plan(data=None):
     json.loads(data)
   except ValueError:
     return "unparsable", None
-  if OUR_ID.search(data):
+  if names_widget(data):
     return "ok", None
   # Exactly one stock widget, and it sits in the bar's layout.
   found = []
@@ -506,10 +505,29 @@ def remember_file(state, path, old, new):
   entry["written"] = sha(new)
 
 
+def names_widget(data):
+  """shell.json names our widget anywhere (decoded JSON, so escapes count).
+  Unparsable counts as yes: nothing is removed on a guess."""
+  try:
+    root = json.loads(data)
+  except ValueError:
+    return True
+  stack = [root]
+  while stack:
+    node = stack.pop()
+    if isinstance(node, dict):
+      if node.get("id") == "rasklad.layout":
+        return True
+      stack.extend(node.values())
+    elif isinstance(node, list):
+      stack.extend(node)
+  return False
+
+
 def ours_in(path, data):
   """Does this file still carry our change? (SYS-270)"""
   if path == SHELL_JSON:
-    return bool(OUR_ID.search(data))
+    return names_widget(data)
   return BEGIN.encode() in data
 
 
@@ -526,9 +544,17 @@ def drop_stale(state, paths):
     if data is None or ours_in(path, data):
       continue
     entry = state["files"].pop(path)
-    state.setdefault("_drop", []).append(entry["backup"])
+    if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
+       read(entry["bak"]) == read(entry["backup"]):
+      state.setdefault("_drop", []).append(entry["backup"])  # same as the copy beside it
+      copy = entry["bak"]
+    else:
+      # The only copy of the file as it was before install: kept, and named.
+      kept = "%s.%s.before-reset" % (entry["backup"], sha(read(entry["backup"]) or b"")[:12])
+      os.replace(entry["backup"], kept)
+      copy = kept
     say("reset", os.path.basename(path),
-        "our change is gone (omarchy refresh?); nothing to undo (old copy: %s)" % entry["bak"])
+        "our change is gone (omarchy refresh?); nothing to undo (old copy: %s)" % copy)
     dropped = True
   if dropped:
     save_and_drop(state)
@@ -536,7 +562,9 @@ def drop_stale(state, paths):
 
 def install(assume_yes, single_layout=False):
   state = load_state()
-  drop_stale(state, FILES)
+  # input.lua is not forgotten here: its entry is what makes --revert check the
+  # live layouts before it removes the controls (SYS-268).
+  drop_stale(state, (BINDINGS, SHELL_JSON))
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
@@ -758,10 +786,22 @@ def hypr_layouts_back(state):
 
 
 def shell_uses_widget():
-  if file_state(SHELL_JSON) is not None:
+  """Read through a dotfiles symlink too. Unreadable counts as in use."""
+  if file_state(SHELL_JSON) == "missing-file":
     return False
-  data = read(SHELL_JSON)
-  return data is not None and bool(OUR_ID.search(data))
+  try:
+    fd = os.open(SHELL_JSON, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
+  except FileNotFoundError:
+    return False  # a dangling link: nothing names the widget
+  except OSError:
+    return True
+  with os.fdopen(fd, "rb") as f:
+    try:
+      if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):
+        return True
+      return names_widget(f.read())
+    except OSError:
+      return True
 
 
 def input_block_present():

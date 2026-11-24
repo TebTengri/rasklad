@@ -83,6 +83,43 @@ class Refresh(Base):
         self.assertIn('shell.json still uses the widget', out)
         self.assertEqual(self.setup.load_state()['link'], self.setup.WIDGET)
 
+    def test_input_entry_survives_install_after_refresh(self):
+        # SYS-268 safeguard: only --revert's live check may forget input.lua.
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.setup.fcitx = lambda: fake.bus()
+        self.assertEqual(self.quiet(self.setup.install, True, single_layout=True)[0], 0)
+        self.input.write_bytes(b'-- omarchy input\n')
+        self.hypr('us', options='compose:caps')  # Hyprland still on the old block
+        self.quiet(self.setup.install, True)
+        self.assertIn(self.setup.INPUT, self.setup.load_state()['files'])
+
+    def test_only_copy_is_kept_when_the_sidecar_is_older(self):
+        sidecar = Path(str(self.bindings) + '.rasklad.bak')
+        sidecar.write_bytes(b'-- a much older bindings.lua\n')  # not ours: left alone
+        self.quiet(self.setup.install, True)
+        self.refresh()
+        code, out = self.quiet(self.setup.install, True)
+        kept = [p for p in Path(self.setup.BACKUP_DIR).iterdir() if p.name.endswith('.before-reset')]
+        self.assertEqual(len(kept), 1, out)
+        self.assertEqual(kept[0].read_bytes(), b'-- user bindings\n')
+        self.assertIn(str(kept[0]), out)
+
+    def test_escaped_widget_id_counts(self):
+        self.assertTrue(self.setup.names_widget(b'{"bar": {"layout": [{"id": "rasklad\\u002elayout"}]}}'))
+        self.assertFalse(self.setup.names_widget(SHELL))
+
+    def test_symlinked_shell_json_is_read_through(self):
+        real = Path(self.tmp.name) / 'dotfiles-shell.json'
+        real.write_bytes(b'{"bar": {"layout": [{"id": "rasklad.layout"}]}}')
+        self.shell.unlink()
+        self.shell.symlink_to(real)
+        self.assertTrue(self.setup.shell_uses_widget())
+        real.write_bytes(SHELL)
+        self.assertFalse(self.setup.shell_uses_widget())
+        real.unlink()  # dangling
+        self.assertFalse(self.setup.shell_uses_widget())
+
     def test_input_block_is_off_without_the_package(self):
         self.hypr('ru,us', variant=',')
         status, new = self.setup.input_plan(b'-- user file\n')
