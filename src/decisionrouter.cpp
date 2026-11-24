@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "decisionrouter.h"
 
 namespace rasklad::routing {

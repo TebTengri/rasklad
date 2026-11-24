@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Verification gates of the optional local experiment profile (SYS-239).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "ngramdetector.h"
 
 #include "layoutconverter.h"

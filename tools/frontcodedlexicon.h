@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Компактный точный словарь канонических ключей для offline-эксперимента

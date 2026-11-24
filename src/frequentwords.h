@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // SYS-226: fixed table of frequent short words for automatic correction where the
 // reviewed router abstains by design (fewer than 4 keys, or a frequent word the model
 // does not confirm, e.g. куда). Exact match only, lowercase. Excluded (2026-11-21, by

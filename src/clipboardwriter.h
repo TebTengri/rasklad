@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Write-only clipboard access for the explicit Copy action (SYS-239).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "documentcontroller.h"
 
 #include <utility>

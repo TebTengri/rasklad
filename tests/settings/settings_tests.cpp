@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SYS-227: settings app logic against fake Fcitx and app sources (SYS-253).
 #include "settingsbackend.h"
+#include "licenses.h"
 #include "settingscore.h"
 #include "seenprograms.h"
 
@@ -90,6 +91,37 @@ class SettingsTests final : public QObject
 {
     Q_OBJECT
 private Q_SLOTS:
+    void licensesFixedNamesBoundedRegularFiles()
+    {
+        QCOMPARE(licenseFileName(QStringLiteral("rasklad")), QStringLiteral("LICENSE"));
+        QCOMPARE(licenseFileName(QStringLiteral("en")), QStringLiteral("en_US.README.txt"));
+        QCOMPARE(licenseFileName(QStringLiteral("ru")), QStringLiteral("ru_RU.README.txt"));
+        QCOMPARE(licenseFileName(QStringLiteral("data")), QStringLiteral("DATA-NOTICE.txt"));
+        QVERIFY(licenseFileName(QStringLiteral("../LICENSE")).isEmpty());
+        QVERIFY(licenseFileName(QStringLiteral("LICENSE")).isEmpty());
+        QVERIFY(licenseFileName(QString()).isEmpty());
+
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const auto put = [&](const QString &name, const QByteArray &bytes) {
+            QFile f(dir.filePath(name));
+            QVERIFY(f.open(QIODevice::WriteOnly));
+            QCOMPARE(f.write(bytes), qint64(bytes.size()));
+        };
+        put(QStringLiteral("LICENSE"), "MIT License\n");
+        QCOMPARE(readLicense(dir.path(), QStringLiteral("rasklad")), QStringLiteral("MIT License\n"));
+        put(QStringLiteral("ru_RU.README.txt"), QString::fromUtf8("Лебедев").toUtf8());
+        QCOMPARE(readLicense(dir.path(), QStringLiteral("ru")), QString::fromUtf8("Лебедев"));
+        QVERIFY(readLicense(dir.path(), QStringLiteral("en")).isEmpty()); // missing
+        QVERIFY(readLicense(dir.path(), QStringLiteral("other")).isEmpty()); // unknown key
+        put(QStringLiteral("DATA-NOTICE.txt"), QByteArray(kMaxLicenseBytes + 1, 'x'));
+        QVERIFY(readLicense(dir.path(), QStringLiteral("data")).isEmpty()); // too large
+        QVERIFY(QFile::link(dir.filePath(QStringLiteral("LICENSE")), dir.filePath(QStringLiteral("en_US.README.txt"))));
+        QVERIFY(readLicense(dir.path(), QStringLiteral("en")).isEmpty()); // symlink
+        QVERIFY(QDir(dir.path()).mkdir(QStringLiteral("sub")));
+        QVERIFY(readLicense(dir.filePath(QStringLiteral("sub")), QStringLiteral("rasklad")).isEmpty());
+    }
+
     void idRulesAndTerminals()
     {
         QVERIFY(validAppId(QStringLiteral("org.omarchy.agent")));

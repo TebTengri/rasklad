@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Owned plain-text document of the manual-preview window (SYS-239).

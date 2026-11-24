@@ -142,3 +142,11 @@ The index lives in `settings/desktopindex.{h,cpp}`. It is a small parser: it rea
 - **The Omarchy connection** collapses to one line when everything is connected. The rows and «Подключить…» appear only when something is missing.
 - **Long titles wrap** instead of being cut.
 - **One window.** Clicking the icon again brings the open window forward instead of opening a second one.
+
+## Лицензии (SYS-256)
+
+В справке есть кнопка «Лицензии». Она открывает окно с кратким указанием авторов
+словарей (строка UKACD — на виду, как просит её уведомление) и полными текстами:
+Rasklad (MIT), английский словарь, русский словарь, «Что изменил Rasklad». Тексты
+читаются из `/usr/share/licenses/rasklad-fcitx5/` по фиксированным именам
+(`settings/licenses.cpp`), без ссылок и форматирования.

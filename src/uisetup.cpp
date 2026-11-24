@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "uisetup.h"
 
 #include "clipboardwriter.h"

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "spellengine.h"
 
 #include "profileverify.h"
