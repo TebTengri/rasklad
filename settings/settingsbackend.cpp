@@ -12,22 +12,23 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
     if (m_setupTool) {
         m_setupTool->updated = [this] {
             const auto out = m_setupTool->lastCheck();
-            m_setup = out ? setupFromCheck(*out) : QVariantMap{};
-            m_setupInstalled = m_setupTool->installed();
-            Q_EMIT changed();
+            const QVariantMap next = out ? setupFromCheck(*out) : QVariantMap{};
+            const bool installed = m_setupTool->installed();
+            const bool moved = !m_setup.isEmpty() && (next != m_setup || installed != m_setupInstalled);
+            m_setup = next;
+            m_setupInstalled = installed;
+            // Something outside changed the desktop (the terminal): read Fcitx again
+            // once, so the banner and lists match. The next check finds no change.
+            if (moved) refresh();
+            else Q_EMIT changed();
         };
     }
-    // The terminal gives no completion signal: every 4 s for 3 minutes, look at
-    // what it can change (the setup states, the Fcitx layouts behind the banner)
-    // without regrouping the app rows under the cursor; later, focus refreshes all.
+    // The terminal gives no completion signal: every 4 s for 3 minutes, start the
+    // asynchronous check (no blocking call here); a changed answer refreshes once.
     m_setupPoll.setInterval(4000);
     connect(&m_setupPoll, &QTimer::timeout, this, [this] {
         if (++m_setupPolls >= 45) m_setupPoll.stop();
-        m_running = m_fcitx->running();
-        m_addon = m_running && m_fcitx->addonEnabled();
-        m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());
         if (m_setupTool) m_setupTool->requestCheck();
-        Q_EMIT changed();
     });
     refresh();
 }

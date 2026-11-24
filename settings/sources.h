@@ -13,6 +13,7 @@
 #include "desktopindex.h"
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QProcess>
 
 #include <functional>
@@ -101,8 +102,7 @@ private:
     std::unique_ptr<QProcess> m_process;
     QByteArray m_out;
     std::optional<QByteArray> m_last;
-    QElapsedTimer m_lastOpen;
-    QString m_lastAction;
+    QHash<QString, QElapsedTimer> m_opened; // per action: a double click opens one terminal
 };
 
 class DBusFcitx final : public FcitxSource

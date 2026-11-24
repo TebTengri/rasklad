@@ -229,7 +229,8 @@ bool RaskladSetup::open(const QString &action)
 {
     if (action != QLatin1String("install") && action != QLatin1String("revert")) return false;
     // A double click opens one terminal, not two.
-    if (action == m_lastAction && m_lastOpen.isValid() && m_lastOpen.elapsed() < 2000) return true;
+    const auto last = m_opened.constFind(action);
+    if (last != m_opened.constEnd() && last->elapsed() < 2000) return true;
     // One of two fixed strings, the tool by absolute path (the launcher runs it with bash -c).
     const QString command = kSetupTool + QStringLiteral(" --") + action;
     // Omarchy's own way to run a setup step: a floating terminal with Done/Failed.
@@ -242,10 +243,7 @@ bool RaskladSetup::open(const QString &action)
         if (QFileInfo(terminal).isExecutable())
             started = QProcess::startDetached(terminal, {kSetupTool, QStringLiteral("--") + action});
     }
-    if (started) {
-        m_lastOpen.start();
-        m_lastAction = action;
-    }
+    if (started) m_opened[action].start();
     return started;
 }
 
