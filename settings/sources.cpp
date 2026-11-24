@@ -178,9 +178,14 @@ RaskladSetup::~RaskladSetup()
 
 void RaskladSetup::finish(std::optional<QByteArray> result)
 {
-    m_last = std::move(result);
     m_out.clear();
     if (m_process) m_process.release()->deleteLater(); // never deleted inside its own signal
+    if (m_again) { // only an answer started after the last request is published
+        m_again = false;
+        requestCheck();
+        return;
+    }
+    m_last = std::move(result);
     if (updated) updated();
 }
 
@@ -188,7 +193,10 @@ void RaskladSetup::requestCheck()
 {
     // Fixed program and argument, no shell, no input; asynchronous, so a stuck
     // tool never freezes the window: killed after 3 s or 8 KiB of output.
-    if (m_process) return;
+    if (m_process) {
+        m_again = true;
+        return;
+    }
     if (!QFileInfo(kSetupTool).isExecutable()) {
         finish(std::nullopt);
         return;

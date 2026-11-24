@@ -275,9 +275,18 @@ private Q_SLOTS:
         QCOMPARE(b.setupRows().value(QStringLiteral("alt")).toString(), QStringLiteral("missing"));
         QCOMPARE(b.setupRows().value(QStringLiteral("icon")).toString(), QStringLiteral("unknown")); // link step absent
         QVERIFY(b.setupInstalled());
+        // The check's fcitx-group answer moves the layouts banner without a Fcitx call.
+        f.group = {QStringLiteral("keyboard-us")};
+        t.out.reset();
+        b.refresh();
+        QVERIFY(!b.layoutsReady());
         t.out = QByteArray("ok fcitx-group\n");
-        b.refresh(); // FakeFcitx has both layouts; a check saying so keeps the banner off
+        t.updated();
         QVERIFY(b.layoutsReady());
+        t.out = QByteArray("missing fcitx-group\n");
+        t.updated();
+        QVERIFY(!b.layoutsReady());
+        f.group = {QStringLiteral("keyboard-us"), QStringLiteral("keyboard-ru")};
         t.out = QByteArray("ok package\nmissing double-alt\nok bar-widget\n");
         b.refresh();
         QVERIFY(b.openSetup(QStringLiteral("install")));

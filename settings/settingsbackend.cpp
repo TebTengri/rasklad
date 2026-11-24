@@ -20,7 +20,9 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
             if (next != m_setup || installed != m_setupInstalled) m_lastRefresh.invalidate();
             // rasklad-setup's fcitx-group "ok" is the banner's own condition (both
             // layouts in the current Fcitx group): take it without a blocking call.
-            if (m_running && next.value(QStringLiteral("fcitx-group")) == QStringLiteral("ok")) m_layouts = true;
+            const QString group = next.value(QStringLiteral("fcitx-group")).toString();
+            if (m_running && group == QLatin1String("ok")) m_layouts = true;
+            else if (group == QLatin1String("missing")) m_layouts = false;
             m_setup = next;
             m_setupInstalled = installed;
             Q_EMIT changed();

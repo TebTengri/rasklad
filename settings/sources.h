@@ -100,6 +100,7 @@ public:
 private:
     void finish(std::optional<QByteArray> result);
     std::unique_ptr<QProcess> m_process;
+    bool m_again = false; // asked again while one ran: its answer may predate the request
     QByteArray m_out;
     std::optional<QByteArray> m_last;
     QHash<QString, QElapsedTimer> m_opened; // per action: a double click opens one terminal
