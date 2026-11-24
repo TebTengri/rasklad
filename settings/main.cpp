@@ -94,9 +94,12 @@ int main(int argc, char *argv[])
                 QLocalSocket probe;
                 probe.connectToServer(socketPath);
                 if (probe.waitForConnected(200)) {
+                    // Done only when the window answers: one that is closing may still
+                    // accept the connection, and then this start takes its place.
                     probe.write("focus\n");
-                    probe.waitForBytesWritten(200);
-                    return 0;
+                    if (probe.waitForBytesWritten(200) && probe.waitForReadyRead(1000) &&
+                        probe.readAll().startsWith("ok"))
+                        return 0;
                 }
                 QThread::msleep(100);
                 owner = lock.tryLock(0);
@@ -151,10 +154,15 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/Main.qml")));
     if (engine.rootObjects().isEmpty()) return 1;
     auto *window = qobject_cast<QWindow *>(engine.rootObjects().constFirst());
+    // Closing: stop answering at once, so a new start opens its own window.
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, &single, &QLocalServer::close);
     QObject::connect(&single, &QLocalServer::newConnection, &app, [&single, window] {
         while (QLocalSocket *peer = single.nextPendingConnection()) {
-            peer->disconnectFromServer(); // the message is only "come forward"
-            peer->deleteLater();
+            // The message is only "come forward"; the answer says this window is alive.
+            peer->write("ok\n");
+            peer->flush();
+            peer->disconnectFromServer();
+            QObject::connect(peer, &QLocalSocket::disconnected, peer, &QObject::deleteLater);
         }
         if (!window) return;
         window->show();

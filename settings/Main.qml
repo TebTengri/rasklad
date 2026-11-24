@@ -39,6 +39,7 @@ ApplicationWindow {
     property int tab: 0
     // Focus always moves to the shown tab's header: keys never reach a hidden page.
     function showTab(index) {
+        pendingReveal = null // a reveal belongs to the tab it was asked on
         tab = index
         page.contentY = Math.min(page.contentY, Math.max(0, tabs.y + content.y - 20))
         tabHeader().forceActiveFocus()
@@ -334,7 +335,7 @@ ApplicationWindow {
     Flickable {
         id: page
         // A tab switch changes the height after layout: finish a pending reveal then.
-        onContentHeightChanged: if (window.pendingReveal) { const it = window.pendingReveal; window.pendingReveal = null; window.reveal(it) }
+        onContentHeightChanged: if (window.pendingReveal && window.pendingReveal.visible) { const it = window.pendingReveal; window.pendingReveal = null; window.reveal(it) }
         anchors.fill: parent
         contentWidth: width
         contentHeight: content.implicitHeight + 36

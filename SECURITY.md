@@ -375,3 +375,5 @@ The settings window starts no shell of its own and passes no text the user typed
 - A later start finds the lock taken, connects, sends `focus`, and exits. It never opens a second window, even when the first does not answer.
 - The first window ignores what it receives and asks Hyprland, over the request socket, to focus its own pid: `hl.dsp.focus({ window = "pid:<n>" })`, then the classic `focuswindow pid:<n>`, as Omarchy's own scripts do. The pid is a number the window gets from its own process.
 - Nothing received on the socket reaches a command or a setting.
+- The first window answers `ok`. A later start that gets no answer, for example from a window that is closing, takes the lock and opens its own window.
+- Residual risk: between the check of the socket path and Qt publishing the socket (by `rename`), a file created there could be replaced. Only this user can create files in the 0700 runtime directory, so only the user's own processes can race it.
