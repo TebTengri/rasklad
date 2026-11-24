@@ -103,6 +103,8 @@ RASKLAD_FIELD_BIT(kDisable, Disable);
 #undef RASKLAD_FIELD_BIT
 
 constexpr std::size_t kMaxWord = 32;
+// SYS-272: a longer surrounding text from the client is treated as unknown.
+constexpr std::size_t kMaxSurroundingBytes = 64 * 1024;
 constexpr std::size_t kMaxPendingReleases = 8;
 // Separate compile-time lab variant; never an environment-controlled app list.
 constexpr const char kLabProgram[] = "rasklad-ime-lab";
@@ -238,6 +240,11 @@ public:
     // SYS-271: bumped whenever the kept word is forgotten or replaced by another,
     // so a deferred undo acts only on the very word it was asked for.
     std::uint64_t lastGeneration = 0;
+    // SYS-272: when the word was kept. Past kLastLifetimeUs it can no longer be
+    // swapped, and a timer wipes it even if no key ever comes.
+    static constexpr std::uint64_t kLastLifetimeUs = 15'000'000;
+    std::uint64_t lastAtUs = 0;
+    bool lastExpired() const { return !lastValid || fcitx::now(CLOCK_MONOTONIC) - lastAtUs > kLastLifetimeUs; }
     void forgetLast() {
         ++lastGeneration;
         for (std::string *text : {&lastNow, &lastOther, &lastSuffix}) {
@@ -257,6 +264,7 @@ public:
         // parameter is wiped whatever happens.
         const bool keep = pre.isValid() && pre.cursor() == pre.anchor() && now != other;
         if (keep) {
+            lastAtUs = fcitx::now(CLOCK_MONOTONIC);
             lastNow = now; lastOther = other; lastSuffix = suffix;
             lastOtherRu = otherRu;
             lastValid = true; // Pending
@@ -483,6 +491,8 @@ public:
 
     const fcitx::Configuration *getConfig() const override { return &config_; }
     void setConfig(const fcitx::RawConfig &raw) override {
+        // SYS-272: refuse an oversized request before anything is parsed or saved.
+        if (!boundedConfig(raw)) return;
         fcitx::RawConfig before;
         config_.save(before);
         config_.load(raw, true);
@@ -510,6 +520,20 @@ public:
         applyApps();
     }
 private:
+    // SYS-272: the settings app sends at most 64 applications and 256 words; any
+    // request far beyond that (node count or total bytes) is refused whole.
+    static constexpr std::size_t kMaxConfigNodes = 1024;
+    static constexpr std::size_t kMaxConfigBytes = 64 * 1024;
+    static bool boundedConfig(const fcitx::RawConfig &raw) {
+        std::size_t nodes = 0, bytes = raw.value().size();
+        if (bytes > kMaxConfigBytes) return false;
+        return raw.visitSubItems(
+            [&](const fcitx::RawConfig &item, const std::string &) {
+                bytes += item.name().size() + item.value().size();
+                return ++nodes <= kMaxConfigNodes && bytes <= kMaxConfigBytes;
+            },
+            "", true);
+    }
     // SYS-227: exception words as the us keys that type them (either layout's form
     // matches); invalid entries are dropped. Words the owner wrote into the config,
     // never typed input.
@@ -814,7 +838,8 @@ private:
     // surrounding text refuses (fail closed). Deletes exactly that many code points.
     static bool lastMatches(fcitx::InputContext *ic, const LabState &s) {
         const auto &st = ic->surroundingText();
-        if (!st.isValid() || st.cursor() != st.anchor()) return false;
+        // SYS-272: an oversized surrounding text counts as unknown (fail closed).
+        if (!st.isValid() || st.cursor() != st.anchor() || st.text().size() > kMaxSurroundingBytes) return false;
         std::string text = s.lastText();
         const bool ends = rasklad::manual::endsBeforeCursor(st.text(), st.cursor(), text);
         wipeString(text);
@@ -1021,6 +1046,7 @@ private:
                     s->gesture.reset(); s->forgetLast();
                     return;
                 }
+                if (s->empty() && s->lastValid && s->lastExpired()) s->forgetLast();
                 if (s->empty() && s->lastValid) {
                     if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time()))
                         scheduleUndo(ic, *s);
@@ -1181,6 +1207,7 @@ private:
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
                 s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
                             std::string(" "));
+                armExpiry(ic, *s);
                 wipeString(w);
                 out.push_back(' ');
                 if (!validate(ic, *s)) {
@@ -1232,6 +1259,7 @@ private:
                 std::string w = s->word();
                 s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
                             fcitx::utf8::UCS4ToUTF8(mark));
+                armExpiry(ic, *s);
                 wipeString(w);
             }
             commitAndClear(ic, *s, std::move(out));
@@ -1254,6 +1282,26 @@ private:
     // never filtered, so the wait delays no typed character.
     static constexpr std::uint64_t kUndoDelayUs = 40000;
     std::unique_ptr<fcitx::EventSourceTime> undoEvent_;
+    // SYS-272: once the most recently kept word's lifetime is over, wipes every
+    // expired kept word in all contexts, even if no key follows. Words kept earlier
+    // expire earlier, so one timer armed for the latest word covers them all.
+    std::unique_ptr<fcitx::EventSourceTime> expireEvent_;
+    void armExpiry(fcitx::InputContext *ic, LabState &s) {
+        if (!instance_ || !s.lastValid) return;
+        auto ref = ic->watch();
+        const auto generation = s.lastGeneration;
+        expireEvent_ = instance_->eventLoop().addTimeEvent(
+            CLOCK_MONOTONIC, s.lastAtUs + LabState::kLastLifetimeUs + 1000, 100000,
+            [this, ref, generation](fcitx::EventSourceTime *, std::uint64_t) {
+                if (auto *c = ref.get())
+                    if (auto *s = state(c, false); s && s->lastGeneration == generation) s->forgetLast();
+                instance_->inputContextManager().foreach([this](fcitx::InputContext *c) {
+                    if (auto *s = state(c, false); s && s->lastValid && s->lastExpired()) s->forgetLast();
+                    return true;
+                });
+                return true;
+            });
+    }
     void scheduleUndo(fcitx::InputContext *ic, LabState &s) {
         if (!instance_) return;
         auto ref = ic->watch();
@@ -1267,7 +1315,7 @@ private:
                 auto *c = ref.get();
                 if (!c) return true;
                 auto *s = state(c, false);
-                if (!s || s->epoch != epoch || s->lastGeneration != generation || !s->lastValid ||
+                if (!s || s->epoch != epoch || s->lastGeneration != generation || s->lastExpired() ||
                     !s->empty() || familyOff_ || !eligible(c) || s->stopping())
                     return true;
                 // The restored form's layout becomes current (SYS-226).
