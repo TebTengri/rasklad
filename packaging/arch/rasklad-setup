@@ -42,6 +42,8 @@ RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', 
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
 OUR_ID = re.compile(rb'"id"\s*:\s*"rasklad\.layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
+# SYS-268: us variants that type Latin letters (the lock screen keeps only us).
+LATIN_US = {"", "intl", "altgr-intl", "alt-intl", "euro", "mac", "colemak", "dvorak", "workman"}
 # SYS-268: the input.lua block, from BEGIN up to END, exactly as written.
 LAYOUT_BLOCK = (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
                 "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
@@ -380,6 +382,9 @@ def input_plan(data=None):
   variants = variant.split(",")
   i = layouts.index("us")
   values = ("us", variants[i].strip() if i < len(variants) else "", ",".join(kept))
+  if values[1] not in LATIN_US:
+    # us(rus) and the like type Cyrillic: the lock screen would have no Latin.
+    return "other-layouts", None
   if not all(XKB.fullmatch(v) for v in values):
     # Only this optional step is affected; the rest of --install goes on.
     return "unknown", None
@@ -732,7 +737,15 @@ def revert():
   had_input = INPUT in state["files"]
   input_kept = had_input and not restore(state, INPUT)
   input_left = False
-  current = read(INPUT) if input_kept and file_state(INPUT) is None else None
+  current = None
+  if input_kept and file_state(INPUT) in (None, "symlink"):
+    # Read only, through a dotfiles symlink too; never written here.
+    try:
+      if stat.S_ISREG(os.stat(INPUT).st_mode):
+        with open(INPUT, "rb") as f:
+          current = f.read()
+    except OSError:
+      current = None
   if current is not None and BEGIN.encode() not in current and \
      hypr_session() == "running" and hypr_layouts_back(state):
     # Edited, our block gone, and Hyprland runs with the user's layouts again:

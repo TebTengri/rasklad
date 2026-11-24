@@ -113,6 +113,10 @@ class Plan(Base):
         for layout in ('us,ru,kz', 'de,ru', 'ru', 'us,ru,us'):
             self.assertEqual(self.plan(layout, options='grp:alts_toggle'), ('other-layouts', None), layout)
 
+    def test_us_variant_without_latin_is_not_offered(self):
+        self.assertEqual(self.plan('ru,us', variant='ruchey_en,rus'), ('other-layouts', None))
+        self.assertEqual(self.plan('us,ru', variant='intl,')[0], 'missing')
+
     def test_single_us_without_toggle_is_ok(self):
         self.assertEqual(self.plan('us', options='compose:caps'), ('ok', None))
 
@@ -363,6 +367,22 @@ class Install(Base):
         self.input.mkdir()  # a directory where input.lua would be
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.setup.revert(), 0)
+
+    def test_input_moved_to_a_symlink_releases_the_controls(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        clean = Path(self.tmp.name) / 'dotfiles-input.lua'
+        clean.write_bytes(b'-- dotfiles\n')
+        self.input.unlink()
+        self.input.symlink_to(clean)
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda *a: True
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.revert()
+        self.assertTrue(self.input.is_symlink())
+        self.assertEqual(clean.read_bytes(), b'-- dotfiles\n')
+        self.assertEqual(fake.calls, 2)  # Fcitx back
 
     def test_block_removed_without_hyprland_keeps_the_controls(self):
         self.hypr('ru,us', variant=',')
