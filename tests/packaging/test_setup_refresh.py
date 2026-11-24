@@ -120,6 +120,33 @@ class Refresh(Base):
         real.unlink()  # dangling
         self.assertFalse(self.setup.shell_uses_widget())
 
+    def test_reset_input_releases_after_a_reload(self):
+        # omarchy refresh gave the stock single us: the old layouts never come back,
+        # but our block is gone and Hyprland has reloaded without it.
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.setup.fcitx = lambda: fake.bus()
+        self.assertEqual(self.quiet(self.setup.install, True, single_layout=True)[0], 0)
+        self.input.write_bytes(b'-- omarchy input\n')
+        self.hypr('us', options='compose:caps')
+        self.setup.hypr_session = lambda: 'running'
+        code, out = self.quiet(self.setup.revert)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(fake.calls, 2)
+        self.assertFalse(os.path.exists(self.setup.STATE_FILE))
+
+    def test_reset_input_without_session_says_where_to_run(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.setup.fcitx = lambda: fake.bus()
+        self.quiet(self.setup.install, True, single_layout=True)
+        self.input.write_bytes(b'-- omarchy input\n')
+        self.setup.hypr_session = lambda: 'unknown'
+        code, out = self.quiet(self.setup.revert)
+        self.assertEqual(code, 1)
+        self.assertIn('inside the Hyprland session', out)
+        self.assertNotIn('remove the rasklad-setup block', out)
+
     def test_input_block_is_off_without_the_package(self):
         self.hypr('ru,us', variant=',')
         status, new = self.setup.input_plan(b'-- user file\n')

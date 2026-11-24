@@ -62,6 +62,9 @@ class Base(unittest.TestCase):
         self.setup.hypr_errors = lambda: []
         self.setup.hypr_running = lambda: False
         self.setup.hypr_session = lambda: 'none'
+        # No real hyprctl, luac or anything else from a test.
+        self.setup.run = lambda argv, timeout=5: None
+        self.setup.hypr_reloaded = lambda: True
         self.setup.link_state = lambda: 'ok'
         self.setup.bindings_plan = lambda data=None: ('ok', None)
         self.setup.shell_plan = lambda data=None: ('ok', None)
@@ -312,10 +315,10 @@ class Install(Base):
         self.setup.hypr_session = lambda: 'running'
         self.setup.hypr_layouts_back = lambda *a: True
         with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(self.setup.revert(), 1)  # input.lua left as the user has it
+            self.assertEqual(self.setup.revert(), 0)  # nothing of ours left to undo
         self.assertEqual(self.input.read_bytes(), b'-- user file\n-- my own edit\n')
         self.assertEqual(fake.calls, 2)  # Fcitx back as it was
-        self.assertNotIn(self.setup.INPUT, self.setup.load_state()['files'])
+        self.assertFalse(os.path.exists(self.setup.STATE_FILE))
 
     def test_single_layout_flag_still_asks(self):
         self.hypr('ru,us', variant=',')

@@ -174,7 +174,14 @@ def save_and_drop(state):
   # Restored files' private copies are deleted only after the state without
   # their entries is on disk, so an interruption never strands an entry.
   drop = state.pop("_drop", [])
+  keep = state.pop("_keep", [])
   save_state(state)
+  for src, dst in keep:
+    if src in {backup_path(f) for f in FILES} and os.path.dirname(dst) == BACKUP_DIR:
+      try:
+        os.replace(src, dst)
+      except FileNotFoundError:
+        pass
   for backup in drop:
     if backup not in {backup_path(f) for f in FILES}:
       continue  # only this tool's own copies of its own files
@@ -531,6 +538,21 @@ def ours_in(path, data):
   return BEGIN.encode() in data
 
 
+def forget_entry(state, path):
+  """Drop a file's entry. Its private copy goes only if the .rasklad.bak beside
+  the file is ours and the same; otherwise it is the only copy of the file from
+  before install and is kept, renamed, once the state without the entry is
+  saved (save_and_drop). Returns where the old copy is."""
+  entry = state["files"].pop(path)
+  if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
+     read(entry["bak"]) == read(entry["backup"]):
+    state.setdefault("_drop", []).append(entry["backup"])
+    return entry["bak"]
+  kept = "%s.%s.before-reset" % (entry["backup"], sha(read(entry["backup"]) or b"")[:12])
+  state.setdefault("_keep", []).append([entry["backup"], kept])
+  return kept
+
+
 def drop_stale(state, paths):
   """SYS-270: a tracked file that no longer carries our change (omarchy refresh,
   or reset by hand) has nothing of ours to undo: its entry and private copy go,
@@ -543,16 +565,7 @@ def drop_stale(state, paths):
     data = read(path)
     if data is None or ours_in(path, data):
       continue
-    entry = state["files"].pop(path)
-    if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
-       read(entry["bak"]) == read(entry["backup"]):
-      state.setdefault("_drop", []).append(entry["backup"])  # same as the copy beside it
-      copy = entry["bak"]
-    else:
-      # The only copy of the file as it was before install: kept, and named.
-      kept = "%s.%s.before-reset" % (entry["backup"], sha(read(entry["backup"]) or b"")[:12])
-      os.replace(entry["backup"], kept)
-      copy = kept
+    copy = forget_entry(state, path)
     say("reset", os.path.basename(path),
         "our change is gone (omarchy refresh?); nothing to undo (old copy: %s)" % copy)
     dropped = True
@@ -765,6 +778,11 @@ def restore(state, path):
   return True
 
 
+def hypr_reloaded():
+  done = run([HYPRCTL, "reload"])
+  return bool(done and done.returncode == 0)
+
+
 def hypr_layouts_back(state):
   """After restoring input.lua: Hyprland reloaded and runs with the user's own
   layouts again: the ones it had when the block was written, or several. One us
@@ -847,12 +865,14 @@ def revert():
   # Kept only while a readable regular input.lua (through a dotfiles symlink
   # too) still holds our block. Gone, a dangling link, a directory, unreadable:
   # the live layouts decide. The path itself is never written here.
-  if input_kept and not input_block_present() and \
-     hypr_session() == "running" and hypr_layouts_back(state):
-    # Edited, our block gone, and Hyprland runs with the user's layouts again:
-    # input.lua stays as the user left it (its .rasklad.bak stays beside it).
+  block_gone = input_kept and not input_block_present()
+  if block_gone and hypr_session() == "running" and hypr_reloaded():
+    # Our block is gone (omarchy refresh, edited, deleted) and a running
+    # Hyprland has reloaded without it: whatever layouts it has now come from
+    # the user's own file, not from us. input.lua stays as it is.
     input_kept, input_left = False, True
-    state.setdefault("_drop", []).append(state["files"].pop(INPUT)["backup"])
+    copy = forget_entry(state, INPUT)
+    say("reset", os.path.basename(INPUT), "our block is gone; left as is (old copy: %s)" % copy)
   restored_hypr = had_input and not input_kept and not input_left
   session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
   if session != "none":
@@ -864,9 +884,10 @@ def revert():
       save_and_drop(state)
       return 1
     state.pop("await_hypr", None)
-  if input_left:
-    clean = False  # input.lua left as is; its backup stays beside it
-  if input_kept:
+  if input_kept and block_gone:
+    clean = False
+    say("kept", "rasklad-controls", "our block is gone from input.lua; run --revert again inside the Hyprland session")
+  elif input_kept:
     clean = False
     say("kept", "rasklad-controls", "input.lua edited; remove the rasklad-setup block from it and run --revert again")
   else:
