@@ -17,11 +17,17 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
             Q_EMIT changed();
         };
     }
-    // The terminal gives no completion signal: check every 4 s for 3 minutes.
+    // The terminal gives no completion signal: every 4 s for 3 minutes, look at
+    // what it can change (the setup states, the Fcitx layouts behind the banner)
+    // without regrouping the app rows under the cursor; later, focus refreshes all.
     m_setupPoll.setInterval(4000);
     connect(&m_setupPoll, &QTimer::timeout, this, [this] {
         if (++m_setupPolls >= 45) m_setupPoll.stop();
+        m_running = m_fcitx->running();
+        m_addon = m_running && m_fcitx->addonEnabled();
+        m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());
         if (m_setupTool) m_setupTool->requestCheck();
+        Q_EMIT changed();
     });
     refresh();
 }

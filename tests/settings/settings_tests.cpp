@@ -252,7 +252,8 @@ private Q_SLOTS:
         const auto row = [](const QVariantMap &m, QStringList steps) { return setupRowState(m, steps); };
         const QVariantMap m{{QStringLiteral("a"), QStringLiteral("ok")},       {QStringLiteral("b"), QStringLiteral("unknown")},
                             {QStringLiteral("c"), QStringLiteral("missing-file")}, {QStringLiteral("d"), QStringLiteral("symlink")},
-                            {QStringLiteral("e"), QStringLiteral("no-slot")},  {QStringLiteral("f"), QStringLiteral("no-fcitx")}};
+                            {QStringLiteral("e"), QStringLiteral("no-slot")},  {QStringLiteral("f"), QStringLiteral("no-fcitx")},
+                            {QStringLiteral("g"), QStringLiteral("unparsable")}};
         QCOMPARE(row(m, {QStringLiteral("a")}), QStringLiteral("ok"));
         QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("b")}), QStringLiteral("unknown")); // never "ok" with an unknown
         QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("zz")}), QStringLiteral("unknown")); // absent step
@@ -260,6 +261,9 @@ private Q_SLOTS:
         QCOMPARE(row(m, {QStringLiteral("a"), QStringLiteral("d")}), QStringLiteral("other"));
         QCOMPARE(row(m, {QStringLiteral("c"), QStringLiteral("e")}), QStringLiteral("problem"));
         QCOMPARE(row(m, {QStringLiteral("f")}), QStringLiteral("unknown"));
+        QCOMPARE(row(m, {QStringLiteral("g")}), QStringLiteral("problem"));
+        QCOMPARE(setupFromCheck("unparsable bar-widget\n").value(QStringLiteral("bar-widget")).toString(),
+                 QStringLiteral("unparsable"));
     }
     void setupShownAndOpened()
     {

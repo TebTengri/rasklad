@@ -50,7 +50,7 @@ ApplicationWindow {
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
-        if (help.visible) return false // help keeps its own focus, also while it animates in
+        if (help.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -570,10 +570,12 @@ ApplicationWindow {
             }
             ColumnLayout {
                 id: setupBox
-                visible: Object.keys(backend.setupRows).length > 0
+                // Shown while there are states, or something to revert even if the check gave no answer.
+                readonly property bool hasRows: Object.keys(backend.setupRows).length > 0
+                visible: hasRows || backend.setupInstalled
                 spacing: 8
                 Layout.fillWidth: true
-                readonly property var rows: [
+                readonly property var rows: !hasRows ? [] : [
                     { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
                     { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
                     { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }

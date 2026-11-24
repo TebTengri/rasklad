@@ -102,6 +102,7 @@ private:
     QByteArray m_out;
     std::optional<QByteArray> m_last;
     QElapsedTimer m_lastOpen;
+    QString m_lastAction;
 };
 
 class DBusFcitx final : public FcitxSource
