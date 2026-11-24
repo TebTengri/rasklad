@@ -3,17 +3,16 @@
 Автоисправлению нужны словари Hunspell и обученная модель — «профиль детектора».
 В Git его нет: это производные данные сторонних словарей, распространение которых
 не одобрено (см. [THIRD_PARTY.md](../../THIRD_PARTY.md) и [политику данных](../../docs/DATA_POLICY.md)).
-Поэтому `tools/build_arch_package.sh` принимает каталог, где профиль уже подготовлен:
+
+## Сборка пакета из готового профиля
 
 ```sh
-tools/build_arch_package.sh <каталог>
+tools/build_arch_package.sh <каталог профиля>
 ```
 
-В `<каталог>` должны лежать 12 файлов по путям `build/...`. Список задан в
-[profile-files.txt](profile-files.txt). Каждый файл закреплён по размеру и SHA-256 в
-`src/profileverify.cpp`. Аддон проверяет закрепления при загрузке, `check()` пакета —
-при сборке. Если хоть один файл не совпадает, автоисправление выключается, и значок
-показывает `EN!`/`RU!`.
+В каталоге профиля должны лежать ровно 12 файлов по путям `build/...` из таблицы
+ниже. В [profile-files.txt](profile-files.txt) есть ещё строки `data/...`. Эти файлы
+скрипт сборки берёт из клона сам, класть их в каталог профиля не нужно.
 
 ## Файлы и источники
 
@@ -21,48 +20,79 @@ tools/build_arch_package.sh <каталог>
 | --- | --- |
 | `build/experiment-data/en.dic`, `ru.dic` | LibreOffice dictionaries, коммит `c0865a85eb67`; адреса и хеши — в [data/sources.json](../../data/sources.json) |
 | `build/experiment-003-data/en.aff`, `ru.aff` | тот же коммит; адреса и хеши — в [data/morphology-003-sources.json](../../data/morphology-003-sources.json) |
-| `build/experiment-003-data/control/en.aff`, `ru.aff` | получаются из `.aff` командой `tools/prepare_affix_control.py` (строки PFX/SFX убраны) |
-| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp`, `artifact-metadata.json` | создаются стендом опыта 002 (`detector_benchmark --artifact-dir`) |
+| `build/experiment-003-data/control/en.aff`, `ru.aff` | получаются из `.aff` (шаг 2 ниже) |
+| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp`, `artifact-metadata.json` | создаются стендом опыта 002 (шаг 3) |
 | `build/experiment-002-artifacts/en_US.NOTICE.txt`, `ru_RU.NOTICE.txt` | байт в байт копии `data/notices/en_US.README.txt` и `ru_RU.README.txt` |
-| `build/experiment-002-artifacts/MODIFICATIONS.txt` | текстовая пометка о локальных изменениях; должна содержать `release_approved=false` |
+| `build/experiment-002-artifacts/MODIFICATIONS.txt` | пометка о локальных изменениях (шаг 4) |
 
-Файлы `data/...` из `profile-files.txt` берутся из коммита сами.
+## Что проверяется
 
-## Как воспроизвести из чистого клона
+Аддон проверяет профиль при каждой загрузке (`src/profileverify.cpp`):
+- словари, `.aff`, контрольные `.aff`, модель и словарь стеблей — по размеру и SHA-256;
+- копии уведомлений — по SHA-256 оригиналов из `data/notices/`;
+- `artifact-metadata.json` — по полям;
+- `MODIFICATIONS.txt` — UTF-8, не пустой, содержит `release_approved=false`.
 
-Это явные ручные шаги с загрузкой из сети. Делайте их сами; агенты проекта не
-скачивают данные без отдельного разрешения владельца.
+Если что-то не сходится, автоисправление выключается, а значок показывает
+`EN!`/`RU!`. `check()` пакета сам профиль не загружает: он запускает тесты и
+проверяет импорты аддона.
+
+## Воспроизведение из чистого клона
+
+Это ручные шаги с загрузкой из сети. Делайте их сами; агенты проекта не скачивают
+данные без отдельного разрешения владельца. Шаги 1, 2 и 4 выполнимы всегда.
+Шаг 3 сейчас выполним только при наличии старого снимка Tatoeba (см. ниже).
 
 1. **Словари.** Скачайте `.dic` и `.aff` по адресам из двух паспортов выше и
-   положите по путям из таблицы. Проверьте:
+   положите по путям из таблицы. Хеши должны совпасть с паспортами:
    ```sh
    sha256sum build/experiment-data/*.dic build/experiment-003-data/*.aff
    ```
-   Хеши должны совпасть с паспортами. Адреса указывают на закреплённый коммит,
-   поэтому файлы не меняются.
-2. **Контрольные `.aff`:**
+   Адреса указывают на закреплённый коммит, поэтому файлы не меняются.
+2. **Контрольные `.aff`** (строки PFX/SFX убраны):
    ```sh
    python3 tools/prepare_affix_control.py --input build/experiment-003-data/en.aff --output build/experiment-003-data/control/en.aff
    python3 tools/prepare_affix_control.py --input build/experiment-003-data/ru.aff --output build/experiment-003-data/control/ru.aff
    ```
-3. **Модель и словарь стеблей.** Соберите стенд (`bin/build`) и запустите оценку
-   опыта 002 с `--artifact-dir build/experiment-002-artifacts`; команда — в
-   [EXPERIMENT-002-METHOD](../../docs/research/EXPERIMENT-002-METHOD.md).
-   Модель обучается только на словарях. Однако стенд требует ещё и проверочные
-   выборки Tatoeba с хешами из [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json).
+3. **Модель и словарь стеблей.** Модель обучается только на словарях. Но стенд,
+   который её пишет, сначала проверяет и проверочные выборки Tatoeba: распакованные
+   `build/experiment-002-data/en.tsv` и `ru.tsv` с хешами из
+   [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json).
    Адрес выгрузки Tatoeba не закреплён и со временем отдаёт другие байты. Без
-   снимка от 2026-11-07 этот шаг сейчас не повторить.
-4. **Уведомления и пометка.** Скопируйте два `README.txt` из `data/notices/` под
-   именами из таблицы. Запишите `MODIFICATIONS.txt` с пометкой `release_approved=false`
-   и ссылкой на паспорта.
-5. Соберите пакет: `tools/build_arch_package.sh .` из корня клона.
+   снимка от 2026-11-07 этот шаг не пройдёт. Со снимком:
+   ```sh
+   bin/build
+   mkdir -p build/experiment-002-artifacts
+   build/tools/detector_benchmark \
+       --manifest data/sources.json \
+       --en build/experiment-data/en.dic \
+       --ru build/experiment-data/ru.dic \
+       --eval-manifest data/evaluation-002-sources.json \
+       --eval-en build/experiment-002-data/en.tsv \
+       --eval-ru build/experiment-002-data/ru.tsv \
+       --protocol data/experiment-002-protocol.json \
+       --artifact-dir build/experiment-002-artifacts \
+       --json > build/experiment-002-report.json
+   ```
+   Подробности — в [методике опыта 002](../../docs/research/EXPERIMENT-002-METHOD.md).
+4. **Уведомления и пометка.**
+   ```sh
+   cp data/notices/en_US.README.txt build/experiment-002-artifacts/en_US.NOTICE.txt
+   cp data/notices/ru_RU.README.txt build/experiment-002-artifacts/ru_RU.NOTICE.txt
+   ```
+   `MODIFICATIONS.txt` у владельца содержит одну строку:
+   ```
+   Modified numerical artifacts derived locally from reviewed LibreOffice dictionaries. Local experiment only, release_approved=false. See data/sources.json and experiment002 protocol.
+   ```
+
+После четырёх шагов клон сам служит каталогом профиля: `tools/build_arch_package.sh .`
 
 ## Что не проверено
 
 - Полное воспроизведение из чистого клона не выполнялось. Профиль владельца
   подготовлен в ходе опытов 002 и 003 и с тех пор закреплён по хешам.
-- Совпадение модели и словаря стеблей, созданных заново, с закреплёнными хешами
-  не проверено. Детерминизм стенда описан в методике, но на новой машине не
-  подтверждён.
-- Автоматизировать шаги 1–4 одним скриптом можно отдельной задачей. Для этого
-  нужно решение о загрузке и сохранении снимка Tatoeba.
+- Совпадение заново созданных модели и словаря стеблей с закреплёнными хешами не
+  проверено. Если они не совпадут, автоисправление будет выключено, пока закрепления
+  не обновят отдельным проверенным изменением.
+- Автоматизировать шаги одним скриптом можно отдельной задачей. Для этого нужно
+  решение о загрузке и хранении снимка Tatoeba.
