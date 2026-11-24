@@ -48,8 +48,8 @@ the owner to accept or not.
 
 | Obligation (source) | Shipped | Conclusion |
 | --- | --- | --- |
-| Keep copyright, conditions and disclaimer in source and binary distributions, or in the documentation that comes with them (ru_RU; SCOWL, Ispell, VarCon and others in en_US) | Full notices in `/usr/share/licenses/rasklad-fcitx5/en_US.README.txt`, `ru_RU.README.txt` and in the profile directory; shown on the settings page «Лицензии» | Met for the package, unmodified and derived files alike |
-| WordNet: the copyright notice, statements and disclaimer appear on **all copies** of the database and documentation, including modifications (en_US) | The full en_US notice, which contains the WordNet text, ships in the same package and in the same profile directory as every file derived from it | Met for the package as distributed: every copy of the data comes with the notice. The binary model and word list carry no notice inside the file, and a file taken out of the package would not carry it. Whether "accompanies every copy" reads as "appears on all copies" is **open**; the alternative is a notice embedded in the files, which needs a format change, new pins and a rebuilt profile |
+| Keep copyright, conditions and disclaimer with source and binary distributions and in their documentation (ru_RU; Ispell; the supporting-documentation part of SCOWL, VarCon and WordNet) | Full notices in `/usr/share/licenses/rasklad-fcitx5/en_US.README.txt`, `ru_RU.README.txt` and in the profile directory; shown on the settings page «Лицензии» | Met for the package |
+| The copyright notice in **all copies**, including modifications (SCOWL and VarCon: "appears in all copies"; WordNet: notice, statements and disclaimer "on ALL copies ... including modifications") | Every copy of the data ships in the same package and profile directory as the full en_US notice. The binary model and word list carry no notice inside the file | **Pending.** Whether a notice that accompanies every copy satisfies "in/on all copies" is the owner's decision. The alternative is a notice embedded in the derived files: a format change, new pins and a rebuilt profile |
 | Modified versions clearly marked (ru_RU) and binary redistributions of modified source marked as modified in the documentation (Ispell clause 3, en_US) | `DATA-NOTICE.txt` in the licenses directory names each modified and derived file; the same text sits next to the control `.aff` as `MODIFIED.txt`; the «Что изменил Rasklad» page | Met in the documentation, which is what Ispell clause 3 asks for binaries. For ru_RU, whether a marker next to the file is enough or each control `.aff` needs its own header line is **open** (see below) |
 | No endorsement or promotion with an author's name (ru_RU: Lebedev; Ispell: Kuenning) | No author is named in descriptions or promotion; `DATA-NOTICE.txt` says so | Met, as long as release texts keep it so |
 | No use of Princeton's name in advertising or publicity about distribution (WordNet) | Princeton appears only inside the full notice | Met, as long as release texts keep it so; a separate rule from non-endorsement |
@@ -74,8 +74,8 @@ the owner to accept or not.
 
 1. Whether the package may be published (GitHub release, AUR) with this data, or
    stays for personal installation.
-2. If yes: whether the WordNet notice accompanying the files is enough, or the
-   model and word list must embed it.
+2. If yes: whether the SCOWL, VarCon and WordNet notices accompanying the files
+   are enough, or the model and word list must embed them.
 3. Whether the adjacent marker is enough for the control `.aff`, or each
    gets a header line (new pins, rebuilt profile).
 4. Then one change flips `release_approved` with the verifier and pins.
