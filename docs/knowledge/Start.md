@@ -14,6 +14,7 @@
 - [Gui](gui.md)
 - [Browser](browser.md)
 - [Fcitx](fcitx.md)
+- [Product Fcitx addon](product-addon.md)
 - [Fixture](fixture.md)
 - [Reference](reference.md)
 - [Exact](exact.md)

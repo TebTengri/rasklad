@@ -54,7 +54,7 @@ flowchart TD
 | Проверить словари/модель | `src/localprofile.h`, `src/localprofile.cpp`, `src/profileverify.cpp`, `THIRD_PARTY.md` |
 | Изменить Qt preview | `src/documentcontroller.cpp`, `src/analysisservice.cpp`, `src/Main.qml` |
 | Browser input/revision | `browser/README.md`, `browser/adapter.js`, `browser/session.js`, `browser/prosemirror.js` |
-| Fcitx composition/commit | `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/FCITX-TRANSPORT-001.md` |
+| Fcitx composition/commit | product: `src/raskladproduct.cpp`, `src/configrules.h`, `src/wordrules.h`; lab (frozen): `src/fcitxlab.cpp`, `src/fcitxlabprofile.cpp`, `docs/FCITX-TRANSPORT-001.md` |
 | Focus regression | `tests/chromium_ime/adversarial-focus.mjs`, `tests/chromium_ime/driver.mjs`, `docs/HYPRLAND-FOCUS-STRESS-001.md` |
 | Missing Space /010 | `docs/GRAB-ENTRY-WITNESS-001.md`, `docs/SERVER-ROUTE-WITNESS-001.md`, `tests/chromium_ime/addon-witness.mjs` |
 | Диагностика маршрута server | `docs/SERVER-ROUTE-WITNESS-001.md`, `tools/server_route_witness_guard.py`, `tests/chromium_ime/server-route-witness.mjs` |

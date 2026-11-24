@@ -16,7 +16,7 @@ INCLUDEPATH += $$PWD/../src $$PWD/../tools
 DESTDIR = $$OUT_PWD
 DEFINES += RASKLAD_PRODUCT RASKLAD_MANUAL_LAB RASKLAD_WITH_HUNSPELL QT_NO_KEYWORDS
 
-SOURCES += $$PWD/../src/fcitxlab.cpp \
+SOURCES += $$PWD/../src/raskladproduct.cpp \
     $$PWD/../src/applicationpolicy.cpp \
     $$PWD/../src/applicationpermissions.cpp \
     $$PWD/../src/compositiondisable.cpp \

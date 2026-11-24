@@ -1,6 +1,6 @@
 # Fcitx
 
-Developer Fcitx composition transport and full local core profile.
+Lab Fcitx addon variants (frozen since SYS-255): composition transport, witnesses, Slack session, full local core profile. Not the product.
 
 Статус: implemented_lab
 

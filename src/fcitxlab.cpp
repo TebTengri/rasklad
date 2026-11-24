@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
 //
+// SYS-255: the lab variants only. The product moved to src/raskladproduct.cpp and
+// is no longer built from this file; RASKLAD_PRODUCT is refused here. This file
+// is kept for the lab tests and frozen: product changes do not come back here.
+//
 // SYS-244 rasklad Fcitx5 transport LAB addon (developer prototype only).
 //
 // Purpose: prove the IME transport path (client preedit -> one commit on Space)
@@ -87,6 +91,9 @@
 //  * The keyboard engine also owns the client preedit slot; we only clear the
 //    preedit if we set it ourselves (preeditShown flag).
 
+#ifdef RASKLAD_PRODUCT
+#error "the product is src/raskladproduct.cpp (SYS-255)"
+#endif
 #include "applicationpolicy.h"
 #include "applicationpermissions.h"
 #include "compositiondisable.h"
@@ -117,28 +124,6 @@
 #include "wordrules.h"
 #endif
 
-#ifdef RASKLAD_PRODUCT
-// SYS-246 product build (docs/SYS-246-PRODUCT-ADDON.md): the manual double-Shift
-// gesture and (SYS-226) automatic correction on Space by the reviewed local profile,
-// in applications listed in the addon configuration. No lab environment, receipts,
-// supervisor pipe, D-Bus or Off/On keys.
-#if !defined(RASKLAD_MANUAL_LAB) || defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_CHROMIUM_LAB) || \
-    defined(RASKLAD_PROFILE_LAB) || defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || \
-    defined(RASKLAD_APPLICATION_OFF_TEST) || defined(RASKLAD_PREEDIT_REENTRY_TEST) || \
-    defined(RASKLAD_DISABLE_REENTRY_TEST) || defined(RASKLAD_SLACK_GATE_TEST_PROGRAM)
-#error "RASKLAD_PRODUCT is built without lab variants"
-#endif
-#include <fcitx-config/configuration.h>
-#include <fcitx-config/iniparser.h>
-#include <fcitx-config/option.h>
-#include "fcitxlabprofile.h"
-#include "frequentwords.h"
-#include "layoutcue.h"
-#include "configrules.h"
-#include "seenprograms.h"
-#include "terminalapps.h"
-#include <fcitx-utils/standardpaths.h>
-#endif
 
 #ifdef RASKLAD_WITNESS_LAB
 #ifndef RASKLAD_PROFILE_LAB
@@ -216,10 +201,6 @@ rasklad::sessionarm::ReceiptSink &receiptSink() {
     return sink;
 }
 #endif
-#ifdef RASKLAD_PRODUCT
-// Product: no environment labels are read at all.
-bool fixtureScope() { return true; }
-#else
 // Fixed fixture labels only: these do not authenticate a process or namespace.
 bool fixtureScope() {
     const auto equal = [](const char *key, const char *value) {
@@ -235,7 +216,6 @@ bool fixtureScope() {
            equal("RASKLAD_PRIVATE_LAB", "1");
 #endif
 }
-#endif
 constexpr policy::Adapter kFixtureAdapters[] = {
     {kLabProgram, kLabProgram, policy::Domain::OwnedFixture, true, true},
 #ifdef RASKLAD_CHROMIUM_LAB
@@ -244,67 +224,10 @@ constexpr policy::Adapter kFixtureAdapters[] = {
 };
 constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
     sizeof(kFixtureAdapters) / sizeof(kFixtureAdapters[0]), 1};
-#ifdef RASKLAD_PRODUCT
-// Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
-FCITX_CONFIGURATION(RaskladConfig,
-    fcitx::Option<std::vector<std::string>> applications{this, "Applications",
-        "Applications (program names as Fcitx reports them)", {"slack", "chromium", "chromium-browser"}};
-    fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};
-    // SYS-227: off leaves only double Shift (and double Alt, which Hyprland handles).
-    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
-    fcitx::Option<std::vector<std::string>> exceptions{this, "Exceptions",
-        "Words never corrected automatically", {}};);
-// SYS-248: read-only status at fcitx://config/addon/rasklad/status, for the bar
-// widget and the settings app. Never saved; writes to it are ignored. Booleans and,
-// since SYS-253, program names (no text) of apps with a focused field, kept in memory.
-FCITX_CONFIGURATION(RaskladStatus,
-    fcitx::Option<bool> profileReady{this, "ProfileReady", "Profile verified", false};
-    fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
-    fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
-        "Applications with a focused text field since start", {}};);
-constexpr const char kConfigPath[] = "conf/rasklad.conf";
-// Applications from the addon configuration (compositor app ids as Fcitx reports
-// them in InputContext::program()). Claims, not authentication: policy allows
-// them for the manual gesture only. Rebuilt only after every state is discarded.
-struct ProductApps {
-    std::vector<std::string> ids;
-    std::vector<policy::Adapter> adapters;
-    std::uint64_t revision = 1;
-};
-ProductApps &productApps() {
-    static ProductApps apps;
-    return apps;
-}
-const std::vector<policy::Adapter> &fixtureAdapters() { return productApps().adapters; }
-policy::Registry fixtureRegistry() {
-    const auto &apps = productApps();
-    return {apps.adapters.data(), apps.adapters.size(), apps.revision};
-}
-// Automatic grant (owner decision 2026-11-21, SYS-226); the gesture is checked
-// separately through Adapter::manual.
-constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
-// Profile files at their pinned relative paths under <PkgData>/rasklad/profile
-// (package: /usr/share/fcitx5/rasklad/profile). Every file is verified against the
-// built-in pins, so a copy found first in the user data directory must be identical.
-std::string profileRoot() {
-    try {
-        const auto marker = fcitx::StandardPaths::global().locate(
-            fcitx::StandardPathsType::PkgData, "rasklad/profile/data/sources.json");
-        if (marker.empty()) return {};
-        return marker.parent_path().parent_path().string();
-    } catch (...) {
-        return {};
-    }
-}
-#else
 constexpr const auto &fixtureAdapters() { return kFixtureAdapters; }
 constexpr policy::Registry fixtureRegistry() { return kFixtureRegistry; }
 constexpr policy::Mode kGrantMode = policy::Mode::Automatic;
-#endif
 constexpr const char kLabEntry[] = "keyboard-us";
-#ifdef RASKLAD_PRODUCT
-constexpr const char kRuEntry[] = "keyboard-ru"; // SYS-226: switched to after a us->ru correction
-#endif
 constexpr const char kPropertyName[] = "raskladlabState";
 
 // Synthetic test rule only. No dictionaries, model or other strings.
@@ -532,13 +455,6 @@ public:
     explicit RaskladLab(fcitx::Instance *instance) : instance_(instance),
         manager_(instance ? &instance->inputContextManager() : nullptr) {
         if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
-#ifdef RASKLAD_PRODUCT
-        fcitx::readAsIni(config_, kConfigPath);
-        rebuildExceptions();
-        rebuildApps();
-        // Missing/changed profile: no automatic correction; the gesture still works.
-        profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>(profileRoot().c_str());
-#endif
         enableFixturePermissions();
 #ifdef RASKLAD_PROFILE_LAB
         profile_ = std::make_unique<rasklad::fcitxlab::ProfileDecision>();
@@ -576,26 +492,6 @@ public:
                     auto *ic =
                         static_cast<fcitx::InputContextEvent &>(event).inputContext();
                     if (auto *s = state(ic, false)) {
-#ifdef RASKLAD_PRODUCT
-                        // Our own deferred layout switch happens only with an empty
-                        // word; the last committed word stays replaceable.
-                        // Any event emitted synchronously by that switch is ours too.
-                        if (selfSwitch_ && s->empty())
-                            return;
-                        // Owner decision 2026-11-23: the layout is switched from outside
-                        // (double Alt in Hyprland runs rasklad-layout-toggle, or Fcitx's
-                        // own keys). A word in progress is committed as shown, so
-                        // nothing typed is lost, then the switch goes ahead.
-                        if (event.type() == fcitx::EventType::InputContextSwitchInputMethod &&
-                            !s->empty() && !s->stopping() && ic->hasFocus() && validate(ic, *s)) {
-                            auto ref = ic->watch();
-                            commitAndClear(ic, *s, s->shown());
-                            auto *again = ref.get(); // the client may drop the context while committing
-                            if (!again) return;
-                            if (auto *after = state(again, false)) discard(again, *after);
-                            return;
-                        }
-#endif
                         discard(ic, *s); // Invalidates even an idle context first.
                     }
 #ifdef RASKLAD_SLACK_SESSION_LAB
@@ -603,32 +499,6 @@ public:
 #endif
                 }));
         }
-#ifdef RASKLAD_PRODUCT
-        // SYS-253: remember which program got a focused field, so the settings app
-        // offers the name this addon matches. Its own watcher: no early return in the
-        // lifecycle handler can skip it. The name only; no text is read here.
-        watchers_.emplace_back(instance_->watchEvent(
-            fcitx::EventType::InputContextFocusIn, fcitx::EventWatcherPhase::PreInputMethod,
-            [this](fcitx::Event &event) {
-                auto *ic = static_cast<fcitx::InputContextEvent &>(event).inputContext();
-                if (ic) rasklad::rememberProgram(seenPrograms_, ic->program());
-            }));
-        // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
-        // keyboard-ru, whoever switched it (double Alt in Hyprland, a correction or an undo).
-        watchers_.emplace_back(instance_->watchEvent(
-            fcitx::EventType::InputContextSwitchInputMethod, fcitx::EventWatcherPhase::Default,
-            [this](fcitx::Event &event) {
-                if (!*config_.sound) return;
-                auto &e = static_cast<fcitx::InputContextSwitchInputMethodEvent &>(event);
-                auto *ic = e.inputContext();
-                const auto *entry = ic ? instance_->inputMethodEntry(ic) : nullptr;
-                if (!entry || !ic->hasFocus()) return;
-                const std::string &now = entry->uniqueName();
-                const std::string &old = e.oldInputMethod();
-                const auto known = [](const std::string &n) { return n == kLabEntry || n == kRuEntry; };
-                if (known(now) && known(old) && now != old) cue_.play();
-            }));
-#endif
 #ifdef RASKLAD_MANUAL_LAB
         watchers_.emplace_back(instance_->watchEvent(
             fcitx::EventType::InputContextSurroundingTextUpdated, fcitx::EventWatcherPhase::PreInputMethod,
@@ -683,36 +553,6 @@ public:
     ~RaskladLab() override = default;
 #endif
 
-#ifdef RASKLAD_PRODUCT
-    const fcitx::Configuration *getConfig() const override { return &config_; }
-    void setConfig(const fcitx::RawConfig &raw) override {
-        fcitx::RawConfig before;
-        config_.save(before);
-        config_.load(raw, true);
-        // Not saved: keep the previous settings, so the settings app's read-back
-        // reports the failure instead of a change that is lost on the next start.
-        // Nothing changed then, so a word being typed is not discarded either.
-        if (!fcitx::safeSaveAsIni(config_, kConfigPath)) {
-            config_.load(before);
-            return;
-        }
-        rebuildExceptions();
-        applyApps();
-    }
-    const fcitx::Configuration *getSubConfig(const std::string &path) const override {
-        if (path != "status") return nullptr;
-        status_.profileReady.setValue(profile_ && profile_->ready());
-        status_.autoCorrect.setValue(*config_.autoCorrect);
-        status_.seenApplications.setValue(seenPrograms_);
-        return &status_;
-    }
-    void setSubConfig(const std::string &, const fcitx::RawConfig &) override {}
-    void reloadConfig() override {
-        fcitx::readAsIni(config_, kConfigPath);
-        rebuildExceptions();
-        applyApps();
-    }
-#endif
 #ifdef RASKLAD_APPLICATION_OFF_TEST
     explicit RaskladLab(fcitx::InputContextManager &manager)
         : instance_(nullptr), manager_(&manager) {
@@ -723,67 +563,6 @@ public:
 private:
 #ifdef RASKLAD_APPLICATION_OFF_TEST
     friend struct ApplicationOffTest;
-#endif
-#ifdef RASKLAD_PRODUCT
-    // SYS-227: exception words as the us keys that type them (either layout's form
-    // matches); invalid entries are dropped. Words the owner wrote into the config,
-    // never typed input.
-    void rebuildExceptions() {
-        exceptionKeys_.clear();
-        // The shared rule (src/configrules.h) picks the entries, as the settings app does.
-        const auto &words = *config_.exceptions;
-        for (const std::size_t i : rasklad::config::keptExceptions({words.begin(), words.end()}))
-            exceptionKeys_.push_back(rasklad::manual::exceptionKeys(words[i]));
-        std::sort(exceptionKeys_.begin(), exceptionKeys_.end());
-    }
-    bool exception(const std::string &keys) const {
-        return std::binary_search(exceptionKeys_.begin(), exceptionKeys_.end(), keys);
-    }
-    // Rebuild the application list from config_; the revision always advances so
-    // no lease from the previous list stays valid.
-    void rebuildApps() {
-        auto &apps = productApps();
-        permissionStore_.reset(); // nothing refers to the old list while it changes
-        apps.adapters.clear();
-        apps.ids.clear();
-        // The shared rule (src/configrules.h): valid, never terminals, unique, capped.
-        const auto &listed = *config_.applications;
-        for (const std::size_t i : rasklad::config::keptApplications({listed.begin(), listed.end()}))
-            apps.ids.push_back(listed[i]);
-        // ids is final before adapters take views into it.
-        for (const auto &id : apps.ids)
-            apps.adapters.push_back({id, id, policy::Domain::RegularApplication, true, false, true});
-        ++apps.revision;
-        permissionStore_ = std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
-    }
-    // A changed list: discard every composition (no commit, as on focus-out)
-    // using the old list, then publish the new one.
-    void applyApps() {
-        // discard() calls into clients; a nested config change must not rebuild
-        // the list underneath this walk. The outer call applies the latest config_.
-        if (applying_) return;
-        applying_ = true;
-        if (!registered_ || !manager_) {
-            rebuildApps();
-            enableFixturePermissions();
-            applying_ = false;
-            return;
-        }
-        using Watch = fcitx::TrackableObjectReference<fcitx::InputContext>;
-        std::vector<Watch> targets;
-        manager_->foreach([&](fcitx::InputContext *ic) {
-            if (state(ic, false)) targets.push_back(ic->watch());
-            return true;
-        });
-        for (auto &watch : targets) {
-            auto *ic = watch.get();
-            if (!ic) continue;
-            if (auto *s = state(ic, false)) discard(ic, *s);
-        }
-        rebuildApps();
-        enableFixturePermissions();
-        applying_ = false;
-    }
 #endif
     void enableFixturePermissions() {
         // Compile-time owned fixture contract only, never registry-as-authority
@@ -857,9 +636,7 @@ private:
         // Revoked or never armed: intercept nothing (buffer is discarded by the caller).
         if (!sessionArmed()) return false;
 #endif
-#ifdef RASKLAD_PRODUCT
-        if (!productListed(ic->program())) return false;
-#elif defined(RASKLAD_CHROMIUM_LAB)
+#if defined(RASKLAD_CHROMIUM_LAB)
         // GTK/X11 supplies chromium; the observed native Wayland app-id is
         // chromium-browser. Both designate only this lab's controlled client.
         if (ic->program() != kLabProgram && ic->program() != "chromium-browser") {
@@ -880,15 +657,9 @@ private:
             !ic->capabilityFlags().test(fcitx::CapabilityFlag::Disable);
 #endif
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
-#ifdef RASKLAD_PRODUCT
-        if (!entry || (entry->uniqueName() != kLabEntry && entry->uniqueName() != kRuEntry)) {
-            return false;
-        }
-#else
         if (!entry || entry->uniqueName() != kLabEntry) {
             return false;
         }
-#endif
         const auto caps = ic->capabilityFlags();
         using fcitx::CapabilityFlag;
         if (!caps.test(CapabilityFlag::Preedit)) {
@@ -906,31 +677,6 @@ private:
 
     // Called only after the existing profile, program, focus and caps gates.
     // Prose belongs to the explicit owned fixture contract, never real apps.
-#ifdef RASKLAD_PRODUCT
-    static bool productListed(const std::string &program) {
-        for (const auto &adapter : fixtureAdapters())
-            if (program == adapter.id) return true;
-        return false;
-    }
-    // Field kind from Fcitx capability hints only; the gate in eligible() refuses
-    // the same flags first. Fcitx cannot tell prose apart: everything else Unknown.
-    static policy::Field fieldFromCaps(const fcitx::CapabilityFlags caps) {
-        using fcitx::CapabilityFlag;
-        if (caps.test(CapabilityFlag::Password)) return policy::Field::Password;
-        if (caps.test(CapabilityFlag::Sensitive) || caps.test(CapabilityFlag::Disable))
-            return policy::Field::Protected;
-        if (caps.test(CapabilityFlag::Terminal)) return policy::Field::Command;
-        if (caps.test(CapabilityFlag::NoSpellCheck)) return policy::Field::Code;
-        return policy::Field::Unknown;
-    }
-    // A listed compositor app id, as Fcitx reports it; never an authentication.
-    static policy::Context fixtureContext(fcitx::InputContext *ic, const LabState &s) {
-        const std::string_view id = ic->program();
-        return {id, id, id, policy::Domain::RegularApplication,
-                policy::Identity::CompositorAppId, fieldFromCaps(ic->capabilityFlags()),
-                ic->hasFocus(), s.id, s.epoch, s.id};
-    }
-#else
     static policy::Context fixtureContext(fcitx::InputContext *ic, const LabState &s) {
         const char *label = kLabProgram;
 #ifdef RASKLAD_CHROMIUM_LAB
@@ -940,7 +686,6 @@ private:
                 policy::Identity::OwnedFixtureContract, policy::Field::Prose,
                 ic->hasFocus(), s.id, s.epoch, s.id};
     }
-#endif
     static policy::Permission fixturePermission(const policy::Context &context) {
         // Fixed lab permission only; no production preference or runtime mode UI.
         return {true, context.verifiedApplicationId, policy::Mode::Automatic, 1};
@@ -1172,68 +917,6 @@ private:
     }
     // Bare Shift_L/Shift_R: no Ctrl/Alt/Super; Shift's own state bit (set on the
     // release, depending on the frontend on the press) is ignored.
-#ifdef RASKLAD_PRODUCT
-    // Enter, Tab or a punctuation character (with at most Shift): the word is over.
-    static bool wordEnd(const fcitx::Key &key) {
-        if (key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
-                                                  fcitx::KeyState::Super, fcitx::KeyState::Hyper}))
-            return false;
-        const auto sym = key.sym();
-        if (sym == FcitxKey_Return || sym == FcitxKey_KP_Enter || sym == FcitxKey_Tab) return true;
-        return rasklad::word::endsWord(fcitx::Key::keySymToUnicode(sym));
-    }
-    // SYS-226 automatic correction of the current word, unless the owner chose a form
-    // with the gesture. Only the reviewed profile's Correct that equals the word's
-    // other-layout form is used. whole: the entire word converted (s.converted is set,
-    // so the Space undo can restore it). Otherwise a us-typed word ending in keys that
-    // carry Russian letters (",", ".", ";", ...) is tried without them, and those keys
-    // stay as typed: "ckjdj," -> "слово,".
-    std::optional<std::string> autoText(LabState &s, bool &whole) {
-        whole = false;
-        if (!*config_.autoCorrect) return std::nullopt; // SYS-227: gestures only
-        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
-        // Case: all lowercase, a capital first letter, or all capitals, judged on the
-        // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
-        const auto caseOk = [&s](std::size_t keys) { return rasklad::word::caseEligible(s.upper, keys); };
-        std::string w = s.word();
-        std::optional<std::string> result;
-        std::size_t cut = w.size();
-        for (int pass = 0; pass < 2 && !result; ++pass) {
-            if (pass == 1) {
-                if (s.typedRu) break;
-                cut = rasklad::word::lettersBeforeTail(w);
-                if (cut == 0) break; // no letters, or nothing after them to strip
-                // An exception that itself ends in a letter key the fallback strips
-                // ("пою" is typed gj.) is never corrected to a shorter word.
-                bool kept = false;
-                for (std::size_t k = cut + 1; k < w.size() && !kept; ++k) {
-                    std::string longer = w.substr(0, k);
-                    kept = exception(longer);
-                    wipeString(longer);
-                }
-                if (kept) break;
-            }
-            std::string keys = w.substr(0, cut);
-            // The exception first: an excepted word is never corrected in a shorter
-            // form just because its own case was not eligible.
-            if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word
-            if (!caseOk(cut)) { wipeString(keys); continue; }
-            std::string typed = LabState::form(keys, s.typedRu);
-            std::string other = LabState::form(keys, !s.typedRu);
-            auto fix = profile_->correctTyped(typed, s.typedRu);
-            const bool ok = (fix && *fix == other && other != typed) ||
-                            (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
-            if (ok) {
-                if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
-                else result = LabState::form(other + w.substr(cut), false, s.upper);
-            }
-            if (fix) wipeString(*fix);
-            wipeString(keys); wipeString(typed); wipeString(other);
-        }
-        wipeString(w);
-        return result;
-    }
-#endif
     static bool isShift(const fcitx::Key &key) {
         if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
         return !fcitx::Key(key.sym(), key.states().unset(fcitx::KeyState::Shift)).hasModifier();
@@ -1483,14 +1166,7 @@ private:
                 }
                 if (s->empty() && s->lastValid) {
                     if (s->gesture.feed(rasklad::manual::Input::ShiftRelease, event.time())) {
-#ifdef RASKLAD_PRODUCT
-                        // The restored form's layout becomes current (SYS-226).
-                        const bool toRu = s->lastOtherRu;
-                        auto ref = ic->watch();
-                        if (replaceLast(ic, *s)) switchLayout(ref, toRu);
-#else
                         replaceLast(ic, *s); // No state/event access after this call.
-#endif
                     }
                     return;
                 }
@@ -1654,36 +1330,7 @@ private:
         }
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z) manualChar = static_cast<char>('a' + (sym - FcitxKey_a));
         bool ruKey = false;
-#ifdef RASKLAD_PRODUCT
-        // SYS-226: a lowercase Russian letter (ru layout) is kept as its us key.
-        if (plain && !manualChar) {
-            manualChar = rasklad::manual::ruToUsKey(
-                static_cast<char32_t>(fcitx::Key::keySymToUnicode(static_cast<fcitx::KeySym>(sym))));
-            ruKey = manualChar != 0;
-        }
-        // A layout switch inside a word ends the word (flushed as typed below).
-        // SYS-226: a capital letter (Shift or Caps Lock, no other modifier) is kept as
-        // its lowercase key plus a case bit.
-        bool upperKey = false;
-        if (!manualChar && !key.states().testAny(fcitx::KeyStates{fcitx::KeyState::Ctrl, fcitx::KeyState::Alt,
-                                                                 fcitx::KeyState::Super, fcitx::KeyState::Hyper})) {
-            if (sym >= FcitxKey_A && sym <= FcitxKey_Z) {
-                manualChar = static_cast<char>('a' + (sym - FcitxKey_A));
-                upperKey = true;
-            } else {
-                const char32_t u = static_cast<char32_t>(fcitx::Key::keySymToUnicode(static_cast<fcitx::KeySym>(sym)));
-                const char32_t lower = (u >= U'\u0410' && u <= U'\u042f') ? u + 0x20 : (u == U'\u0401' ? U'\u0451' : 0);
-                if (lower) {
-                    manualChar = rasklad::manual::ruToUsKey(lower);
-                    ruKey = upperKey = manualChar != 0;
-                }
-            }
-        }
-        if (manualChar && !s->empty() && ruKey != s->typedRu) manualChar = 0;
-        const bool letterKey = plain || upperKey;
-#else
         const bool letterKey = plain;
-#endif
         if (letterKey && manualChar && !s->full()) {
 #else
         if (plain && sym >= FcitxKey_a && sym <= FcitxKey_z && !s->full()) {
@@ -1699,9 +1346,6 @@ private:
             }
 #ifdef RASKLAD_MANUAL_LAB
             if (s->empty()) s->typedRu = ruKey;
-#ifdef RASKLAD_PRODUCT
-            if (upperKey) s->upper |= std::uint32_t{1} << s->size();
-#endif
             acceptLetter(ic, *s, event, manualChar);
 #else
             acceptLetter(ic, *s, event, static_cast<char>('a' + (sym - FcitxKey_a)));
@@ -1722,25 +1366,10 @@ private:
                 auto corrected = profile_->correct(w, context.field);
                 std::string out = corrected ? std::move(*corrected) : w;
 #elif defined(RASKLAD_MANUAL_LAB)
-#ifdef RASKLAD_PRODUCT
-                // SYS-226: automatic correction only if the owner did not choose a form
-                // with the gesture, and only on the reviewed profile's Correct, which
-                // must equal this word's other-layout form. Double Shift right after
-                // the Space restores the original (replaceLast); SYS-250: also when
-                // only the letters were corrected and trailing keys kept ("ns," -> "ты,").
-                bool whole = false;
-                auto fixed = autoText(*s, whole);
-                std::string out = fixed ? std::move(*fixed) : s->shown();
-#else
                 std::string out = s->shown(); // only what the owner chose to see
-#endif
                 // The other form: after a correction (whole or letters only) the word
                 // exactly as typed; otherwise the whole word in the layout not shown.
-#ifdef RASKLAD_PRODUCT
-                const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
-#else
                 const bool otherRu = s->typedRu == s->converted;
-#endif
                 s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
                             std::string(" "));
 #else
@@ -1756,15 +1385,7 @@ private:
                 // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
-#ifdef RASKLAD_PRODUCT
-                const bool switchAfter = fixed.has_value();
-                const bool toRu = !s->typedRu;
-                auto ref = ic->watch();
-#endif
                 commitAndClear(ic, *s, std::move(out));
-#ifdef RASKLAD_PRODUCT
-                if (switchAfter) switchLayout(ref, toRu); // the corrected word's layout
-#endif
                 return;
             }
             if (sym == FcitxKey_BackSpace) {
@@ -1775,12 +1396,7 @@ private:
 
         // Every other press (incl. full buffer): flush ORIGINAL letters to this
         // same focused context, then let the key pass unfiltered.
-#ifdef RASKLAD_PRODUCT
-        // Punctuation ends a word and a new one may start right after it (куда-то).
-        if (!boundary && !wordEnd(key)) s->setBypass(true);
-#else
         if (!boundary) s->setBypass(true);
-#endif
 #ifdef RASKLAD_WITNESS_LAB
         if (wSpacePress) {
             lw::inc(s->empty() ? lw::Counter::passEmpty
@@ -1792,31 +1408,7 @@ private:
                 discard(ic, *s);
                 return;
             }
-#if defined(RASKLAD_PRODUCT)
-            // SYS-226: a punctuation key, Enter or Tab also ends the word: the same
-            // automatic correction as Space, then the key passes. SYS-250: after a
-            // punctuation character (not Enter or Tab: Enter may already have sent
-            // the message) double Shift swaps the word back, with the character the
-            // client inserted kept as it is.
-            bool whole = false;
-            std::optional<std::string> fixed;
-            const bool ends = wordEnd(key);
-            if (ends) fixed = autoText(*s, whole);
-            const bool toRu = !s->typedRu;
-            auto ref = ic->watch();
-            const bool switchAfter = fixed.has_value();
-            std::string out = fixed ? std::move(*fixed) : s->shown();
-            const std::uint32_t mark = fcitx::Key::keySymToUnicode(sym);
-            if (ends && mark > 0x20 && mark != 0x7f) {
-                const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
-                std::string w = s->word();
-                s->keepLast(ic->surroundingText(), out, LabState::form(w, otherRu, s->upper), otherRu,
-                            fcitx::utf8::UCS4ToUTF8(mark));
-                wipeString(w);
-            }
-            commitAndClear(ic, *s, std::move(out));
-            if (switchAfter) switchLayout(ref, toRu);
-#elif defined(RASKLAD_MANUAL_LAB)
+#if defined(RASKLAD_MANUAL_LAB)
             commitAndClear(ic, *s, s->shown()); // what the owner sees, never a hidden form
 #else
             commitAndClear(ic, *s, s->word());
@@ -1826,45 +1418,6 @@ private:
 
     fcitx::Instance *instance_;
     fcitx::InputContextManager *manager_;
-#ifdef RASKLAD_PRODUCT
-    RaskladConfig config_;
-    mutable RaskladStatus status_; // filled on each read; see getSubConfig
-    std::vector<std::string> seenPrograms_; // SYS-253: names only, memory only
-    std::vector<std::string> exceptionKeys_; // sorted
-    bool applying_ = false;
-    std::unique_ptr<rasklad::fcitxlab::ProfileDecision> profile_;
-    std::unique_ptr<fcitx::EventSource> switchEvent_;
-    bool selfSwitch_ = false;
-    rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
-    // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
-    // layout becomes the current Fcitx input method, so the owner keeps typing in it.
-    // Only between keyboard-us and keyboard-ru, only if both are in the current group,
-    // deferred to the next loop turn, and only while that context is focused with no
-    // word in progress (never drops typed letters).
-    // Double Alt is detected by Hyprland, not here: after the first Alt, Electron
-    // apps (Slack) move focus to their menu bar and Fcitx never sees the second.
-    void switchLayout(fcitx::TrackableObjectReference<fcitx::InputContext> ref, bool toRu) {
-        if (!instance_) return;
-        const std::string target = toRu ? kRuEntry : kLabEntry;
-        bool us = false, ru = false;
-        for (const auto &item : instance_->inputMethodManager().currentGroup().inputMethodList()) {
-            us = us || item.name() == kLabEntry;
-            ru = ru || item.name() == kRuEntry;
-        }
-        if (!us || !ru) return;
-        switchEvent_ = instance_->eventLoop().addDeferEvent([this, ref, target](fcitx::EventSource *) {
-            auto *c = ref.get();
-            if (!c || !c->hasFocus()) return true;
-            if (auto *s = state(c, false); s && !s->empty()) return true;
-            const auto *entry = instance_->inputMethodEntry(c);
-            if (!entry || entry->uniqueName() == target) return true;
-            selfSwitch_ = true;
-            instance_->setCurrentInputMethod(c, target, false);
-            selfSwitch_ = false;
-            return true;
-        });
-    }
-#endif
     std::unique_ptr<policy::ApplicationPermissions> permissionStore_ =
         std::make_unique<policy::ApplicationPermissions>(fixtureRegistry());
     bool familyOff_ = false;
