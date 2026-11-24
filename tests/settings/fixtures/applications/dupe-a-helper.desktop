@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Dupe Helper
+NoDisplay=true
+StartupWMClass=Dupe
+Exec=dupe --helper

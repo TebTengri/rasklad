@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Foo Editor
+GenericName=Text editor
+GenericName[ru]=Текстовый редактор
+Comment=Edits text
+Exec=env FOO=1 BAR=two "/opt/foo/bin/fooedit" --new %F

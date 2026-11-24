@@ -5,7 +5,7 @@
 # Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
 # or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.5.10
+pkgver=0.5.11
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
@@ -20,13 +20,14 @@ sha256sums=('@SHA256@' '@PROFILE_SHA256@')
 
 build() {
   cd "rasklad-${pkgver}"
-  mkdir -p build/addon build/policy build/permissions build/cue build/settings build/settings-tests
+  mkdir -p build/addon build/policy build/permissions build/cue build/settings build/settings-tests build/desktopindex-tests
   (cd build/addon && qmake6 ../../tools/fcitx_product.pro && make)
   (cd build/policy && qmake6 ../../tests/application_policy/application_policy.pro && make)
   (cd build/permissions && qmake6 ../../tests/application_permissions/application_permissions.pro && make)
   (cd build/cue && qmake6 ../../tests/layout_cue/layout_cue.pro && make)
   (cd build/settings && qmake6 ../../settings/settings.pro && make)
   (cd build/settings-tests && qmake6 ../../tests/settings/settings_tests.pro && make)
+  (cd build/desktopindex-tests && qmake6 ../../tests/settings/desktopindex_tests.pro && make)
 }
 
 check() {
@@ -35,6 +36,7 @@ check() {
   ./build/permissions/application_permissions_tests
   ./build/cue/layout_cue_tests
   ./build/settings-tests/settings_tests
+  QT_QPA_PLATFORM=offscreen ./build/desktopindex-tests/desktopindex_tests
   # The addon must not read the environment, load code, log, write files, or use D-Bus,
   # the network or processes (libc names, then Qt classes, which nm shows mangled).
   # Reading the pinned profile with QFile is expected; writing through Qt is not.

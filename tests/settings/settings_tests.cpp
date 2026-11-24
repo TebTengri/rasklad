@@ -162,21 +162,67 @@ private Q_SLOTS:
         QVERIFY(layoutsReady({QStringLiteral("keyboard-us"), QStringLiteral("keyboard-ru")}));
         QVERIFY(!layoutsReady({QStringLiteral("keyboard-us")}));
     }
-    void listShowsEnabledOpenAndTerminals()
+    void listGroupsRowsAndHidesTerminals()
+    {
+        FakeFcitx f;
+        FakeApps w;
+        w.open << QStringLiteral("quickshell") << QStringLiteral("chromium-browser");
+        SettingsBackend b(&f, &w);
+        QVERIFY(b.fcitxRunning() && b.addonEnabled() && b.configLoaded() && b.layoutsReady());
+        QCOMPARE(b.enabledCount(), 2);
+        const QVariantMap slack = entry(b, QStringLiteral("slack"));
+        QVERIFY(slack.value(QStringLiteral("enabled")).toBool());
+        QCOMPARE(slack.value(QStringLiteral("group")).toString(), QStringLiteral("on"));
+        QCOMPARE(slack.value(QStringLiteral("name")).toString(), QStringLiteral("slack")); // no index: the id
+        QCOMPARE(entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        // Terminals and system components are never offered; aliases share one row.
+        QVERIFY(entry(b, QStringLiteral("foot")).isEmpty());
+        QVERIFY(entry(b, QStringLiteral("quickshell")).isEmpty());
+        QVERIFY(entry(b, QStringLiteral("chromium-browser")).isEmpty());
+        const QVariantMap chromium = entry(b, QStringLiteral("chromium"));
+        QCOMPARE(chromium.value(QStringLiteral("names")).toStringList(),
+                 QStringList({QStringLiteral("chromium"), QStringLiteral("chromium-browser")}));
+        QVERIFY(chromium.value(QStringLiteral("partial")).toBool()); // only "chromium" is stored
+        QCOMPARE(b.apps().constFirst().toMap().value(QStringLiteral("group")).toString(), QStringLiteral("on"));
+    }
+    void aliasesSwitchTogetherAndRowsStay()
     {
         FakeFcitx f;
         FakeApps w;
         SettingsBackend b(&f, &w);
-        QVERIFY(b.fcitxRunning() && b.addonEnabled() && b.configLoaded() && b.layoutsReady());
-        QCOMPARE(b.enabledCount(), 2);
-        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("enabled")).toBool());
-        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("tested")).toBool());
-        QVERIFY(entry(b, QStringLiteral("slack")).value(QStringLiteral("focused")).toBool());
-        QVERIFY(!entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("enabled")).toBool());
-        QVERIFY(entry(b, QStringLiteral("foot")).value(QStringLiteral("terminal")).toBool());
-        // Enabled first, terminals last.
-        QCOMPARE(b.apps().constFirst().toMap().value(QStringLiteral("enabled")).toBool(), true);
-        QCOMPARE(b.apps().constLast().toMap().value(QStringLiteral("id")).toString(), QStringLiteral("foot"));
+        b.setAppEnabled(QStringLiteral("chromium"), true); // completes the partial row
+        QVERIFY(configFromMap(f.stored)->apps.contains(QStringLiteral("chromium-browser")));
+        QVERIFY(!entry(b, QStringLiteral("chromium")).value(QStringLiteral("partial")).toBool());
+        b.setAppEnabled(QStringLiteral("chromium-browser"), false);
+        const QStringList stored = configFromMap(f.stored)->apps;
+        QVERIFY(!stored.contains(QStringLiteral("chromium")) && !stored.contains(QStringLiteral("chromium-browser")));
+        // Switching does not move a row until the next refresh.
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("on"));
+        b.setAppEnabled(QStringLiteral("chatgpt"), true);
+        QCOMPARE(entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chatgpt")).value(QStringLiteral("group")).toString(), QStringLiteral("on"));
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+    }
+    void enabledSystemComponentStaysListed()
+    {
+        FakeFcitx f;
+        f.stored = fcitxMap({QStringLiteral("quickshell")}, true);
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(entry(b, QStringLiteral("quickshell")).value(QStringLiteral("enabled")).toBool());
+        b.setAppEnabled(QStringLiteral("quickshell"), false);
+        QVERIFY(configFromMap(f.stored)->apps.isEmpty());
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("quickshell")).isEmpty()); // off: hidden again
+    }
+    void roundingReply()
+    {
+        QCOMPARE(roundingFromReply(R"({"option":"decoration:rounding","int":8,"set":true})"), 8);
+        QCOMPARE(roundingFromReply(R"({"int":400})"), 24);
+        QCOMPARE(roundingFromReply(R"({"int":-3})"), 0);
+        QCOMPARE(roundingFromReply("no"), 0);
+        QCOMPARE(roundingFromReply(R"({"str":"8"})"), 0);
     }
     void toggleWritesAndReadsBack()
     {

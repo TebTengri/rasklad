@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=Shared Two
+Exec=sharedtool --two %u

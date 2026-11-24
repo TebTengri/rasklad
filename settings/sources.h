@@ -10,6 +10,9 @@
 #include <QStringList>
 #include <QVariantMap>
 
+#include "desktopindex.h"
+
+#include <functional>
 #include <optional>
 
 namespace rasklad::settings {
@@ -35,6 +38,32 @@ public:
     // Program names the addon saw with a focused text field since it started;
     // empty if Fcitx is not reachable or the addon is older than SYS-253.
     virtual QStringList seenApps() = 0;
+};
+
+// SYS-254: Hyprland's decoration:rounding over its request socket (no subprocess),
+// read once at start; 0 outside Hyprland or on any failure.
+int hyprlandRounding();
+
+// SYS-254: human names, descriptions and icons for program names.
+class AppNames
+{
+public:
+    virtual ~AppNames() = default;
+    virtual void reload() {}
+    virtual std::optional<AppInfo> find(const QString &program) const = 0;
+};
+
+// From the installed .desktop entries, in the window's language; reloaded on refresh.
+class DesktopAppNames final : public AppNames
+{
+public:
+    explicit DesktopAppNames(std::function<QString()> language) : m_language(std::move(language)) {}
+    void reload() override { m_index.load(DesktopIndex::defaultDirs(), m_language()); }
+    std::optional<AppInfo> find(const QString &program) const override { return m_index.find(program); }
+
+private:
+    std::function<QString()> m_language;
+    DesktopIndex m_index;
 };
 
 class DBusFcitx final : public FcitxSource

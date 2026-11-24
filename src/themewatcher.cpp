@@ -177,7 +177,7 @@ std::optional<ThemePalette> parseThemeColors(const QByteArray &bytes)
         p.background = fallback.background;
         p.foreground = fallback.foreground;
     }
-    p.error = firstOf(colors, {"colors.normal.red", "color1"});
+    p.error = firstOf(colors, {"red", "colors.normal.red", "color1"}); // Omarchy colors.toml names it red
     p.muted = firstOf(colors, {"colors.bright.black", "color8"});
     finishPalette(p);
     return p;
