@@ -529,11 +529,11 @@ def ours_in(path, data):
   BEGIN comment alone may have been taken out while what follows still runs."""
   if path == SHELL_JSON:
     return names_widget(data)
-  if path == BINDINGS:
-    return BEGIN.encode() in data or RULE.encode() in data  # the rule loader
-  # input.lua: every block version names rasklad-setup in its comments, and the
-  # current one also checks rasklad_package.
-  return b"rasklad-setup" in data or b"rasklad_package" in data
+  # Lua files: every block version and the rule loader name rasklad (in a
+  # comment, a variable or the rule's path, even split by concatenation as
+  # "rasklad" .. "-fcitx5"). A file with every mention of rasklad taken out is
+  # the user's own configuration, whatever it sets.
+  return b"rasklad" in data.lower()
 
 
 def forget_entry(state, path):

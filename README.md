@@ -116,7 +116,8 @@ rasklad-setup --revert && sudo pacman -R rasklad-fcitx5 && fcitx5 -rd
 пустое место виджета: верните `omarchy.keyboard-layout` в
 `~/.config/omarchy/shell.json` (копия — `~/.config/omarchy/shell.json.rasklad.bak`).
 Об этом же напоминает `pacman -R`. После `omarchy refresh` достаточно снова запустить
-`rasklad-setup --install`: записи о сброшенных файлах он снимает сам.
+`rasklad-setup --install`: записи о сброшенных файлах он снимает сам. Файл, из
+которого убраны все упоминания rasklad, считается вашей собственной настройкой.
 
 ## Ограничения
 

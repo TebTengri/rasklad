@@ -161,6 +161,8 @@ class Refresh(Base):
         loader = ('-- user\nlocal rasklad = "%s"\ndofile(rasklad)\n' % self.setup.RULE).encode()
         self.assertTrue(self.setup.ours_in(self.setup.BINDINGS, loader))
         self.assertFalse(self.setup.ours_in(self.setup.BINDINGS, b'-- omarchy bindings\n'))
+        split = b'local r = "/usr/share/rasklad" .. "-fcitx5/hyprland/double-alt.lua"\ndofile(r)\n'
+        self.assertTrue(self.setup.ours_in(self.setup.BINDINGS, split))
 
     def test_reload_with_config_errors_does_not_count(self):
         self.setup = load_setup(self.tmp.name)
