@@ -55,11 +55,15 @@ tools/build_arch_package.sh <каталог профиля>
    python3 tools/prepare_affix_control.py --input build/experiment-003-data/ru.aff --output build/experiment-003-data/control/ru.aff
    ```
 3. **Модель и словарь стеблей.** Модель обучается только на словарях. Но стенд,
-   который её пишет, сначала проверяет и проверочные выборки Tatoeba: распакованные
-   `build/experiment-002-data/en.tsv` и `ru.tsv` с хешами из
-   [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json).
-   Адрес выгрузки Tatoeba не закреплён и со временем отдаёт другие байты. Без
-   снимка от 2026-11-07 этот шаг не пройдёт. Со снимком:
+   который её пишет, требует ещё и проверочные выборки Tatoeba.
+
+   Выборки готовятся так: выгрузку Tatoeba по адресу из
+   [data/evaluation-002-sources.json](../../data/evaluation-002-sources.json)
+   распаковать и пропустить через `tools/prepare_cc0_evaluation.py` (он убирает
+   столбец времени). Получится `build/experiment-002-data/en.tsv` и `ru.tsv`. Их хеш
+   должен совпасть с полем `sha256` паспорта. Адрес выгрузки не закреплён и со
+   временем отдаёт другие байты, поэтому без снимка от 2026-11-07 этот шаг не
+   пройдёт. Со снимком:
    ```sh
    bin/build
    mkdir -p build/experiment-002-artifacts
@@ -84,7 +88,10 @@ tools/build_arch_package.sh <каталог профиля>
        > build/experiment-002-artifacts/MODIFICATIONS.txt
    ```
 
-После четырёх шагов клон сам служит каталогом профиля: `tools/build_arch_package.sh .`
+После четырёх шагов клон сам служит каталогом профиля:
+`tools/build_arch_package.sh .`. Совпадут ли заново созданные модель и словарь
+стеблей с закреплёнными хешами, не проверялось. Если не совпадут, автоисправление
+не включится (см. ниже).
 
 ## Что не проверено
 
