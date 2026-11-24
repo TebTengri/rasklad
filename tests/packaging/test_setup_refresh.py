@@ -64,6 +64,17 @@ class Refresh(Base):
         self.assertEqual(self.bindings.read_bytes(), b'-- omarchy bindings\n')
         self.assertEqual(self.shell.read_bytes(), SHELL)
 
+    def test_declining_after_refresh_keeps_the_records(self):
+        from unittest import mock
+        self.quiet(self.setup.install, True)
+        before = self.setup.load_state()['files']
+        self.refresh()
+        with mock.patch.object(self.setup.sys.stdin, 'isatty', return_value=True), \
+             mock.patch('builtins.input', return_value='n'):
+            code, out = self.quiet(self.setup.install, False)
+        self.assertIn('Nothing changed', out)
+        self.assertEqual(self.setup.load_state()['files'], before)
+
     def test_revert_after_refresh_is_clean(self):
         self.quiet(self.setup.install, True)
         self.refresh()

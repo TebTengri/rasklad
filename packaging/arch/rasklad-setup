@@ -556,7 +556,7 @@ def forget_entry(state, path):
   return kept
 
 
-def drop_stale(state, paths):
+def drop_stale(state, paths, save=True):
   """SYS-270: a tracked file that no longer carries our change (omarchy refresh,
   or reset by hand) has nothing of ours to undo: its entry and private copy go,
   the .rasklad.bak beside it stays. Otherwise --install and --revert would stop
@@ -572,15 +572,18 @@ def drop_stale(state, paths):
     say("reset", os.path.basename(path),
         "our change is gone (omarchy refresh?); nothing to undo (old copy: %s)" % copy)
     dropped = True
-  if dropped:
+  if dropped and save:
     save_and_drop(state)
+  return dropped
 
 
 def install(assume_yes, single_layout=False):
   state = load_state()
   # input.lua is not forgotten here: its entry is what makes --revert check the
-  # live layouts before it removes the controls (SYS-268).
-  drop_stale(state, (BINDINGS, SHELL_JSON))
+  # live layouts before it removes the controls (SYS-268). The others are
+  # forgotten in memory only, saved once the user agrees below, so a "no" keeps
+  # the records a later --revert may still need.
+  stale = drop_stale(state, (BINDINGS, SHELL_JSON), save=False)
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
@@ -664,6 +667,8 @@ def install(assume_yes, single_layout=False):
         say("skipped", os.path.basename(path), "Hyprland keeps its layouts")
         layout_change = []
 
+  if stale:
+    save_and_drop(state)  # the user agreed: the stale records go now
   # Each step is recorded before it is done, so a crash in between leaves a
   # state --revert can reconcile (an unwritten file still equals its copy).
   errors_before = hypr_errors()
