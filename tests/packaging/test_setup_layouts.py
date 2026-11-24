@@ -9,11 +9,13 @@ import importlib.machinery
 import importlib.util
 import io
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.dont_write_bytecode = True  # no __pycache__ next to packaging/arch/rasklad-setup
 
 
 def load_setup(home):
