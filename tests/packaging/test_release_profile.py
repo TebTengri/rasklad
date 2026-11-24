@@ -67,6 +67,8 @@ class PackagingGate(unittest.TestCase):
         gate = (ROOT / 'tests/profile_gate/profile_gate.cpp').read_text()
         self.assertIn('verifyProfileFiles(', gate)
         self.assertIn('productionPins()', gate)
+        wrapper = (ROOT / 'tools/build_arch_package.sh').read_text()
+        self.assertIn('makepkg --cleanbuild --check', wrapper)
 
 
 if __name__ == '__main__':
