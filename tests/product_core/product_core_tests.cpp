@@ -87,6 +87,18 @@ static void wordRules()
     CHECK(word::lettersBeforeTail("ckjdj") == 0);   // ends in a letter: nothing to strip
     CHECK(word::lettersBeforeTail(",.;") == 0);     // no letters
     CHECK(word::lettersBeforeTail("") == 0);
+
+    // SYS-269: protected fields and non-prose purposes are refused.
+    namespace f = word::field;
+    CHECK(!word::refusedField(0));
+    CHECK(!word::refusedField(1ULL << 1));   // Preedit only: ordinary text
+    CHECK(!word::refusedField(1ULL << 22));  // Name: layout fixes help there
+    CHECK(!word::refusedField(1ULL << 21));  // Alpha
+    for (std::uint64_t bit : {f::kPassword, f::kSensitive, f::kNoSpellCheck, f::kTerminal, f::kDisable,
+                              f::kEmail, f::kUrl, f::kDigit, f::kNumber, f::kDialable, f::kDate, f::kTime}) {
+        CHECK(word::refusedField(bit));
+        CHECK(word::refusedField(bit | (1ULL << 1)));
+    }
 }
 
 static void registryOncePerRevision()
