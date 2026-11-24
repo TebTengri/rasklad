@@ -222,6 +222,39 @@ try{
   phase='exception_gesture';await reset();await type('word');await type('shift2');await type('space');report.exceptGestureValue=await v();report.exceptGesture=report.exceptGestureValue==='привет ';
   const required=['exceptWord','exceptCapital','exceptComma','exceptShort','exceptLetterKey','exceptOtherCorrected','exceptGesture'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='focus'){
+  // SYS-271: focus moves to another field right after the key that makes the
+  // addon commit (Space: correction; double Shift: undo), before the commit can
+  // have arrived. Whatever the timing, nothing of the first field's word may
+  // land in the second field, and the first field holds one consistent form.
+  if(!nativeWayland)throw Error('native product suite required');
+  async function race(cmd,ms){
+   const ack=nextVkLine(5000);vk.stdin.write(cmd+'\n');
+   if(ms>0)await new Promise(r=>setTimeout(r,ms));
+   await ev(`document.getElementById('other').focus();true`);
+   if(await ack!=='{"ok":true}')throw Error('private virtual-keyboard command failed');
+   await new Promise(r=>setTimeout(r,400));
+   return {prose:await ev('prose.value'),other:await ev(`document.getElementById('other').value`)};
+  }
+  const okProse=['привет ','ghbdtn ','привет','ghbdtn'];
+  const runs=[];
+  for(const ms of [0,0,0,0,0,1,1,1,2,2,5,10,20,50]){
+   phase='focus_space_'+ms;await reset();await type('word');
+   runs.push({kind:'space',ms,...await race('space',ms)});
+   phase='focus_undo_'+ms;await reset();await type('word');await type('space');
+   runs.push({kind:'undo',ms,...await race('shift2',ms)});
+  }
+  report.focusRuns=runs;
+  // Below a few milliseconds the key and the focus move are effectively at the
+  // same moment; that window is measured (focusLeaks), not required.
+  report.focusLeaks=runs.filter(r=>r.other!=='').map(r=>r.kind+'@'+r.ms);
+  report.focusNothingInOther=runs.filter(r=>r.ms>=2).every(r=>r.other==='');
+  report.focusProseConsistent=runs.every(r=>okProse.includes(r.prose));
+  // Afterwards the addon still works in the new field.
+  phase='focus_after';await reset('other');await type('word');await type('space');
+  report.focusAfterWorks=await ev(`document.getElementById('other').value==='привет '`);
+  const required=['focusNothingInOther','focusProseConsistent','focusAfterWorks'];
+  report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='gestures'){
   // SYS-227: automatic correction switched off: words stay as typed on every word end,
   // in both layouts; double Shift still converts the word being typed.
