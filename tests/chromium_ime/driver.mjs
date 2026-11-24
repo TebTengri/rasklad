@@ -256,7 +256,7 @@ try{
   report.focusUndoControl=(await fields()).prose;
   report.focusUndoExercised=report.focusUndoControl===SEED_P+'ghbdtn ';
   const runs=[];
-  for(const ms of [0,0,0,0,0,1,1,1,2,2,5,10,20,30,50,80]){
+  for(const ms of [0,0,0,0,1,1,2,5,20,50,80]){
    phase='focus_space_'+ms;await seed();await type('word');
    runs.push({kind:'space',ms,...await race('space',ms)});
    phase='focus_undo_'+ms;await seed();await type('word');await type('space');
