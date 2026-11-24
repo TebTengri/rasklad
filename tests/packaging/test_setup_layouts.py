@@ -415,6 +415,28 @@ class Install(Base):
                 self.assertEqual(fake.calls, 2, kind)
                 self.assertTrue(self.input.is_symlink() if kind == 'dangling' else self.input.is_dir())
 
+    def test_unreadable_input_goes_to_the_live_check(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        real_read = self.setup.read
+        def denied(path):
+            if path == self.setup.INPUT:
+                raise PermissionError(13, 'Permission denied')
+            return real_read(path)
+        self.setup.read = denied
+        self.setup.input_block_present = lambda: False  # cannot be read either
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda *a: True
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.revert()
+        self.assertEqual(fake.calls, 2)
+
+    def test_fifo_does_not_block(self):
+        self.input.unlink()
+        os.mkfifo(self.input)
+        self.assertFalse(self.setup.input_block_present())
+
     def test_block_removed_without_hyprland_keeps_the_controls(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])

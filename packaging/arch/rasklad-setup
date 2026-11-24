@@ -725,13 +725,23 @@ def hypr_layouts_back(state):
 
 
 def input_block_present():
+  # Opened without blocking and checked on the open file: a path swapped for a
+  # FIFO in between cannot stall revert.
   try:
-    if not stat.S_ISREG(os.stat(INPUT).st_mode):
+    fd = os.open(INPUT, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
+  except OSError:
+    return False
+  try:
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
       return False
-    with open(INPUT, "rb") as f:
+    with os.fdopen(fd, "rb") as f:
+      fd = None
       return BEGIN.encode() in f.read()
   except OSError:
     return False
+  finally:
+    if fd is not None:
+      os.close(fd)
 
 
 def revert():
@@ -745,7 +755,11 @@ def revert():
   # double Alt rule, the bar widget and Fcitx's layouts are the only ways to
   # switch, so they all stay until a later --revert restores it.
   had_input = INPUT in state["files"]
-  input_kept = had_input and not restore(state, INPUT)
+  try:
+    input_kept = had_input and not restore(state, INPUT)
+  except OSError as e:  # unreadable input.lua or its directory
+    say("unreadable", os.path.basename(INPUT), "left as is (%s)" % e.strerror)
+    input_kept = True
   input_left = False
   # Kept only while a readable regular input.lua (through a dotfiles symlink
   # too) still holds our block. Gone, a dangling link, a directory, unreadable:
