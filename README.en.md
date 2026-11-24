@@ -102,8 +102,8 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 `rasklad-setup --install --yes --single-layout`.
 
 `rasklad-setup --revert` puts everything back. A file you changed yourself after
-installing is left as it is, with a notice. Only one `rasklad-setup` runs at a
-time. The same actions are in the settings window, section "Connection to
+installing is left as it is, with a notice. Only one `--install` or `--revert`
+runs at a time. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
 
@@ -157,7 +157,8 @@ out counts as your own configuration.
 
 - Typed text never goes to the network, to logs or to disk.
 - The add-on keeps in memory, per field, only the word being typed and the last
-  finished word. The last word is dropped at the next key or focus change; after
+  finished word. The last word is dropped at the next key other than Shift, or at
+  a focus change; after
   15 seconds it can no longer be swapped and is then wiped.
 - The settings window stores only the application list, the exceptions and the
   switches, in `~/.config/fcitx5/conf/rasklad.conf`.

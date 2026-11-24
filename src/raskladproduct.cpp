@@ -334,7 +334,11 @@ public:
         }
     }
 
-    void clearPending() { pendingCount_ = 0; }
+    // SYS-272: wipe, not just forget: the codes and keysyms of consumed keys.
+    void clearPending() {
+        for (auto &e : pending_) e = Pending{};
+        pendingCount_ = 0;
+    }
     bool hasPending() const { return pendingCount_ != 0; }
 
     // Remember a consumed press so its release can be swallowed.
@@ -359,7 +363,7 @@ public:
                 for (std::size_t j = i + 1; j < pendingCount_; ++j) {
                     pending_[j - 1] = pending_[j];
                 }
-                --pendingCount_;
+                pending_[--pendingCount_] = Pending{}; // released: nothing kept
                 return true;
             }
         }
