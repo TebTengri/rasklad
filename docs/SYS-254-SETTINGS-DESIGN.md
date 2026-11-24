@@ -132,3 +132,13 @@ The index lives in `settings/desktopindex.{h,cpp}`. It is a small parser: it rea
 - Accessibility review: focus returns to the same row after a switch or a refresh; the window opens with focus on the first row; a held Space switches once; help has a Close button, scrolls, and returns focus; rows expose checkbox role, state and actions.
 - Codex review: an enabled system component stays listed so it can be switched off; names come from any alias; exact id breaks window-class ties; one deadline for the Hyprland exchange; held Esc/Q act once; the 64-app limit shows outside the add form.
 - SYS-260: help says how to pause (the Automatic correction switch, or a middle click on the layout icon); no separate pause switch, because it would duplicate that setting.
+
+## SYS-261: tabs after the owner's first week
+
+- **Three tabs:** «Основные» (correction and the Omarchy connection), «Приложения» and «Исключения».
+  - The owner chose this layout. With many apps installed, one page grew too long to reach the other settings.
+  - The tabs carry Omarchy's look: a bold label and an accent underline on the current tab.
+  - They switch with Ctrl+1/2/3, Ctrl+Tab, or ←/→ on a focused tab.
+- **The Omarchy connection** collapses to one line when everything is connected. The rows and «Подключить…» appear only when something is missing.
+- **Long titles wrap** instead of being cut.
+- **One window.** Clicking the icon again brings the open window forward instead of opening a second one.

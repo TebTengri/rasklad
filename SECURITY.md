@@ -368,3 +368,8 @@ The settings window starts no shell of its own and passes no text the user typed
 - The window itself writes no Hyprland, bar or Fcitx group file.
 
 **Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.
+
+**One window (SYS-261).** The window listens on `$XDG_RUNTIME_DIR/rasklad-settings.socket`, which only the same user can open (`UserAccessOption`).
+- A second start connects to it, sends `focus`, and exits.
+- The first window ignores what it receives and asks Hyprland, over the same request socket, for `dispatch focuswindow pid:<its own pid>`. The pid is a number the window gets from its own process.
+- Nothing received on the socket reaches a command or a setting.

@@ -48,6 +48,8 @@ public:
 // SYS-254: Hyprland's decoration:rounding over its request socket (no subprocess),
 // read once at start; 0 outside Hyprland or on any failure.
 int hyprlandRounding();
+// SYS-261: asks Hyprland to focus the window of this process; false outside Hyprland.
+bool hyprlandFocusPid(qint64 pid);
 
 // SYS-254: human names, descriptions and icons for program names.
 class AppNames

@@ -14,12 +14,16 @@
 #include "themewatcher.h"
 
 #include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 #include <QGuiApplication>
+#include <QLocalServer>
+#include <QLocalSocket>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QTextStream>
+#include <QWindow>
 
 using namespace rasklad;
 
@@ -42,6 +46,30 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationName(QStringLiteral("rasklad-settings"));
     QGuiApplication::setApplicationVersion(QStringLiteral(RASKLAD_VERSION));
     QGuiApplication::setDesktopFileName(QStringLiteral("rasklad-settings"));
+
+    // SYS-261: one settings window. A second start asks the first to come forward
+    // over a socket only this user can open, then exits.
+    QString lockPath;
+    {
+        const QString runtime = qEnvironmentVariable("XDG_RUNTIME_DIR");
+        if (!runtime.isEmpty() && QDir::isAbsolutePath(runtime))
+            lockPath = runtime + QStringLiteral("/rasklad-settings.socket");
+    }
+    if (!lockPath.isEmpty()) {
+        QLocalSocket probe;
+        probe.connectToServer(lockPath);
+        if (probe.waitForConnected(300)) {
+            probe.write("focus\n");
+            probe.waitForBytesWritten(300);
+            return 0;
+        }
+    }
+    QLocalServer single;
+    if (!lockPath.isEmpty()) {
+        QLocalServer::removeServer(lockPath); // a stale socket of a crashed window
+        single.setSocketOptions(QLocalServer::UserAccessOption);
+        single.listen(lockPath); // on failure: still a working window, only no single-instance
+    }
 
     app::ThemeWatcher theme(app::defaultThemeSources(), QString(), true);
     settings::DBusFcitx fcitx;
@@ -79,6 +107,19 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.load(QUrl(QStringLiteral("qrc:/Main.qml")));
     if (engine.rootObjects().isEmpty()) return 1;
+    auto *window = qobject_cast<QWindow *>(engine.rootObjects().constFirst());
+    QObject::connect(&single, &QLocalServer::newConnection, &app, [&single, window] {
+        while (QLocalSocket *peer = single.nextPendingConnection()) {
+            peer->disconnectFromServer(); // the message is only "come forward"
+            peer->deleteLater();
+        }
+        if (!window) return;
+        window->show();
+        window->raise();
+        window->requestActivate();
+        // Wayland lets a compositor refuse requestActivate; Hyprland focuses on request.
+        settings::hyprlandFocusPid(QCoreApplication::applicationPid());
+    });
     const int code = app.exec();
     if (installed) QCoreApplication::removeTranslator(&ru);
     return code;

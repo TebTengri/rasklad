@@ -255,19 +255,21 @@ bool RaskladSetup::open(const QString &action)
     return started;
 }
 
-int hyprlandRounding()
+namespace {
+// One request to Hyprland's request socket (no subprocess); empty on any failure.
+QByteArray hyprlandRequest(const QByteArray &request)
 {
     const QByteArray runtime = qgetenv("XDG_RUNTIME_DIR");
     const QByteArray instance = qgetenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (runtime.isEmpty() || instance.isEmpty() || instance.contains('/')) return 0;
+    if (runtime.isEmpty() || instance.isEmpty() || instance.contains('/')) return {};
     const QByteArray path = runtime + "/hypr/" + instance + "/.socket.sock";
     sockaddr_un addr{};
-    if (path.size() >= static_cast<qsizetype>(sizeof(addr.sun_path))) return 0;
+    if (path.size() >= static_cast<qsizetype>(sizeof(addr.sun_path))) return {};
     addr.sun_family = AF_UNIX;
     std::memcpy(addr.sun_path, path.constData(), static_cast<size_t>(path.size()));
     // Non-blocking throughout: a wedged compositor never holds the window back.
     const int fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
-    if (fd < 0) return 0;
+    if (fd < 0) return {};
     // One deadline for the whole exchange: a trickling reply cannot stretch it.
     const QDeadlineTimer deadline(kTimeoutMs);
     const auto wait = [fd, &deadline](short events) {
@@ -280,7 +282,6 @@ int hyprlandRounding()
         return r > 0 && (p.revents & events);
     };
     QByteArray reply;
-    const QByteArray request = "j/getoption decoration:rounding";
     bool connected = ::connect(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == 0;
     if (!connected && (errno == EINPROGRESS || errno == EAGAIN) && wait(POLLOUT)) {
         int err = 0;
@@ -298,7 +299,20 @@ int hyprlandRounding()
         }
     }
     ::close(fd);
-    return roundingFromReply(reply);
+    return reply;
+}
+} // namespace
+
+int hyprlandRounding()
+{
+    return roundingFromReply(hyprlandRequest("j/getoption decoration:rounding"));
+}
+
+bool hyprlandFocusPid(qint64 pid)
+{
+    // Only our own pid, a number: Hyprland answers "ok" when it focused the window.
+    if (pid <= 0) return false;
+    return hyprlandRequest("dispatch focuswindow pid:" + QByteArray::number(pid)).trimmed() == "ok";
 }
 
 QStringList FcitxSeenApps::seenApps()
