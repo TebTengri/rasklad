@@ -310,9 +310,12 @@ int hyprlandRounding()
 
 bool hyprlandFocusPid(qint64 pid)
 {
-    // Only our own pid, a number: Hyprland answers "ok" when it focused the window.
+    // Only our own pid, a number. A Lua-configured Hyprland (0.56+) takes the Lua
+    // form; older or hyprland.conf sessions take the classic one, as Omarchy does.
     if (pid <= 0) return false;
-    return hyprlandRequest("dispatch focuswindow pid:" + QByteArray::number(pid)).trimmed() == "ok";
+    const QByteArray n = QByteArray::number(pid);
+    if (hyprlandRequest("dispatch hl.dsp.focus({ window = \"pid:" + n + "\" })").trimmed() == "ok") return true;
+    return hyprlandRequest("dispatch focuswindow pid:" + n).trimmed() == "ok";
 }
 
 QStringList FcitxSeenApps::seenApps()

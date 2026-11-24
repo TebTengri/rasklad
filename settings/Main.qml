@@ -37,12 +37,15 @@ ApplicationWindow {
     // The app row that had keyboard focus: a list rebuild (after a switch or a
     // refresh) recreates the rows, and the new one takes the focus back.
     property int tab: 0
-    // keyFocus: from the keyboard on the tab row, so focus stays on the tabs.
-    function showTab(index, keyFocus) {
+    // Focus always moves to the shown tab's header: keys never reach a hidden page.
+    function showTab(index) {
         tab = index
         page.contentY = Math.min(page.contentY, Math.max(0, tabs.y + content.y - 20))
-        if (keyFocus) Qt.callLater(() => { const t = tabs.children[index]; if (t) t.forceActiveFocus() })
+        tabHeader().forceActiveFocus()
     }
+    function tabHeader() { return tabRepeater.itemAt(tab) }
+    // A control the keyboard may land on: shown on screen and usable.
+    function reachable(item) { return item !== null && item !== undefined && item.visible && item.enabled }
     property string rowFocus: ""
     property var rowItems: Object.create(null) // key -> live row; no prototype keys
     property string limitApp: "" // the app whose switch-on hit the 64-app limit
@@ -51,13 +54,16 @@ ApplicationWindow {
     function restoreFocus() {
         const row = Object.prototype.hasOwnProperty.call(rowItems, rowFocus) ? rowItems[rowFocus] : null
         if (!focusLost()) return
-        if (rowFocus !== "" && row) row.forceActiveFocus()
-        else if (tab === 0) firstRow.forceActiveFocus() // the row went away (a component switched off)
+        if (rowFocus !== "" && reachable(row)) row.forceActiveFocus()
+        else if (tab === 0 && reachable(firstRow)) firstRow.forceActiveFocus()
+        else tabHeader().forceActiveFocus() // the row went away, or it is on another tab
     }
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
         if (help.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
+        // Focus on a hidden page (its row was rebuilt there) counts as lost too.
+        if (!activeFocusItem || !activeFocusItem.visible) return true
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) return false
         return true
@@ -97,14 +103,22 @@ ApplicationWindow {
             if (help.opened) help.close()
             else if (addBox.visible) { addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
             else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
-            else if (window.typing) firstRow.forceActiveFocus()
+            else if (window.typing) window.tabHeader().forceActiveFocus() // out of the field, still on its tab
             else Qt.quit()
         }
     }
     Shortcut {
         sequence: "Ctrl+N"
         enabled: backend.configLoaded
-        onActivated: { window.showTab(1); addBox.visible = true; Qt.callLater(() => { window.reveal(addBox); addField.forceActiveFocus() }) }
+        onActivated: {
+            window.showTab(1)
+            addBox.visible = true
+            // Lay the Applications page out now, so the scroll knows its new height.
+            appsPage.forceLayout()
+            content.forceLayout()
+            addField.forceActiveFocus()
+            window.reveal(addBox)
+        }
     }
 
     function errorText(code) {
@@ -395,6 +409,7 @@ ApplicationWindow {
                 Layout.topMargin: 10
                 spacing: 4
                 Repeater {
+                    id: tabRepeater
                     model: [qsTr("General"), qsTr("Applications"), qsTr("Exceptions")]
                     delegate: Rectangle {
                         id: tab
@@ -410,8 +425,8 @@ ApplicationWindow {
                         Accessible.name: modelData
                         Accessible.selected: current
                         Accessible.onPressAction: window.showTab(index)
-                        Keys.onLeftPressed: window.showTab((window.tab + 2) % 3, true)
-                        Keys.onRightPressed: window.showTab((window.tab + 1) % 3, true)
+                        Keys.onLeftPressed: window.showTab((window.tab + 2) % 3)
+                        Keys.onRightPressed: window.showTab((window.tab + 1) % 3)
                         Label {
                             id: tabLabel
                             anchors.centerIn: parent
@@ -450,6 +465,7 @@ ApplicationWindow {
 
                 ColumnLayout {
                     id: generalPage
+                    enabled: pages.currentIndex === 0 // a hidden page takes no keys
                     spacing: 8
                     Layout.fillWidth: true
                     // ---- Correction
@@ -570,6 +586,7 @@ ApplicationWindow {
 
                 ColumnLayout {
                     id: appsPage
+                    enabled: pages.currentIndex === 1
                     spacing: 8
                     Layout.fillWidth: true
                     // ---- Applications
@@ -684,6 +701,7 @@ ApplicationWindow {
 
                 ColumnLayout {
                     id: wordsPage
+                    enabled: pages.currentIndex === 2
                     spacing: 8
                     Layout.fillWidth: true
                     // ---- Exceptions

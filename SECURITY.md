@@ -369,7 +369,9 @@ The settings window starts no shell of its own and passes no text the user typed
 
 **Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.
 
-**One window (SYS-261).** The window listens on `$XDG_RUNTIME_DIR/rasklad-settings.socket`, which only the same user can open (`UserAccessOption`).
-- A second start connects to it, sends `focus`, and exits.
-- The first window ignores what it receives and asks Hyprland, over the same request socket, for `dispatch focuswindow pid:<its own pid>`. The pid is a number the window gets from its own process.
+**One window (SYS-261).** Only when `$XDG_RUNTIME_DIR` is an absolute directory owned by this user with mode 0700; otherwise every start is a separate window.
+- The first window holds `rasklad-settings.lock` there for its whole life (`QLockFile`, which detects a lock left by a crashed process) and listens on `rasklad-settings.socket` (`UserAccessOption`).
+- Only the lock holder removes a leftover socket, and only when it is a socket owned by this user.
+- A later start finds the lock taken, connects, sends `focus`, and exits. It never opens a second window, even when the first does not answer.
+- The first window ignores what it receives and asks Hyprland, over the request socket, to focus its own pid: `hl.dsp.focus({ window = "pid:<n>" })`, then the classic `focuswindow pid:<n>`, as Omarchy's own scripts do. The pid is a number the window gets from its own process.
 - Nothing received on the socket reaches a command or a setting.

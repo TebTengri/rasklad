@@ -14,18 +14,46 @@
 #include "themewatcher.h"
 
 #include <QCoreApplication>
-#include <QDir>
 #include <QFile>
 #include <QGuiApplication>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QLockFile>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QTextStream>
+#include <QThread>
 #include <QWindow>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 using namespace rasklad;
+
+namespace {
+// $XDG_RUNTIME_DIR only when it is an absolute, real directory owned by this user
+// and closed to group and others (mode 0700); otherwise empty: no single-instance.
+QString privateRuntimeDir()
+{
+    const QByteArray dir = qgetenv("XDG_RUNTIME_DIR");
+    if (dir.isEmpty() || !dir.startsWith('/')) return {};
+    struct stat st {};
+    if (::lstat(dir.constData(), &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != ::getuid() ||
+        (st.st_mode & 077) != 0)
+        return {};
+    return QString::fromLocal8Bit(dir);
+}
+
+// Removes the socket left by a crashed window: only a socket, never another file.
+void removeStaleSocket(const QString &path)
+{
+    struct stat st {};
+    const QByteArray p = QFile::encodeName(path);
+    if (::lstat(p.constData(), &st) == 0 && S_ISSOCK(st.st_mode) && st.st_uid == ::getuid())
+        ::unlink(p.constData());
+}
+} // namespace
 
 int main(int argc, char *argv[])
 {
@@ -47,28 +75,34 @@ int main(int argc, char *argv[])
     QGuiApplication::setApplicationVersion(QStringLiteral(RASKLAD_VERSION));
     QGuiApplication::setDesktopFileName(QStringLiteral("rasklad-settings"));
 
-    // SYS-261: one settings window. A second start asks the first to come forward
-    // over a socket only this user can open, then exits.
-    QString lockPath;
-    {
-        const QString runtime = qEnvironmentVariable("XDG_RUNTIME_DIR");
-        if (!runtime.isEmpty() && QDir::isAbsolutePath(runtime))
-            lockPath = runtime + QStringLiteral("/rasklad-settings.socket");
-    }
-    if (!lockPath.isEmpty()) {
-        QLocalSocket probe;
-        probe.connectToServer(lockPath);
-        if (probe.waitForConnected(300)) {
-            probe.write("focus\n");
-            probe.waitForBytesWritten(300);
-            return 0;
-        }
-    }
+    // SYS-261: one settings window. The first start holds a lock file for its whole
+    // life and listens on a socket; a later start finds the lock taken, asks the
+    // first window to come forward over the socket, and exits. Only in a runtime
+    // directory that is this user's own and closed to others (XDG basedir rules).
+    const QString runtime = privateRuntimeDir();
+    QLockFile lock(runtime + QStringLiteral("/rasklad-settings.lock"));
     QLocalServer single;
-    if (!lockPath.isEmpty()) {
-        QLocalServer::removeServer(lockPath); // a stale socket of a crashed window
-        single.setSocketOptions(QLocalServer::UserAccessOption);
-        single.listen(lockPath); // on failure: still a working window, only no single-instance
+    if (!runtime.isEmpty()) {
+        const QString socketPath = runtime + QStringLiteral("/rasklad-settings.socket");
+        if (lock.tryLock(0)) {
+            removeStaleSocket(socketPath); // we hold the lock: no live window owns it
+            single.setSocketOptions(QLocalServer::UserAccessOption);
+            single.listen(socketPath); // on failure: still a working window, only no single-instance
+        } else if (lock.error() == QLockFile::LockFailedError) {
+            // The first window may still be starting: try for up to two seconds.
+            for (int attempt = 0; attempt < 10; ++attempt) {
+                QLocalSocket probe;
+                probe.connectToServer(socketPath);
+                if (probe.waitForConnected(200)) {
+                    probe.write("focus\n");
+                    probe.waitForBytesWritten(200);
+                    return 0;
+                }
+                QThread::msleep(100);
+            }
+            return 0; // a window holds the lock but does not answer: never a second one
+        }
+        // Any other lock error (unwritable dir): run without single-instance.
     }
 
     app::ThemeWatcher theme(app::defaultThemeSources(), QString(), true);
@@ -116,9 +150,9 @@ int main(int argc, char *argv[])
         if (!window) return;
         window->show();
         window->raise();
-        window->requestActivate();
         // Wayland lets a compositor refuse requestActivate; Hyprland focuses on request.
-        settings::hyprlandFocusPid(QCoreApplication::applicationPid());
+        if (!settings::hyprlandFocusPid(QCoreApplication::applicationPid()))
+            window->requestActivate(); // outside Hyprland: ask the compositor, the window stays open either way
     });
     const int code = app.exec();
     if (installed) QCoreApplication::removeTranslator(&ru);
