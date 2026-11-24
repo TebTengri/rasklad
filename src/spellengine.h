@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Minimal wrapper over the installed system Hunspell 1.7.5 C API for the

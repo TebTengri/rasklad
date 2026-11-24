@@ -10,4 +10,5 @@ HEADERS += $$PWD/../../settings/settingsbackend.h $$PWD/../../src/seenprograms.h
 SOURCES += settings_tests.cpp \
     $$PWD/../../settings/settingscore.cpp \
     $$PWD/../../settings/settingsbackend.cpp \
+    $$PWD/../../settings/licenses.cpp \
     $$PWD/../../settings/desktopindex.cpp

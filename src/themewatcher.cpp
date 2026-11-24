@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "themewatcher.h"
 
 #include <QDir>

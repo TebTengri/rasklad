@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Экспериментальный n-граммный scorer ошибочной раскладки (SYS-232).

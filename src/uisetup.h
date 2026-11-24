@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Shared QML bootstrap for the app and the offscreen UI smoke test (SYS-239).

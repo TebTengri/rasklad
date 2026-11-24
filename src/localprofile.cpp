@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "localprofile.h"
 
 #include "layoutconverter.h"

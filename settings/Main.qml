@@ -62,7 +62,7 @@ ApplicationWindow {
     // After every rebuild, once the old rows are gone and the new ones exist.
     Connections { target: backend; function onChanged() { Qt.callLater(window.restoreFocus) } }
     function focusLost() {
-        if (help.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
+        if (help.visible || licenses.visible || revertConfirm.visible) return false // a popup keeps its own focus, also while it animates in
         // Focus on a hidden page (its row was rebuilt there) counts as lost too.
         if (!activeFocusItem || !activeFocusItem.visible) return true
         for (let it = activeFocusItem; it; it = it.parent)
@@ -89,8 +89,8 @@ ApplicationWindow {
     }
 
     Shortcut { sequences: ["Ctrl+R", "F5"]; onActivated: backend.refresh() }
-    Shortcut { sequence: "F1"; onActivated: help.opened ? help.close() : help.open() }
-    Shortcut { sequence: "?"; enabled: !window.typing; onActivated: help.opened ? help.close() : help.open() }
+    Shortcut { sequence: "F1"; enabled: !licenses.opened; onActivated: help.opened ? help.close() : help.open() }
+    Shortcut { sequence: "?"; enabled: !window.typing && !licenses.opened; onActivated: help.opened ? help.close() : help.open() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
     Shortcut { sequence: "Ctrl+1"; onActivated: window.showTab(0) }
     Shortcut { sequence: "Ctrl+2"; onActivated: window.showTab(1) }
@@ -98,12 +98,13 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+Tab"; onActivated: window.showTab((window.tab + 1) % 3) }
     Shortcut { sequence: "Ctrl+Shift+Tab"; onActivated: window.showTab((window.tab + 2) % 3) }
     // Й is Q in the Russian layout: the keys work in either layout.
-    Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.opened; onActivated: Qt.quit() }
+    Shortcut { sequences: ["Q", "Й"]; autoRepeat: false; enabled: !window.typing && !help.opened && !licenses.opened; onActivated: Qt.quit() }
     Shortcut {
         sequence: "Escape"
         autoRepeat: false // a held Esc takes one step, never clear-then-quit
         onActivated: {
             if (help.opened) help.close()
+            else if (licenses.opened) licenses.close()
             else if (addBox.visible) { window.pendingReveal = null; addBox.visible = false; addField.text = ""; addButton.forceActiveFocus() }
             else if (window.typing && activeFocusItem.text !== "") activeFocusItem.text = "" // keep typed text from a stray quit
             else if (window.typing) window.tabHeader().forceActiveFocus() // out of the field, still on its tab
@@ -822,7 +823,7 @@ ApplicationWindow {
         onAboutToShow: returnTo = window.activeFocusItem
         onOpened: helpClose.forceActiveFocus()
         // A row destroyed while help was open nulls returnTo: find its successor.
-        onClosed: if (returnTo) returnTo.forceActiveFocus(); else window.restoreFocus()
+        onClosed: if (licenses.visible) return; else if (returnTo) returnTo.forceActiveFocus(); else window.restoreFocus()
         background: Rectangle {
             color: theme.background
             radius: window.small
@@ -875,12 +876,102 @@ ApplicationWindow {
                         }
                     }
                 }
-                Button {
-                    id: helpClose
-                    text: qsTr("Close")
-                    Layout.alignment: Qt.AlignRight
-                    onClicked: help.close()
+                RowLayout {
+                    Layout.fillWidth: true
+                    Button {
+                        text: qsTr("Licenses")
+                        flat: true
+                        // Focus goes back where help found it, not to this button.
+                        onClicked: { licenses.returnTo = help.returnTo; help.returnTo = null; help.close(); licenses.open() }
+                    }
+                    Item { Layout.fillWidth: true }
+                    Button {
+                        id: helpClose
+                        text: qsTr("Close")
+                        onClicked: help.close()
+                    }
                 }
+            }
+        }
+    }
+
+    // ---- Licenses (SYS-256), from the help popup ----------------------------------
+
+    Popup {
+        id: licenses
+        modal: true
+        focus: true
+        anchors.centerIn: Overlay.overlay
+        width: Math.min(window.width - 32, 640)
+        height: window.height - 32
+        padding: 18
+        property Item returnTo: null
+        property string key: "rasklad"
+        onOpened: licensesClose.forceActiveFocus()
+        onClosed: if (returnTo) returnTo.forceActiveFocus(); else window.restoreFocus()
+        background: Rectangle {
+            color: theme.background
+            radius: window.small
+            border.color: window.tint(0.4)
+        }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Accessible.role: Accessible.Dialog
+            Accessible.name: qsTr("Licenses")
+            Label {
+                text: qsTr("Licenses")
+                font.pixelSize: 16
+                font.bold: true
+            }
+            Hint { text: qsTr("Rasklad's own code is under the MIT license. The dictionaries and the model made from them keep their authors' terms."); font.pixelSize: 12 }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                textFormat: Text.PlainText
+                font.pixelSize: 12
+                text: qsTr("English dictionary: SCOWL and other sources. UKACD: Copyright (c) J Ross Beresford 1993-1999. All Rights Reserved.") + "\n"
+                      + qsTr("Russian dictionary: Copyright (c) 1997-2008, Alexander I. Lebedev.")
+            }
+            Hint { text: qsTr("Qt, Fcitx 5 and Hunspell are system libraries with their own licenses."); font.pixelSize: 12 }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                Repeater {
+                    model: [
+                        { key: "rasklad", label: qsTr("Rasklad (MIT)") },
+                        { key: "en", label: qsTr("English dictionary") },
+                        { key: "ru", label: qsTr("Russian dictionary") },
+                        { key: "data", label: qsTr("What Rasklad changed") }
+                    ]
+                    delegate: Button {
+                        required property var modelData
+                        text: modelData.label
+                        checkable: true
+                        checked: licenses.key === modelData.key
+                        onClicked: licenses.key = modelData.key
+                    }
+                }
+            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                TextArea {
+                    readOnly: true
+                    selectByMouse: true
+                    wrapMode: TextEdit.Wrap
+                    textFormat: TextEdit.PlainText
+                    font.pixelSize: 11
+                    text: backend.licenseText(licenses.key)
+                          || qsTr("The text is not installed. It is in /usr/share/licenses/rasklad-fcitx5/ of the package.")
+                    Accessible.name: qsTr("License text")
+                }
+            }
+            Button {
+                id: licensesClose
+                text: qsTr("Close")
+                Layout.alignment: Qt.AlignRight
+                onClicked: licenses.close()
             }
         }
     }

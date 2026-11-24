@@ -17,7 +17,7 @@
 ## Сборка
 
 ```
-tools/build_arch_package.sh /home/mvn/Work/rasklad
+tools/build_arch_package.sh "/путь/к/профилю"
 ```
 
 Аргумент — каталог, где лежат проверенные файлы детектора (`build/experiment-*`);

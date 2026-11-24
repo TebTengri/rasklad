@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // QTranslator backed by a small JSON message table (SYS-239).

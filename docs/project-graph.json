@@ -6,9 +6,9 @@
     "AGENTS.md": "b9607dfd8376d2c0b3a3d9183f2b3b5289b4c15e74fbc5760b1440889a4bee2e",
     "CLAUDE.md": "fb498b745a6ebebf321ba3163d86f91f67cb5c4dd5953f59c6aa7e6f399e84b4",
     "LICENSE": "cbcea74632d9225584ae7b24a788eb50144ebe1a75d58a1f78138ec1f44f3726",
-    "README.md": "18ca586b9b861737f2ccb1dba51a2f006df585b62e5cf99b1a0c1e5d270bbf38",
-    "SECURITY.md": "8db2db28a421ba03b2047cdd712c5edb4ec421bd452b9a08f74bd02266ec7e23",
-    "THIRD_PARTY.md": "83818da72ce92f825787e20b673ad238c3ec7f3ec7b107f0cfd2bc28f2d6f816",
+    "README.md": "943cf3575ee252ad7d60751c68a5b1f2e16f2281ca8ef7fcd1326d2c54e89b7c",
+    "SECURITY.md": "289b6c20c8a4c945bbc63942d36396216609432acc15321911bf43fab7ea8f60",
+    "THIRD_PARTY.md": "5896f7c115555d47e24632fabd81e64f10d9e60d856975bf0698902d6b7f8a7f",
     "bin/build": "c83f73f226860f68bc6b301e6830b98f271d27d41a0051a44027b16af9704e31",
     "bin/build-browser-fixture": "4c970d7435a06c9c890ecf79e1c5322622bab5046124185d257fae34f1f35656",
     "bin/build-browser-hunspell": "eee8aee22b3e5393ccd2928b86c6f96aa3b129421a1861b96cc1b490be93e319",
@@ -36,13 +36,13 @@
     "docs/DATA_POLICY.md": "61a8445d7c605ee1c2c4dc865f2dc7fc687bd9741e12bb19f1056b84df3dc46e",
     "docs/GITHUB_SECURITY.md": "d734268c2c3faf7a67c7ebb2eece700fb4b0e002453a60961c2f3ec018dc3e6f",
     "docs/NAVIGATION-TOOLS.md": "abcd40c59244445d03d95cbd2155c760a48540757ba057440756aff925974a18",
-    "docs/NEXT.md": "e8c4a2614f2b5d3d11d57f9aad86e483c4b05e8e4c7e1d97736335289587141c",
+    "docs/NEXT.md": "af571196a4336edea5d517a24f630d12d9e946a9854f04710f6df1120d63e923",
     "docs/OWNER-ALERTS.md": "aefaba889dae9428514e6f327888da22a9da62fefc0efbdb25bf90bb4ce3d7a7",
     "docs/ROADMAP.md": "be75e4aec48df4a21cbc2b27a2c39fe97d89d6f195fa7187c9132240f4239a52",
     "docs/SYS-225-MANUAL-GESTURE.md": "1e1b9ba9dd2107f279c8f20854ebe627a295a3209a983e859bd2ff4c89270a2c",
     "docs/SYS-226-AUTO-CORRECTION.md": "9c91c782ac3ef22f780695a6a6cce2122d895ce5696151c24ff5bc9f20128d9c",
     "docs/SYS-246-PRODUCT-ADDON.md": "d9b40b9ddb874741a92c8ff400100bfff1856916b9a8c9fd891d2cea965ff85d",
-    "docs/SYS-254-SETTINGS-DESIGN.md": "ab2e69bf5a684123798ef2c4a21d91bff8024e08d7f7187f9049e4dfdb770eb5",
+    "docs/SYS-254-SETTINGS-DESIGN.md": "37bec27af64926fecf8c6e526ffd734d5af8996234e25c19a02f6fccf2a26714",
     "docs/research/A11Y-BRIDGE-CONTROL-001.md": "43c5f0455f5c035ce7f223136c2cb12ba6c88d5ad7a8948b0f87fe6253a2249e",
     "docs/research/ACTUAL-FCITX-HANDOFF-001.md": "91a450976f38af615787ae023d390aba5cbd0065122782a3ce09660b6c67f14b",
     "docs/research/ADDON-WITNESS-001.md": "3ce89b520342e13652f3541367da3eb88500a1041bd55ffbaa00d68dd9209775",
@@ -125,53 +125,53 @@
     "docs/research/WINDOW-PROVENANCE-001.md": "cb929db6030b1379f3613a094609aa918662d165dff5ac86424d9a19b3677a07",
     "rasklad.pro": "cc746f9acb89186e1dd905c1638211f8b43af246adf5c93e3cfb98084a4ad4e3",
     "src/Main.qml": "bd61a1cef9b41d373abcf3424793b48bd73fab4bf3a3b45c2a5f83f4c4d2bc5a",
-    "src/analysisservice.cpp": "9979c961d2b7f940dd8b22889657ead75735aab0d5107ea1b1159bfe808074a6",
-    "src/analysisservice.h": "21cdc104c9628e3cb3c1d4cbca1e7174d0f298fe801e541a99a1d206d7e3156b",
+    "src/analysisservice.cpp": "940cfe1815f95a845764365258d27e1f588cc627049e3021f1f354075b18df95",
+    "src/analysisservice.h": "56b23543f787d9fba745672806884c760dc1774b233eeb0797c8f24a4d110c4f",
     "src/applicationpermissions.cpp": "865fed0f15b42daf335fefc2000d66ae99ce1eae8f80036037d5ec70b99c1b51",
     "src/applicationpermissions.h": "83e77ef9062100d34587d31375ebf5eeebfd0acb6b55801929af339d352f1c5c",
     "src/applicationpolicy.cpp": "94de384c556ac64e61ff3ecfde1ba1102a998ddf267fc1a52dd037e7321e57bc",
     "src/applicationpolicy.h": "2d9085ddf336d2f07a39573c150fe8a94a615936f168ede2a1c973f84230f5c1",
-    "src/appoptions.cpp": "2ff1fd2f12a033c32c16fd59bd398e49871c606fbd500bee92247101e9d4d680",
-    "src/appoptions.h": "011373c337684d0a13c3e72d9abcdbd452ac1c2eda1b0b598a483e7107f29ee0",
-    "src/clipboardwriter.cpp": "43865e802caef9360a427ce507146d8718fe99a92161148c4cbe51181748261f",
-    "src/clipboardwriter.h": "714700d4846b8234e1cbdedc8235b3e810e6df3ef3af4d915dd0475b7235221b",
+    "src/appoptions.cpp": "2aaeeeb7ee1f119d790d5af2b250672c272b335808eee89794a0040a847c147c",
+    "src/appoptions.h": "61be01d31313fb0dfc6ad873f8537cfd62160f012eb9c69c3ee93615ded7a761",
+    "src/clipboardwriter.cpp": "8e8b7489e2960ee73066f95539358cb15bfc6c45b49d281b32b07a21a7f3814d",
+    "src/clipboardwriter.h": "29851dfb7867b43ce27cd9f0a1e5a2f869c84378c6562e6ab171e985f2055cbf",
     "src/compositiondisable.cpp": "2f1d4c5be6493d7f57b91da21933c61def8f7a04545e736a3af326202203f77b",
     "src/compositiondisable.h": "c58519178bc94755038e50e030221ca6af5374b23306e19faca3b55b41300afb",
     "src/configrules.h": "88dec6420934039c4746514c1522261c322e22248ff2673df121ee544fee0cc8",
-    "src/decisionrouter.cpp": "aa73ff592fd3ad6c4cf194ca35111dad09ec0fe051889361aadd66263cba176b",
-    "src/decisionrouter.h": "c2841ac486f801c866690bc99a64c9151bd3b52f2e0566da18c1343bdfc80b4d",
-    "src/documentcontroller.cpp": "aa970efa55a084b64368d6f888da53435e6083b9f3e684ca0a354674f5570609",
-    "src/documentcontroller.h": "70f25bc33064b0e4635568dcf8fdda4304d4b1b789e0fe32198b5802f809c5f4",
+    "src/decisionrouter.cpp": "82259c7e88297f43ce7259d72efe453a3f9e318992c3ff8abb96b0e02dd182f8",
+    "src/decisionrouter.h": "0689d64dbcb35020e7a30a6049022411e3e4626eacac13274a8965c0e881e8c3",
+    "src/documentcontroller.cpp": "e708077bee3010a8a1035a35ffff8dc477a6bfe32a144493ed3a7250bc448f88",
+    "src/documentcontroller.h": "caacfc6d09f1a0d81ddea2785cf7a81c43d73fd5481d8e467ec5af45cea302d3",
     "src/fcitxlab.cpp": "f6da3844e01685407f1201adebac2cad2b9d0ab32e085961c817fc3025211ba8",
     "src/fcitxlabprofile.cpp": "d827457e7053419cd5cddd96ebb5888f427aa7d222ed878fdfe240582f0cfd28",
     "src/fcitxlabprofile.h": "60a6b3000f9d48e0e9bd2cabf5fb5d437f3a1cf88d04529a222f04792536c7da",
-    "src/frequentwords.h": "ed66b2de3fde09eea3210cd47d804f6bd63449a8f17f0a01d553d377cf704b68",
-    "src/jsontranslator.cpp": "9f1cc9fa03bf736748c3b7dd56bfd2472ebaf100539fadacf3ec1eaf17f002ed",
-    "src/jsontranslator.h": "6a8b76b41cb256b777868d5f9e7ef4b80bebbf1cc43460f1be1f5b955d99a122",
-    "src/layoutconverter.cpp": "3e13b7be42c1cdd675d0ad4d8c13b9b833f146765d333e295dd4befd002d990d",
-    "src/layoutconverter.h": "e2fbfd2f9ac43b975532631ed84d895203309244b803fb452b1dba9673d79544",
+    "src/frequentwords.h": "6d485e4e921fff56dd7b42b2d11d25b4c409b2622eb1f1a6f3260ca747d2e350",
+    "src/jsontranslator.cpp": "d66f73133a636a7a4a24c0258db0c691fedfb3f4f705f147822e2fe70dec43ca",
+    "src/jsontranslator.h": "8604e48362dfdc48225be903e51f05d8d6a5b66520050fe02ca4f3ce0832caea",
+    "src/layoutconverter.cpp": "c60509fac2d94fd3909505ce46d241400f89ce3c2f9cc7fab7c59bd5cc0fa336",
+    "src/layoutconverter.h": "2d05b9a32b323950f3b7113fc68f8cd3051773796654d9eb76c6f3ff6f5b68df",
     "src/layoutcue.cpp": "927937e0fc7cf27806f65b7776c0c59cfa6f244aedeb8bdaee4ae1451c73d7cd",
     "src/layoutcue.h": "f87b2ff8bf6f638148f868061a68f55a7b003b02779d8e26ed52a4dec61a0c97",
-    "src/localprofile.cpp": "12bd2c08a9be69bf1dc7ce882a7740bc5a86106bcd33c0eca5a5deb9189c247e",
-    "src/localprofile.h": "1ea95efac44d824cfd8d51af0cf3ce02b18daff69230e00e7d3f96ba6c706f3a",
-    "src/main.cpp": "d7e2e6192f751e4510167bf149f67515fe9ca6957218dcd9b95a6668be722424",
+    "src/localprofile.cpp": "4fb3034d22aef5f0425fae6d513777d57437ae14f150f7314b9d400e9fc73bde",
+    "src/localprofile.h": "197289d537618e9f8c100bf33ff5dbc4c60419e0a565626a1d8bfbda4c013e88",
+    "src/main.cpp": "644a0e7d07adc04acdfb4f5d67d08e60313e07cd8fe3824ae0a90cd1d75c8d75",
     "src/manualgesture.h": "ff92fd2091f24bd551c406df20774207c5fba3c4f0caf4aaf4d5f4298cc4d635",
-    "src/ngramdetector.cpp": "9663b55a433c48477821d176c7df2809373e720b5d3226df0eaeb1b0c61f9b5c",
-    "src/ngramdetector.h": "484e79fb543b2de2b7ad208d9d4a7b4574e951338475c7e75c72519fd3f0b738",
-    "src/profileverify.cpp": "3821d0c3c27d2a22cc89b32e011e5dd238df563b43c6d8df3946188ea2bf0c64",
-    "src/profileverify.h": "dc3d40ea333784b0c5b068127484298452b7348b0fc03fbc8b8a5eb11723881b",
+    "src/ngramdetector.cpp": "c4894777039e2b10a163ee7a701efc79ee1dcdfef17afe2aebe8119b69d7c9c9",
+    "src/ngramdetector.h": "5de72cdbb967ac1133a3e2b9e9a452a70a0ed64062c5a29e4c475316f9b6d219",
+    "src/profileverify.cpp": "6650e97faa3ae02cfffd4e152573a54d2e996c1e4a6cd7aa079c963d95b2f902",
+    "src/profileverify.h": "d0c24fb3394b2db21e270205f6f892afc8e29b7eb4212336cabf1412e21322f2",
     "src/rasklad_app.pro": "bddd716b3f8c05e25e7985bebcf9758331f66dbf467d4af1160f507f813255a5",
     "src/rasklad_core.pro": "96f1804ffbf47859dd4df21536e0a6c89377d895b66f171bba628ada16ca13d7",
     "src/raskladproduct.cpp": "78d84f48d0ed5f25ce397c13720c3b21c3da412564125a5582f0967f3f7ce8fe",
     "src/seenprograms.h": "f7313e3bbaef0e1da0f460c28c076a23fc931b4c09277f0192af8854f674be87",
     "src/sessionarm.h": "f99322ce2080acc41cd1b7ac50fdc287ad9b49b3405876579cc6ddd37288ed94",
-    "src/spellengine.cpp": "871150bc102e188d7a612fc12c898d9f368efe2b7fac1f60a58acedb72ca7b74",
-    "src/spellengine.h": "db1d103eafb882e8df9d384eb1ec56c692ce512fae8fdf0c3505765b396b58c1",
+    "src/spellengine.cpp": "416aa51c39fce61f3dd125383127304d6e11a4515ac04a70ec94b6d081130c72",
+    "src/spellengine.h": "ed16474fd53e65162d2940ba83d4eb96d96e93222c6bdf80f5a0caee1b8b5adb",
     "src/terminalapps.h": "00e19d8a00a2cfbfb4c10f51cb938090a48c81d0ffadde0f193dfb4d78187aac",
-    "src/themewatcher.cpp": "0f8335aedb703ec43ae7d0b59d33222c68a89f829a03aa2daf3a7f5038c35b35",
-    "src/themewatcher.h": "3dbae81c3d2e2da79ce8dafa1c7b8766ba092d906c5bc8a169419688a70ea7ea",
-    "src/uisetup.cpp": "0327661f179739f2cff9819789d8d479014c9e4582089a19bd79814f7f70475c",
-    "src/uisetup.h": "5adddcdaa70a4f0f6beb53432f074a93e57a6e85644407e26058def0aa28f4b7",
+    "src/themewatcher.cpp": "85766d0e7fc027852c23b37da221195266328d4b96f674cdd0384df4640a735d",
+    "src/themewatcher.h": "e248b49bacbb50c604a3ac8d66455fb7be74e3ef934fefb93dd91fee465f4a39",
+    "src/uisetup.cpp": "e8f569ed112725a85fa4c557beb364bce2308c6be7b13bb995e6740a27d3c385",
+    "src/uisetup.h": "6530f1997cd543ceacc7612eaa9c6cc7429553c0af470edcedfbd3d95b3cb16b",
     "src/wordrules.h": "070a988ae27313154c424d3a1a6624718f2300df187f511ff36c94a0b098eac0",
     "tests/app/app_tests.cpp": "11585f51ce8856315c5926f830aaf3562ad2b85e676e5bcf0c147811e06f196d",
     "tests/app/app_tests.pro": "24bb5f23899ce60770c1ef2a2cf38e9b7a4b7b38607b6d28ce80e24612d9a75f",
@@ -293,8 +293,8 @@
     "tests/router/router_tests.pro": "8c5a0773e5c57a48ac8f7eadc565daa80ff0de9d01339cb07e993e77d0286838",
     "tests/settings/desktopindex_tests.cpp": "cf441579082c4cafdf36d4b354a930db125ca5216fed7f96ac6cfe0558c275d1",
     "tests/settings/desktopindex_tests.pro": "30f11f3b633bd41505dd43cfe0fb9e78a202f970b88c5c59b5e9319565a644cb",
-    "tests/settings/settings_tests.cpp": "ba043f58beaf75d163b9fc9498c65a0cb012c478ef1833fc890dbc437726c81c",
-    "tests/settings/settings_tests.pro": "1374d362d06db5f10349df617057d6a22e9a9423e59b529d54514f60bc2057e4",
+    "tests/settings/settings_tests.cpp": "0c11a1a06c4efb7b4b1b5e5c7f567e75538757600e1d0954212e3a6fc9a15be2",
+    "tests/settings/settings_tests.pro": "4a92c10db818c5f735402850f4c468218a9e55dc84aaa6590064edede484a9a9",
     "tests/setup/inside.py": "5ab5d9274f96be70a1e202952c4505c6b5f51434e834ed3e2fc934f2821ff2dd",
     "tests/slack_probe/test_bootstrap_probe.py": "715bf90355a147357ee3f02243ac3b004c4ab2692da6b80dd50a0ca304823de0",
     "tests/slack_probe/test_editor_metadata.py": "ac0885d87584a8169f8707f399fe3a558d008607de52b61cddf77c89ba0ae5a9",
@@ -414,8 +414,8 @@
     "tools/fcitx_slack_manual_lab.pro": "a8e90fd62b68f58bc169efff0183efd6b0b99a60f4aefe7b5a0454abfee92d2b",
     "tools/fcitx_witness_lab.pro": "e15e5be686e05bf15bb11b30045dfb684f89e2734d5d521a892c1d35058cb5f3",
     "tools/fcitxlabwitness.h": "f0bfc9dd1a24f960e3578c80bc746edd7345be9e7608676565d2b678cfe85a13",
-    "tools/frontcodedlexicon.cpp": "47bf10757720104c18c9e344a0a98ca737c5e30097e2ae8a088ddcdeb7b1aa7a",
-    "tools/frontcodedlexicon.h": "c0ff7ef3d1ff4282644fda4c17833d253c388ba2f14fad43e19724fdb76962ef",
+    "tools/frontcodedlexicon.cpp": "de09363c95f13b0ecc5f84c9f18c98b89b23bb33f7d75320f1b939a72afdcb62",
+    "tools/frontcodedlexicon.h": "efbe88cd750f44ef2734652f2120336c4fa9bf563d6e39a76bfd5393fa15a765",
     "tools/generate_grab_header.py": "2b9622bac54d29f652a0d3dcc9522a7a0c7408c485c4f4b5b314855f8315902e",
     "tools/grab_entry_witness.pro": "a0d7dcfeaa74566027c7c00b021af3ce7e402e66ce34bbad5d27d2e7d2fa7849",
     "tools/host_registry_probe.py": "7fea3f07e58e1c52dfabc893b04363fb726df1d74254f6bf6327d9e7b03e2ec4",
@@ -8399,19 +8399,19 @@
       "from": "src/analysisservice.cpp",
       "to": "src/analysisservice.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/analysisservice.h",
       "to": "src/decisionrouter.h",
       "kind": "literal_include_or_import",
-      "line": 16
+      "line": 17
     },
     {
       "from": "src/analysisservice.h",
       "to": "src/profileverify.h",
       "kind": "literal_include_or_import",
-      "line": 18
+      "line": 19
     },
     {
       "from": "src/applicationpermissions.cpp",
@@ -8441,13 +8441,13 @@
       "from": "src/appoptions.cpp",
       "to": "src/appoptions.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/clipboardwriter.cpp",
       "to": "src/clipboardwriter.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/compositiondisable.cpp",
@@ -8477,37 +8477,37 @@
       "from": "src/decisionrouter.cpp",
       "to": "src/decisionrouter.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/decisionrouter.h",
       "to": "src/layoutconverter.h",
       "kind": "literal_include_or_import",
-      "line": 22
+      "line": 23
     },
     {
       "from": "src/decisionrouter.h",
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
-      "line": 24
+      "line": 25
     },
     {
       "from": "src/documentcontroller.cpp",
       "to": "src/documentcontroller.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/documentcontroller.h",
       "to": "src/analysisservice.h",
       "kind": "literal_include_or_import",
-      "line": 28
+      "line": 29
     },
     {
       "from": "src/documentcontroller.h",
       "to": "src/layoutconverter.h",
       "kind": "literal_include_or_import",
-      "line": 30
+      "line": 31
     },
     {
       "from": "src/fcitxlab.cpp",
@@ -8585,13 +8585,13 @@
       "from": "src/jsontranslator.cpp",
       "to": "src/jsontranslator.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/layoutconverter.cpp",
       "to": "src/layoutconverter.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/layoutcue.cpp",
@@ -8603,97 +8603,97 @@
       "from": "src/localprofile.cpp",
       "to": "src/localprofile.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/localprofile.cpp",
       "to": "src/layoutconverter.h",
       "kind": "literal_include_or_import",
-      "line": 2
+      "line": 3
     },
     {
       "from": "src/localprofile.cpp",
       "to": "src/spellengine.h",
       "kind": "literal_include_or_import",
-      "line": 6
+      "line": 7
     },
     {
       "from": "src/localprofile.h",
       "to": "src/decisionrouter.h",
       "kind": "literal_include_or_import",
-      "line": 13
+      "line": 14
     },
     {
       "from": "src/localprofile.h",
       "to": "src/profileverify.h",
       "kind": "literal_include_or_import",
-      "line": 15
+      "line": 16
     },
     {
       "from": "src/main.cpp",
       "to": "src/analysisservice.h",
       "kind": "literal_include_or_import",
-      "line": 7
+      "line": 8
     },
     {
       "from": "src/main.cpp",
       "to": "src/appoptions.h",
       "kind": "literal_include_or_import",
-      "line": 9
+      "line": 10
     },
     {
       "from": "src/main.cpp",
       "to": "src/clipboardwriter.h",
       "kind": "literal_include_or_import",
-      "line": 10
+      "line": 11
     },
     {
       "from": "src/main.cpp",
       "to": "src/documentcontroller.h",
       "kind": "literal_include_or_import",
-      "line": 11
+      "line": 12
     },
     {
       "from": "src/main.cpp",
       "to": "src/localprofile.h",
       "kind": "literal_include_or_import",
-      "line": 12
+      "line": 13
     },
     {
       "from": "src/main.cpp",
       "to": "src/themewatcher.h",
       "kind": "literal_include_or_import",
-      "line": 13
+      "line": 14
     },
     {
       "from": "src/main.cpp",
       "to": "src/uisetup.h",
       "kind": "literal_include_or_import",
-      "line": 14
+      "line": 15
     },
     {
       "from": "src/ngramdetector.cpp",
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/ngramdetector.cpp",
       "to": "src/layoutconverter.h",
       "kind": "literal_include_or_import",
-      "line": 2
+      "line": 3
     },
     {
       "from": "src/profileverify.cpp",
       "to": "src/profileverify.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/profileverify.h",
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
-      "line": 32
+      "line": 33
     },
     {
       "from": "src/raskladproduct.cpp",
@@ -8777,49 +8777,49 @@
       "from": "src/spellengine.cpp",
       "to": "src/spellengine.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/spellengine.cpp",
       "to": "src/profileverify.h",
       "kind": "literal_include_or_import",
-      "line": 2
+      "line": 3
     },
     {
       "from": "src/themewatcher.cpp",
       "to": "src/themewatcher.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/uisetup.cpp",
       "to": "src/uisetup.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "src/uisetup.cpp",
       "to": "src/clipboardwriter.h",
       "kind": "literal_include_or_import",
-      "line": 2
+      "line": 3
     },
     {
       "from": "src/uisetup.cpp",
       "to": "src/documentcontroller.h",
       "kind": "literal_include_or_import",
-      "line": 4
+      "line": 5
     },
     {
       "from": "src/uisetup.cpp",
       "to": "src/themewatcher.h",
       "kind": "literal_include_or_import",
-      "line": 5
+      "line": 6
     },
     {
       "from": "src/uisetup.h",
       "to": "src/jsontranslator.h",
       "kind": "literal_include_or_import",
-      "line": 4
+      "line": 5
     },
     {
       "from": "src/wordrules.h",
@@ -9167,7 +9167,7 @@
       "from": "tests/settings/settings_tests.cpp",
       "to": "src/seenprograms.h",
       "kind": "literal_include_or_import",
-      "line": 5
+      "line": 6
     },
     {
       "from": "tests/slack_session/sessionarm_tests.cpp",
@@ -9665,13 +9665,13 @@
       "from": "tools/frontcodedlexicon.cpp",
       "to": "tools/frontcodedlexicon.h",
       "kind": "literal_include_or_import",
-      "line": 1
+      "line": 2
     },
     {
       "from": "tools/frontcodedlexicon.h",
       "to": "src/ngramdetector.h",
       "kind": "literal_include_or_import",
-      "line": 26
+      "line": 27
     },
     {
       "from": "tools/hunspellengine.cpp",

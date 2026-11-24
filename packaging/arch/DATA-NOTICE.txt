@@ -1,0 +1,31 @@
+Rasklad: dictionaries and model in this package
+
+This package contains data derived from two Hunspell dictionaries taken from
+LibreOffice/dictionaries at commit c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb:
+
+  en_US  SCOWL, Ispell, WordNet, UKACD and other sources; full notice in
+         en_US.README.txt. UKACD is Copyright (c) J Ross Beresford 1993-1999.
+         All Rights Reserved.
+  ru_RU  Copyright (c) 1997-2008, Alexander I. Lebedev; full notice in
+         ru_RU.README.txt.
+
+These notices are not covered by the MIT license of Rasklad's own code, and
+the MIT license grants no rights in this data.
+
+Files and whether they are modified (paths under
+/usr/share/fcitx5/rasklad/profile/):
+
+  build/experiment-data/en.dic, ru.dic          unmodified upstream copies
+  build/experiment-003-data/en.aff, ru.aff      unmodified upstream copies
+  build/experiment-003-data/control/en.aff,     MODIFIED by Rasklad: the PFX and
+    control/ru.aff                              SFX rules are removed; all other
+                                                lines are kept as upstream
+  build/experiment-002-artifacts/               DERIVED by Rasklad from the two
+    detector-model.rskn, exact-full-lexicons.rskp  dictionaries (model weights
+                                                and a word list); not upstream
+                                                files
+  build/experiment-002-artifacts/en_US.NOTICE.txt, ru_RU.NOTICE.txt
+                                                unmodified copies of the notices
+
+The modified and derived files are not versions published by the dictionary
+authors. The names of the authors are not used to endorse or promote Rasklad.

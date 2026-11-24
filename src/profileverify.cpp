@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #include "profileverify.h"
 
 #include <QCryptographicHash>

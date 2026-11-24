@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Read-only Omarchy theme and desktop-language follower (SYS-239).

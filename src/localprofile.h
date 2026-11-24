@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Exact verified local evidence provider (SYS-239, ADR-001 profile).

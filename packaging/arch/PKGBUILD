@@ -5,12 +5,12 @@
 # Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
 # or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.5.16
+pkgver=0.5.17
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
 url='https://github.com/TebTengri/rasklad'
-license=('MIT')
+license=('MIT' 'LicenseRef-hunspell-en_US' 'LicenseRef-hunspell-ru_RU')
 depends=('fcitx5' 'qt6-base' 'qt6-declarative' 'hunspell' 'alsa-lib' 'python-gobject')
 optdepends=('fcitx5-configtool: generic Fcitx settings'
             'hyprland: list open windows in rasklad-settings')
@@ -77,7 +77,13 @@ package() {
     [[ /$f/ != */../* ]] || return 1
     install -Dm644 "$f" "${pkgdir}/usr/share/fcitx5/rasklad/profile/${f#./}"
   done)
+  # Licenses: MIT for Rasklad's own code, full dictionary notices and the record
+  # of what Rasklad modified or derived (also marked next to the modified .aff).
   install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 data/notices/en_US.README.txt "${pkgdir}/usr/share/licenses/${pkgname}/en_US.README.txt"
+  install -Dm644 data/notices/ru_RU.README.txt "${pkgdir}/usr/share/licenses/${pkgname}/ru_RU.README.txt"
+  install -Dm644 packaging/arch/DATA-NOTICE.txt "${pkgdir}/usr/share/licenses/${pkgname}/DATA-NOTICE.txt"
+  install -Dm644 packaging/arch/DATA-NOTICE.txt "${pkgdir}/usr/share/fcitx5/rasklad/profile/build/experiment-003-data/control/MODIFIED.txt"
   install -Dm644 docs/SYS-246-PRODUCT-ADDON.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
   install -Dm644 packaging/arch/INSTALL.md "${pkgdir}/usr/share/doc/${pkgname}/INSTALL.md"
   install -Dm644 SECURITY.md "${pkgdir}/usr/share/doc/${pkgname}/SECURITY.md"

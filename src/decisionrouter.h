@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Production DecisionRouter (SYS-239, ADR-001).

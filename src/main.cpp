@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // rasklad manual-preview window (SYS-239).
 //
 // Own Qt Quick window: the user types or pastes text into the app's plain-text

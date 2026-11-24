@@ -377,3 +377,10 @@ The settings window starts no shell of its own and passes no text the user typed
 - Nothing received on the socket reaches a command or a setting.
 - The first window answers `ok` and stops listening as it closes. A later start that gets no answer keeps trying for 5 seconds: once the closing window releases the lock, it takes it and opens its own window. If the lock is still held after 5 seconds, it reports an error and exits with status 1.
 - Residual risk: between the check of the socket path and Qt publishing the socket (by `rename`), a file created there could be replaced. Only this user can create files in the 0700 runtime directory, so only the user's own processes can race it.
+
+## License texts in the settings window (SYS-256)
+
+The «Лицензии» page reads only four fixed file names (`LICENSE`, `en_US.README.txt`,
+`ru_RU.README.txt`, `DATA-NOTICE.txt`) from `/usr/share/licenses/rasklad-fcitx5/`.
+QML passes a key, never a path. A symlink, a non-regular file or a file larger than
+64 KiB is not read. The texts are shown as plain text, never as rich text or links.

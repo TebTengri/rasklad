@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 #include "settingsbackend.h"
+#include "licenses.h"
 
 #include <algorithm>
 
 namespace rasklad::settings {
+
+QString SettingsBackend::licenseText(const QString &key) const
+{
+    return readLicense(QString::fromLatin1(kLicenseDir), key);
+}
 
 SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *names, SetupTool *setup,
                                  QObject *parent)

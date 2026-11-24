@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 #pragma once
 
 // Owner of the optional word-analysis provider (SYS-239).
