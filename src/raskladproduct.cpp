@@ -15,6 +15,14 @@
 #if !defined(RASKLAD_PRODUCT) || !defined(RASKLAD_MANUAL_LAB) || !defined(RASKLAD_WITH_HUNSPELL)
 #error "src/raskladproduct.cpp is the product: build it with tools/fcitx_product.pro"
 #endif
+// As before the split: the product is never built with a lab variant's flags.
+#if defined(RASKLAD_SLACK_SESSION_LAB) || defined(RASKLAD_CHROMIUM_LAB) || defined(RASKLAD_PROFILE_LAB) || \
+    defined(RASKLAD_WITNESS_LAB) || defined(RASKLAD_DISABLE_TEST_LAB) || defined(RASKLAD_APPLICATION_OFF_TEST) || \
+    defined(RASKLAD_PREEDIT_REENTRY_TEST) || defined(RASKLAD_DISABLE_REENTRY_TEST) || \
+    defined(RASKLAD_SLACK_GATE_TEST_PROGRAM) || defined(RASKLAD_CORE_ENTRY_WITNESS_LAB) || \
+    defined(RASKLAD_GRAB_ENTRY_WITNESS_LAB)
+#error "RASKLAD_PRODUCT is built without lab variants"
+#endif
 
 #include "applicationpolicy.h"
 #include "applicationpermissions.h"
