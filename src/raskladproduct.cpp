@@ -85,6 +85,22 @@
 
 namespace {
 
+// SYS-269: rasklad::word::field mirrors these Fcitx bits.
+#define RASKLAD_FIELD_BIT(name, flag) \
+    static_assert(rasklad::word::field::name == static_cast<std::uint64_t>(fcitx::CapabilityFlag::flag))
+RASKLAD_FIELD_BIT(kPassword, Password);
+RASKLAD_FIELD_BIT(kEmail, Email);
+RASKLAD_FIELD_BIT(kDigit, Digit);
+RASKLAD_FIELD_BIT(kUrl, Url);
+RASKLAD_FIELD_BIT(kDialable, Dialable);
+RASKLAD_FIELD_BIT(kNumber, Number);
+RASKLAD_FIELD_BIT(kNoSpellCheck, NoSpellCheck);
+RASKLAD_FIELD_BIT(kTerminal, Terminal);
+RASKLAD_FIELD_BIT(kDate, Date);
+RASKLAD_FIELD_BIT(kTime, Time);
+RASKLAD_FIELD_BIT(kSensitive, Sensitive);
+RASKLAD_FIELD_BIT(kDisable, Disable);
+#undef RASKLAD_FIELD_BIT
 
 constexpr std::size_t kMaxWord = 32;
 constexpr std::size_t kMaxPendingReleases = 8;
@@ -597,14 +613,9 @@ private:
         if (!caps.test(CapabilityFlag::Preedit)) {
             return false;
         }
-        if (caps.test(CapabilityFlag::Password) ||
-            caps.test(CapabilityFlag::Sensitive) ||
-            caps.test(CapabilityFlag::NoSpellCheck) ||
-            caps.test(CapabilityFlag::Terminal) ||
-            caps.test(CapabilityFlag::Disable)) {
-            return false;
-        }
-        return true;
+        // Protected fields and non-prose purposes (e-mail, URL, numbers, phone,
+        // date, time): SYS-269, rasklad::word::refusedField.
+        return !rasklad::word::refusedField(caps.toInteger());
     }
 
     // Called only after the existing profile, program, focus and caps gates.

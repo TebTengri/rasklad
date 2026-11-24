@@ -51,4 +51,30 @@ inline std::size_t lettersBeforeTail(std::string_view keys) noexcept
     return cut == keys.size() ? 0 : cut;
 }
 
+// SYS-269: the field hints Fcitx reports (fcitx::CapabilityFlag bit values; the
+// addon static_asserts they match). Nothing is buffered or corrected in a field
+// that is protected, or whose purpose is not prose: an e-mail ("ns@" is not
+// "ты@"), a web address, a number, a phone number, a date or a time.
+namespace field {
+inline constexpr std::uint64_t kPassword = 1ULL << 3;
+inline constexpr std::uint64_t kEmail = 1ULL << 7;
+inline constexpr std::uint64_t kDigit = 1ULL << 8;
+inline constexpr std::uint64_t kUrl = 1ULL << 12;
+inline constexpr std::uint64_t kDialable = 1ULL << 13;
+inline constexpr std::uint64_t kNumber = 1ULL << 14;
+inline constexpr std::uint64_t kNoSpellCheck = 1ULL << 17;
+inline constexpr std::uint64_t kTerminal = 1ULL << 32;
+inline constexpr std::uint64_t kDate = 1ULL << 33;
+inline constexpr std::uint64_t kTime = 1ULL << 34;
+inline constexpr std::uint64_t kSensitive = 1ULL << 36;
+inline constexpr std::uint64_t kDisable = 1ULL << 40;
+inline constexpr std::uint64_t kRefused = kPassword | kSensitive | kNoSpellCheck | kTerminal | kDisable |
+                                          kEmail | kUrl | kDigit | kNumber | kDialable | kDate | kTime;
+} // namespace field
+
+inline bool refusedField(std::uint64_t capabilityFlags) noexcept
+{
+    return (capabilityFlags & field::kRefused) != 0;
+}
+
 } // namespace rasklad::word
