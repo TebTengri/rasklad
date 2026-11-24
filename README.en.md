@@ -101,9 +101,10 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 `us` has a non-Latin variant, the step is not offered. Non-interactive install:
 `rasklad-setup --install --yes --single-layout`.
 
-`rasklad-setup --revert` puts everything back. A file you changed yourself after
-installing is left as it is, with a notice (a save in the instant between its
-check and the replacement is not caught). Only one `--install` or `--revert`
+`rasklad-setup --revert` puts back what it changed. A file or Fcitx layout group
+you changed yourself after installing is left as it is, with a notice, and the
+revert ends with an error so that you can sort it out. An edit made in the instant
+between its check and the replacement is not caught. Only one `--install` or `--revert`
 runs at a time. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
