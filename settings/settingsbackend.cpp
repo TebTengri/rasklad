@@ -54,7 +54,10 @@ void SettingsBackend::reloadConfig()
     const auto map = m_running ? m_fcitx->readConfig() : std::nullopt;
     const auto parsed = map ? configFromMap(*map) : std::nullopt;
     m_loaded = parsed.has_value();
-    if (parsed) m_config = *parsed;
+    if (parsed) {
+        m_config = *parsed;
+        m_raw = *map;
+    }
     // Asked again on every read (refresh and before each change), so a restarted
     // Fcitx never keeps showing the previous daemon's warning.
     m_profileBroken = m_running && m_fcitx->profileReady() == std::optional<bool>(false);
@@ -128,19 +131,22 @@ bool SettingsBackend::commit(const AddonConfig &next)
     const QVariantMap now = mapFromConfig(m_config);
     for (auto it = now.cbegin(); it != now.cend(); ++it)
         if (changes.value(it.key()) == it.value()) changes.remove(it.key());
-    // SYS-272: read again right before writing. If another tool changed a key this
-    // edit writes since the edit started from it, nothing is written: the window
-    // shows the new value and the user repeats the edit (no lost update).
+    // SYS-272: read again right before writing, raw (no capping or normalizing,
+    // so an entry beyond the window's limits counts too) and with no other call in
+    // between. If another tool changed a key this edit writes since the edit
+    // started from it, nothing is written: the window shows the new value and the
+    // user repeats the edit. This narrows the window; it is not atomic (Fcitx has
+    // no compare-and-set).
     if (m_loaded && !changes.isEmpty()) {
-        reloadConfig();
-        if (m_loaded) {
-            const QVariantMap current = mapFromConfig(m_config);
-            for (auto it = changes.cbegin(); it != changes.cend(); ++it)
-                if (current.value(it.key()) != now.value(it.key())) {
-                    m_error = QStringLiteral("changed");
-                    rebuildApps();
-                    return false;
-                }
+        const auto raw = m_running ? m_fcitx->readConfig() : std::nullopt;
+        bool conflict = !raw.has_value();
+        for (auto it = changes.cbegin(); raw && !conflict && it != changes.cend(); ++it)
+            conflict = raw->value(it.key()) != m_raw.value(it.key());
+        if (conflict) {
+            reloadConfig();
+            m_error = m_loaded ? QStringLiteral("changed") : QStringLiteral("fcitx");
+            rebuildApps();
+            return false;
         }
     }
     if (!m_loaded || !m_fcitx->writeConfig(changes)) {

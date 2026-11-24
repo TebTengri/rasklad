@@ -144,7 +144,7 @@ ApplicationWindow {
         if (!backend.wordOptions) return qsTr("The Rasklad addon is older than this window. Update Rasklad and restart Fcitx.")
         if (!backend.layoutsReady) return qsTr("Add the English and Russian layouts (keyboard-us, keyboard-ru) to the Fcitx group.")
         if (backend.profileBroken) return qsTr("Automatic correction is unavailable: the dictionaries did not pass verification. Reinstall Rasklad.")
-        if (backend.error === "write") return errorText("write")
+        if (backend.error === "write" || backend.error === "changed") return errorText(backend.error)
         return ""
     }
 

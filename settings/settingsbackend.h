@@ -96,6 +96,7 @@ private:
     bool m_profileBroken = false;
     bool m_layouts = false;
     AddonConfig m_config;
+    QVariantMap m_raw; // the addon's config exactly as read last (SYS-272: conflict check)
     QStringList m_focused; // SYS-253: programs the addon saw with a focused field
     QStringList m_seen; // switched off in this session: stay visible to switch back on
     // Group of each row, fixed at refresh: a switched row stays where it is under the cursor.

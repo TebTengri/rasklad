@@ -575,6 +575,27 @@ private Q_SLOTS:
         QCOMPARE(b.error(), QString());
     }
 
+    void entryBeyondTheCapCountsAsAChange()
+    {
+        // 256 words shown; another tool appends a 257th while the user removes one.
+        // The capped view would not see it; the raw comparison does.
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        QVariantMap words;
+        for (int i = 0; i < 256; ++i) words.insert(QString::number(i), QStringLiteral("w%1").arg(QChar(u'a' + i % 26)) + QString(i / 26 + 1, u'x'));
+        f.stored.insert(QStringLiteral("Exceptions"), words);
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        QVariantMap more = words;
+        more.insert(QStringLiteral("256"), QStringLiteral("extra"));
+        f.otherEditAtRead = f.reads + 2;
+        f.otherEdit = {{QStringLiteral("Exceptions"), more}};
+        const int before = f.writes;
+        b.removeException(b.exceptions().first());
+        QCOMPARE(b.error(), QStringLiteral("changed"));
+        QCOMPARE(f.writes, before);
+    }
+
     void otherClientsChangeIsNotAnError()
     {
         FakeFcitx f;
