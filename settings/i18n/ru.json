@@ -50,6 +50,7 @@
     "Terminals are not supported.": "Терминалы не поддерживаются.",
     "The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.": "Настройки Hyprland, панели и Fcitx вернутся к виду до подключения Rasklad. Файлы, которые вы с тех пор меняли, останутся как есть.",
     "The Rasklad addon is older than this window. Update Rasklad and restart Fcitx.": "Аддон Rasklad устарел. Обновите Rasklad и перезапустите Fcitx.",
+    "To pause automatic correction, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working.": "Чтобы поставить автоисправление на паузу, выключите его здесь или щёлкните средней кнопкой мыши по значку раскладки вверху справа. Двойной Shift и двойной Alt продолжают работать.",
     "Use Latin letters, digits, dot, dash or underscore.": "Только латиница, цифры, точка, дефис и подчёркивание.",
     "Web app": "Веб-приложение",
     "When off, double Shift still fixes a word.": "Если выключено, слово исправляется двойным Shift.",

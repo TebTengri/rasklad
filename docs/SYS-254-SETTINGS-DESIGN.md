@@ -131,3 +131,4 @@ The index lives in `settings/desktopindex.{h,cpp}`. It is a small parser: it rea
 - Not adopted: an "everywhere except" model. Rasklad stays opt-in per app on purpose (SECURITY.md: fields an app does not mark as passwords cannot be told apart).
 - Accessibility review: focus returns to the same row after a switch or a refresh; the window opens with focus on the first row; a held Space switches once; help has a Close button, scrolls, and returns focus; rows expose checkbox role, state and actions.
 - Codex review: an enabled system component stays listed so it can be switched off; names come from any alias; exact id breaks window-class ties; one deadline for the Hyprland exchange; held Esc/Q act once; the 64-app limit shows outside the add form.
+- SYS-260: help says how to pause (the Automatic correction switch, or a middle click on the layout icon); no separate pause switch, because it would duplicate that setting.
