@@ -59,6 +59,7 @@
     "Russian dictionary": "Русский словарь",
     "Russian dictionary: Copyright (c) 1997-2008, Alexander I. Lebedev.": "Русский словарь: Copyright (c) 1997-2008, Alexander I. Lebedev.",
     "Sound on layout switch": "Звук при смене раскладки",
+    "Changed in another program meanwhile. The current list is shown; make the change again.": "Пока вы правили, список изменила другая программа. Показан текущий список, повторите изменение.",
     "Terminals are not supported.": "Терминалы не поддерживаются.",
     "In a browser Rasklad works in every tab. It skips fields the page marks as passwords, but cannot tell a terminal or code editor running in a web page: pause it there with a middle click on the bar icon.": "В браузере Rasklad работает во всех вкладках. Поля, которые страница отмечает как пароль, он пропускает, но не отличает терминал или редактор кода, открытый на веб-странице: там приостановите его средним щелчком по значку на панели.",
     "The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.": "Настройки Hyprland, панели и Fcitx вернутся к виду до подключения Rasklad. Файлы, которые вы с тех пор меняли, останутся как есть.",

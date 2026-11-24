@@ -128,6 +128,7 @@ ApplicationWindow {
     function errorText(code) {
         switch (code) {
         case "write": return qsTr("Fcitx did not accept the change. Nothing was changed.")
+        case "changed": return qsTr("Changed in another program meanwhile. The current list is shown; make the change again.")
         case "invalid": return qsTr("Use Latin letters, digits, dot, dash or underscore.")
         case "terminal": return qsTr("Terminals are not supported.")
         case "full": return qsTr("At most 64 applications can be on.")

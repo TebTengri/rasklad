@@ -128,6 +128,21 @@ bool SettingsBackend::commit(const AddonConfig &next)
     const QVariantMap now = mapFromConfig(m_config);
     for (auto it = now.cbegin(); it != now.cend(); ++it)
         if (changes.value(it.key()) == it.value()) changes.remove(it.key());
+    // SYS-272: read again right before writing. If another tool changed a key this
+    // edit writes since the edit started from it, nothing is written: the window
+    // shows the new value and the user repeats the edit (no lost update).
+    if (m_loaded && !changes.isEmpty()) {
+        reloadConfig();
+        if (m_loaded) {
+            const QVariantMap current = mapFromConfig(m_config);
+            for (auto it = changes.cbegin(); it != changes.cend(); ++it)
+                if (current.value(it.key()) != now.value(it.key())) {
+                    m_error = QStringLiteral("changed");
+                    rebuildApps();
+                    return false;
+                }
+        }
+    }
     if (!m_loaded || !m_fcitx->writeConfig(changes)) {
         m_error = m_loaded ? QStringLiteral("write") : QStringLiteral("fcitx");
         rebuildApps();

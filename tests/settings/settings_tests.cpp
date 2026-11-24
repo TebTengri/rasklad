@@ -36,9 +36,14 @@ public:
     bool addonEnabled() override { return up; }
     QStringList groupMethods() override { return group; }
     std::optional<bool> profileReady() override { return up ? ready : std::nullopt; }
+    int reads = 0;
+    int otherEditAtRead = 0; // on this read, another tool has just changed the store
+    QVariantMap otherEdit;
     std::optional<QVariantMap> readConfig() override
     {
         if (!up) return std::nullopt;
+        if (++reads == otherEditAtRead)
+            for (auto it = otherEdit.cbegin(); it != otherEdit.cend(); ++it) stored.insert(it.key(), it.value());
         if (broken) return QVariantMap{{QStringLiteral("Sound"), QStringLiteral("True")}};
         return stored;
     }
@@ -545,6 +550,31 @@ private Q_SLOTS:
         QCOMPARE(b.error(), QString());
         QVERIFY(configFromMap(f.stored)->exceptions.isEmpty());
     }
+    void editOfAListChangedMeanwhileIsNotWritten()
+    {
+        // SYS-272: another tool edits the list between the read the edit starts from
+        // and the write: nothing is written, the window shows the other tool's list.
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        f.otherEditAtRead = f.reads + 2; // the add's fresh read, then the one right before writing
+        f.otherEdit = {{QStringLiteral("Exceptions"), QVariantMap{{QStringLiteral("0"), QStringLiteral("rfr")}}}};
+        const int before = f.writes;
+        QVERIFY(!b.addException(QStringLiteral("ok")));
+        QCOMPARE(b.error(), QStringLiteral("changed"));
+        QCOMPARE(f.writes, before);
+        QCOMPARE(b.exceptions(), (QStringList{QStringLiteral("rfr")}));
+        // Repeated, the edit applies on top of the other tool's list.
+        QVERIFY(b.addException(QStringLiteral("ok")));
+        QCOMPARE(configFromMap(f.stored)->exceptions, (QStringList{QStringLiteral("ok"), QStringLiteral("rfr")}));
+        // A change to a key this edit does not write is no reason to refuse.
+        f.otherEditAtRead = f.reads + 2;
+        f.otherEdit = {{QStringLiteral("Sound"), QStringLiteral("False")}};
+        QVERIFY(b.addException(QStringLiteral("hello")));
+        QCOMPARE(b.error(), QString());
+    }
+
     void otherClientsChangeIsNotAnError()
     {
         FakeFcitx f;
