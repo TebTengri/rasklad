@@ -203,6 +203,24 @@ class GroupRollbackScope(Base):
         self.assertIn('changed since install', out.getvalue())
         self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
 
+    def test_reinstall_after_a_layout_change_keeps_it_on_revert(self):
+        # us at first; install added ru; the user replaced ru with de. A new install
+        # adds ru again; --revert must give back us+de, not the first us-only group.
+        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-de', '')])
+        state = self.setup.new_state()
+        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['keyboard-us', '']],
+                          'after': [['keyboard-us', ''], ['keyboard-ru', '']], 'after_layout': 'us'}
+        self.setup.save_state(state)
+        self.hypr('us', options='')
+        code, out = self.install(fake)
+        self.assertEqual(code, 0, out)
+        self.assertIn(('keyboard-ru', ''), fake.items)
+        saved = self.setup.load_state()['fcitx']
+        self.assertEqual(saved['before'], [['keyboard-us', ''], ['keyboard-de', '']])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(self.setup.restore_fcitx(self.setup.load_state()))
+        self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
+
     def test_pinyin_only_group_reverts(self):
         fake = FakeFcitx([('pinyin', ''), ('keyboard-us', ''), ('keyboard-ru', '')])
         self.setup.fcitx = fake.bus
