@@ -17,21 +17,22 @@ text; this is its translation.
 
 - **Automatically at the end of a word.** On Space, Enter, Tab or a punctuation
   key that ends the word, a word typed in the wrong layout is replaced. Keys that
-  are letters in the other layout (`,` is `б`) stay part of the word until the
-  next separator. A word is replaced only when Hunspell and the model agree. Common
-  words from a fixed list are corrected without the model: `rfr` → `как`,
+  type a letter in the other layout (the comma key is Russian `б`) stay part of the
+  word until the next separator. A word is replaced only when Hunspell and the
+  model agree, or when it is on a fixed list of common words: `rfr` → `как`,
   `ns` → `ты`, `щл` → `ok`, `ghbdtn` → `привет`. Case is kept: `Ghbdtn` →
   `Привет`, `GHBDTN` → `ПРИВЕТ`. Mixed case, unknown and ambiguous words are left
   alone.
 - **Swap the last word.** Right after the Space (or the punctuation that ended the
   word), a double Shift swaps the word just finished: after a replacement it
-  brings back what you typed (and again), and a word that was not replaced is put
-  into the other layout (`hello ` → `руддщ `). It works only if you have pressed
-  nothing since and the application told Rasklad the text before the cursor: that
-  word and the character after it. Otherwise it does nothing. Not after Enter or
-  Tab, and not later than 15 seconds after the word.
-- **By hand.** A word being typed is underlined; a double Shift then switches its
-  form, and automatic correction leaves that word alone.
+  brings back what you typed (another double Shift toggles back), and a word that
+  was not replaced is put into the other layout (`hello ` → `руддщ `). It works
+  only if you have pressed nothing since and the application reports the text
+  before the cursor, which must end with that word and its separator. Otherwise it
+  does nothing. It does not work after Enter or Tab, or more than 15 seconds after
+  the word.
+- **While typing.** The word being typed is underlined; a double Shift converts it
+  to the other layout, and automatic correction then leaves that word alone.
 - **Layout.** A double left Alt switches EN ↔ RU in any window.
 - **Omarchy bar icon** shows EN/RU and whether auto-correction is on.
 - **Exceptions.** In the settings window, the Exceptions tab lists words that
@@ -48,7 +49,7 @@ everywhere.
 | --- | --- | --- |
 | Any window | double left Alt | switch layout EN ↔ RU |
 | Enabled application | double Shift right after Space (or a word-ending mark) | undo the replacement, or put the word into the other layout |
-| Enabled application | double Shift on the underlined word | switch the word's form |
+| Enabled application | double Shift on the underlined word | convert the word to the other layout |
 | Bar icon | left click | switch layout |
 | Bar icon | middle click | pause or resume auto-correction |
 | Bar icon | right click | open the settings |
@@ -92,16 +93,16 @@ shows every change and asks first. It adds:
 - the Rasklad icon in place of the standard layout icon;
 - the EN and RU layouts in Fcitx.
 
-As a separate question, default "no", it offers to keep only the `us` layout in
+In a separate question (default: no), it offers to keep only the `us` layout in
 Hyprland, with no group switch (`grp:`), so that only Fcitx switches layouts. The
 setting is appended to `~/.config/hypr/input.lua`; earlier lines stay. The lock
 screen takes its layout from Hyprland, so its password can then be typed in Latin
 letters only. If there are layouts other than `us` and `ru` (`kz`, for example), or
-`us` has a non-Latin variant, the step is not offered. Without questions:
+`us` has a non-Latin variant, the step is not offered. Non-interactive install:
 `rasklad-setup --install --yes --single-layout`.
 
 `rasklad-setup --revert` puts everything back. A file you changed yourself after
-installing is left as it is, and it says so. Only one `rasklad-setup` runs at a
+installing is left as it is, with a notice. Only one `rasklad-setup` runs at a
 time. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
@@ -116,13 +117,13 @@ rasklad-setup --revert && sudo pacman -R rasklad-fcitx5 && fcitx5 -rd
 ```
 
 If the package was removed without a revert, the double Alt and the single-layout
-block in `input.lua` (written by 0.5.22 or later) stop working by themselves
-(after `hyprctl reload`). Remove an older block from `input.lua` by hand. The bar
+block in `input.lua` (written by 0.5.22 or later) stop applying at the next
+`hyprctl reload`. Remove an older block from `input.lua` by hand. The bar
 may keep an empty widget slot: put `omarchy.keyboard-layout` back into
 `~/.config/omarchy/shell.json` (a copy is in
 `~/.config/omarchy/shell.json.rasklad.bak`). `pacman -R` reminds you of this.
-After `omarchy refresh`, run `rasklad-setup --install` again: it drops the records
-of a reset `bindings.lua` and `shell.json` by itself (if `input.lua` was reset too,
+After `omarchy refresh`, run `rasklad-setup --install` again: if `bindings.lua` or
+`shell.json` was reset, it forgets its records for them (if `input.lua` was reset too,
 run `rasklad-setup --revert` first). A file with every mention of rasklad taken
 out counts as your own configuration.
 
@@ -133,11 +134,18 @@ out counts as your own configuration.
 - Terminals are not supported: the add-on refuses known terminals even when added
   by hand, and fields the application marks as a terminal. A terminal it does not
   know, such as a web terminal in a browser, it cannot tell apart.
-- A password field the application does not mark as one looks like ordinary text
-  to Rasklad. That is why it works only in applications you switch on yourself.
+- The add-on skips fields the application marks as password, hidden, terminal,
+  e-mail, URL, number, phone, date or time. A field without such a mark, password
+  fields included, looks like ordinary text to Rasklad. That is why it works only
+  in the listed applications (Slack and Chromium by default; you can switch them
+  off).
 - If a web page moves the focus to another field in the same millisecond as you
   press Space, the corrected word can land in the new field
   ([docs/SYS-271-FOCUS-RACE.md](docs/SYS-271-FOCUS-RACE.md)).
+- If the application sends no text around the cursor, or more than 64 KiB of it,
+  the double Shift after a word does nothing.
+- The double Alt is not swallowed: the application sees both Alt presses too (a
+  menu bar may flash in Slack and other Electron apps).
 - If Fcitx crashes, the word being typed is lost.
 - The add-on is built against Hunspell 1.7. If an update removes
   `libhunspell-1.7.so.0`, Fcitx does not load the add-on at all. A rebuild against
@@ -148,12 +156,14 @@ out counts as your own configuration.
 ## Privacy
 
 - Typed text never goes to the network, to logs or to disk.
-- The add-on keeps in memory only the current word and the last finished word,
-  until the next key and for at most 15 seconds.
+- The add-on keeps in memory, per field, only the word being typed and the last
+  finished word. The last word is dropped at the next key or focus change; after
+  15 seconds it can no longer be swapped and is then wiped.
 - The settings window stores only the application list, the exceptions and the
   switches, in `~/.config/fcitx5/conf/rasklad.conf`.
-- The names of programs where you placed the cursor are kept in Fcitx's memory
-  only, without any text.
+- The names of programs where you placed the cursor, without any text, are kept
+  in Fcitx's memory while it runs and are readable by your own programs over the
+  session bus (the settings window shows them).
 
 Security boundaries and everything the add-on and the window run:
 [SECURITY.md](SECURITY.md) (Russian).
@@ -194,11 +204,13 @@ Dictionaries:
 - Russian: [LibreOffice/dictionaries `c0865a85eb67`, ru_RU](https://github.com/LibreOffice/dictionaries/tree/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/ru_RU),
   Copyright (c) 1997-2008 Alexander I. Lebedev; [terms](data/notices/ru_RU.README.txt).
 
-Rasklad changed part of this data and built a model from it; what exactly is in
-[DATA-NOTICE.txt](packaging/arch/DATA-NOTICE.txt). The dictionary authors have not
+Rasklad changed part of this data and built a model from it; the changes are
+listed in [DATA-NOTICE.txt](packaging/arch/DATA-NOTICE.txt). The dictionary authors have not
 endorsed and do not support Rasklad.
 
 The package puts the full dictionary notices, the UKACD document and the
 description of Rasklad's changes in `/usr/share/licenses/rasklad-fcitx5/`. The same
-texts open in the settings window: Help (F1) → Licenses. A public release of the
+texts open in the settings window: Help (F1) → Licenses. Distribution review by
+exact hashes: [DISTRIBUTION-REVIEW-001](data/notices/DISTRIBUTION-REVIEW-001.md).
+A public release of the
 package with this data awaits the owner's decision.
