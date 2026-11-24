@@ -26,6 +26,7 @@
 #include <QThread>
 #include <QWindow>
 
+#include <cerrno>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -40,18 +41,19 @@ QString privateRuntimeDir()
     if (dir.isEmpty() || !dir.startsWith('/')) return {};
     struct stat st {};
     if (::lstat(dir.constData(), &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != ::getuid() ||
-        (st.st_mode & 077) != 0)
+        (st.st_mode & 07777) != 0700)
         return {};
     return QString::fromLocal8Bit(dir);
 }
 
-// Removes the socket left by a crashed window: only a socket, never another file.
-void removeStaleSocket(const QString &path)
+// Frees the socket path for a new listener: true when nothing is there, or when
+// it held a leftover socket of ours and that is now removed. Never touches another file.
+bool removeStaleSocket(const QString &path)
 {
     struct stat st {};
     const QByteArray p = QFile::encodeName(path);
-    if (::lstat(p.constData(), &st) == 0 && S_ISSOCK(st.st_mode) && st.st_uid == ::getuid())
-        ::unlink(p.constData());
+    if (::lstat(p.constData(), &st) != 0) return errno == ENOENT;
+    return S_ISSOCK(st.st_mode) && st.st_uid == ::getuid() && ::unlink(p.constData()) == 0;
 }
 } // namespace
 
@@ -84,13 +86,11 @@ int main(int argc, char *argv[])
     QLocalServer single;
     if (!runtime.isEmpty()) {
         const QString socketPath = runtime + QStringLiteral("/rasklad-settings.socket");
-        if (lock.tryLock(0)) {
-            removeStaleSocket(socketPath); // we hold the lock: no live window owns it
-            single.setSocketOptions(QLocalServer::UserAccessOption);
-            single.listen(socketPath); // on failure: still a working window, only no single-instance
-        } else if (lock.error() == QLockFile::LockFailedError) {
-            // The first window may still be starting: try for up to two seconds.
-            for (int attempt = 0; attempt < 10; ++attempt) {
+        bool owner = lock.tryLock(0);
+        if (!owner && lock.error() == QLockFile::LockFailedError) {
+            // Another window holds the lock; it may still be starting, or closing.
+            // Try for up to two seconds: bring it forward, or take the lock it left.
+            for (int attempt = 0; attempt < 10 && !owner; ++attempt) {
                 QLocalSocket probe;
                 probe.connectToServer(socketPath);
                 if (probe.waitForConnected(200)) {
@@ -99,9 +99,18 @@ int main(int argc, char *argv[])
                     return 0;
                 }
                 QThread::msleep(100);
+                owner = lock.tryLock(0);
             }
-            return 0; // a window holds the lock but does not answer: never a second one
+            if (!owner) return 0; // a window holds the lock but does not answer: never a second one
         }
+        // We hold the lock: no live window owns the socket path. Listen only when the
+        // path is free or a leftover socket (never replace another file); if listening
+        // fails, give the lock up so a later start opens its own window.
+        if (owner && !(removeStaleSocket(socketPath) && [&] {
+                single.setSocketOptions(QLocalServer::UserAccessOption);
+                return single.listen(socketPath);
+            }()))
+            lock.unlock();
         // Any other lock error (unwritable dir): run without single-instance.
     }
 

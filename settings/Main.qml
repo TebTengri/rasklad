@@ -77,6 +77,8 @@ ApplicationWindow {
         for (let it = activeFocusItem; it; it = it.parent)
             if (it === content) { reveal(activeFocusItem); return }
     }
+    property Item pendingReveal: null // shown again once the page height settles (Ctrl+N)
+    Timer { id: revealExpiry; interval: 500; onTriggered: window.pendingReveal = null }
     function reveal(item) {
         const y = item.mapToItem(content, 0, 0).y + content.y
         const max = Math.max(0, page.contentHeight - page.height)
@@ -113,11 +115,11 @@ ApplicationWindow {
         onActivated: {
             window.showTab(1)
             addBox.visible = true
-            // Lay the Applications page out now, so the scroll knows its new height.
-            appsPage.forceLayout()
-            content.forceLayout()
             addField.forceActiveFocus()
-            window.reveal(addBox)
+            // The page height settles after layout: reveal again once it has.
+            window.pendingReveal = addBox
+            Qt.callLater(() => { if (window.pendingReveal) window.reveal(window.pendingReveal) })
+            revealExpiry.restart() // never a stale reveal on a later, unrelated height change
         }
     }
 
@@ -331,6 +333,8 @@ ApplicationWindow {
     // The whole page scrolls, so a small tiled window still reaches every row.
     Flickable {
         id: page
+        // A tab switch changes the height after layout: finish a pending reveal then.
+        onContentHeightChanged: if (window.pendingReveal) { const it = window.pendingReveal; window.pendingReveal = null; window.reveal(it) }
         anchors.fill: parent
         contentWidth: width
         contentHeight: content.implicitHeight + 36
