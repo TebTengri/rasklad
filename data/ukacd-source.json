@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "UK Advanced Cryptics Dictionary licensing document",
+  "file": "data/notices/UKACD-readme.txt",
+  "sha256": "f32bd492ae07e04a8b257ef816c0b8c86f6d55d2d026bb847b1fcbdd3459057a",
+  "bytes": 5234,
+  "document_version": "1.7, 23 August 2000",
+  "copyright": "Copyright (c) J Ross Beresford 1993-2000. All Rights Reserved.",
+  "condition": "if UKACD is used in a software package or redistributed in any form, the copyright notice must be prominently displayed and the text of this document must be included verbatim",
+  "source": {
+    "archive": "https://downloads.sourceforge.net/project/wordlist/SCOWL/2020.12.07/scowl-2020.12.07.tar.gz",
+    "archive_sha256": "5587667caa20c4891390c2d42dbb4d5c4c3f41bee77af1457ece3ba23fb859cc",
+    "archive_md5": "dda7a18d86bc1d65856abf4656389429",
+    "archive_bytes": 2569810,
+    "md5_and_size_match": "SourceForge file record for /SCOWL/2020.12.07, checked 2026-11-24",
+    "path_in_archive": "scowl-2020.12.07/r/ukacd/readme.txt",
+    "why_this_release": "the en_US dictionary at LibreOffice/dictionaries c0865a85eb67 was built from SCOWL 2020.12.07 (data/notices/en_US.README.txt)"
+  },
+  "bytes_kept": "verbatim, including CRLF line ends and form feeds (.gitattributes -text)"
+}

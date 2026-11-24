@@ -949,7 +949,7 @@ ApplicationWindow {
                     wrapMode: Text.WordWrap
                     textFormat: Text.PlainText
                     font.pixelSize: 12
-                    text: qsTr("English dictionary: SCOWL and other sources. UKACD: Copyright (c) J Ross Beresford 1993-1999. All Rights Reserved.") + "\n"
+                    text: qsTr("English dictionary: SCOWL and other sources. UKACD: Copyright (c) J Ross Beresford 1993-2000. All Rights Reserved.") + "\n"
                           + qsTr("Russian dictionary: Copyright (c) 1997-2008, Alexander I. Lebedev.")
                 }
                 Hint { text: qsTr("Qt, Fcitx 5 and Hunspell are system libraries with their own licenses."); font.pixelSize: 12 }
@@ -961,6 +961,7 @@ ApplicationWindow {
                             { key: "rasklad", label: qsTr("Rasklad (MIT)") },
                             { key: "en", label: qsTr("English dictionary") },
                             { key: "ru", label: qsTr("Russian dictionary") },
+                            { key: "ukacd", label: "UKACD" },
                             { key: "data", label: qsTr("What Rasklad changed") }
                         ]
                         delegate: Button {

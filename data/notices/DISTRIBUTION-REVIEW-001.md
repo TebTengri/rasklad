@@ -11,7 +11,7 @@ owner decides. Flipping it is one separate change: passports, the profile's
 
 ## Exact contents
 
-Package 0.5.17, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
+Package 0.5.18 (unchanged since 0.5.17), `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
 hashes are of the profile the owner's packages are built from; any rebuilt
 profile must be compared again.
 
@@ -53,8 +53,8 @@ the owner to accept or not.
 | Modified versions clearly marked (ru_RU) and binary redistributions of modified source marked as modified in the documentation (Ispell clause 3, en_US) | `DATA-NOTICE.txt` in the licenses directory names each modified and derived file; the same text sits next to the control `.aff` as `MODIFIED.txt`; the «Что изменил Rasklad» page | Met in the documentation, which is what Ispell clause 3 asks for binaries. For ru_RU, whether a marker next to the file is enough or each control `.aff` needs its own header line is **open** (see below) |
 | No endorsement or promotion with an author's name (ru_RU: Lebedev; Ispell: Kuenning) | No author is named in descriptions or promotion; `DATA-NOTICE.txt` says so | Met, as long as release texts keep it so |
 | No use of Princeton's name in advertising or publicity about distribution (WordNet) | Princeton appears only inside the full notice | Met, as long as release texts keep it so; a separate rule from non-endorsement |
-| UKACD copyright displayed prominently (en_US) | UKACD line on the «Лицензии» page itself and at the top of `DATA-NOTICE.txt` | Met |
-| UKACD: "the text of this document must be included verbatim" if UKACD is used in a software package (en_US) | The UKACD copyright and this restriction, as quoted in the en_US notice; not UKACD's own document, which is not part of the pinned upstream | **Pending.** It may not apply: per the en_US notice, UKACD words enter SCOWL at level 80 and UKACD gave accent information, while this dictionary is size 60 built with `--accents=strip`. This was not checked against the word lists. If it applies, the UKACD document must be obtained and shipped |
+| UKACD copyright displayed prominently (en_US) | UKACD line (1993-2000, from its own document) on the «Лицензии» page itself and at the top of `DATA-NOTICE.txt` | Met |
+| UKACD: "the text of this document must be included verbatim" if UKACD is used in a software package (en_US) | The UKACD document itself, version 1.7, byte for byte from the SCOWL 2020.12.07 source archive (`data/notices/UKACD-readme.txt`, passport `data/ukacd-source.json`), installed as `/usr/share/licenses/rasklad-fcitx5/UKACD-readme.txt` and shown on the «Лицензии» page | Met. Shipped whether or not UKACD words reach the size-60 list, so the question of applicability no longer matters |
 | Derived data keeps the source terms (LANGUAGE-PACKS-REVIEW) | `DATA-NOTICE.txt` lists the model and word list as derived; `license=` names MIT and `LicenseRef-hunspell-en-US`, `LicenseRef-hunspell-ru-RU` | Met for the record. The model weights and the word list are derivatives of both dictionaries; every term above applies to them, and the permissive terms allow distributing modified and derived forms with notices |
 | Project MIT does not cover the data | LICENSE, README, THIRD_PARTY.md, `DATA-NOTICE.txt` | Met |
 
@@ -77,7 +77,6 @@ the owner to accept or not.
    stays for personal installation.
 2. If yes: whether the SCOWL, VarCon and WordNet notices accompanying the files
    are enough, or the model and word list must embed them.
-3. Whether the UKACD document must be shipped (see its row).
-4. Whether the adjacent marker is enough for the control `.aff`, or each
+3. Whether the adjacent marker is enough for the control `.aff`, or each
    gets a header line (new pins, rebuilt profile).
-5. Then one change flips `release_approved` with the verifier and pins.
+4. Then one change flips `release_approved` with the verifier and pins.

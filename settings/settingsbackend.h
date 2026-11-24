@@ -70,7 +70,7 @@ public:
     Q_INVOKABLE void setAutoCorrect(bool on);
     Q_INVOKABLE bool addException(const QString &word);
     Q_INVOKABLE void removeException(const QString &word);
-    // SYS-256: "rasklad", "en", "ru" or "data" from the package license directory.
+    // SYS-256: "rasklad", "en", "ru", "data" or "ukacd" from the package license directory.
     Q_INVOKABLE QString licenseText(const QString &key) const;
 
 Q_SIGNALS:

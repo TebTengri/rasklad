@@ -10,7 +10,7 @@ namespace rasklad::settings {
 inline constexpr char kLicenseDir[] = "/usr/share/licenses/rasklad-fcitx5";
 inline constexpr qint64 kMaxLicenseBytes = 64 * 1024;
 
-// "rasklad", "en", "ru" or "data" -> file name; empty for anything else.
+// "rasklad", "en", "ru", "data" or "ukacd" -> file name; empty for anything else.
 QString licenseFileName(const QString &key);
 // The text of that file in dir, or empty if the key is unknown, the file is missing,
 // is not a regular file (a symlink counts as not), or is larger than the limit.

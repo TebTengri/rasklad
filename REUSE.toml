@@ -92,3 +92,9 @@ path = "data/notices/RustBook-*-COPYRIGHT.txt"
 precedence = "override"
 SPDX-FileCopyrightText = "The Rust Project Developers"
 SPDX-License-Identifier = "MIT OR Apache-2.0"
+
+[[annotations]]
+path = "data/notices/UKACD-readme.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "1993-2000 J Ross Beresford"
+SPDX-License-Identifier = "LicenseRef-ukacd"
