@@ -14,13 +14,13 @@ SettingsBackend::SettingsBackend(FcitxSource *fcitx, AppSource *apps, AppNames *
             const auto out = m_setupTool->lastCheck();
             const QVariantMap next = out ? setupFromCheck(*out) : QVariantMap{};
             const bool installed = m_setupTool->installed();
-            const bool moved = !m_setup.isEmpty() && (next != m_setup || installed != m_setupInstalled);
+            // Something outside changed the desktop (the terminal): the next window
+            // focus (Hyprland returns it when the terminal closes) re-reads Fcitx for
+            // the banner. Never a blocking call or a new check from here.
+            if (next != m_setup || installed != m_setupInstalled) m_lastRefresh.invalidate();
             m_setup = next;
             m_setupInstalled = installed;
-            // Something outside changed the desktop (the terminal): read Fcitx again
-            // once, so the banner and lists match. The next check finds no change.
-            if (moved) refresh();
-            else Q_EMIT changed();
+            Q_EMIT changed();
         };
     }
     // The terminal gives no completion signal: every 4 s for 3 minutes, start the
