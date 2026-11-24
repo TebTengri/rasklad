@@ -27,7 +27,8 @@ find "$out" -mindepth 1 -delete
 git -C "$root" archive --format=tar.gz --prefix="rasklad-${ver}/" -o "$out/rasklad-${ver}.tar.gz" HEAD
 sum=$(sha256sum "$out/rasklad-${ver}.tar.gz" | cut -d' ' -f1)
 # Profile tarball: data/ files from the archived commit, build/ files from PROFILE_ROOT.
-# Every file is checked against its pin when the addon loads it, and in check().
+# check() runs the addon's own verifier on it (tests/profile_gate), and the addon
+# checks it again when it loads.
 stage=$(mktemp -d "$out/profile.XXXXXX")
 while IFS= read -r rel; do
   [[ -z $rel || $rel == \#* ]] && continue
@@ -48,5 +49,6 @@ psum=$(sha256sum "$out/rasklad-profile-${ver}.tar.gz" | cut -d' ' -f1)
 sed -e "s/@SHA256@/${sum}/" -e "s/@PROFILE_SHA256@/${psum}/" "$root/packaging/arch/PKGBUILD" > "$out/PKGBUILD"
 # Same commit, same package: timestamps come from the commit.
 export SOURCE_DATE_EPOCH=$(git -C "$root" log -1 --format=%ct)
-(cd "$out" && makepkg --cleanbuild --noconfirm >/dev/null)
+# --check: check() runs the profile gate even if makepkg.conf disables checks.
+(cd "$out" && makepkg --cleanbuild --check --noconfirm >/dev/null)
 ls "$out"/rasklad-fcitx5-"${ver}"-*.pkg.tar.zst

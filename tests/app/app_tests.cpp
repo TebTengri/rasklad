@@ -716,10 +716,12 @@ private Q_SLOTS:
     void productionPinsArePinned()
     {
         const profile::ProfilePins &p = profile::productionPins();
-        QCOMPARE(p.model.sha256, QStringLiteral("e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8"));
-        QCOMPARE(p.model.bytes, qint64(88290));
-        QCOMPARE(p.stem.sha256, QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871"));
-        QCOMPARE(p.stem.bytes, qint64(1200379));
+        // SYS-256: the experiment artifacts in the RSKX notice container
+        // (tools/make_release_profile.py).
+        QCOMPARE(p.model.sha256, QStringLiteral("d30f471a13be898514b030fbab95872b69d431beb8e105bc56b860a3c163509a"));
+        QCOMPARE(p.model.bytes, qint64(106396));
+        QCOMPARE(p.stem.sha256, QStringLiteral("ff325623b4dd2fe871195138d7b09c1c5dd0384152bca85e8c9f66789dd15da3"));
+        QCOMPARE(p.stem.bytes, qint64(1218480));
         QVERIFY(profile::isSafeRelativePath(p.morphManifest.path, QStringLiteral("data/")));
         QVERIFY(profile::isSafeRelativePath(p.model.path, QStringLiteral("build/")));
         for (const profile::LanguagePins &l : p.languages) {
@@ -736,7 +738,7 @@ private Q_SLOTS:
     {
         // Only public, committed manifests are read here.
         const profile::ProfilePins &p = profile::productionPins();
-        QVERIFY(profile::verifyMorphManifest(readSource("data/morphology-003-sources.json"), p));
+        QVERIFY(profile::verifyMorphManifest(readSource("data/product-profile-sources.json"), p));
         QVERIFY(profile::verifyTrainingManifest(readSource("data/sources.json"), p));
         QVERIFY(profile::verifyProtocol002(readSource("data/experiment-002-protocol.json"), p));
     }

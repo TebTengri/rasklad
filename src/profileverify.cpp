@@ -170,8 +170,10 @@ bool pinnedObjectMatches(const QJsonValue &value, const FilePin &pin, const QStr
 ProfilePins makeProductionPins()
 {
     ProfilePins p;
-    p.morphManifest = {QStringLiteral("data/morphology-003-sources.json"),
-                       QStringLiteral("590b2b69c75f73d6f5ebd817dc4e2f2798d877f090ac42a81fa0a02f5fbf2413"), 0};
+    // SYS-256: the product's own manifest (the research one, morphology-003, keeps the
+    // unmarked control .aff); see tools/make_release_profile.py.
+    p.morphManifest = {QStringLiteral("data/product-profile-sources.json"),
+                       QStringLiteral("5d7bb7cb856d94a4a59bf410248d382f1f526d452601afb05db3c4697ece277e"), 0};
     p.trainingManifest = {QStringLiteral("data/sources.json"),
                           QStringLiteral("29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20"), 0};
     p.protocol002 = {QStringLiteral("data/experiment-002-protocol.json"),
@@ -195,7 +197,7 @@ ProfilePins makeProductionPins()
     en.aff = {QStringLiteral("build/experiment-003-data/en.aff"),
               QStringLiteral("e746c882dd6f303c2c46e7452804b9201115a6942cfeb15f18f8edf774d2e24e"), 3205};
     en.controlAff = {QStringLiteral("build/experiment-003-data/control/en.aff"),
-                     QStringLiteral("60fde13d7b4856a2dcb4a70eb9320a7288e38f3cd11ca6a40509a1d22e81f08f"), 1460};
+                     QStringLiteral("4c2ee7fbf1aa4a8ea31503b7a7c4688d4a84d99bcbd9f4a0783842ec333e1b19"), 1618};
     en.notice = {QStringLiteral("data/notices/en_US.README.txt"),
                  QStringLiteral("168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371")};
     en.artifactNoticePath = QStringLiteral("build/experiment-002-artifacts/en_US.NOTICE.txt");
@@ -206,16 +208,16 @@ ProfilePins makeProductionPins()
     ru.aff = {QStringLiteral("build/experiment-003-data/ru.aff"),
               QStringLiteral("38ce7d4af78e211e9bafe4bf7e3d6a2c420591136cb738ec6648f8fdf6524cd7"), 71236};
     ru.controlAff = {QStringLiteral("build/experiment-003-data/control/ru.aff"),
-                     QStringLiteral("097549718b2cc53e0c597abb01a467fb8161ac9b3cac35287107717e6e71dd19"), 162};
+                     QStringLiteral("2869341971555f4f585e739e911dd4c921f4b636b955c5b06210bb443b49f438"), 320};
     ru.notice = {QStringLiteral("data/notices/ru_RU.README.txt"),
                  QStringLiteral("262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52")};
     ru.artifactNoticePath = QStringLiteral("build/experiment-002-artifacts/ru_RU.NOTICE.txt");
 
     p.artifactDir = QStringLiteral("build/experiment-002-artifacts/");
     p.model = {QStringLiteral("build/experiment-002-artifacts/detector-model.rskn"),
-               QStringLiteral("e92e549e5f0853e4cd78d6d997653098b78550eb9911de11421434e26e3985d8"), 88290};
+               QStringLiteral("d30f471a13be898514b030fbab95872b69d431beb8e105bc56b860a3c163509a"), 106396};
     p.stem = {QStringLiteral("build/experiment-002-artifacts/exact-full-lexicons.rskp"),
-              QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871"), 1200379};
+              QStringLiteral("ff325623b4dd2fe871195138d7b09c1c5dd0384152bca85e8c9f66789dd15da3"), 1218480};
     p.artifactMetadataPath = QStringLiteral("build/experiment-002-artifacts/artifact-metadata.json");
     p.modificationsPath = QStringLiteral("build/experiment-002-artifacts/MODIFICATIONS.txt");
     return p;
@@ -403,6 +405,37 @@ bool removePfxSfxRows(const QByteArray &source, QByteArray &out)
         return false;
     out = std::move(result);
     return true;
+}
+
+QByteArray wrapNoticeContainer(const QByteArray &notice, const QByteArray &payload)
+{
+    if (notice.isEmpty() || qint64(notice.size()) > kMaxEmbeddedNoticeBytes || !isStrictUtf8(notice)
+        || notice.contains('\0') || payload.isEmpty())
+        return {};
+    QByteArray out("RSKX");
+    const quint32 n = quint32(notice.size());
+    for (int i = 0; i < 4; ++i)
+        out.append(char((n >> (8 * i)) & 0xff));
+    out.append(notice);
+    out.append(payload);
+    return out;
+}
+
+bool unwrapNoticeContainer(const QByteArray &file, QByteArray &notice, QByteArray &payload)
+{
+    if (file.size() < 8 || !file.startsWith("RSKX"))
+        return false;
+    quint32 n = 0;
+    for (int i = 0; i < 4; ++i)
+        n |= quint32(quint8(file.at(4 + i))) << (8 * i);
+    if (n == 0 || qint64(n) > kMaxEmbeddedNoticeBytes || qint64(n) >= qint64(file.size()) - 8)
+        return false;
+    QByteArray text = file.mid(8, qsizetype(n));
+    if (!isStrictUtf8(text) || text.contains('\0'))
+        return false;
+    notice = std::move(text);
+    payload = file.mid(8 + qsizetype(n));
+    return !payload.isEmpty();
 }
 
 bool isQueryableToken(QStringView token)
@@ -633,7 +666,7 @@ ProfileError verifyProfileFiles(const QString &projectRoot, const ProfilePins &p
         if (!isStrictUtf8(aff) || !isStrictUtf8(control))
             return ProfileError::NotUtf8;
         QByteArray derived;
-        if (!removePfxSfxRows(aff, derived) || derived != control)
+        if (!removePfxSfxRows(aff, derived) || control != QByteArray(kControlAffHeader) + derived)
             return ProfileError::ControlMismatch;
         files.dic = resolveContainedFile(root, l.dic.path);
         files.aff = resolveContainedFile(root, l.aff.path);
@@ -672,14 +705,21 @@ ProfileError verifyProfileFiles(const QString &projectRoot, const ProfilePins &p
         QByteArray modelBytes;
         if (const ProfileError e = readPinned(root, pins.model, kMaxModelBytes, modelBytes); e != ProfileError::None)
             return e;
-        const std::optional<NgramModel> model = NgramModel::deserialize(modelBytes);
-        if (!model || !model->isValid() || model->serialize() != modelBytes)
+        QByteArray notice;
+        QByteArray modelPayload;
+        if (!unwrapNoticeContainer(modelBytes, notice, modelPayload))
+            return ProfileError::FormatMismatch;
+        const std::optional<NgramModel> model = NgramModel::deserialize(modelPayload);
+        if (!model || !model->isValid() || model->serialize() != modelPayload)
             return ProfileError::FormatMismatch;
         QByteArray stemBytes;
         if (const ProfileError e = readPinned(root, pins.stem, kMaxStemBytes, stemBytes); e != ProfileError::None)
             return e;
-        std::optional<std::array<benchmark::FrontCodedLexicon, 2>> stem = benchmark::deserializeLexiconPair(stemBytes);
-        if (!stem || benchmark::serializeLexiconPair(stem->at(0), stem->at(1)) != stemBytes)
+        QByteArray stemPayload;
+        if (!unwrapNoticeContainer(stemBytes, notice, stemPayload))
+            return ProfileError::FormatMismatch;
+        std::optional<std::array<benchmark::FrontCodedLexicon, 2>> stem = benchmark::deserializeLexiconPair(stemPayload);
+        if (!stem || benchmark::serializeLexiconPair(stem->at(0), stem->at(1)) != stemPayload)
             return ProfileError::FormatMismatch;
         out.model = *model;
         out.stem = std::move(*stem);

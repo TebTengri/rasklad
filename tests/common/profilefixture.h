@@ -100,6 +100,7 @@ struct ProfileFixture {
             QByteArray control;
             if (!profile::removePfxSfxRows(aff[li], control))
                 return false;
+            control.prepend(profile::kControlAffHeader); // SYS-256: marked as modified
             const QString c = QString::fromLatin1(code[li]);
             profile::LanguagePins &l = p.languages[li];
             l.dic = pinOf(QStringLiteral("build/dicts/") + c + QStringLiteral(".dic"), dic[li]);
@@ -122,12 +123,14 @@ struct ProfileFixture {
         const std::vector<KeySequence> ru{keysOf(QStringLiteral("ghbdtn")), keysOf(QStringLiteral("vbh")),
                                           keysOf(QStringLiteral("djlf"))};
         const NgramModel model = NgramModel::train(en, ru);
-        const QByteArray modelBytes = model.serialize();
+        // SYS-256: both files carry the notices inside.
+        const QByteArray modelBytes = profile::wrapNoticeContainer("fixture notice\n", model.serialize());
         const auto enLex = benchmark::FrontCodedLexicon::build(en);
         const auto ruLex = benchmark::FrontCodedLexicon::build(ru);
         if (modelBytes.isEmpty() || !enLex || !ruLex)
             return false;
-        const QByteArray stemBytes = benchmark::serializeLexiconPair(*enLex, *ruLex);
+        const QByteArray stemBytes =
+            profile::wrapNoticeContainer("fixture notice\n", benchmark::serializeLexiconPair(*enLex, *ruLex));
         p.model = pinOf(QStringLiteral("build/artifacts/model.rskn"), modelBytes);
         p.stem = pinOf(QStringLiteral("build/artifacts/stem.rskp"), stemBytes);
         if (!writeBytes(root, p.model.path, modelBytes) || !writeBytes(root, p.stem.path, stemBytes))

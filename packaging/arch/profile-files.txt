@@ -1,6 +1,6 @@
 # SYS-226: pinned profile files packaged under /usr/share/fcitx5/rasklad/profile.
 # Must equal tools/chromium_ime_lab.py PROFILE_PATHS (tests/packaging).
-data/morphology-003-sources.json
+data/product-profile-sources.json
 data/sources.json
 data/experiment-002-protocol.json
 data/notices/MORPHOLOGY-003-REVIEW.md
