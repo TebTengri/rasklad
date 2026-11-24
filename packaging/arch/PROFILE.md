@@ -64,9 +64,10 @@ tools/build_arch_package.sh <каталог профиля>
    закреплён и со временем отдаёт другие байты, поэтому без снимка от 2026-11-07
    этот шаг не пройдёт. Со снимком:
    ```sh
+   snapshot="/путь/к/снимку/tatoeba"   # каталог с двумя .tsv.bz2
    mkdir -p build/experiment-002-data
-   python3 tools/prepare_cc0_evaluation.py --language eng --input <путь>/eng_sentences_CC0.tsv.bz2 --output build/experiment-002-data/en.tsv
-   python3 tools/prepare_cc0_evaluation.py --language rus --input <путь>/rus_sentences_CC0.tsv.bz2 --output build/experiment-002-data/ru.tsv
+   python3 tools/prepare_cc0_evaluation.py --language eng --input "$snapshot/eng_sentences_CC0.tsv.bz2" --output build/experiment-002-data/en.tsv
+   python3 tools/prepare_cc0_evaluation.py --language rus --input "$snapshot/rus_sentences_CC0.tsv.bz2" --output build/experiment-002-data/ru.tsv
    bin/build
    mkdir -p build/experiment-002-artifacts
    build/tools/detector_benchmark \
