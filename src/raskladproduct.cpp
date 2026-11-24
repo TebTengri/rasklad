@@ -525,7 +525,8 @@ private:
     static constexpr std::size_t kMaxConfigNodes = 1024;
     static constexpr std::size_t kMaxConfigBytes = 64 * 1024;
     static bool boundedConfig(const fcitx::RawConfig &raw) {
-        std::size_t nodes = 0, bytes = 0;
+        std::size_t nodes = 0, bytes = raw.value().size();
+        if (bytes > kMaxConfigBytes) return false;
         return raw.visitSubItems(
             [&](const fcitx::RawConfig &item, const std::string &) {
                 bytes += item.name().size() + item.value().size();
@@ -1281,9 +1282,9 @@ private:
     // never filtered, so the wait delays no typed character.
     static constexpr std::uint64_t kUndoDelayUs = 40000;
     std::unique_ptr<fcitx::EventSourceTime> undoEvent_;
-    // SYS-272: wipes the most recently kept word once its lifetime is over, even if
-    // no key follows. One timer: an older word in another context is refused at use
-    // (lastExpired) and wiped by its next key or lifecycle event.
+    // SYS-272: once the most recently kept word's lifetime is over, wipes every
+    // expired kept word in all contexts, even if no key follows. Words kept earlier
+    // expire earlier, so one timer armed for the latest word covers them all.
     std::unique_ptr<fcitx::EventSourceTime> expireEvent_;
     void armExpiry(fcitx::InputContext *ic, LabState &s) {
         if (!instance_ || !s.lastValid) return;
@@ -1294,6 +1295,10 @@ private:
             [this, ref, generation](fcitx::EventSourceTime *, std::uint64_t) {
                 if (auto *c = ref.get())
                     if (auto *s = state(c, false); s && s->lastGeneration == generation) s->forgetLast();
+                instance_->inputContextManager().foreach([this](fcitx::InputContext *c) {
+                    if (auto *s = state(c, false); s && s->lastValid && s->lastExpired()) s->forgetLast();
+                    return true;
+                });
                 return true;
             });
     }
