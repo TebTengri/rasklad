@@ -92,16 +92,19 @@ int main(int argc, char *argv[])
             // Another window holds the lock; it may still be starting, or closing.
             // Until the deadline: bring it forward, or take the lock it left.
             const QDeadlineTimer deadline(5000);
+            // Every wait is capped by what is left, so the deadline holds.
+            const auto left = [&deadline](int ms) { return int(qMin<qint64>(ms, deadline.remainingTime())); };
             while (!owner && !deadline.hasExpired()) {
                 QLocalSocket probe;
                 probe.connectToServer(socketPath);
                 // The connection itself is the request. Done only when the window
                 // answers: one that is closing may still accept it, and then this
                 // start takes its place.
-                if (probe.waitForConnected(200) && probe.waitForReadyRead(1000) &&
-                    probe.readAll().startsWith("ok"))
+                if (probe.waitForConnected(left(200)) && !deadline.hasExpired() &&
+                    probe.waitForReadyRead(left(1000)) && probe.readAll().startsWith("ok"))
                     return 0;
-                QThread::msleep(100);
+                if (deadline.hasExpired()) break;
+                QThread::msleep(static_cast<unsigned long>(left(100)));
                 owner = lock.tryLock(0);
             }
             if (!owner) {
