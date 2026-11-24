@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
                 QThread::msleep(static_cast<unsigned long>(left(100)));
                 owner = lock.tryLock(0);
             }
+            if (!owner) owner = lock.tryLock(0); // a last try: the budget may end just as it is released
             if (!owner) {
                 // A window holds the lock but neither answers nor closes: never a second one.
                 QTextStream(stderr) << "rasklad-settings: another settings window holds the lock but does not answer\n";

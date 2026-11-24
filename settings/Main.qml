@@ -673,6 +673,8 @@ ApplicationWindow {
                     ColumnLayout {
                         id: addBox
                         visible: false
+                        // However the form closes (Enter, Add, Esc), a pending reveal of it ends.
+                        onVisibleChanged: if (!visible) window.pendingReveal = null
                         spacing: 4
                         Layout.fillWidth: true
                         RowLayout {
