@@ -97,6 +97,7 @@ private Q_SLOTS:
         QCOMPARE(licenseFileName(QStringLiteral("en")), QStringLiteral("en_US.README.txt"));
         QCOMPARE(licenseFileName(QStringLiteral("ru")), QStringLiteral("ru_RU.README.txt"));
         QCOMPARE(licenseFileName(QStringLiteral("data")), QStringLiteral("DATA-NOTICE.txt"));
+        QCOMPARE(licenseFileName(QStringLiteral("ukacd")), QStringLiteral("UKACD-readme.txt"));
         QVERIFY(licenseFileName(QStringLiteral("../LICENSE")).isEmpty());
         QVERIFY(licenseFileName(QStringLiteral("LICENSE")).isEmpty());
         QVERIFY(licenseFileName(QString()).isEmpty());
@@ -114,6 +115,8 @@ private Q_SLOTS:
         QCOMPARE(readLicense(dir.path(), QStringLiteral("ru")), QString::fromUtf8("Лебедев"));
         QVERIFY(readLicense(dir.path(), QStringLiteral("en")).isEmpty()); // missing
         QVERIFY(readLicense(dir.path(), QStringLiteral("other")).isEmpty()); // unknown key
+        put(QStringLiteral("UKACD-readme.txt"), "a\r\nb\fc\r\n");
+        QCOMPARE(readLicense(dir.path(), QStringLiteral("ukacd")), QStringLiteral("a\nb\nc\n")); // shown without CR/FF
         put(QStringLiteral("DATA-NOTICE.txt"), QByteArray(kMaxLicenseBytes + 1, 'x'));
         QVERIFY(readLicense(dir.path(), QStringLiteral("data")).isEmpty()); // too large
         QVERIFY(QFile::link(dir.filePath(QStringLiteral("LICENSE")), dir.filePath(QStringLiteral("en_US.README.txt"))));

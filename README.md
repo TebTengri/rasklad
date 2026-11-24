@@ -174,8 +174,20 @@ Wayland, Hyprland, Slack и Chromium. Отчёты, ADR и лабораторн�
 MIT проекта не даёт нового права на распространение этих данных или готового
 бинарного пакета.
 
-Пакет кладёт полные уведомления словарей и описание того, что Rasklad в них
-изменил, в `/usr/share/licenses/rasklad-fcitx5/`. Те же тексты открываются в окне
+Словари:
+- английский — [LibreOffice/dictionaries `c0865a85eb67`, en](https://github.com/LibreOffice/dictionaries/tree/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/en),
+  собран из [SCOWL](http://wordlist.aspell.net/) 2020.12.07 (Kevin Atkinson и др.; в нём
+  использован UKACD, Copyright (c) J Ross Beresford 1993-2000);
+  [условия](data/notices/en_US.README.txt), [документ UKACD](data/notices/UKACD-readme.txt);
+- русский — [LibreOffice/dictionaries `c0865a85eb67`, ru_RU](https://github.com/LibreOffice/dictionaries/tree/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/ru_RU),
+  Copyright (c) 1997-2008 Alexander I. Lebedev; [условия](data/notices/ru_RU.README.txt).
+
+Rasklad изменил часть этих данных и построил из них модель; что именно — в
+[DATA-NOTICE.txt](packaging/arch/DATA-NOTICE.txt). Авторы словарей Rasklad не
+одобряли и не поддерживают.
+
+Пакет кладёт полные уведомления словарей, документ UKACD и описание того, что
+Rasklad изменил, в `/usr/share/licenses/rasklad-fcitx5/`. Те же тексты открываются в окне
 настроек: справка (F1) → «Лицензии». Ревью распространения по точным хешам —
 [DISTRIBUTION-REVIEW-001](data/notices/DISTRIBUTION-REVIEW-001.md). Публичный выпуск
 пакета с этими данными ждёт решения владельца.

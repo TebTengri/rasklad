@@ -5,7 +5,7 @@
 # Installs an Fcitx addon and a settings app: no service, autostart, setuid, udev
 # or user configuration. Fcitx loads it on its next start.
 pkgname=rasklad-fcitx5
-pkgver=0.5.17
+pkgver=0.5.18
 pkgrel=1
 pkgdesc='Offline wrong-layout correction (us<->ru) for Fcitx5, in listed applications only'
 arch=('x86_64')
@@ -83,6 +83,7 @@ package() {
   install -Dm644 data/notices/en_US.README.txt "${pkgdir}/usr/share/licenses/${pkgname}/en_US.README.txt"
   install -Dm644 data/notices/ru_RU.README.txt "${pkgdir}/usr/share/licenses/${pkgname}/ru_RU.README.txt"
   install -Dm644 packaging/arch/DATA-NOTICE.txt "${pkgdir}/usr/share/licenses/${pkgname}/DATA-NOTICE.txt"
+  install -Dm644 data/notices/UKACD-readme.txt "${pkgdir}/usr/share/licenses/${pkgname}/UKACD-readme.txt"
   install -Dm644 packaging/arch/DATA-NOTICE.txt "${pkgdir}/usr/share/fcitx5/rasklad/profile/build/experiment-003-data/control/MODIFIED.txt"
   install -Dm644 docs/SYS-246-PRODUCT-ADDON.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
   install -Dm644 packaging/arch/INSTALL.md "${pkgdir}/usr/share/doc/${pkgname}/INSTALL.md"

@@ -4,10 +4,20 @@ This package contains data derived from two Hunspell dictionaries taken from
 LibreOffice/dictionaries at commit c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb:
 
   en_US  SCOWL, Ispell, WordNet, UKACD and other sources; full notice in
-         en_US.README.txt. UKACD is Copyright (c) J Ross Beresford 1993-1999.
+         en_US.README.txt. UKACD is Copyright (c) J Ross Beresford 1993-2000.
          All Rights Reserved.
   ru_RU  Copyright (c) 1997-2008, Alexander I. Lebedev; full notice in
          ru_RU.README.txt.
+
+The en_US word list is built from SCOWL 2020.12.07, which uses the UK Advanced
+Cryptics Dictionary (UKACD). As its author requires, its document is included
+verbatim as UKACD-readme.txt:
+  Copyright (c) J Ross Beresford 1993-2000. All Rights Reserved.
+
+Sources:
+  https://github.com/LibreOffice/dictionaries/tree/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/en
+  https://github.com/LibreOffice/dictionaries/tree/c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb/ru_RU
+  http://wordlist.aspell.net/  (SCOWL)
 
 In the package metadata these are LicenseRef-hunspell-en-US and
 LicenseRef-hunspell-ru-RU; the full terms are the two notice files.
