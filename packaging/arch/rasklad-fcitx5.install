@@ -1,0 +1,17 @@
+# SYS-270: pacman runs this as root, after the files are gone, and cannot undo a
+# user's rasklad-setup --install; it only says what is left and what to do.
+# Nothing is changed.
+
+post_remove() {
+  cat <<'NOTE'
+==> rasklad-fcitx5 removed. If you had run rasklad-setup --install and not
+    --revert (best done before removing the package):
+    - double Alt and a keep-only-us block written by 0.5.22 or later switch
+      themselves off: run "hyprctl reload". An older block at the end of
+      ~/.config/hypr/input.lua (from "-- BEGIN rasklad-setup" to
+      "-- END rasklad-setup") is removed by hand;
+    - the Omarchy bar may show an empty slot: put "omarchy.keyboard-layout"
+      back in ~/.config/omarchy/shell.json
+      (the copy from before install: ~/.config/omarchy/shell.json.rasklad.bak).
+NOTE
+}
