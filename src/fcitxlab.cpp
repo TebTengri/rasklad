@@ -114,6 +114,7 @@
 #error "RASKLAD_MANUAL_LAB is a separate artifact"
 #endif
 #include "manualgesture.h"
+#include "wordrules.h"
 #endif
 
 #ifdef RASKLAD_PRODUCT
@@ -133,6 +134,7 @@
 #include "fcitxlabprofile.h"
 #include "frequentwords.h"
 #include "layoutcue.h"
+#include "configrules.h"
 #include "seenprograms.h"
 #include "terminalapps.h"
 #include <fcitx-utils/standardpaths.h>
@@ -261,10 +263,6 @@ FCITX_CONFIGURATION(RaskladStatus,
     fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
         "Applications with a focused text field since start", {}};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
-constexpr std::size_t kMaxApps = 64;
-constexpr std::size_t kMaxExceptions = 256;
-// Same character rules as the policy registry; anything else is dropped.
-bool appIdentifier(const std::string &id) { return rasklad::programIdentifier(id); }
 // Applications from the addon configuration (compositor app ids as Fcitx reports
 // them in InputContext::program()). Claims, not authentication: policy allows
 // them for the manual gesture only. Rebuilt only after every state is discarded.
@@ -351,9 +349,7 @@ public:
     std::uint32_t upper = 0;
     std::string shown() const { return form(word(), typedRu != converted, upper); }
     static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
-        std::string out = asRu ? rasklad::manual::usToRu(typed) : typed;
-        if (out.empty()) out = typed;
-        return mask ? rasklad::manual::applyUpper(out, mask) : out;
+        return rasklad::word::form(typed, asRu, mask);
     }
     // The last word this addon committed with Space or a punctuation key (SYS-250),
     // kept only until any other key, lifecycle event or failed check. Only it may
@@ -734,13 +730,10 @@ private:
     // never typed input.
     void rebuildExceptions() {
         exceptionKeys_.clear();
-        // The cap counts distinct entries in list order, as the settings app does.
-        for (const auto &word : *config_.exceptions) {
-            if (exceptionKeys_.size() == kMaxExceptions) break;
-            auto keys = rasklad::manual::exceptionKeys(word);
-            if (!keys.empty() && std::find(exceptionKeys_.begin(), exceptionKeys_.end(), keys) == exceptionKeys_.end())
-                exceptionKeys_.push_back(std::move(keys));
-        }
+        // The shared rule (src/configrules.h) picks the entries, as the settings app does.
+        const auto &words = *config_.exceptions;
+        for (const std::size_t i : rasklad::config::keptExceptions({words.begin(), words.end()}))
+            exceptionKeys_.push_back(rasklad::manual::exceptionKeys(words[i]));
         std::sort(exceptionKeys_.begin(), exceptionKeys_.end());
     }
     bool exception(const std::string &keys) const {
@@ -753,13 +746,10 @@ private:
         permissionStore_.reset(); // nothing refers to the old list while it changes
         apps.adapters.clear();
         apps.ids.clear();
-        for (const auto &id : *config_.applications) {
-            if (apps.ids.size() == kMaxApps) break;
-            if (!appIdentifier(id) || rasklad::terminalApp(id)) continue; // never terminals
-            bool seen = false;
-            for (const auto &have : apps.ids) seen = seen || have == id;
-            if (!seen) apps.ids.push_back(id);
-        }
+        // The shared rule (src/configrules.h): valid, never terminals, unique, capped.
+        const auto &listed = *config_.applications;
+        for (const std::size_t i : rasklad::config::keptApplications({listed.begin(), listed.end()}))
+            apps.ids.push_back(listed[i]);
         // ids is final before adapters take views into it.
         for (const auto &id : apps.ids)
             apps.adapters.push_back({id, id, policy::Domain::RegularApplication, true, false, true});
@@ -1190,9 +1180,7 @@ private:
             return false;
         const auto sym = key.sym();
         if (sym == FcitxKey_Return || sym == FcitxKey_KP_Enter || sym == FcitxKey_Tab) return true;
-        const std::uint32_t u = fcitx::Key::keySymToUnicode(sym);
-        if (u == 0x2116) return true; // №
-        return u > 0x20 && u < 0x7f && !((u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z'));
+        return rasklad::word::endsWord(fcitx::Key::keySymToUnicode(sym));
     }
     // SYS-226 automatic correction of the current word, unless the owner chose a form
     // with the gesture. Only the reviewed profile's Correct that equals the word's
@@ -1206,19 +1194,15 @@ private:
         if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
         // Case: all lowercase, a capital first letter, or all capitals, judged on the
         // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
-        const auto caseOk = [&s](std::size_t keys) {
-            const std::uint32_t all = keys >= 32 ? ~std::uint32_t{0} : (std::uint32_t{1} << keys) - 1;
-            const std::uint32_t mask = s.upper & all;
-            return mask == 0 || mask == 1 || mask == all;
-        };
+        const auto caseOk = [&s](std::size_t keys) { return rasklad::word::caseEligible(s.upper, keys); };
         std::string w = s.word();
         std::optional<std::string> result;
         std::size_t cut = w.size();
         for (int pass = 0; pass < 2 && !result; ++pass) {
             if (pass == 1) {
                 if (s.typedRu) break;
-                while (cut > 0 && !(w[cut - 1] >= 'a' && w[cut - 1] <= 'z')) --cut;
-                if (cut == 0 || cut == w.size()) break;
+                cut = rasklad::word::lettersBeforeTail(w);
+                if (cut == 0) break; // no letters, or nothing after them to strip
                 // An exception that itself ends in a letter key the fallback strips
                 // ("пою" is typed gj.) is never corrected to a shorter word.
                 bool kept = false;

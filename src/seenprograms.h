@@ -5,6 +5,7 @@
 // Names only, in memory only: never saved, never logged, no text of any kind.
 #pragma once
 
+#include "configrules.h"
 #include "terminalapps.h"
 
 #include <algorithm>
@@ -15,17 +16,7 @@
 
 namespace rasklad {
 
-inline constexpr std::size_t kMaxSeenPrograms = 64; // same cap as the application list
-
-// Same character rules as the application list: [A-Za-z0-9._-], 1..128.
-inline bool programIdentifier(std::string_view id)
-{
-    if (id.empty() || id.size() > 128) return false;
-    for (const unsigned char c : id)
-        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-              c == '.' || c == '_' || c == '-')) return false;
-    return true;
-}
+inline constexpr std::size_t kMaxSeenPrograms = config::kMaxApps; // same cap as the application list
 
 // Keeps the most recently focused names, oldest first. Empty, invalid and
 // terminal names and the settings app itself are refused. A name seen again
@@ -34,7 +25,7 @@ inline bool programIdentifier(std::string_view id)
 // True if the list changed.
 inline bool rememberProgram(std::vector<std::string> &seen, std::string_view program)
 {
-    if (!programIdentifier(program) || terminalApp(program) || program == "rasklad-settings") return false;
+    if (!config::listableApp(program) || program == "rasklad-settings") return false;
     const auto it = std::find(seen.begin(), seen.end(), program);
     if (it != seen.end()) {
         if (it + 1 == seen.end()) return false;

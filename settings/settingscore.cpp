@@ -15,14 +15,9 @@ namespace rasklad::settings {
 
 bool validAppId(const QString &id)
 {
-    if (id.isEmpty() || id.size() > 128) return false;
-    for (const QChar c : id) {
-        const ushort u = c.unicode();
-        if (!((u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z') || (u >= '0' && u <= '9') || u == '.' ||
-              u == '_' || u == '-'))
-            return false;
-    }
-    return true;
+    const QByteArray latin = id.toLatin1(); // a non-Latin-1 character becomes '?', which is refused
+    return id.size() == latin.size() &&
+           rasklad::config::appIdentifier(std::string_view(latin.constData(), static_cast<std::size_t>(latin.size())));
 }
 
 bool isTerminal(const QString &id)
@@ -55,6 +50,20 @@ QString exceptionKey(const QString &word)
 }
 
 namespace {
+
+// A list as the UTF-8 the addon reads, for the shared rules in src/configrules.h.
+struct Utf8List {
+    std::vector<QByteArray> bytes;
+    std::vector<std::string_view> views;
+};
+Utf8List utf8Views(const QStringList &list)
+{
+    Utf8List out;
+    out.bytes.reserve(static_cast<std::size_t>(list.size()));
+    for (const QString &s : list) out.bytes.push_back(s.toUtf8());
+    for (const QByteArray &b : out.bytes) out.views.emplace_back(b.constData(), static_cast<std::size_t>(b.size()));
+    return out;
+}
 
 // A Fcitx list option: a map keyed "0", "1", … (kept in numeric order), or "" when
 // empty. nullopt for any other shape.
@@ -89,10 +98,9 @@ std::optional<AddonConfig> configFromMap(const QVariantMap &map)
     AddonConfig out;
     const auto apps = listFromValue(map.value(QStringLiteral("Applications")));
     if (!apps) return std::nullopt;
-    for (const QString &id : *apps) {
-        if (out.apps.size() == kMaxApps) break;
-        if (validAppId(id) && !isTerminal(id) && !out.apps.contains(id)) out.apps.append(id);
-    }
+    // The addon's rule (src/configrules.h) picks the entries: the window shows what the addon uses.
+    for (const std::size_t i : rasklad::config::keptApplications(utf8Views(*apps).views))
+        out.apps.append(apps->at(static_cast<qsizetype>(i)));
     out.sound = map.value(QStringLiteral("Sound"), QStringLiteral("True")).toString() != QLatin1String("False");
     out.wordOptions = map.contains(QStringLiteral("AutoCorrect"));
     if (out.wordOptions) {
@@ -101,15 +109,8 @@ std::optional<AddonConfig> configFromMap(const QVariantMap &map)
                                ? listFromValue(map.value(QStringLiteral("Exceptions")))
                                : std::optional<QStringList>(QStringList{});
         if (!words) return std::nullopt;
-        QStringList seen;
-        for (const QString &raw : *words) {
-            if (out.exceptions.size() == kMaxExceptions) break;
-            const QString word = normalizeException(raw);
-            const QString key = exceptionKey(word);
-            if (word.isEmpty() || seen.contains(key)) continue;
-            seen.append(key);
-            out.exceptions.append(word);
-        }
+        for (const std::size_t i : rasklad::config::keptExceptions(utf8Views(*words).views))
+            out.exceptions.append(words->at(static_cast<qsizetype>(i)).toLower()); // stored lowercase, as normalizeException
     }
     return out;
 }
