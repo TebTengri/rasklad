@@ -11,7 +11,7 @@ owner decides. Flipping it is one separate change: passports, the profile's
 
 ## Exact contents
 
-Package 0.5.17, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
+Package 0.5.18 (unchanged since 0.5.17), `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes). The
 hashes are of the profile the owner's packages are built from; any rebuilt
 profile must be compared again.
 
