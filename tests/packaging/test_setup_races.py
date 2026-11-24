@@ -113,16 +113,16 @@ class RecordThenCheck(Base):
 
 
 class FcitxGroup(Base):
-    def test_saved_group_without_any_keyboard_is_never_written(self):
+    def test_empty_saved_group_is_never_written(self):
         fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
         self.setup.fcitx = fake.bus
         state = self.setup.new_state()
-        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['pinyin', '']],
+        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [],
                           'after': [['keyboard-us', ''], ['keyboard-ru', '']], 'after_layout': 'us'}
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertFalse(self.setup.restore_fcitx(state))
         self.assertEqual(fake.calls, 0)
-        self.assertIn('no keyboard layout', out.getvalue())
+        self.assertIn('the saved group is empty', out.getvalue())
 
     def test_group_restored_after_new_hyprland_errors(self):
         # Fcitx had only us; install adds ru, then Hyprland reports a new error:
@@ -176,7 +176,25 @@ class GroupRollbackScope(Base):
         self.assertEqual(code, 1, out)
         self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
         saved = self.setup.load_state()['fcitx']
-        self.assertEqual(saved['before'], [['keyboard-us', '']])  # the earlier install's record stays
+        # The earlier install's record stays exactly as it was: us+de must not match
+        # its after, or --revert would remove de.
+        self.assertEqual(saved['before'], [['keyboard-us', '']])
+        self.assertEqual(saved['after'], [['keyboard-us', ''], ['keyboard-ru', '']])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertFalse(self.setup.restore_fcitx(self.setup.load_state()))
+        self.assertIn('changed since install', out.getvalue())
+        self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
+
+    def test_pinyin_only_group_reverts(self):
+        fake = FakeFcitx([('pinyin', ''), ('keyboard-us', ''), ('keyboard-ru', '')])
+        self.setup.fcitx = fake.bus
+        state = self.setup.new_state()
+        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['pinyin', '']],
+                          'after': [['pinyin', ''], ['keyboard-us', ''], ['keyboard-ru', '']],
+                          'after_layout': 'us'}
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(self.setup.restore_fcitx(state))
+        self.assertEqual(fake.items, [('pinyin', '')])
 
     def test_group_kept_while_an_earlier_block_keeps_us(self):
         # An earlier install's input.lua block still keeps Hyprland at us: removing
