@@ -1,12 +1,15 @@
 #!/usr/bin/python3 -I
 # SPDX-License-Identifier: MIT
 # Rasklad bar widget helper (SYS-251): one long-lived process that asks Fcitx for
-# the current input method every 250 ms and for Rasklad's read-only status every
-# 500 ms, in-process over D-Bus, and prints one JSON line only when either
-# changes: {"method": "keyboard-us", "correction": "on"}. Fcitx announces no
-# layout change on the bus, so this replaces the widget's own busctl polling
-# (2.5 processes a second) with a single process. Only the method name and two
-# booleans are read, never text. It exits when the widget stops reading.
+# the current input method and for Rasklad's read-only status, in-process over
+# D-Bus, and prints one JSON line only when either changes:
+# {"method": "keyboard-us", "correction": "on"}. Fcitx announces no layout change
+# on the bus, so the method is polled. SYS-272 (battery): the Fcitx owner comes
+# from NameOwnerChanged instead of a call per tick; the method is read every
+# 500 ms, every 250 ms for 3 s after any change; the status every 2 s. Rasklad's
+# own switches (rasklad-layout-toggle, rasklad-pause-toggle) send a Poke signal
+# that makes it read both at once. Only the method name and two booleans are
+# read, never text. It exits when the widget stops reading.
 import json
 import os
 import re
@@ -66,6 +69,10 @@ def correction(bus, owner, status):
   return "on" if auto else "paused"
 
 
+FAST_MS, SLOW_MS, FAST_FOR, STATUS_EVERY_MS = 250, 500, 12, 2000
+POKE_INTERFACE = "org.rasklad.Widget1"
+
+
 def main():
   # Optional addon name (the closed lab registers it as "raskladlab").
   addon = sys.argv[1] if len(sys.argv) == 2 else "rasklad"
@@ -74,36 +81,73 @@ def main():
   status = "fcitx://config/addon/%s/status" % addon
   bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
   loop = GLib.MainLoop()
-  state = {"owner": None, "correction": "", "tick": 0, "last": None}
+  # fast: ticks left at FAST_MS; status_due: monotonic ms of the next status read.
+  state = {"owner": owner_of(bus), "correction": "", "last": None, "fast": FAST_FOR,
+           "status_due": 0, "timer": 0, "status_now": True}
+
+  def now_ms():
+    return GLib.get_monotonic_time() // 1000
+
+  def schedule():
+    if state["timer"]:
+      GLib.source_remove(state["timer"])
+    state["timer"] = GLib.timeout_add(FAST_MS if state["fast"] > 0 else SLOW_MS, tick)
 
   def tick():
-    owner = owner_of(bus)
+    state["timer"] = 0
+    owner = state["owner"]
     method = current_method(bus, owner) if owner else ""
-    # Both values come from one Fcitx: a new owner invalidates the cached status.
-    if owner != state["owner"] or state["tick"] % 2 == 0 or not method:
+    if state["status_now"] or now_ms() >= state["status_due"] or not method:
       state["correction"] = correction(bus, owner, status) if method else ""
-    state["owner"] = owner
-    state["tick"] += 1
+      state["status_due"] = now_ms() + STATUS_EVERY_MS
+      state["status_now"] = False
     line = {"method": method, "correction": state["correction"]}
     if line != state["last"]:
       state["last"] = line
+      state["fast"] = FAST_FOR
       try:
         sys.stdout.write(json.dumps(line) + "\n")
         sys.stdout.flush()
       except (BrokenPipeError, OSError):
         loop.quit()
         return False
-    return True
+    elif state["fast"] > 0:
+      state["fast"] -= 1
+    schedule()
+    return False
+
+  def wake():
+    # Read both values now (a new Fcitx, or one of Rasklad's own switches).
+    state["status_now"] = True
+    state["fast"] = FAST_FOR
+    if state["timer"]:
+      GLib.source_remove(state["timer"])
+      state["timer"] = 0
+    tick()
+
+  def owner_changed(_conn, _sender, _path, _iface, _signal, params):
+    name, _old, new = params.unpack()
+    if name == BUS:
+      # Both values come from one Fcitx: a new owner invalidates the cached status.
+      state["owner"] = new
+      wake()
+
+  def poked(*_):
+    wake()
 
   def reader_gone(*_):
     loop.quit()
     return False
 
+  bus.signal_subscribe("org.freedesktop.DBus", "org.freedesktop.DBus", "NameOwnerChanged",
+                       "/org/freedesktop/DBus", BUS, Gio.DBusSignalFlags.NONE, owner_changed)
+  bus.signal_subscribe(None, POKE_INTERFACE, "Poke", "/org/rasklad/Widget", None,
+                       Gio.DBusSignalFlags.NONE, poked)
   # Stop as soon as the widget closes its end, even while nothing changes.
   GLib.io_add_watch(sys.stdout.fileno(), GLib.PRIORITY_DEFAULT, GLib.IO_ERR | GLib.IO_HUP, reader_gone)
-  if not tick():
+  tick()
+  if not state["timer"]:
     return
-  GLib.timeout_add(250, tick)
   try:
     loop.run()
   except KeyboardInterrupt:

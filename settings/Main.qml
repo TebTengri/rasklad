@@ -597,6 +597,8 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     // ---- Applications
                     Hint { text: qsTr("Rasklad works only in the applications switched on here. Terminals are not supported.") }
+                    // SYS-272: a browser is one application for Fcitx, whatever the page.
+                    Hint { text: qsTr("In a browser Rasklad works in every tab. It skips password fields, but cannot tell a terminal or code editor running in a web page: pause it there with a middle click on the bar icon.") }
 
                     TextField {
                         id: filter

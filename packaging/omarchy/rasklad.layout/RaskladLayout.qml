@@ -51,7 +51,7 @@ BarWidget {
   // below starts it again within 2 s.
   Process {
     id: watch
-    command: ["rasklad-layout-watch"]
+    command: ["/usr/bin/rasklad-layout-watch"]
     running: true
     stdout: SplitParser {
       onRead: data => root.applyWatch(data)
@@ -67,14 +67,14 @@ BarWidget {
 
   Process {
     id: toggle
-    command: ["rasklad-layout-toggle"]
+    command: ["/usr/bin/rasklad-layout-toggle"]
   }
 
   // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
   // the same Fcitx instance. The widget shows only what the watcher reports.
   Process {
     id: pause
-    command: ["rasklad-pause-toggle"]
+    command: ["/usr/bin/rasklad-pause-toggle"]
   }
 
   visible: label !== ""
@@ -97,7 +97,7 @@ BarWidget {
     onTooltipTextChanged: if (tooltipHovered && root.bar) root.bar.showTooltip(button, tooltipText)
     onPressed: function(pressedButton) {
       if (pressedButton === Qt.RightButton) {
-        Util.execArgv(["rasklad-settings"])
+        Util.execArgv(["/usr/bin/rasklad-settings"])
       } else if (pressedButton === Qt.MiddleButton) {
         if (!pause.running) pause.running = true
       } else if (pressedButton === Qt.LeftButton && !toggle.running) {
