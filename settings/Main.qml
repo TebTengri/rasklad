@@ -907,6 +907,7 @@ ApplicationWindow {
         padding: 18
         property Item returnTo: null
         property string key: "rasklad"
+        onAboutToShow: licensesFlick.contentY = 0 // reopen at the top, Close in view
         onOpened: licensesClose.forceActiveFocus()
         // The row may have gone or been hidden meanwhile: then the usual recovery.
         onClosed: if (returnTo && returnTo.visible && returnTo.enabled) returnTo.forceActiveFocus(); else window.restoreFocus()
@@ -916,6 +917,7 @@ ApplicationWindow {
             border.color: window.tint(0.4)
         }
         contentItem: Flickable {
+            id: licensesFlick
             // The whole page scrolls, so it fits the smallest window too.
             contentHeight: licensesBody.implicitHeight
             boundsBehavior: Flickable.StopAtBounds
