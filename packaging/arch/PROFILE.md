@@ -22,7 +22,8 @@ tools/build_arch_package.sh "/путь/к/профилю"
 | `build/experiment-data/en.dic`, `ru.dic` | LibreOffice dictionaries, коммит `c0865a85eb67`; адреса и хеши — в [data/sources.json](../../data/sources.json) |
 | `build/experiment-003-data/en.aff`, `ru.aff` | тот же коммит; адреса и хеши — в [data/morphology-003-sources.json](../../data/morphology-003-sources.json), закрепления продукта — в [data/product-profile-sources.json](../../data/product-profile-sources.json) |
 | `build/experiment-003-data/control/en.aff`, `ru.aff` | получаются из `.aff` (шаг 2), затем получают пометку об изменении (шаг 5) |
-| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp`, `artifact-metadata.json` | создаются стендом опыта 002 (шаг 3), затем получают уведомления внутри файла (шаг 5) |
+| `build/experiment-002-artifacts/detector-model.rskn`, `exact-full-lexicons.rskp` | создаются стендом опыта 002 (шаг 3), затем получают уведомления внутри файла (шаг 5) |
+| `build/experiment-002-artifacts/artifact-metadata.json` | создаётся стендом опыта 002 (шаг 3); на шаге 5 в нём обновляются размеры, хеши и формат модели и списка слов |
 | `build/experiment-002-artifacts/en_US.NOTICE.txt`, `ru_RU.NOTICE.txt` | байт в байт копии `data/notices/en_US.README.txt` и `ru_RU.README.txt` |
 | `build/experiment-002-artifacts/MODIFICATIONS.txt` | пометка о локальных изменениях (шаг 4) |
 
@@ -33,6 +34,8 @@ tools/build_arch_package.sh "/путь/к/профилю"
 - контрольные `.aff` — что это исходный `.aff` без строк PFX/SFX с заголовком-пометкой
   Rasklad в начале;
 - модель и словарь стеблей — что в начале файла есть уведомления (контейнер RSKX);
+- сборщик пакета и `check()` в PKGBUILD до этого сверяют профиль с теми же закреплениями
+  (`tools/check_profile_pins.py`): старый или изменённый профиль в пакет не попадёт;
 - копии уведомлений — по SHA-256 оригиналов из `data/notices/`;
 - `artifact-metadata.json` — по полям;
 - `MODIFICATIONS.txt` — UTF-8, не пустой, содержит `release_approved=false`.

@@ -154,7 +154,8 @@ struct ProfilePins {
 // SYS-256: the model and the word list carry the dictionary notices inside the file:
 // "RSKX", notice length (uint32, little endian), the UTF-8 notice, then the unchanged
 // RSKN/RSKP payload. Unwrap rejects another magic, an empty or oversized notice, a
-// notice that is not strict UTF-8 and an empty payload.
+// notice that is not strict UTF-8 and an empty payload; wrap returns an empty array
+// for input unwrap would reject.
 [[nodiscard]] QByteArray wrapNoticeContainer(const QByteArray &notice, const QByteArray &payload);
 [[nodiscard]] bool unwrapNoticeContainer(const QByteArray &file, QByteArray &notice, QByteArray &payload);
 

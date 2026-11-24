@@ -51,9 +51,8 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def embedded_notice(what):
-    en = (ROOT / 'data/notices/en_US.README.txt').read_bytes()
-    ru = (ROOT / 'data/notices/ru_RU.README.txt').read_bytes()
+def embedded_notice(what, en, ru):
+    """en and ru are the verified notice bytes of the source profile."""
     head = (
         f'Rasklad {what}: data derived from the en_US and ru_RU Hunspell dictionaries\n'
         'of LibreOffice/dictionaries commit c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb.\n'
@@ -76,13 +75,15 @@ def wrap(notice, payload):
 def build_profile(data):
     """Returns the release profile (relative path -> bytes) for the reviewed one."""
     data = dict(data)
+    en = data['build/experiment-002-artifacts/en_US.NOTICE.txt']
+    ru = data['build/experiment-002-artifacts/ru_RU.NOTICE.txt']
     for lang in ('en', 'ru'):
         rel = f'build/experiment-003-data/control/{lang}.aff'
         data[rel] = CONTROL_AFF_HEADER + data[rel]
     model_rel = 'build/experiment-002-artifacts/detector-model.rskn'
     stem_rel = 'build/experiment-002-artifacts/exact-full-lexicons.rskp'
-    data[model_rel] = wrap(embedded_notice('detector model'), data[model_rel])
-    data[stem_rel] = wrap(embedded_notice('word list'), data[stem_rel])
+    data[model_rel] = wrap(embedded_notice('detector model', en, ru), data[model_rel])
+    data[stem_rel] = wrap(embedded_notice('word list', en, ru), data[stem_rel])
 
     meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
     meta = json.loads(data[meta_rel])

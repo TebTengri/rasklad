@@ -38,8 +38,10 @@ Files and whether they are modified (paths under
   build/experiment-002-artifacts/               DERIVED by Rasklad from the two
     detector-model.rskn, exact-full-lexicons.rskp  dictionaries (model weights
                                                 and a word list); not upstream
-                                                files; each file begins with the
+                                                files; each file contains the
                                                 full en_US and ru_RU notices
+                                                (after a short header, before
+                                                the data)
   build/experiment-002-artifacts/en_US.NOTICE.txt, ru_RU.NOTICE.txt
                                                 unmodified copies of the notices
 

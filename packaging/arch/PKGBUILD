@@ -41,6 +41,8 @@ check() {
   QT_QPA_PLATFORM=offscreen ./build/desktopindex-tests/desktopindex_tests
   ./build/core/product_core_tests
   ./build/gesture/manual_gesture_tests
+  # SYS-256: the staged profile matches the production pins and carries its marks.
+  python3 -I tools/check_profile_pins.py "${srcdir}/profile"
   # The addon must not read the environment, load code, log, write files, or use D-Bus,
   # the network or processes (libc names, then Qt classes, which nm shows mangled).
   # Reading the pinned profile with QFile is expected; writing through Qt is not.

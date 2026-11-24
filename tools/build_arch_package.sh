@@ -27,7 +27,7 @@ find "$out" -mindepth 1 -delete
 git -C "$root" archive --format=tar.gz --prefix="rasklad-${ver}/" -o "$out/rasklad-${ver}.tar.gz" HEAD
 sum=$(sha256sum "$out/rasklad-${ver}.tar.gz" | cut -d' ' -f1)
 # Profile tarball: data/ files from the archived commit, build/ files from PROFILE_ROOT.
-# Every file is checked against its pin when the addon loads it, and in check().
+# Every file is checked against its pin here, in check(), and when the addon loads it.
 stage=$(mktemp -d "$out/profile.XXXXXX")
 while IFS= read -r rel; do
   [[ -z $rel || $rel == \#* ]] && continue
@@ -41,6 +41,8 @@ while IFS= read -r rel; do
   install -Dm644 "$stage/tmp" "$stage/profile/$rel"
 done < "$root/packaging/arch/profile-files.txt"
 rm "$stage/tmp"
+# SYS-256: never package a profile the addon would refuse (old, unmarked or altered).
+python3 -I "$root/tools/check_profile_pins.py" "$stage/profile" || { echo 'profile does not match the production pins' >&2; exit 1; }
 tar --sort=name --owner=0 --group=0 --numeric-owner --mtime=@"$(git -C "$root" log -1 --format=%ct)" \
   -C "$stage" -czf "$out/rasklad-profile-${ver}.tar.gz" profile
 find "$stage" -mindepth 1 -delete && rmdir "$stage"

@@ -409,6 +409,9 @@ bool removePfxSfxRows(const QByteArray &source, QByteArray &out)
 
 QByteArray wrapNoticeContainer(const QByteArray &notice, const QByteArray &payload)
 {
+    if (notice.isEmpty() || qint64(notice.size()) > kMaxEmbeddedNoticeBytes || !isStrictUtf8(notice)
+        || notice.contains('\0') || payload.isEmpty())
+        return {};
     QByteArray out("RSKX");
     const quint32 n = quint32(notice.size());
     for (int i = 0; i < 4; ++i)

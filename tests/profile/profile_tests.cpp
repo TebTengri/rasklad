@@ -137,10 +137,26 @@ private Q_SLOTS:
         QCOMPARE(notice, QString::fromUtf8("Лебедев\n").toUtf8());
         QCOMPARE(payload, QByteArray("RSKN-payload"));
         QVERIFY(!unwrapNoticeContainer(QByteArray("RSKN-payload"), notice, payload)); // unwrapped file
-        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer(QByteArray(), "p"), notice, payload)); // empty notice
-        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer("n", QByteArray()), notice, payload)); // no payload
-        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer("\xff\xfe", "p"), notice, payload)); // not UTF-8
-        QVERIFY(!unwrapNoticeContainer(wrapNoticeContainer(QByteArray(profile::kMaxEmbeddedNoticeBytes + 1, 'n'), "p"),
+        // The writer refuses what the reader would reject.
+        QVERIFY(wrapNoticeContainer(QByteArray(), "p").isEmpty());
+        QVERIFY(wrapNoticeContainer("n", QByteArray()).isEmpty());
+        QVERIFY(wrapNoticeContainer("\xff\xfe", "p").isEmpty());
+        QVERIFY(wrapNoticeContainer(QByteArray("a\0b", 3), "p").isEmpty());
+        QVERIFY(wrapNoticeContainer(QByteArray(profile::kMaxEmbeddedNoticeBytes + 1, 'n'), "p").isEmpty());
+        QVERIFY(!wrapNoticeContainer(QByteArray(profile::kMaxEmbeddedNoticeBytes, 'n'), "p").isEmpty());
+        // Hand-made containers the reader rejects.
+        auto raw = [](const QByteArray &magic, quint32 n, const QByteArray &rest) {
+            QByteArray b = magic;
+            for (int i = 0; i < 4; ++i)
+                b.append(char((n >> (8 * i)) & 0xff));
+            return b + rest;
+        };
+        QVERIFY(!unwrapNoticeContainer(raw("RSKX", 0, "p"), notice, payload));         // empty notice
+        QVERIFY(!unwrapNoticeContainer(raw("RSKX", 1, "n"), notice, payload));         // no payload
+        QVERIFY(!unwrapNoticeContainer(raw("RSKX", 2, "\xff\xfep"), notice, payload)); // not UTF-8
+        QVERIFY(!unwrapNoticeContainer(raw("RSKY", 1, "np"), notice, payload));        // another magic
+        QVERIFY(!unwrapNoticeContainer(raw("RSKX", quint32(profile::kMaxEmbeddedNoticeBytes + 1),
+                                           QByteArray(profile::kMaxEmbeddedNoticeBytes + 2, 'n')),
                                        notice, payload)); // too large
         QByteArray truncated = wrapNoticeContainer("notice", "p");
         truncated.chop(2); // the length now points past the end

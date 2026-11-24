@@ -63,11 +63,6 @@ the owner to accept or not.
 
 - Qt, Fcitx 5 and Hunspell are not shipped: the package depends on the Arch
   packages and links dynamically. Their notices come with those packages.
-- The modified control `.aff` files are not changed byte-wise to add a header: that
-  would change the pinned hashes. They are marked by the adjacent `MODIFIED.txt`
-  and `DATA-NOTICE.txt`. Whether an adjacent marker is enough is part of the
-  owner's decision; the alternative is a header line in each control `.aff` plus
-  new pins and a rebuilt profile.
 - Personal names and census provenance in the en_US word lists (see the README):
   the package is not advertised as anonymized data.
 - Additional languages: each needs its own review.
