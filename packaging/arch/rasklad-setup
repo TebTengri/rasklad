@@ -174,14 +174,7 @@ def save_and_drop(state):
   # Restored files' private copies are deleted only after the state without
   # their entries is on disk, so an interruption never strands an entry.
   drop = state.pop("_drop", [])
-  keep = state.pop("_keep", [])
   save_state(state)
-  for src, dst in keep:
-    if src in {backup_path(f) for f in FILES} and os.path.dirname(dst) == BACKUP_DIR:
-      try:
-        os.replace(src, dst)
-      except FileNotFoundError:
-        pass
   for backup in drop:
     if backup not in {backup_path(f) for f in FILES}:
       continue  # only this tool's own copies of its own files
@@ -541,15 +534,20 @@ def ours_in(path, data):
 def forget_entry(state, path):
   """Drop a file's entry. Its private copy goes only if the .rasklad.bak beside
   the file is ours and the same; otherwise it is the only copy of the file from
-  before install and is kept, renamed, once the state without the entry is
-  saved (save_and_drop). Returns where the old copy is."""
+  before install and is kept as *.before-reset, written before the state forgets
+  it. Returns where the old copy is."""
   entry = state["files"].pop(path)
   if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
      read(entry["bak"]) == read(entry["backup"]):
     state.setdefault("_drop", []).append(entry["backup"])
     return entry["bak"]
-  kept = "%s.%s.before-reset" % (entry["backup"], sha(read(entry["backup"]) or b"")[:12])
-  state.setdefault("_keep", []).append([entry["backup"], kept])
+  data = read(entry["backup"])
+  if data is None:
+    return entry["bak"]  # nothing left to keep
+  # Copied first, so no moment exists where the only copy is untracked.
+  kept = "%s.%s.before-reset" % (entry["backup"], sha(data)[:12])
+  write_atomic(kept, data, 0o600)
+  state.setdefault("_drop", []).append(entry["backup"])
   return kept
 
 
@@ -779,8 +777,12 @@ def restore(state, path):
 
 
 def hypr_reloaded():
+  """hyprctl reload answers ok even when a config error leaves the previous
+  config in force, so the reload counts only with no config errors after it."""
   done = run([HYPRCTL, "reload"])
-  return bool(done and done.returncode == 0)
+  if not (done and done.returncode == 0):
+    return False
+  return hypr_errors() == []
 
 
 def hypr_layouts_back(state):
@@ -813,10 +815,15 @@ def shell_uses_widget():
     return False  # a dangling link: nothing names the widget
   except OSError:
     return True
+  try:
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+      os.close(fd)
+      return True
+  except OSError:
+    os.close(fd)
+    return True
   with os.fdopen(fd, "rb") as f:
     try:
-      if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):
-        return True
       return names_widget(f.read())
     except OSError:
       return True
@@ -834,7 +841,10 @@ def input_block_present():
       return False
     with os.fdopen(fd, "rb") as f:
       fd = None
-      return BEGIN.encode() in f.read()
+      data = f.read()
+    # Any trace of it: the BEGIN comment alone may have been taken out while the
+    # override below it still runs.
+    return any(t in data for t in (BEGIN.encode(), LAYOUT_MARK.encode(), b"rasklad_package"))
   except OSError:
     return False
   finally:
@@ -886,7 +896,8 @@ def revert():
     state.pop("await_hypr", None)
   if input_kept and block_gone:
     clean = False
-    say("kept", "rasklad-controls", "our block is gone from input.lua; run --revert again inside the Hyprland session")
+    say("kept", "rasklad-controls",
+        "our block is gone from input.lua; run --revert again inside the Hyprland session, with no config errors")
   elif input_kept:
     clean = False
     say("kept", "rasklad-controls", "input.lua edited; remove the rasklad-setup block from it and run --revert again")

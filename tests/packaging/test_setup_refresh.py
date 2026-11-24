@@ -147,6 +147,25 @@ class Refresh(Base):
         self.assertIn('inside the Hyprland session', out)
         self.assertNotIn('remove the rasklad-setup block', out)
 
+    def test_override_without_its_begin_line_still_counts(self):
+        self.hypr('ru,us', variant=',')
+        status, new = self.setup.input_plan(b'-- user file\n')
+        self.input.write_bytes(new.replace(self.setup.BEGIN.encode(), b'-- (edited)'))
+        self.assertTrue(self.setup.input_block_present())
+
+    def test_reload_with_config_errors_does_not_count(self):
+        self.setup = load_setup(self.tmp.name)
+        self.setup.run = lambda argv, timeout=5: type('Done', (), {'returncode': 0})()
+        self.setup.hypr_errors = lambda: ['input.lua:3: syntax error']
+        self.assertFalse(self.setup.hypr_reloaded())
+        self.setup.hypr_errors = lambda: []
+        self.assertTrue(self.setup.hypr_reloaded())
+
+    def test_shell_json_directory_counts_as_in_use(self):
+        self.shell.unlink()
+        self.shell.mkdir()
+        self.assertTrue(self.setup.shell_uses_widget())
+
     def test_input_block_is_off_without_the_package(self):
         self.hypr('ru,us', variant=',')
         status, new = self.setup.input_plan(b'-- user file\n')
