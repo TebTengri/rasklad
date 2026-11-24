@@ -128,7 +128,8 @@ with open(bindings, "rb") as f:
 tool("--revert")
 required = ["checkMissingFirst", "installOk", "checkCleanAfter", "groupHasBoth", "luaValid",
             "secondInstallNoChange", "bakBeside", "revertOk", "revertByteExact", "groupRestored",
-            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone", "returnEndingLeftAlone"]
+            "stateRemoved", "secondRevertNoop", "symlinkLeftAlone", "returnEndingLeftAlone",
+            "layoutsKeptByDefault", "layoutsKeptRevert"]  # SYS-268
 report["checks"] = len(required)
 report["passed"] = all(report[k] is True for k in required)
 print(json.dumps(report, sort_keys=True))

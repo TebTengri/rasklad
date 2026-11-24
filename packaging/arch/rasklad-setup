@@ -34,6 +34,8 @@ WIDGET = SHARE + "/omarchy/rasklad.layout"
 HYPRCTL = "/usr/bin/hyprctl"
 BEGIN = "-- BEGIN rasklad-setup"
 END = "-- END rasklad-setup"
+# SYS-268: in every input.lua block this version writes (us kept, by choice).
+LAYOUT_MARK = "-- rasklad-setup layout 2: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
@@ -307,13 +309,11 @@ def input_plan(data=None):
   if data is None:
     data = read(INPUT)
   if BEGIN.encode() in data:
-    # Decided by the file, not by what Hyprland has loaded. A block from before
-    # SYS-268 may keep a layout other than us (ru,us kept ru only).
+    # Decided by the file, not by what Hyprland has loaded. A block written
+    # before SYS-268 has no mark: it may have kept ru alone (from ru,us) or
+    # dropped a layout such as kz, so it is reported for a revert and reinstall.
     block = data[data.index(BEGIN.encode()):]
-    found = re.search(rb'kb_layout\s*=\s*"([^"]*)"', block)
-    if found and found.group(1) != b"us":
-      return "legacy", None
-    return "ok", None
+    return ("ok", None) if LAYOUT_MARK.encode() in block else ("legacy", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
   if layout is None or options is None or variant is None:
     return "unknown", None
@@ -334,6 +334,7 @@ def input_plan(data=None):
     raise Refused("unexpected characters in the Hyprland keyboard options")
   block = ("\n%s: Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland\n"
            "-- keeps one layout and no group toggle. Remove with rasklad-setup --revert.\n"
+           + LAYOUT_MARK + "\n"
            "hl.config({\n  input = {\n    kb_layout = \"%s\",\n    kb_variant = \"%s\",\n"
            "    kb_options = \"%s\",\n  },\n})\n%s\n") % ((BEGIN,) + values + (END,))
   new = append_block(data, block)
@@ -412,12 +413,14 @@ def check():
   report(bindings_plan()[0], "double-alt")
   state = input_plan()[0]
   if state == "unknown":
-    say("unknown", "hyprland-layout", "Hyprland not running")
+    say("unknown", "hyprland-layout", "Hyprland not running or its keyboard options not readable")
   elif state == "missing":
     # SYS-268: a choice, not a fault. Hyprland keeps its layouts and switch.
     say("optional", "hyprland-layout", "Hyprland keeps its layouts; --install --single-layout leaves only us")
+  elif state == "lua-error":
+    say("optional", "hyprland-layout", "Hyprland keeps its layouts; input.lua would not compile with the block")
   elif state == "other-layouts":
-    say("other-layouts", "hyprland-layout", "layouts other than us and ru; Hyprland keeps them")
+    say("other-layouts", "hyprland-layout", "the layouts are not exactly us and ru; Hyprland keeps them")
   elif state == "legacy":
     report("legacy", "hyprland-layout", "an older block keeps a layout other than us: run --revert, then --install")
   else:
@@ -474,7 +477,7 @@ def install(assume_yes, single_layout=False):
       say("unknown", os.path.basename(path), "Hyprland not running; skipped")
     elif status == "other-layouts":
       say("other-layouts", os.path.basename(path),
-          "layouts other than us and ru: Hyprland keeps its layouts and switch; left as is")
+          "the layouts are not exactly us and ru: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path),
           "an older block keeps a layout other than us: run --revert, then --install")
@@ -523,7 +526,7 @@ def install(assume_yes, single_layout=False):
         say("skipped", os.path.basename(path), "Hyprland keeps its layouts; pass --single-layout to keep only us")
         layout_change = []
     elif not sys.stdin.isatty():
-      raise Refused("not a terminal: pass --yes to apply")
+      raise Refused("not a terminal: pass --yes --single-layout to keep only us")
     elif input("Keep only the us layout in Hyprland? [y/N] ").strip().lower() not in ("y", "yes"):
       say("skipped", os.path.basename(path), "Hyprland keeps its layouts")
       layout_change = []
@@ -634,13 +637,23 @@ def revert():
   state = load_state()
   clean = True
   restored_hypr = False
-  input_kept = False
-  for path in list(state["files"]):
-    done = restore(state, path)
-    clean = done and clean
-    restored_hypr = restored_hypr or (done and path in (BINDINGS, INPUT))
-    input_kept = input_kept or (not done and path == INPUT)
-  if state.get("link"):
+  # SYS-268: input.lua first. While it still keeps one Hyprland layout, the
+  # double Alt rule, the bar widget and Fcitx's layouts are the only ways to
+  # switch, so they all stay until a later --revert restores it.
+  had_input = INPUT in state["files"]
+  input_kept = had_input and not restore(state, INPUT)
+  restored_hypr = had_input and not input_kept
+  if input_kept:
+    clean = False
+    say("kept", "rasklad-controls", "input.lua not restored; double Alt, bar widget and Fcitx layouts kept")
+  else:
+    for path in list(state["files"]):
+      done = restore(state, path)
+      clean = done and clean
+      restored_hypr = restored_hypr or (done and path == BINDINGS)
+  if input_kept:
+    pass
+  elif state.get("link"):
     if os.path.islink(PLUGIN_LINK) and os.readlink(PLUGIN_LINK) == WIDGET:
       os.unlink(PLUGIN_LINK)
       say("removed", "bar-widget-link")

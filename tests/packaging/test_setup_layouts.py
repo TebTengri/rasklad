@@ -118,10 +118,13 @@ class Plan(Base):
         self.assertEqual(self.setup.input_plan(b'')[0], 'unknown')
 
     def test_block_from_before_sys268_is_legacy(self):
-        old = b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "ru"}})\n'
-        self.assertEqual(self.setup.input_plan(old)[0], 'legacy')
-        ours = b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "us"}})\n'
-        self.assertEqual(self.setup.input_plan(ours)[0], 'ok')
+        # Unmarked blocks: ru kept from ru,us, or us kept from us,ru,kz.
+        for layout in (b'ru', b'us'):
+            old = b'-- user\n' + self.setup.BEGIN.encode() + b'\nhl.config({input={kb_layout = "' + layout + b'"}})\n'
+            self.assertEqual(self.setup.input_plan(old)[0], 'legacy', layout)
+        status, new = self.plan('ru,us', variant=',')
+        self.assertIn(self.setup.LAYOUT_MARK.encode(), new)
+        self.assertEqual(self.setup.input_plan(new)[0], 'ok')
 
 
 class Install(Base):
@@ -154,6 +157,24 @@ class Install(Base):
         code, out = self.install(None, single_layout=True)
         self.assertIn('until Fcitx runs', out)
         self.assertEqual(self.input.read_bytes(), b'-- user file\n')
+
+    def test_failed_input_revert_keeps_every_control(self):
+        # Installed with --single-layout, then input.lua edited by hand.
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.write_bytes(self.input.read_bytes() + b'-- edited\n')
+        state = self.setup.load_state()
+        state['link'] = self.setup.WIDGET
+        self.setup.save_state(state)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertIn('rasklad-controls', out.getvalue())
+        self.assertEqual(fake.calls, 1)  # Fcitx's layouts not taken back
+        state = self.setup.load_state()
+        self.assertIn(self.setup.INPUT, state['files'])
+        self.assertEqual(state['link'], self.setup.WIDGET)
 
     def test_usage_rejects_single_layout_elsewhere(self):
         with contextlib.redirect_stderr(io.StringIO()):
