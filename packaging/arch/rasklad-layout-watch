@@ -82,7 +82,7 @@ def main():
   bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
   loop = GLib.MainLoop()
   # fast: ticks left at FAST_MS; status_due: monotonic ms of the next status read.
-  state = {"owner": owner_of(bus), "correction": "", "last": None, "fast": FAST_FOR,
+  state = {"owner": "", "correction": "", "last": None, "fast": FAST_FOR,
            "status_due": 0, "timer": 0, "status_now": True}
 
   def now_ms():
@@ -95,6 +95,9 @@ def main():
 
   def tick():
     state["timer"] = 0
+    if not state["owner"]:
+      # Also covers a Fcitx that appeared before the subscription took effect.
+      state["owner"] = owner_of(bus)
     owner = state["owner"]
     method = current_method(bus, owner) if owner else ""
     if state["status_now"] or now_ms() >= state["status_due"] or not method:
@@ -145,6 +148,8 @@ def main():
                        Gio.DBusSignalFlags.NONE, poked)
   # Stop as soon as the widget closes its end, even while nothing changes.
   GLib.io_add_watch(sys.stdout.fileno(), GLib.PRIORITY_DEFAULT, GLib.IO_ERR | GLib.IO_HUP, reader_gone)
+  # Subscribed first, then the owner is looked up (in tick): a change in between
+  # arrives as a queued NameOwnerChanged.
   tick()
   if not state["timer"]:
     return
