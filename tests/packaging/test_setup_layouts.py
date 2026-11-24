@@ -343,6 +343,27 @@ class Install(Base):
         self.hypr('us', options='grp:alts_toggle')
         self.assertTrue(self.setup.hypr_layouts_back({'hypr_layout': 'us'}))  # what they had
 
+    def test_state_from_before_hypr_layout_still_reverts(self):
+        self.setup.run = lambda argv, timeout=5: mock.Mock(returncode=0)
+        self.hypr('us', options='compose:caps,grp:alts_toggle')  # what they had: us and a toggle
+        self.assertTrue(self.setup.hypr_layouts_back({}))
+        self.hypr('us', options='compose:caps')  # still our one-layout block
+        self.assertFalse(self.setup.hypr_layouts_back({}))
+
+    def test_recorded_layout_ignores_whitespace(self):
+        self.hypr('ru,\tus', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.install(fake, single_layout=True)
+        self.assertEqual(self.setup.load_state()['hypr_layout'], 'ru,us')
+
+    def test_revert_without_input_entry_ignores_odd_input_path(self):
+        state = self.setup.load_state()
+        self.setup.save_state(state)
+        self.input.unlink()
+        self.input.mkdir()  # a directory where input.lua would be
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 0)
+
     def test_block_removed_without_hyprland_keeps_the_controls(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
