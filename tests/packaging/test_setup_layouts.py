@@ -337,6 +337,18 @@ class Install(Base):
             self.assertEqual(self.setup.revert(), 1)
         self.assertRegex(out.getvalue(), r'untracked\s+input\.lua')
         self.assertIn('keyboard-ru', [name for name, _ in fake2.items])
+        # The block removed by hand while Hyprland still runs on us: the retry
+        # waits for Hyprland's own layouts; keyboard-ru stays.
+        self.input.write_bytes(b'-- user file\n')
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda state: False
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertIn('keyboard-ru', [name for name, _ in fake2.items])
+        # A comment about Rasklad alone is not a block of ours.
+        self.assertFalse(self.setup.layout_block_in_input())
+        self.input.write_bytes(b'-- I use Rasklad for corrections\n')
+        self.assertFalse(self.setup.layout_block_in_input())
 
     def test_check_reports_rasklad_off(self):
         # Owner decision 2026-11-25: the addon is off until turned on in the window;

@@ -1314,6 +1314,19 @@ def shell_uses_widget():
       return True
 
 
+def layout_block_in_input():
+  """SYS-272: input.lua holds a layout block of ours: its BEGIN or layout mark,
+  or its rasklad_package code. A user's comment that mentions Rasklad is not one."""
+  try:
+    data = read(os.path.realpath(INPUT))
+  except OSError:
+    return False
+  if data is None:
+    return False
+  return BEGIN.encode() in data or b"rasklad-setup layout" in data or \
+    ("name", b"rasklad_package") in lua_tokens(data)
+
+
 def input_block_present():
   # Opened without blocking and checked on the open file: a path swapped for a
   # FIFO in between cannot stall revert.
@@ -1489,7 +1502,8 @@ def revert():
     input_kept, input_left = False, True
     copy = forget_entry(state, INPUT)
     say("reset", os.path.basename(INPUT), "our block is gone; left as is (old copy: %s)" % copy)
-  if not had_input and input_block_present():
+  untracked_block = not had_input and layout_block_in_input()
+  if untracked_block:
     # SYS-272: our layout block without an entry (the record was lost and a
     # later --install made a new one): Hyprland still keeps one layout, so every
     # control stays, Fcitx's layouts included, until the block is removed.
@@ -1506,6 +1520,10 @@ def revert():
       save_and_drop(state)
       return 1
     state.pop("await_hypr", None)
+  if untracked_block:
+    # The next run, once the block is removed, waits for Hyprland to show the
+    # user's layouts again before the controls go (as after a restore).
+    state["await_hypr"] = True
   if input_kept and block_gone:
     clean = False
     say("kept", "rasklad-controls",
