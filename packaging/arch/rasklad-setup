@@ -747,6 +747,10 @@ def names_widget(data):
 LONG_OPEN = re.compile(rb"\[(=*)\[")
 NAME = re.compile(rb"[A-Za-z_][A-Za-z0-9_]*")
 SYMBOLS = (b"...", b"..", b"==", b"~=", b"<=", b">=", b"//", b"::", b"<<", b">>")
+# Operators that bind tighter than .. (arithmetic, unary, power, and a call,
+# index or method on a string): a string next to one is not folded.
+TIGHTER_LEFT = {("sym", s) for s in (b"+", b"-", b"*", b"/", b"//", b"%", b"^", b"#", b"~")} | {("name", b"not")}
+TIGHTER_RIGHT = {("sym", s) for s in (b"+", b"-", b"*", b"/", b"//", b"%", b"^", b":", b"[", b"(", b".")}
 ESCAPES = {b"a": b"\a", b"b": b"\b", b"f": b"\f", b"n": b"\n", b"r": b"\r", b"t": b"\t", b"v": b"\v"}
 
 
@@ -756,6 +760,7 @@ def lua_tokens(data):
   joined by .. are one string, so a constant split path is still seen. Lua is
   never evaluated: this only reads the text."""
   out, i, n = [], 0, len(data)
+  bad = False
 
   def long_bracket(at):
     # [[ or [=*[ at `at`: (body, index past the close), or None. Unclosed: to the end.
@@ -771,6 +776,10 @@ def lua_tokens(data):
       body = body[1:]
     return body, n if end == -1 else end + len(close)
 
+  # Lua skips a first line starting with # (a shebang) when it loads a file.
+  if data.startswith(b"#"):
+    ends = [e for e in (data.find(b"\n"), data.find(b"\r")) if e != -1]
+    i = min(ends) if ends else n
   while i < n:
     c = data[i:i + 1]
     if c in b" \t\r\n\v\f":
@@ -806,12 +815,18 @@ def lua_tokens(data):
           m = re.match(rb"[0-9]{1,3}", data[j + 1:j + 4])
           value.append(int(m.group(0)) & 0xFF)
           j += 1 + len(m.group(0))
-        elif e == b"u" and re.match(rb"\{[0-9A-Fa-f]{1,8}\}", data[j + 2:j + 12]):
-          m = re.match(rb"\{([0-9A-Fa-f]{1,8})\}", data[j + 2:j + 12])
-          value += chr(min(int(m.group(1), 16), 0x10FFFF)).encode("utf-8", "surrogatepass")
+        elif e == b"u" and re.match(rb"\{[0-9A-Fa-f]+\}", data[j + 2:]):
+          m = re.match(rb"\{([0-9A-Fa-f]+)\}", data[j + 2:])
+          code = int(m.group(1), 16)
+          value += chr(code).encode("utf-8", "surrogatepass") if code <= 0x10FFFF else b"?"
           j += 2 + len(m.group(0))
-        else:
+        elif e in ESCAPES or e in (b"\\", b'"', b"'"):
           value += ESCAPES.get(e, e)
+          j += 2
+        else:
+          # Not a Lua escape: Lua rejects the file, so it is never our loader.
+          bad = True
+          value += e
           j += 2
       out.append(("str", bytes(value)))
       i = j + 1
@@ -830,13 +845,18 @@ def lua_tokens(data):
       sym = next((s for s in SYMBOLS if data.startswith(s, i)), c)
       out.append(("sym", sym))
       i += len(sym)
-  # Fold "a" .. "b" into one string, left to right.
+  # Fold "a" .. "b" into one string, left to right, only where no operator that
+  # binds tighter than .. touches either side (#"a" .. "b" is not "ab").
   folded = []
-  for tok in out:
-    if tok[0] == "str" and len(folded) >= 2 and folded[-1] == ("sym", b"..") and folded[-2][0] == "str":
+  for k, tok in enumerate(out):
+    after = out[k + 1] if k + 1 < len(out) else None
+    if tok[0] == "str" and len(folded) >= 2 and folded[-1] == ("sym", b"..") and folded[-2][0] == "str" \
+       and (len(folded) < 3 or folded[-3] not in TIGHTER_LEFT) and after not in TIGHTER_RIGHT:
       folded[-2:] = [("str", folded[-2][1] + tok[1])]
     else:
       folded.append(tok)
+  if bad:
+    folded.append(("bad", b""))
   return folded
 
 
@@ -854,6 +874,8 @@ LOADER_LINES = ("local rasklad = \"%s\"\n"
 
 def has_loader(data):
   tokens, want = lua_tokens(data), lua_tokens(LOADER_LINES)
+  if ("bad", b"") in tokens:
+    return False
   return any(tokens[k:k + len(want)] == want for k in range(len(tokens) - len(want) + 1))
 
 

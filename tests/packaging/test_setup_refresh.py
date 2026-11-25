@@ -255,6 +255,14 @@ class Refresh(Base):
         # A constant path from a long string and a short one is still seen.
         cut3 = r.index('rasklad') + 3
         self.assertEqual(plan(('dofile([[%s]] .. "%s")\n' % (r[:cut3], r[cut3:])).encode()), ('other', None))
+        # A shebang line is skipped as Lua does.
+        self.assertEqual(plan(b'#!/usr/bin/lua --[[\n' + load)[0], 'ok')
+        self.assertEqual(plan(b'#!/usr/bin/lua rasklad\nlocal x = 1\n')[0], 'missing')
+        # A Unicode escape with many digits; an invalid escape is never a loader.
+        self.assertEqual(plan(b'local s = "\\u{0000000000000072}asklad"\n'), ('other', None))
+        self.assertEqual(plan(load.replace(b'"/', b'"\\/', 1)), ('other', None))
+        # #"ras" .. "klad" is "3klad": no mention.
+        self.assertEqual(plan(b'local s = #"ras" .. "klad"\n')[0], 'missing')
         # Escapes are decoded: "\114asklad" is rasklad.
         self.assertEqual(plan(b'local s = "\\114asklad"\n'), ('other', None))
 
