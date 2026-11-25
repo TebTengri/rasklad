@@ -893,7 +893,7 @@ def install(assume_yes, single_layout=False):
         say("unknown", "fcitx-group", "Fcitx did not answer; run --check")
         failed = True
       else:
-        run_rows = [r for r in new if r in back[2]]
+        run_rows = [r for r in new if back[2].count(r) == 1]  # twice: not ours
         set_claim(state, name, still_ours(kept, back[2]) + run_rows)
         save_state(state)
         if replied and len(run_rows) == len(new):

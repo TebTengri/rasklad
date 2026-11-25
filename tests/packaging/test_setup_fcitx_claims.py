@@ -487,6 +487,19 @@ class Claims(Base):
         self.revert_with(fake)
         self.assertEqual(fake.items, [US, RU, RU])
 
+    def test_duplicate_seen_right_after_the_write_is_not_ours(self):
+        fake = FakeFcitx([US])
+        bus = fake.bus()
+        write = bus['set_group']
+
+        def set_group(name, layout, items):
+            ok = write(name, layout, items)
+            fake.items = fake.items + [RU]  # the user adds the same row at once
+            return ok
+        bus['set_group'] = set_group
+        self.install_with(fake, bus=lambda: bus)
+        self.assertEqual(self.claim(), [])
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}
