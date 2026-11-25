@@ -118,6 +118,9 @@ constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
     sizeof(kFixtureAdapters) / sizeof(kFixtureAdapters[0]), 1};
 // Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
 FCITX_CONFIGURATION(RaskladConfig,
+    // Owner decision 2026-11-25: off until the owner turns it on (settings app).
+    // Off, the addon is loaded but does nothing: no word, gesture, cue or status names.
+    fcitx::Option<bool> enabled{this, "Enabled", "Rasklad is on", false};
     fcitx::Option<std::vector<std::string>> applications{this, "Applications",
         "Applications (program names as Fcitx reports them)", {"slack", "chromium", "chromium-browser"}};
     fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};
@@ -130,6 +133,7 @@ FCITX_CONFIGURATION(RaskladConfig,
 // since SYS-253, program names (no text) of apps with a focused field, kept in memory.
 FCITX_CONFIGURATION(RaskladStatus,
     fcitx::Option<bool> profileReady{this, "ProfileReady", "Profile verified", false};
+    fcitx::Option<bool> enabled{this, "Enabled", "Rasklad is on", false};
     fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
     fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
         "Applications with a focused text field since start", {}};);
@@ -466,14 +470,14 @@ public:
             fcitx::EventType::InputContextFocusIn, fcitx::EventWatcherPhase::PreInputMethod,
             [this](fcitx::Event &event) {
                 auto *ic = static_cast<fcitx::InputContextEvent &>(event).inputContext();
-                if (ic) rasklad::rememberProgram(seenPrograms_, ic->program());
+                if (ic && *config_.enabled) rasklad::rememberProgram(seenPrograms_, ic->program());
             }));
         // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
         // keyboard-ru, whoever switched it (double Alt in Hyprland, a correction or an undo).
         watchers_.emplace_back(instance_->watchEvent(
             fcitx::EventType::InputContextSwitchInputMethod, fcitx::EventWatcherPhase::Default,
             [this](fcitx::Event &event) {
-                if (!*config_.sound) return;
+                if (!*config_.enabled || !*config_.sound) return;
                 auto &e = static_cast<fcitx::InputContextSwitchInputMethodEvent &>(event);
                 auto *ic = e.inputContext();
                 const auto *entry = ic ? instance_->inputMethodEntry(ic) : nullptr;
@@ -516,6 +520,7 @@ public:
     const fcitx::Configuration *getSubConfig(const std::string &path) const override {
         if (path != "status") return nullptr;
         status_.profileReady.setValue(profile_ && profile_->ready());
+        status_.enabled.setValue(*config_.enabled);
         status_.autoCorrect.setValue(*config_.autoCorrect);
         status_.seenApplications.setValue(seenPrograms_);
         return &status_;
@@ -598,6 +603,7 @@ private:
         }
         rebuildApps();
         enableFixturePermissions();
+        if (!*config_.enabled) seenPrograms_.clear(); // off keeps no names either
         applying_ = false;
     }
     void enableFixturePermissions() {
@@ -638,7 +644,7 @@ private:
         if (!ic || !ic->hasFocus()) {
             return false;
         }
-        if (!productListed(ic->program())) return false;
+        if (!*config_.enabled || !productListed(ic->program())) return false;
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
         if (!entry || (entry->uniqueName() != kLabEntry && entry->uniqueName() != kRuEntry)) {
             return false;
@@ -1071,7 +1077,7 @@ private:
 
 
     void handleKey(fcitx::KeyEvent &event) {
-        if (!registered_ || event.filtered()) {
+        if (!registered_ || !*config_.enabled || event.filtered()) {
             return;
         }
         fcitx::InputContext *ic = event.inputContext();

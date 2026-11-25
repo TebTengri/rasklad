@@ -38,6 +38,9 @@ struct AddonConfig {
     bool wordOptions = false;
     bool autoCorrect = true;
     QStringList exceptions;
+    // The addon has the on/off switch (0.5.30 and later; off until turned on).
+    bool switchable = false;
+    bool enabled = false;
 };
 
 // From the a{sv} Fcitx returns for fcitx://config/addon/rasklad (nested maps,

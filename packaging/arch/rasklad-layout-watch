@@ -8,7 +8,7 @@
 # from NameOwnerChanged instead of a call per tick; the method is read every
 # 500 ms, every 250 ms for 3 s after any change; the status every 2 s. Rasklad's
 # own switches (rasklad-layout-toggle, rasklad-pause-toggle) send a Poke signal
-# that makes it read both at once. Only the method name and two booleans are
+# that makes it read both at once. Only the method name and three booleans are
 # read, never text. It exits when the widget stops reading.
 import json
 import os
@@ -64,6 +64,10 @@ def correction(bus, owner, status):
   ready, auto = flag(values, "ProfileReady"), flag(values, "AutoCorrect")
   if ready is None or auto is None:
     return ""
+  # Owner decision 2026-11-25: off until turned on. An addon without the key
+  # (before 0.5.30) is always on.
+  if flag(values, "Enabled") is False:
+    return "off"
   if not ready:
     return "broken"
   return "on" if auto else "paused"

@@ -492,6 +492,31 @@ private Q_SLOTS:
         QVERIFY(!b.autoCorrect());
         QCOMPARE(b.error(), QString());
     }
+    void onOffSwitch()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        f.stored.insert(QStringLiteral("Enabled"), QStringLiteral("False"));
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(b.switchable() && !b.raskladEnabled());
+        b.setRaskladEnabled(true);
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("True"));
+        QVERIFY(b.raskladEnabled());
+        b.setAutoCorrect(false); // other changes keep the switch
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("True"));
+        b.setRaskladEnabled(false);
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("False"));
+        // An addon without the switch is always on and never gets the key.
+        FakeFcitx old;
+        SettingsBackend o(&old, &w);
+        QVERIFY(!o.switchable() && o.raskladEnabled());
+        const int before = old.writes;
+        o.setRaskladEnabled(false);
+        QCOMPARE(old.writes, before);
+        o.setSound(false);
+        QVERIFY(!old.stored.contains(QStringLiteral("Enabled")));
+    }
     void olderAddonNeverGetsWordOptions()
     {
         FakeFcitx f; // stored has no AutoCorrect: an addon before 0.5

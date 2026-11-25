@@ -278,10 +278,13 @@ def inside():
         addons = Path('/home/lab/.local/share/fcitx5/addon')
         addons.mkdir(parents=True)
         (addons/'raskladlab.conf').write_bytes(Path('/lab/addon.conf').read_bytes())
-        if os.environ.get('RASKLAD_PRODUCT_SUITE') == 'unlisted':
-            # Product addon configured without the fixture's app id: it must stay inert.
+        suite = os.environ.get('RASKLAD_PRODUCT_SUITE')
+        if suite:
+            # Owner decision 2026-11-25: the addon is off until turned on. 'unlisted'
+            # leaves out the fixture's app id: it must stay inert.
+            apps = '0=slack\n' if suite == 'unlisted' else '0=slack\n1=chromium\n2=chromium-browser\n'
             (config/'conf').mkdir()
-            (config/'conf'/'rasklad.conf').write_text('[Applications]\n0=slack\n')
+            (config/'conf'/'rasklad.conf').write_text('Enabled=True\n[Applications]\n' + apps)
         phase = 'native_ime_clients'
         clients = load('native_clients', Path('/lab/native_ime_clients.py'))
         report = clients.run(base, children)

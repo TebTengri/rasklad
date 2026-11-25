@@ -80,7 +80,13 @@ tools/build_arch_package.sh "$profile"             # пакет в build/arch-pa
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # перезапустить Fcitx
 rasklad-setup --install                            # подключить к рабочему столу
+rasklad-settings                                   # включить Rasklad
 ```
+
+После установки Rasklad выключен: аддон загружен, но ничего не делает — ни
+исправления, ни двойного Shift, ни звука. Включается он переключателем
+«Rasklad включён» в окне настроек и работает сразу, без перезапуска Fcitx.
+Выключается там же. `rasklad-setup` его не включает.
 
 Профиль детектора (словари и модель) в Git не хранится. Откуда он берётся и как
 его воспроизвести из чистого клона — в [packaging/arch/PROFILE.md](packaging/arch/PROFILE.md).

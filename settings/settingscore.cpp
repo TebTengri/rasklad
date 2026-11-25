@@ -102,6 +102,8 @@ std::optional<AddonConfig> configFromMap(const QVariantMap &map)
     for (const std::size_t i : rasklad::config::keptApplications(utf8Views(*apps).views))
         out.apps.append(apps->at(static_cast<qsizetype>(i)));
     out.sound = map.value(QStringLiteral("Sound"), QStringLiteral("True")).toString() != QLatin1String("False");
+    out.switchable = map.contains(QStringLiteral("Enabled"));
+    out.enabled = map.value(QStringLiteral("Enabled")).toString() == QLatin1String("True");
     out.wordOptions = map.contains(QStringLiteral("AutoCorrect"));
     if (out.wordOptions) {
         out.autoCorrect = map.value(QStringLiteral("AutoCorrect")).toString() != QLatin1String("False");
@@ -126,6 +128,8 @@ QVariantMap mapFromConfig(const AddonConfig &config)
     }
     QVariantMap out{{QStringLiteral("Applications"), apps},
                     {QStringLiteral("Sound"), config.sound ? QStringLiteral("True") : QStringLiteral("False")}};
+    if (config.switchable)
+        out.insert(QStringLiteral("Enabled"), config.enabled ? QStringLiteral("True") : QStringLiteral("False"));
     if (config.wordOptions) {
         QStringList words;
         for (const QString &raw : config.exceptions) {

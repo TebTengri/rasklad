@@ -250,6 +250,18 @@ void SettingsBackend::setAutoCorrect(bool on)
     commit(next);
 }
 
+void SettingsBackend::setRaskladEnabled(bool on)
+{
+    if (!fresh()) return;
+    if (!switchable() || on == m_config.enabled) {
+        rebuildApps();
+        return;
+    }
+    AddonConfig next = m_config;
+    next.enabled = on;
+    commit(next);
+}
+
 bool SettingsBackend::addException(const QString &raw)
 {
     if (!fresh()) return false;

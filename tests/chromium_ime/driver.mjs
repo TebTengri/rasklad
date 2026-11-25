@@ -138,8 +138,9 @@ try{
   report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
   const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo','onMidTokenPreserved','onNewWordCorrected','offAgainPassthrough'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
- }else if(process.env.RASKLAD_PRODUCT_SUITE==='unlisted'){
-  // SYS-246 product addon whose configuration does not list this app: fully inert.
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='unlisted'||process.env.RASKLAD_PRODUCT_SUITE==='off'){
+  // SYS-246 product addon whose configuration does not list this app, or (owner
+  // decision 2026-11-25) one that was never turned on: fully inert.
   if(!nativeWayland)throw Error('native product suite required');
   const v=()=>ev('prose.value');
   phase='product_unlisted';await reset();await type('word');await type('shift2');await type('space');
@@ -147,6 +148,15 @@ try{
   report.productUnlistedTyped=await v()==='ghbdtn ';
   await type('shift2');report.productUnlistedAfterSpace=await v()==='ghbdtn ';
   const required=['productUnlistedNoPreedit','productUnlistedTyped','productUnlistedAfterSpace'];
+  if(process.env.RASKLAD_PRODUCT_SUITE==='off'){
+   // The widget's helper reports the addon as off.
+   phase='product_off_watch';
+   const watcher=spawn('/usr/bin/python3',['-I','/lab/rasklad-layout-watch','raskladlab'],{stdio:['ignore','pipe','ignore']});
+   const line=await new Promise(resolve=>{let b='';const t=setTimeout(()=>resolve(null),3000);watcher.stdout.on('data',d=>{b+=d.toString();const i=b.indexOf('\n');if(i>=0){clearTimeout(t);resolve(b.slice(0,i));}});});
+   watcher.kill();
+   try{report.productOffWatch=JSON.parse(line).correction==='off';}catch(e){report.productOffWatch=false;}
+   required.push('productOffWatch');
+  }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
   // SYS-226: keyboard-us and keyboard-ru in Fcitx. A correction makes the corrected

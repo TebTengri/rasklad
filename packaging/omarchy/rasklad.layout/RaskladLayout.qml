@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Rasklad bar widget: the Fcitx layout as EN or RU, and whether automatic
-// correction is on, paused or off, from rasklad-layout-watch (one long-lived helper
+// correction is on, paused or broken and whether Rasklad is off, from rasklad-layout-watch (one long-lived helper
 // that asks Fcitx itself rather than through the shell's shared input-method
-// indicator, so it keeps up across Fcitx restarts). Only the method name and two
+// indicator, so it keeps up across Fcitx restarts). Only the method name and three
 // booleans are read, never text.
 // Left click switches us <-> ru (the same rasklad-layout-toggle that double Alt
 // runs); middle click pauses or resumes automatic correction; right click opens
@@ -45,7 +45,7 @@ BarWidget {
     }
     if (!state || typeof state.method !== "string" || typeof state.correction !== "string") return
     root.method = /^[A-Za-z0-9_.:-]{1,64}$/.test(state.method) ? state.method : ""
-    root.correction = ["on", "paused", "broken"].indexOf(state.correction) >= 0 ? state.correction : ""
+    root.correction = ["on", "paused", "broken", "off"].indexOf(state.correction) >= 0 ? state.correction : ""
   }
 
   // SYS-251: one long-lived helper reports the layout and the correction state as
@@ -89,12 +89,13 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: root.label
-    dimmed: root.correction === "paused" || root.correction === ""
+    dimmed: root.correction === "paused" || root.correction === "off" || root.correction === ""
     fontSize: Style.font.caption
     horizontalMargin: 6
     tooltipText: strings.t(root.correction === "on" ? "tooltip.on"
                          : root.correction === "paused" ? "tooltip.paused"
                          : root.correction === "broken" ? "tooltip.broken"
+                         : root.correction === "off" ? "tooltip.off"
                          : "tooltip.unknown").arg(root.code || "—")
     // The bar copies the tooltip when the pointer enters; refresh it in place.
     onTooltipTextChanged: if (tooltipHovered && root.bar) root.bar.showTooltip(button, tooltipText)

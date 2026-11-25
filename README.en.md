@@ -81,7 +81,13 @@ tools/build_arch_package.sh "$profile"             # package in build/arch-packa
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # restart Fcitx
 rasklad-setup --install                            # connect it to the desktop
+rasklad-settings                                   # turn Rasklad on
 ```
+
+After installation Rasklad is off: the addon is loaded but does nothing — no
+correction, no double Shift, no sound. The «Rasklad is on» switch in the settings
+window turns it on at once, without restarting Fcitx, and off again.
+`rasklad-setup` does not turn it on.
 
 The detector profile (dictionaries and model) is not kept in Git. Where it comes
 from and how to reproduce it from a clean clone:

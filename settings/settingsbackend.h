@@ -24,6 +24,8 @@ class SettingsBackend final : public QObject
     Q_PROPERTY(bool layoutsReady READ layoutsReady NOTIFY changed)
     Q_PROPERTY(bool sound READ sound NOTIFY changed)
     Q_PROPERTY(bool wordOptions READ wordOptions NOTIFY changed)
+    Q_PROPERTY(bool switchable READ switchable NOTIFY changed)
+    Q_PROPERTY(bool raskladEnabled READ raskladEnabled NOTIFY changed)
     Q_PROPERTY(bool autoCorrect READ autoCorrect NOTIFY changed)
     Q_PROPERTY(bool profileBroken READ profileBroken NOTIFY changed)
     Q_PROPERTY(QStringList exceptions READ exceptions NOTIFY changed)
@@ -48,6 +50,9 @@ public:
     bool layoutsReady() const { return m_layouts; }
     bool sound() const { return m_config.sound; }
     bool wordOptions() const { return m_loaded && m_config.wordOptions; }
+    // An addon without the switch (before 0.5.30) is always on.
+    bool switchable() const { return m_loaded && m_config.switchable; }
+    bool raskladEnabled() const { return !switchable() || m_config.enabled; }
     bool autoCorrect() const { return m_config.autoCorrect; }
     // Only a definite "not verified" from a running addon; unknown is not broken.
     bool profileBroken() const { return m_profileBroken; }
@@ -68,6 +73,7 @@ public:
     Q_INVOKABLE bool addApp(const QString &id);
     Q_INVOKABLE void setSound(bool on);
     Q_INVOKABLE void setAutoCorrect(bool on);
+    Q_INVOKABLE void setRaskladEnabled(bool on);
     Q_INVOKABLE bool addException(const QString &word);
     Q_INVOKABLE void removeException(const QString &word);
     // SYS-256: "rasklad", "en", "ru", "data" or "ukacd" from the package license directory.

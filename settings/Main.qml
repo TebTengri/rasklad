@@ -479,6 +479,13 @@ ApplicationWindow {
                     SectionHeader { text: qsTr("CORRECTION"); rule: false }
                     ToggleRow {
                         id: firstRow
+                        title: qsTr("Rasklad is on")
+                        detail: qsTr("Off after installation. When off, Rasklad does nothing: no correction, no double Shift, no sound.")
+                        checked: backend.raskladEnabled
+                        available: backend.switchable
+                        onToggled: on => backend.setRaskladEnabled(on)
+                    }
+                    ToggleRow {
                         title: qsTr("Automatic correction")
                         detail: qsTr("When off, double Shift still fixes a word.")
                         checked: backend.autoCorrect
