@@ -104,6 +104,7 @@ void SettingsBackend::refreshIfStale()
 void SettingsBackend::refresh()
 {
     m_error.clear();
+    m_fcitx->forgetStall();
     m_running = m_fcitx->running();
     m_addon = m_running && m_fcitx->addonEnabled();
     m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());

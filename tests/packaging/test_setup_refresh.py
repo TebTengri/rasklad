@@ -227,6 +227,18 @@ class Refresh(Base):
         # A live loader in another form, with no BEGIN line, is: nothing added.
         other = ("local rasklad = '%s'\ndofile(rasklad)\n" % self.setup.RULE).encode()
         self.assertEqual(plan(other), ('ok', None))
+        # A mention of rasklad is not a loader.
+        self.assertEqual(plan(b'local label = "Rasklad is useful"\n')[0], 'missing')
+        # CR-only line ends: a line comment ends at CR.
+        self.assertEqual(plan(b'-- note\r' + line.replace(b'\n', b'\r'))[0], 'ok')
+        self.assertEqual(plan(b'-- ' + line.replace(b'\n', b'\r'))[0], 'missing')
+
+    def test_recordless_traces(self):
+        s = self.setup
+        self.assertTrue(s.trace_in(s.INPUT, ('local rasklad_package = io.open("%s", "r")\n' % s.RULE).encode()))
+        self.assertFalse(s.trace_in(s.INPUT, b'-- my rasklad notes\nlocal x = 1\n'))
+        self.assertFalse(s.trace_in(s.SHELL_JSON, b'{ not json'))
+        self.assertTrue(s.trace_in(s.SHELL_JSON, b'{ "id": "rasklad.layout", '))
 
     def test_reload_with_config_errors_does_not_count(self):
         self.setup = load_setup(self.tmp.name)

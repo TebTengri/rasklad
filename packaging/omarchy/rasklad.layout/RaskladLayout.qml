@@ -33,7 +33,8 @@ BarWidget {
   // may be missing or not loaded, and then nothing is corrected.
   // SYS-272: a click that did not go through ("toggle" or "pause"), for 3 s.
   property string failed: ""
-  readonly property string label: code === "" ? "" : failed !== "" ? code + "×"
+  // A failed click shows even while the watcher has no answer (Fcitx stalled).
+  readonly property string label: failed !== "" ? code + "×" : code === "" ? ""
                                 : correction === "broken" ? code + "!"
                                 : correction === "" ? code + "?" : code
 
@@ -86,8 +87,12 @@ BarWidget {
   Process {
     id: pause
     command: ["/usr/bin/rasklad-pause-toggle"]
-    // While Rasklad is off the middle click does nothing by design: no complaint.
-    onExited: function(exitCode) { if (exitCode !== 0 && root.correction !== "off") root.fail("pause"); else if (exitCode === 0) root.clearFail("pause") }
+    // Off or broken, the middle click does nothing by design (the tooltip says
+    // why): a complaint only where pausing is possible.
+    onExited: function(exitCode) {
+      if (exitCode !== 0 && (root.correction === "on" || root.correction === "paused")) root.fail("pause")
+      else if (exitCode === 0) root.clearFail("pause")
+    }
   }
 
   visible: label !== ""

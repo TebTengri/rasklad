@@ -28,6 +28,8 @@ class FcitxSource
 public:
     virtual ~FcitxSource() = default;
     virtual bool running() = 0;
+    // A refresh asks again even right after a stall (SYS-272, forgetFcitxStall).
+    virtual void forgetStall() {}
     virtual bool addonEnabled() = 0;
     virtual QStringList groupMethods() = 0;
     virtual std::optional<QVariantMap> readConfig() = 0;
@@ -51,6 +53,10 @@ public:
 // SYS-254: Hyprland's decoration:rounding over its request socket (no subprocess),
 // read once at start; 0 outside Hyprland or on any failure.
 int hyprlandRounding();
+
+// SYS-272: a refresh asks Fcitx again even right after a stall (Retry after a
+// restart); the 3 s short-cut covers only the calls within one refresh.
+void forgetFcitxStall();
 // SYS-261: asks Hyprland to focus the window of this process; false outside Hyprland.
 bool hyprlandFocusPid(qint64 pid);
 
@@ -120,6 +126,7 @@ public:
     std::optional<QVariantMap> readConfig() override;
     std::optional<bool> profileReady() override;
     bool writeConfig(const QVariantMap &config) override;
+    void forgetStall() override;
 };
 
 class FcitxSeenApps final : public AppSource

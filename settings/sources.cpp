@@ -40,6 +40,15 @@ const QString kUri = QStringLiteral("fcitx://config/addon/rasklad");
 constexpr qint64 kStallMs = 3000;
 QElapsedTimer g_stalled; // invalid while Fcitx answers
 
+} // namespace
+
+void forgetFcitxStall()
+{
+    g_stalled.invalidate();
+}
+
+namespace {
+
 QDBusMessage call(const QString &method, const QVariantList &args = {})
 {
     QDBusMessage m = QDBusMessage::createMethodCall(kService, QStringLiteral("/controller"),
@@ -158,6 +167,11 @@ std::optional<QVariantMap> statusMap()
 }
 
 } // namespace
+
+void DBusFcitx::forgetStall()
+{
+    forgetFcitxStall();
+}
 
 std::optional<bool> DBusFcitx::profileReady()
 {
