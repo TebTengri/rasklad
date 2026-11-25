@@ -3,4 +3,4 @@
 include(fcitx_slack_gate_test.pro)
 TARGET = raskladslackmanualgatetest
 DEFINES += RASKLAD_MANUAL_LAB
-HEADERS += $$PWD/../src/manualgesture.h
+HEADERS += $$PWD/../src/manualgesture.h $$PWD/../src/wipe.h

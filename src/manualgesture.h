@@ -5,6 +5,7 @@
 // Times are the key events' own millisecond timestamps (KeyEvent::time()).
 #pragma once
 
+#include "wipe.h"
 #include <array>
 #include <cstdint>
 #include <string>
@@ -90,7 +91,7 @@ inline std::string usToRu(std::string_view word) {
     for (const char c : word) {
         if (c >= 'a' && c <= 'z') out.append(kUsToRu[static_cast<std::size_t>(c - 'a')]);
         else if (const auto r = punctToRu(c); !r.empty()) out.append(r);
-        else return {};
+        else { wipe(out); return {}; } // SYS-272: no partial copy left behind
     }
     return out;
 }
@@ -117,6 +118,7 @@ inline std::string applyUpper(const std::string &text, std::uint32_t mask) {
             out.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
             i += 2;
         } else {
+            wipe(out); // SYS-272: no partial copy left behind
             return text;
         }
     }

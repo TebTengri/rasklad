@@ -4,4 +4,4 @@
 include(fcitx_slack_lab.pro)
 TARGET = raskladslackmanual
 DEFINES += RASKLAD_MANUAL_LAB
-HEADERS += $$PWD/../src/manualgesture.h
+HEADERS += $$PWD/../src/manualgesture.h $$PWD/../src/wipe.h

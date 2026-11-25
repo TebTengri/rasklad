@@ -177,14 +177,7 @@ constexpr const char kRuleTo[] = "привет";
 
 // Wipes the whole buffer, not just the current length: a string shortened in
 // place (the double-Shift swap) keeps older bytes past size() (SYS-272).
-void wipeString(std::string &s) {
-    s.resize(s.capacity()); // no reallocation; the tail becomes addressable
-    volatile char *p = s.empty() ? nullptr : &s[0];
-    for (std::size_t i = 0; p && i < s.size(); ++i) {
-        p[i] = '\0';
-    }
-    s.clear();
-}
+void wipeString(std::string &s) { rasklad::wipe(s); }
 
 // Per-context state. Owned by Fcitx through the property factory; destroyed
 // with its InputContext. Contains only the current lab word and bounded
@@ -209,7 +202,12 @@ public:
     // Text to show/commit; empty conversion (never for a..z) keeps the original.
     // Bit i: the i-th key was typed as a capital letter (SYS-226). Keys are lowercase.
     std::uint32_t upper = 0;
-    std::string shown() const { return form(word(), typedRu != converted, upper); }
+    std::string shown() const {
+        std::string w = word();
+        std::string out = form(w, typedRu != converted, upper);
+        rasklad::wipe(w); // SYS-272: no unwiped temporary of the word
+        return out;
+    }
     static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
         return rasklad::word::form(typed, asRu, mask);
     }
@@ -943,7 +941,13 @@ private:
                             (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
             if (ok) {
                 if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
-                else result = LabState::form(other + w.substr(cut), false, s.upper);
+                else {
+                    // Built in place and wiped: no unwiped temporaries (SYS-272).
+                    std::string joined = other;
+                    joined.append(w, cut, std::string::npos);
+                    result = LabState::form(joined, false, s.upper);
+                    wipeString(joined);
+                }
             }
             if (fix) wipeString(*fix);
             wipeString(keys); wipeString(typed); wipeString(other);
@@ -959,7 +963,9 @@ private:
         std::string w = s.shown();
         fcitx::Text text;
         const int cursor = static_cast<int>(w.size()); // Fcitx Text cursor is a byte offset
-        text.append(std::move(w), fcitx::TextFormatFlag::Underline);
+        // Copied, then wiped: copies Fcitx itself makes are beyond our reach (SYS-272).
+        text.append(w, fcitx::TextFormatFlag::Underline);
+        wipeString(w);
         text.setCursor(cursor);
         ic->inputPanel().setClientPreedit(text);
         s.setPreeditShown(true);
@@ -1210,7 +1216,9 @@ private:
                 // only the letters were corrected and trailing keys kept ("ns," -> "ты,").
                 bool whole = false;
                 auto fixed = autoText(*s, whole);
-                std::string out = fixed ? std::move(*fixed) : s->shown();
+                // Copied, not moved: a short string's bytes would stay behind (SYS-272).
+                std::string out = fixed ? *fixed : s->shown();
+                if (fixed) wipeString(*fixed);
                 // The other form: after a correction (whole or letters only) the word
                 // exactly as typed; otherwise the whole word in the layout not shown.
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
@@ -1230,7 +1238,8 @@ private:
                 const bool switchAfter = fixed.has_value();
                 const bool toRu = !s->typedRu;
                 auto ref = ic->watch();
-                commitAndClear(ic, *s, std::move(out));
+                commitAndClear(ic, *s, out);
+                wipeString(out);
                 if (switchAfter) switchLayout(ref, toRu); // the corrected word's layout
                 return;
             }
@@ -1261,7 +1270,8 @@ private:
             const bool toRu = !s->typedRu;
             auto ref = ic->watch();
             const bool switchAfter = fixed.has_value();
-            std::string out = fixed ? std::move(*fixed) : s->shown();
+            std::string out = fixed ? *fixed : s->shown(); // copied, not moved (SYS-272)
+            if (fixed) wipeString(*fixed);
             const std::uint32_t mark = fcitx::Key::keySymToUnicode(sym);
             if (ends && mark > 0x20 && mark != 0x7f) {
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
@@ -1271,7 +1281,8 @@ private:
                 armExpiry(ic, *s);
                 wipeString(w);
             }
-            commitAndClear(ic, *s, std::move(out));
+            commitAndClear(ic, *s, out);
+            wipeString(out);
             if (switchAfter) switchLayout(ref, toRu);
         }
     }

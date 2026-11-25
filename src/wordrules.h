@@ -4,6 +4,7 @@
 // answers out. The addon keeps the key events, the field and the profile.
 #pragma once
 
+#include "wipe.h"
 #include "manualgesture.h"
 
 #include <cstddef>
@@ -38,7 +39,10 @@ inline std::string form(const std::string &typed, bool asRu, std::uint32_t upper
 {
     std::string out = asRu ? manual::usToRu(typed) : typed;
     if (out.empty()) out = typed;
-    return upper ? manual::applyUpper(out, upper) : out;
+    if (!upper) return out;
+    std::string shown = manual::applyUpper(out, upper);
+    wipe(out); // SYS-272: the intermediate copy of the word
+    return shown;
 }
 
 // SYS-250: how many leading keys are letters before the keys that end a us-typed
