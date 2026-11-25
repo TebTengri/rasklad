@@ -222,7 +222,10 @@ def load_state():
 
 def save_state(state):
   private_state_dir()
-  write_atomic(STATE_FILE, (json.dumps(state, indent=2, sort_keys=True) + "\n").encode(), 0o600)
+  # Keys starting with "_" are this run's working notes (the copies to delete
+  # once saved), never part of the file.
+  data = {k: v for k, v in state.items() if not k.startswith("_")}
+  write_atomic(STATE_FILE, (json.dumps(data, indent=2, sort_keys=True) + "\n").encode(), 0o600)
 
 
 def save_and_drop(state):
@@ -400,17 +403,17 @@ def settle_claim(state, name, layout, items):
   user removed or changed are theirs from here on. A record converted from an
   older version only counts if the group is still exactly as that install left
   it (as the older --revert required); otherwise its rows are left as they are.
-  Saves the state when it changed."""
+  Returns True when the record changed; the caller saves it."""
   entry = claimed_groups(state).get(name)
   if not entry:
-    return
+    return False
   rows = [list(r) for r in entry["added"]]
   if "legacy_after" in entry:
     if items != entry["legacy_after"] or layout != entry["legacy_layout"]:
       say("changed", "fcitx-group", "changed since an older install; its layouts left as is")
       rows = []
   set_claim(state, name, still_ours(rows, items))
-  save_state(state)
+  return claimed_groups(state).get(name) != entry
 
 
 # --- the steps: (state, new bytes) --------------------------------------------
@@ -778,8 +781,8 @@ def install(assume_yes, single_layout=False):
 
   # SYS-272: what this run sees is settled at once: a row of ours the user
   # removed is theirs if it comes back, even while the question waits.
-  if live:
-    settle_claim(state, live[0], live[1], live[2])
+  if live and settle_claim(state, live[0], live[1], live[2]):
+    save_state(state)
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
@@ -890,7 +893,11 @@ def install(assume_yes, single_layout=False):
   for path, old, new in input_change:
     # The group as Fcitx has it now, not the snapshot from before the question:
     # a successful reply does not prove both layouts are there.
-    if fcitx_plan(fcitx())[0] != "ok":
+    final_bus = fcitx()
+    final = final_bus["group"]() if final_bus else None
+    if final and settle_claim(state, final[0], final[1], final[2]):
+      save_state(state)  # a removal seen here makes a re-added row the user's
+    if fcitx_plan(final_bus, final)[0] != "ok":
       say("skipped", os.path.basename(path), "Fcitx does not have both layouts; Hyprland layouts left as is")
       failed = True
       continue

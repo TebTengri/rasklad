@@ -337,6 +337,35 @@ class Claims(Base):
         self.assertIn('changed since an older install', out)
         self.assertEqual(fake.items, [US, RU])
 
+    def test_working_notes_never_reach_the_state_file(self):
+        state = self.setup.new_state()
+        state['_drop'] = ['/nonexistent']
+        self.setup.save_state(state)
+        self.assertNotIn('_drop', self.setup.load_state())
+
+    def test_removal_seen_at_the_last_check_makes_a_re_add_the_users(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([US, RU])
+        self.setup.fcitx = fake.bus
+        state = self.setup.new_state()
+        self.setup.set_claim(state, 'Default', [list(RU)])
+        self.setup.save_state(state)
+        bus = fake.bus()
+        first = bus['group']
+        calls = iter(range(100))
+
+        def group():
+            if next(calls) == 1:  # gone at the last check before input.lua
+                fake.items = [US]
+            return first()
+        bus['group'] = group
+        self.setup.fcitx = lambda: bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.install(True, single_layout=True)
+        self.assertIn('Fcitx does not have both layouts', out.getvalue())
+        self.assertEqual(self.claim(), [])
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}
