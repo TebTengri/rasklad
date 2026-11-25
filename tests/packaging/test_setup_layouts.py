@@ -223,6 +223,15 @@ class Install(Base):
         code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
         self.assertEqual(code, 1, out)
 
+    def test_an_error_that_went_away_is_not_new(self):
+        self.hypr('ru,us', variant=',')
+        seen = iter([['old A', 'old B'], ['old A']])
+        self.setup.hypr_errors = lambda: next(seen)
+        self.setup.hypr_running = lambda: True
+        code, out = self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn('undoing', out)
+
     def test_nothing_to_change_when_all_is_done(self):
         code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
         self.assertEqual(code, 0, out)

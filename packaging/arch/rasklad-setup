@@ -1014,7 +1014,9 @@ def install(assume_yes, single_layout=False):
   if hypr and hypr_running():
     run([HYPRCTL, "reload"])
     errors = hypr_errors()
-    if errors and errors != errors_before:
+    # Only errors that were not there before count: one that went away is not new.
+    new_errors = [e for e in errors if e not in errors_before] if errors and errors_before is not None else errors
+    if new_errors:
       # With no answer before the change, any error now is taken as ours: undoing
       # our own edits is the safe side.
       say("error", "hyprland", "new config errors after the change; undoing it" if errors_before is not None

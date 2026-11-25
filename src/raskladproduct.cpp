@@ -966,7 +966,8 @@ private:
     }
     // A press of a modifier or lock key alone (Ctrl, Alt, Super, Caps Lock, AltGr,
     // ...): it types nothing. The key it is combined with (Ctrl+A) is non-plain and
-    // flushes and bypasses itself, so the press alone must not (SYS-272).
+    // flushes and bypasses itself, so over an empty buffer the press alone must
+    // not latch bypass (SYS-272); over a word in progress it still commits it.
     static bool bareModifier(fcitx::KeySym sym) {
         switch (sym) {
         case FcitxKey_Control_L: case FcitxKey_Control_R: case FcitxKey_Alt_L: case FcitxKey_Alt_R:
@@ -1163,8 +1164,9 @@ private:
             s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
             // Over an empty buffer: no bypass, so Alt Alt or Caps Lock before a word
             // does not leave that word uncorrected (SYS-272). Over a word in progress
-            // the word is still committed as typed: Alt may open a menu and take
-            // the focus, and focus-out would drop the uncommitted letters.
+            // the word is still committed in the form shown (as typed, or as double
+            // Shift turned it): Alt may open a menu and take the focus, and
+            // focus-out would drop the uncommitted letters.
             if (bareModifier(key.sym()) && s->empty()) return;
         }
         const bool boundary = plain && (sym == FcitxKey_space ||
