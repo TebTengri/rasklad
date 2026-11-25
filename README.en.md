@@ -110,7 +110,8 @@ it added and later add the same one back yourself before `rasklad-setup --instal
 or `--revert` has seen the removal (`--check` and the settings window's check
 record nothing), it takes that one for its own and removes it. The same goes for a
 Fcitx group deleted and created again under the same name, and for a layout it
-was adding when Fcitx gave no answer after the write. Only one `--install` or `--revert`
+was adding when Fcitx gave no answer or the run stopped before the answer, if you
+then add the same one yourself. Only one `--install` or `--revert`
 runs at a time for the same state directory. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).
