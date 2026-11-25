@@ -25,7 +25,7 @@ and the docs). An update is an ordinary reviewed change made in five steps:
                                   unchanged work files: writes exactly the files
                                   compare measured (checked first, then written)
 
-After `pin`: rebuild, run the tests and the stand on the new profile
+After `pin`: rebuild, run the tests, commit, then the stand on the new profile
 (tools/build_arch_package.sh build/dict-update/<commit12>/release), review the
 diff, and send it to independent review like any change. A changed upstream
 README stops `build` until it is accepted with --accept-notices (the license
@@ -37,6 +37,7 @@ are read as bytes only, and nothing from them is executed.
 import argparse
 import bz2
 import datetime
+import fcntl
 import hashlib
 import importlib.util
 import io
@@ -524,8 +525,23 @@ def local_edits(paths):
 
 
 def pin(commit):
-    """Writes into the repository exactly what compare measured, or nothing."""
+    """Writes into the repository exactly what compare measured, or nothing.
+    One pin at a time: a lock in build/dict-update/ covers the checks and the writes."""
     work = work_dir(commit)
+    lock_path = work.parent / '.pin.lock'
+    work.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit('pin: another pin is running')
+        return pin_locked(commit, work)
+    finally:
+        os.close(fd)
+
+
+def pin_locked(commit, work):
     try:
         record = load_json(work / 'compare.json')
     except (OSError, ValueError):
@@ -576,11 +592,20 @@ def pin(commit):
             os.replace(temp, targets[rel])
             replaced.append(rel)
     except BaseException:
-        for rel in reversed(replaced):
-            if rel in backups:
-                os.replace(backups[rel], targets[rel])
-            else:
-                targets[rel].unlink(missing_ok=True)
+        stuck = []
+        for rel in reversed(replaced):  # every restore is attempted
+            try:
+                if rel in backups:
+                    os.replace(backups[rel], targets[rel])
+                else:
+                    targets[rel].unlink(missing_ok=True)
+            except OSError:
+                stuck.append(rel)
+        if stuck:
+            print('pin: could not restore %s; the old files are kept at: %s'
+                  % (', '.join(stuck), ', '.join(backups[r] for r in stuck if r in backups)), file=sys.stderr)
+            for rel in stuck:  # keep their backups
+                backups.pop(rel, None)
         raise
     finally:
         for temp in temps.values():
@@ -590,7 +615,7 @@ def pin(commit):
             if os.path.lexists(backup):
                 os.unlink(backup)
             os.rmdir(os.path.dirname(backup))
-    print('pinned %s (%d files). Next: bin/build, the tests, tools/build_arch_package.sh %s, the stand; '
+    print('pinned %s (%d files). Next: bin/build, the tests, commit (the package builder reads HEAD), tools/build_arch_package.sh %s, the stand; '
           'then review git diff and send it to independent review.' % (commit, len(changed), work / 'release'))
 
 

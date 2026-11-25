@@ -275,6 +275,34 @@ class PinWrites(unittest.TestCase):
         self.assertEqual([p for p in self.tool.ROOT.rglob('.*') if 'build' not in p.parts], [])
 
 
+    def test_a_failed_restore_keeps_its_backup(self):
+        real, calls = os.replace, []
+
+        def flaky(src, dst):
+            calls.append(dst)
+            if len(calls) >= 2:  # the second replace and every restore fail
+                raise OSError('simulated')
+            return real(src, dst)
+        self.tool.os.replace = flaky
+        try:
+            with self.assertRaises(OSError):
+                self.tool.pin(NEW)
+        finally:
+            self.tool.os.replace = real
+        kept = list(self.tool.ROOT.rglob('*.keep/old'))
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(kept[0].read_text(), 'old\n')
+
+    def test_one_pin_at_a_time(self):
+        import fcntl
+        fd = os.open(self.work.parent / '.pin.lock', os.O_RDWR | os.O_CREAT, 0o600)
+        self.addCleanup(os.close, fd)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        with self.assertRaises(SystemExit) as raised:
+            self.tool.pin(NEW)
+        self.assertIn('another pin', str(raised.exception))
+
+
 class WorkDir(unittest.TestCase):
     def setUp(self):
         self.tool = load('update_dictionaries', 'tools/update_dictionaries.py')
