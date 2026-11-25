@@ -1078,7 +1078,10 @@ def undo_group(state, name, rows):
   if not remaining:
     say("kept", "fcitx-group", "the group would be left empty; left as is")
     return
-  if not bus["set_group"](name, layout, remaining):
+  bus["set_group"](name, layout, remaining)
+  # A reply does not prove the rows are gone: only a read does.
+  back = bus["group_by"](name)
+  if back is None or any(r in back[2] for r in rows):
     say("failed", "fcitx-group")
     return
   say("restored", "fcitx-group")
@@ -1111,6 +1114,9 @@ def restore_fcitx(state):
       clean = False
       continue
     _, layout, items = now
+    entry = claimed_groups(state)[name]
+    if "legacy_after" in entry and (items != entry["legacy_after"] or layout != entry["legacy_layout"]):
+      clean = False  # said by settle_claim; the next --revert finds nothing to do
     settle_claim(state, name, layout, items)
     ours = claimed_rows(state, name)
     remaining = [i for i in items if i not in ours]
@@ -1119,12 +1125,15 @@ def restore_fcitx(state):
     elif not remaining:
       say("kept", "fcitx-group", "taking out ours would leave the group %s empty; left as is" % name)
       clean = False
-    elif bus["set_group"](name, layout, remaining):
-      say("restored", "fcitx-group")
-      set_claim(state, name, [])
     else:
-      say("failed", "fcitx-group")
-      clean = False
+      bus["set_group"](name, layout, remaining)
+      back = bus["group_by"](name)  # a reply does not prove the rows are gone
+      if back is not None and not any(r in back[2] for r in ours):
+        say("restored", "fcitx-group")
+        set_claim(state, name, [])
+      else:
+        say("failed", "fcitx-group")
+        clean = False
   return clean
 
 

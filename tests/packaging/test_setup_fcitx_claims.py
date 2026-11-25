@@ -327,7 +327,9 @@ class Claims(Base):
         fake = FakeFcitx([US, RU, DE])
         code, out = self.revert_with(fake)
         self.assertIn('changed since an older install', out)
+        self.assertEqual(code, 1)
         self.assertEqual(fake.items, [US, RU, DE])
+        self.assertEqual(self.revert_with(fake)[0], 0)  # nothing left to do
 
     def test_old_record_needs_its_default_layout_too(self):
         self.old_state([US], [US, RU])
@@ -442,6 +444,15 @@ class Claims(Base):
             self.setup.install(True)
         self.assertIn('another group became current', out.getvalue())
         self.assertEqual(self.claim('Work'), [])  # us is not in Work: not ours
+
+    def test_revert_keeps_the_claim_when_fcitx_did_not_apply(self):
+        fake = FakeFcitx([US])
+        self.install_with(fake)
+        fake.apply = False  # Fcitx answers but keeps the group
+        code, out = self.revert_with(fake)
+        self.assertEqual(code, 1)
+        self.assertRegex(out, r'failed\s+fcitx-group')
+        self.assertEqual(self.claim(), [RU])
 
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
