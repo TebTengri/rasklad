@@ -171,7 +171,7 @@ try{
    const setEnabled=(value)=>execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
    setEnabled('False');await reset();setEnabled('True');
    await type('word');await type('space');await type('word');await type('space');
-   report.productEnabledEmptyField=await v()==='ghbdtn привет ';
+   report.productEnabledEmptyFieldValue=await v();report.productEnabledEmptyField=report.productEnabledEmptyFieldValue==='ghbdtn привет ';
    required.push('productEnableMidTokenRaw','productEnabledCorrects','productEnabledEmptyField');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
