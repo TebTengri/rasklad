@@ -91,7 +91,7 @@ inline std::string usToRu(std::string_view word) {
     for (const char c : word) {
         if (c >= 'a' && c <= 'z') out.append(kUsToRu[static_cast<std::size_t>(c - 'a')]);
         else if (const auto r = punctToRu(c); !r.empty()) out.append(r);
-        else { wipe(out); return out; } // SYS-272: no partial copy; one returned variable
+        else { wipe(out); return out; } // SYS-272: the partial result is wiped
     }
     return out;
 }
@@ -118,7 +118,7 @@ inline std::string applyUpper(const std::string &text, std::uint32_t mask) {
             out.push_back(static_cast<char>(0x80 | (cp & 0x3f)));
             i += 2;
         } else {
-            wipe(out); // SYS-272: no partial copy left behind
+            wipe(out); // SYS-272: the partial result is wiped
             out = text; // the same variable is returned on every path (NRVO)
             return out;
         }

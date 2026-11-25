@@ -205,7 +205,7 @@ public:
     std::string shown() const {
         std::string w = word();
         std::string out = form(w, typedRu != converted, upper);
-        rasklad::wipe(w); // SYS-272: no unwiped temporary of the word
+        rasklad::wipe(w); // SYS-272: the copy of the word is wiped
         return out;
     }
     static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
@@ -944,12 +944,12 @@ private:
                 if (pass == 0) {
                     s.converted = true; whole = true;
                     std::string shown = s.shown();
-                    out.assign(shown); // copied, then wiped: a moved short string keeps its bytes
+                    out.assign(shown); // copied, then the local is wiped (SYS-272)
                     wipeString(shown);
                     found = true;
                 }
                 else {
-                    // Built in place and wiped: no unwiped temporaries (SYS-272).
+                    // The pieces are wiped after use (SYS-272).
                     std::string tail = w.substr(cut);
                     std::string both = rasklad::joined(other, tail);
                     std::string shown = LabState::form(both, false, s.upper);
@@ -1252,7 +1252,7 @@ private:
                 const bool fixed = autoText(*s, whole, fixedText);
                 // Copied, not moved: a short string's bytes would stay behind (SYS-272).
                 std::string shown = fixed ? std::string() : s->shown();
-                // Room for the space up front: push_back never reallocates (SYS-272).
+                // Room for the space up front, so push_back does not reallocate (SYS-272).
                 std::string out = rasklad::joined(fixed ? fixedText : shown, std::string(), 1);
                 wipeString(fixedText);
                 wipeString(shown);
