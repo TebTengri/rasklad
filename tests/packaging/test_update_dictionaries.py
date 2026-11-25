@@ -68,7 +68,7 @@ class Pin(unittest.TestCase):
                 (self.work / sub / rel).parent.mkdir(parents=True, exist_ok=True)
                 (self.work / sub / rel).write_bytes(data)
         self.source = source
-        stage = self.work / 'stage/data'
+        stage = self.work / 'profile/data'
         (stage / 'notices').mkdir(parents=True)
         for name in ('en_US.README.txt', 'ru_RU.README.txt'):
             shutil.copyfile(ROOT / 'data/notices' / name, stage / 'notices' / name)

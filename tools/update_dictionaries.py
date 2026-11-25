@@ -156,16 +156,18 @@ def build(commit, accept_notices):
     if changed and not accept_notices:
         raise SystemExit('upstream notices changed: %s. Review the license text against data/notices/, '
                          'then run build again with --accept-notices.' % ', '.join(changed))
-    for sub in ('stage', 'profile', 'eval', 'release'):
+    for sub in ('profile', 'eval', 'release'):
         if (work / sub).exists():
             raise SystemExit('already built: %s (remove it to build again)' % (work / sub))
     benchmark = ROOT / 'build/tools/detector_benchmark'
     if not benchmark.is_file():
         raise SystemExit('build the tools first: bin/build')
 
-    # A small repository tree for detector_benchmark, which resolves each notice
-    # next to its manifest (the manifest's directory/..).
-    stage = work / 'stage'
+    # The profile is also the repository tree detector_benchmark sees: it
+    # resolves each notice next to its manifest (the manifest's directory/..) and
+    # takes an artifact directory only inside that tree's build/.
+    profile = work / 'profile'
+    stage = profile
     (stage / 'data/notices').mkdir(parents=True)
     for name in NOTICES:
         shutil.copyfile(down / name, stage / 'data/notices' / name)
@@ -177,7 +179,6 @@ def build(commit, accept_notices):
         shutil.copyfile(ROOT / licence, stage / licence)
     shutil.copyfile(ROOT / 'data/experiment-002-protocol.json', stage / 'data/experiment-002-protocol.json')
 
-    profile = work / 'profile'
     dic = profile / 'build/experiment-data'
     aff = profile / 'build/experiment-003-data'
     arts = profile / 'build/experiment-002-artifacts'
@@ -318,7 +319,8 @@ def pin_cpp(text, rel, digest, size, where):
 def pin(commit, root=ROOT):
     """Writes the pins into `root` (the repository; a copy in the tests)."""
     work = work_dir(commit)
-    stage, profile, release = work / 'stage', work / 'profile', work / 'release'
+    profile, release = work / 'profile', work / 'release'
+    stage = profile  # the manifests and notices as built
     old_commit = load_json(root / 'data/sources.json')['commit']
     if old_commit == commit:
         raise SystemExit('already pinned to this commit')
