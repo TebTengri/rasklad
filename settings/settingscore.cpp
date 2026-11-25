@@ -156,6 +156,17 @@ QStringList seenAppsFromStatus(const QVariantMap &status)
     return out;
 }
 
+std::optional<qint64> timesOnFromStatus(const QVariantMap &status)
+{
+    const QVariant raw = status.value(QStringLiteral("TimesOn"));
+    if (raw.metaType() != QMetaType::fromType<QString>()) return std::nullopt;
+    const QString text = raw.toString();
+    if (text.isEmpty() || text.size() > 10) return std::nullopt;
+    for (const QChar c : text)
+        if (c < QLatin1Char('0') || c > QLatin1Char('9')) return std::nullopt;
+    return text.toLongLong();
+}
+
 QVariantMap setupFromCheck(const QByteArray &output)
 {
     static const QStringList steps{QStringLiteral("package"),         QStringLiteral("fcitx-addon"),

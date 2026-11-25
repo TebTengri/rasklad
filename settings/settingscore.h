@@ -58,6 +58,10 @@ QVariantMap mapFromConfig(const AddonConfig &config);
 // or of another shape.
 QStringList seenAppsFromStatus(const QVariantMap &status);
 
+// SYS-272: "TimesOn" from the addon status, a non-negative decimal; none if
+// missing (older addon) or malformed.
+std::optional<qint64> timesOnFromStatus(const QVariantMap &status);
+
 // SYS-254: Hyprland's reply to `j/getoption decoration:rounding`: the corner
 // radius Omarchy apps use. 0 (sharp, Omarchy's default) for any other reply;
 // capped at 24 so a stray value cannot distort the window.

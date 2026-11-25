@@ -63,6 +63,8 @@ class FakeApps final : public AppSource
 public:
     QStringList open{QStringLiteral("foot"), QStringLiteral("chatgpt"), QStringLiteral("slack")};
     QStringList seenApps() override { return open; }
+    std::optional<qint64> times = 1;
+    std::optional<qint64> timesOn() override { return times; }
 };
 
 class FakeSetup final : public SetupTool
@@ -516,6 +518,22 @@ private Q_SLOTS:
         QCOMPARE(old.writes, before);
         o.setSound(false);
         QVERIFY(!old.stored.contains(QStringLiteral("Enabled")));
+    }
+    void offAndOnUnseenForgetsKeptNames()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("Enabled"), QStringLiteral("True"));
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        b.setAppEnabled(QStringLiteral("chromium"), false); // kept by the window
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        w.times = 2; // off and on through Fcitx between two refreshes
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString() != QStringLiteral("recent"));
+        QCOMPARE(timesOnFromStatus({{QStringLiteral("TimesOn"), QStringLiteral("12")}}), std::optional<qint64>(12));
+        QVERIFY(!timesOnFromStatus({{QStringLiteral("TimesOn"), QStringLiteral("-1")}}));
+        QVERIFY(!timesOnFromStatus({}));
     }
     void olderAddonNeverGetsWordOptions()
     {

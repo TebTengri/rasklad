@@ -57,8 +57,9 @@ void LayoutCue::play()
                 if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, kRate, 1,
                                        200000) == 0 &&
                     !m_stop.load() && snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
-                    // 70 ms is below the default start threshold: start explicitly.
-                    if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED) snd_pcm_start(pcm);
+                    // 70 ms is below the default start threshold: start explicitly,
+                    // unless stopped meanwhile (the samples queued are then dropped).
+                    if (!m_stop.load() && snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED) snd_pcm_start(pcm);
                     // Let it play: at most ~400 ms, or until stopped (off or unload).
                     for (int i = 0; i < 40 && !m_stop.load(); ++i) {
                         if (snd_pcm_state(pcm) != SND_PCM_STATE_RUNNING) break;

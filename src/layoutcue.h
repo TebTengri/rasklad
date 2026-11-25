@@ -30,6 +30,7 @@ public:
     void play();
     // Main thread: ends a cue in flight within ~10 ms; the next play() starts anew.
     void stop() { m_stop.store(true); }
+    bool busy() const { return m_busy.load(); } // for tests
 
 private:
     const char *m_device;
