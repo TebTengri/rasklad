@@ -195,19 +195,21 @@ def load_state():
   saved = state.get("fcitx")
   items = lambda v: isinstance(v, list) and all(
     isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
-  if isinstance(saved, dict) and "before" in saved:
+  if isinstance(saved, dict) and set(saved) != {"groups"}:
     # Written before SYS-272 (a snapshot): ours are only the required methods in
-    # after that were not in before. Anything else there was the user's.
+    # after that were not in before, and only as this tool writes them (with no
+    # layout of their own). Anything else there was the user's.
     if not (isinstance(saved.get("group"), str) and items(saved.get("before")) and
             items(saved.get("after"))):
       raise bad
     had = set(ids(saved["before"]))
-    rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had]
-    state["fcitx"] = {saved["group"]: {"added": rows}} if rows else None
+    rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had and r[1] == ""]
+    state["fcitx"] = {"groups": {saved["group"]: {"added": rows}}} if rows else None
   elif saved is not None:
-    if not (isinstance(saved, dict) and saved and all(
+    groups = saved.get("groups") if isinstance(saved, dict) else None
+    if not (isinstance(groups, dict) and groups and all(
         isinstance(k, str) and isinstance(v, dict) and set(v) == {"added"} and items(v["added"]) and
-        v["added"] and all(r[0] in REQUIRED for r in v["added"]) for k, v in saved.items())):
+        v["added"] and all(r[0] in REQUIRED and r[1] == "" for r in v["added"]) for k, v in groups.items())):
       raise bad
   return state
 
@@ -364,18 +366,22 @@ def ids(items):
 REQUIRED = ("keyboard-us", "keyboard-ru")
 
 
+def claimed_groups(state):
+  return dict((state.get("fcitx") or {}).get("groups", {}))
+
+
 def claimed_rows(state, name):
-  entry = (state.get("fcitx") or {}).get(name)
+  entry = claimed_groups(state).get(name)
   return [list(r) for r in entry["added"]] if entry else []
 
 
 def set_claim(state, name, rows):
-  groups = dict(state.get("fcitx") or {})
+  groups = claimed_groups(state)
   if rows:
     groups[name] = {"added": [list(r) for r in rows]}
   else:
     groups.pop(name, None)
-  state["fcitx"] = groups or None
+  state["fcitx"] = {"groups": groups} if groups else None
 
 
 def still_ours(rows, items):
@@ -743,6 +749,15 @@ def install(assume_yes, single_layout=False):
       say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
       layout_change = []
 
+  if group[0] == "ok":
+    # SYS-272: both are there; rows of ours the user removed or changed since
+    # are theirs now, so a later --revert never takes a re-added one out.
+    now = bus["group"]()
+    rows = claimed_rows(state, now[0]) if now else []
+    if rows and still_ours(rows, now[2]) != rows:
+      set_claim(state, now[0], still_ours(rows, now[2]))
+      save_state(state)
+
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
     print("Nothing to change.")
@@ -1052,7 +1067,7 @@ def restore_fcitx(state):
     say("no-fcitx", "fcitx-group", "start Fcitx and run --revert again")
     return False
   clean = True
-  for name in list(state.get("fcitx") or {}):
+  for name in list(claimed_groups(state)):
     if name not in names:
       say("reset", "fcitx-group", "the group %s is gone; nothing to undo there" % name)
       set_claim(state, name, [])

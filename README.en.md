@@ -106,8 +106,9 @@ after the last install is normally left as it is, with a notice. From the Fcitx
 layout group it takes out only the layouts it added; the others, their order and
 the default layout stay as they are. Known gaps: an edit made in the instant
 between its check and the replacement is not caught, and if you remove a layout
-it added and later add the same one back yourself (with no `rasklad-setup` run in
-between), it takes that one for its own and removes it. Only one `--install` or `--revert`
+it added and later add the same one back yourself before `rasklad-setup` has seen
+the removal, it takes that one for its own and removes it. The same goes for a
+Fcitx group deleted and created again under the same name. Only one `--install` or `--revert`
 runs at a time for the same state directory. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).

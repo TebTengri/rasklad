@@ -36,7 +36,7 @@ class Claims(Base):
         return self.run_quiet(self.setup.revert)
 
     def claim(self, name='Default'):
-        groups = self.setup.load_state().get('fcitx') or {}
+        groups = (self.setup.load_state().get('fcitx') or {}).get('groups', {})
         return [tuple(r) for r in groups.get(name, {}).get('added', [])]
 
     # --- the bug and the case that broke the first fix --------------------------
@@ -274,9 +274,37 @@ class Claims(Base):
         self.revert_with(fake)
         self.assertEqual(fake.items, [PINYIN])
 
+    def test_old_record_never_claims_a_row_with_its_own_layout(self):
+        # main: de only; install; the user gives ru a layout and removes us;
+        # reinstall wrote that custom ru into after.
+        custom = ('keyboard-ru', 'ru(phonetic)')
+        self.old_state([DE], [DE, custom, US])
+        self.assertEqual(self.claim(), [US])
+        fake = FakeFcitx([DE, custom, US, ('keyboard-fr', '')])
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [DE, custom, ('keyboard-fr', '')])
+
+    def test_a_group_named_before_is_just_a_name(self):
+        fake = FakeFcitx([US])
+        fake.name = 'before'
+        self.install_with(fake)
+        self.assertEqual(self.claim('before'), [RU])
+        self.assertEqual(self.revert_with(fake)[0], 0)
+        self.assertEqual(fake.items, [US])
+
+    def test_install_with_both_there_forgets_a_changed_row(self):
+        fake = FakeFcitx([US])
+        self.install_with(fake)
+        fake.items = [US, ('keyboard-ru', 'ru(phonetic)')]
+        self.install_with(fake)
+        self.assertEqual(self.claim(), [])
+        fake.items = [US, RU]  # the user puts the plain ru back
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [US, RU])
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
-        state['fcitx'] = {'Default': {'added': [list(DE)]}}
+        state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}
         self.setup.save_state(state)
         with self.assertRaises(self.setup.Refused):
             self.setup.load_state()
