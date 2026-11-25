@@ -31,19 +31,30 @@ def load_setup(home):
 
 
 class FakeFcitx:
+    """One group, "Default" unless renamed; .layout is its default layout."""
     def __init__(self, items, apply=True):
         self.items = items
         self.apply = apply
         self.calls = 0
+        self.name = 'Default'
+        self.layout = 'us'
+        self.writes = []
+
+    def info(self, name):
+        if name != self.name:
+            return None
+        return (self.name, self.layout, [list(i) for i in self.items])
 
     def bus(self):
-        return {'group': lambda: ('Default', 'us', [list(i) for i in self.items]),
-                'set_group': self.set_group, 'status': lambda: None}
+        return {'group': lambda: self.info(self.name), 'group_by': self.info,
+                'groups': lambda: [self.name], 'set_group': self.set_group, 'status': lambda: None}
 
     def set_group(self, name, layout, items):
         self.calls += 1
-        if self.apply:
+        self.writes.append((name, layout, [list(i) for i in items]))
+        if self.apply and name == self.name:
             self.items = [tuple(i) for i in items]
+            self.layout = layout
         return True  # Fcitx answers normally even when nothing changed
 
 
@@ -243,9 +254,9 @@ class Install(Base):
         self.hypr('us,ru', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
         real = self.setup.fcitx_plan
-        def plan_then_kz(bus):
+        def plan_then_kz(bus, *current):
             self.hypr('us,ru,kz', variant=',,')  # after the question
-            return real(bus)
+            return real(bus, *current)
         self.setup.fcitx_plan = plan_then_kz
         code, out = self.install(fake, single_layout=True)
         self.assertEqual(code, 1)

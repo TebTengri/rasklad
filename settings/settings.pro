@@ -5,7 +5,7 @@ TARGET = rasklad-settings
 QT = core gui qml quick quickcontrols2 dbus network
 CONFIG += c++17 warn_on
 CONFIG -= app_bundle
-DEFINES += QT_NO_KEYWORDS RASKLAD_VERSION=\\\"0.5.27\\\"
+DEFINES += QT_NO_KEYWORDS RASKLAD_VERSION=\\\"0.5.28\\\"
 INCLUDEPATH += $$PWD $$PWD/../src
 include(../src/rasklad_hardening.pri)
 HEADERS += licenses.h settingsbackend.h settingscore.h sources.h desktopindex.h appiconprovider.h \

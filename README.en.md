@@ -101,13 +101,19 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 `us` has a non-Latin variant, the step is not offered. Non-interactive install:
 `rasklad-setup --install --yes --single-layout`.
 
-`rasklad-setup --revert` puts back what it changed. A file or Fcitx layout group
-you changed yourself after the last install is normally left as it is, with a
-notice. Known gaps: an edit
-made in the instant between its check and the replacement is not caught, and if
-you change the Fcitx group and `--install` then adds a missing layout again,
-`--revert` can return the group to how it was before the first install, dropping
-your change. Only one `--install` or `--revert`
+`rasklad-setup --revert` puts back what it changed. A file you changed yourself
+after the last install is normally left as it is, with a notice. From the Fcitx
+layout group it takes out only the layouts that its last saved record says it
+added; the others, their order and the default layout stay as they are. Known gaps: an edit made in the instant between its check and the
+replacement is not caught, and it removes a layout matching that record even if
+you added it yourself. That happens if you removed its layout and added the same
+one while the record never learned of the removal, or if a run recorded a layout
+but never got confirmation that it was added. The record does not learn of a
+change when no `--install` or
+`--revert` ran in between (`--check` and the settings window's check record
+nothing), when a run could not save its record (it stopped, Fcitx gave no answer,
+the disk was full), and with a Fcitx group deleted and created again under the
+same name. Only one `--install` or `--revert`
 runs at a time for the same state directory. The same actions are in the settings window, section "Connection to
 Omarchy"; keeping only `us` in Hyprland is offered in the terminal only
 (`rasklad-setup --install`).

@@ -193,19 +193,40 @@ def load_state():
   if state.get("link") not in (None, WIDGET):
     raise bad
   saved = state.get("fcitx")
-  if saved is not None:
-    items = lambda v: isinstance(v, list) and all(
-      isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
-    if not (isinstance(saved, dict) and isinstance(saved.get("group"), str) and
-            isinstance(saved.get("layout"), str) and isinstance(saved.get("after_layout", ""), str) and
-            items(saved.get("before")) and items(saved.get("after"))):
+  items = lambda v: isinstance(v, list) and all(
+    isinstance(i, list) and len(i) == 2 and all(isinstance(x, str) for x in i) for i in v)
+  if isinstance(saved, dict) and set(saved) != {"groups"}:
+    # Written before SYS-272 (a snapshot): ours are only the required methods in
+    # after that were not in before, and only as this tool writes them (with no
+    # layout of their own). Anything else there was the user's.
+    if not (isinstance(saved.get("group"), str) and items(saved.get("before")) and
+            items(saved.get("after"))):
+      raise bad
+    had = set(ids(saved["before"]))
+    rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had and r[1] == ""]
+    if not isinstance(saved.get("after_layout", saved.get("layout")), str):
+      raise bad
+    entry = {"added": rows, "legacy_after": saved["after"], "legacy_before": saved["before"],
+             "legacy_layout": saved.get("after_layout", saved.get("layout"))}
+    state["fcitx"] = {"groups": {saved["group"]: entry}} if rows else None
+  elif saved is not None:
+    groups = saved.get("groups") if isinstance(saved, dict) else None
+    if not (isinstance(groups, dict) and groups and all(
+        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after", "legacy_before", "legacy_layout"} == {"added"} and
+        len({"legacy_after", "legacy_before", "legacy_layout"} & set(v)) in (0, 3) and
+        isinstance(v.get("legacy_layout", ""), str) and
+        items(v["added"]) and items(v.get("legacy_after", [])) and items(v.get("legacy_before", [])) and
+        v["added"] and all(r[0] in REQUIRED and r[1] == "" for r in v["added"]) for k, v in groups.items())):
       raise bad
   return state
 
 
 def save_state(state):
   private_state_dir()
-  write_atomic(STATE_FILE, (json.dumps(state, indent=2, sort_keys=True) + "\n").encode(), 0o600)
+  # Keys starting with "_" are this run's working notes (the copies to delete
+  # once saved), never part of the file.
+  data = {k: v for k, v in state.items() if not k.startswith("_")}
+  write_atomic(STATE_FILE, (json.dumps(data, indent=2, sort_keys=True) + "\n").encode(), 0o600)
 
 
 def save_and_drop(state):
@@ -313,14 +334,23 @@ def fcitx():
     except GLib.Error:
       return None
 
-  def group():
-    name = call("CurrentInputMethodGroup", None, "(s)")
-    if not name:
+  def group_by(name):
+    # None when Fcitx does not answer or has no group of that name.
+    names = call("InputMethodGroups", None, "(as)")
+    if not names or name not in names[0]:
       return None
-    info = call("InputMethodGroupInfo", GLib.Variant("(s)", (name[0],)), "(sa(ss))")
+    info = call("InputMethodGroupInfo", GLib.Variant("(s)", (name,)), "(sa(ss))")
     if not info:
       return None
-    return name[0], info[0], [list(item) for item in info[1]]
+    return name, info[0], [list(item) for item in info[1]]
+
+  def group():
+    name = call("CurrentInputMethodGroup", None, "(s)")
+    return group_by(name[0]) if name else None
+
+  def groups():
+    names = call("InputMethodGroups", None, "(as)")
+    return list(names[0]) if names else None
 
   def set_group(name, layout, items):
     return call("SetInputMethodGroupInfo",
@@ -332,11 +362,67 @@ def fcitx():
     values = reply[0] if reply else None
     return values if isinstance(values, dict) else None
 
-  return {"group": group, "set_group": set_group, "status": status}
+  return {"group": group, "group_by": group_by, "groups": groups, "set_group": set_group, "status": status}
 
 
 def ids(items):
   return sorted(i[0] for i in items)
+
+
+# SYS-272: the Fcitx record holds, per group name, the rows (method, its own
+# layout) this tool added, never a snapshot of the whole group. Undoing removes
+# those rows if they are still there exactly, and keeps everything else as it is
+# now: the user's other methods, their order and the group's default layout.
+REQUIRED = ("keyboard-us", "keyboard-ru")
+
+
+def claimed_groups(state):
+  return dict((state.get("fcitx") or {}).get("groups", {}))
+
+
+def claimed_rows(state, name):
+  entry = claimed_groups(state).get(name)
+  return [list(r) for r in entry["added"]] if entry else []
+
+
+def set_claim(state, name, rows):
+  groups = claimed_groups(state)
+  if rows:
+    groups[name] = {"added": [list(r) for r in rows]}
+  else:
+    groups.pop(name, None)
+  state["fcitx"] = {"groups": groups} if groups else None
+
+
+def still_ours(rows, items):
+  # A row the user removed, or gave another layout, is no longer ours; nor is
+  # one the group holds twice (which of them is ours cannot be told).
+  return [r for r in rows if items.count(r) == 1]
+
+
+def legacy_unmatched(entry, layout, items):
+  # An older install's record counts on its group as it left it (after); a group
+  # back as it was before (never applied, or restored) has nothing of ours.
+  return items != entry["legacy_after"] and items != entry["legacy_before"] or \
+    items == entry["legacy_after"] and layout != entry["legacy_layout"]
+
+
+def settle_claim(state, name, layout, items):
+  """Bring the record for this group up to what Fcitx shows now: rows of ours the
+  user removed or changed are theirs from here on. A record converted from an
+  older version only counts if the group is still exactly as that install left
+  it (as the older --revert required); otherwise its rows are left as they are.
+  Returns True when the record changed; the caller saves it."""
+  entry = claimed_groups(state).get(name)
+  if not entry:
+    return False
+  rows = [list(r) for r in entry["added"]]
+  if "legacy_after" in entry:
+    if legacy_unmatched(entry, layout, items):
+      say("changed", "fcitx-group", "changed since an older install; its layouts left as is")
+      rows = []
+  set_claim(state, name, still_ours(rows, items))
+  return claimed_groups(state).get(name) != entry
 
 
 # --- the steps: (state, new bytes) --------------------------------------------
@@ -475,8 +561,10 @@ def link_state():
   return "other" if os.path.lexists(PLUGIN_LINK) else "missing"
 
 
-def fcitx_plan(bus):
-  current = bus["group"]() if bus else None
+def fcitx_plan(bus, current=False):
+  # current: a group already read (one snapshot for the plan and the record).
+  if current is False:
+    current = bus["group"]() if bus else None
   if current is None:
     return "no-fcitx", None
   name, layout, items = current
@@ -691,13 +779,19 @@ def install(assume_yes, single_layout=False):
   if link == "other":
     say("other", "bar-widget-link", "something else is there; left as is")
   bus = fcitx()
-  group = fcitx_plan(bus)
+  live = bus["group"]() if bus else None
+  group = fcitx_plan(bus, live)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
     # SYS-268: without Fcitx nothing else would switch layouts.
     if layout_change:
       say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
       layout_change = []
+
+  # SYS-272: what this run sees is settled at once: a row of ours the user
+  # removed is theirs if it comes back, even while the question waits.
+  if live and settle_claim(state, live[0], live[1], live[2]):
+    save_state(state)
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
@@ -767,26 +861,54 @@ def install(assume_yes, single_layout=False):
     os.makedirs(os.path.dirname(PLUGIN_LINK), exist_ok=True)
     os.symlink(WIDGET, PLUGIN_LINK)
     say("done", "bar-widget-link")
+  run_rows, fcitx_name = [], None
   if group[0] == "missing":
-    name, layout, before, after = group[1]
-    # A retry keeps the group as it was before the first attempt.
-    saved = state.get("fcitx")
-    prior = dict(saved) if saved else None  # put back as is if this run is rolled back
-    if not (saved and saved["group"] == name):
-      saved = {"group": name, "layout": layout, "before": before}
-    saved["after"] = after
-    saved["after_layout"] = layout  # the layout this write used
-    state["fcitx"] = saved
-    save_state(state)
-    if bus["set_group"](name, layout, after):
-      say("done", "fcitx-group")
-    else:
-      say("failed", "fcitx-group")
+    # SYS-272: read again now, not the group from before the question, so a
+    # change made while it waited is kept; the default layout is passed through.
+    now = bus["group"]()
+    if now and settle_claim(state, now[0], now[1], now[2]):
+      save_state(state)  # whichever group this is: what is seen is settled
+    if now is None:
+      say("no-fcitx", "fcitx-group", "start Fcitx and run again")
       failed = True
+    elif now[0] != group[1][0]:
+      say("changed", "fcitx-group", "another group became current while waiting; left as is")
+      failed = True
+    elif all(m in ids(now[2]) for m in REQUIRED):
+      say("ok", "fcitx-group", "both layouts are there already")
+    else:
+      name, layout, items = now
+      new = [[m, ""] for m in REQUIRED if m not in ids(items)]
+      fcitx_name = name
+      # Settled against this read just above; new rows are missing now, so
+      # never among them. Recorded before the write: an interruption after it
+      # still lets --revert take these rows out.
+      kept = claimed_rows(state, name)
+      set_claim(state, name, kept + new)
+      save_state(state)
+      replied = bus["set_group"](name, layout, items + new)
+      back = bus["group_by"](name)
+      if back is None:
+        # Outcome unknown: the claim stays, so --revert can still remove them.
+        say("unknown", "fcitx-group", "Fcitx did not answer; run --check")
+        failed = True
+      else:
+        run_rows = [r for r in new if back[2].count(r) == 1]  # twice: not ours
+        set_claim(state, name, still_ours(kept, back[2]) + run_rows)
+        save_state(state)
+        if replied and len(run_rows) == len(new):
+          say("done", "fcitx-group")
+        else:
+          say("failed", "fcitx-group")
+          failed = True
   for path, old, new in input_change:
     # The group as Fcitx has it now, not the snapshot from before the question:
     # a successful reply does not prove both layouts are there.
-    if fcitx_plan(fcitx())[0] != "ok":
+    final_bus = fcitx()
+    final = final_bus["group"]() if final_bus else None
+    if final and settle_claim(state, final[0], final[1], final[2]):
+      save_state(state)  # a removal seen here makes a re-added row the user's
+    if fcitx_plan(final_bus, final)[0] != "ok":
       say("skipped", os.path.basename(path), "Fcitx does not have both layouts; Hyprland layouts left as is")
       failed = True
       continue
@@ -831,11 +953,11 @@ def install(assume_yes, single_layout=False):
         # if this run changed it and no block of ours still keeps Hyprland at us.
         # The bar widget switches between the two Fcitx methods: while shell.json
         # uses it, both stay, or its click would do nothing.
-        if group[0] == "missing" and INPUT not in state["files"] and not state.get("await_hypr"):
+        if run_rows and INPUT not in state["files"] and not state.get("await_hypr"):
           if shell_uses_widget():
             say("kept", "fcitx-group", "the bar widget switches between both layouts; kept")
           else:
-            undo_group(state, group[1], prior)
+            undo_group(state, fcitx_name, run_rows)
       save_and_drop(state)
       return 1
   return 1 if failed else 0
@@ -945,53 +1067,84 @@ def input_block_present():
       os.close(fd)
 
 
-def undo_group(state, planned, prior):
-  """Auto-rollback of this run's Fcitx change: back to the group as this run
-  found it, only while Fcitx still has exactly what this run wrote. The record
-  goes back to what it was before this run (none, or an earlier install's)."""
-  name, layout, before, after = planned
+def undo_group(state, name, rows):
+  """Auto-rollback of this run's Fcitx change: only the rows this run added that
+  are still ours are taken out of the group as it is now; whatever else is
+  recorded stays recorded, settled against that same read."""
   bus = fcitx()
-  current = bus["group"]() if bus else None
-  if current is None or current[0] != name or current[1] != layout or current[2] != after:
-    say("kept", "fcitx-group", "changed meanwhile; left as is")
+  now = bus["group_by"](name) if bus else None
+  if now is None:
+    say("kept", "fcitx-group", "Fcitx did not answer; run --revert later")
     return
-  if not bus["set_group"](name, layout, before):
+  _, layout, items = now
+  settle_claim(state, name, layout, items)
+  # A row this run saw removed is the user's if it is back: not ours any more.
+  claim = claimed_rows(state, name)
+  rows = [r for r in rows if r in claim]
+  if not rows:
+    return
+  remaining = [i for i in items if i not in rows]
+  if not remaining:
+    say("kept", "fcitx-group", "the group would be left empty; left as is")
+    return
+  bus["set_group"](name, layout, remaining)
+  # A reply does not prove the rows are gone: only a read does.
+  back = bus["group_by"](name)
+  if back is None:
     say("failed", "fcitx-group")
     return
-  say("restored", "fcitx-group")
-  # An earlier install's record keeps its own after: a group the user changed
-  # since then must not match it, or --revert would undo the user's change.
-  state["fcitx"] = prior
+  settle_claim(state, name, back[1], back[2])  # row by row: gone ones are done
+  say("restored" if not any(r in back[2] for r in rows) else "failed", "fcitx-group")
 
 
 def restore_fcitx(state):
-  """Put the Fcitx group back as it was before install, if it is still exactly
-  as install left it. Returns True when nothing of ours is left in it."""
-  saved = state["fcitx"]
-  # SYS-272: an empty saved group (a damaged or edited state file) would leave
-  # Fcitx with nothing to type with: never written. Any non-empty group the user
-  # had (us, de, pinyin only) is put back.
-  if not saved["before"]:
-    say("changed", "fcitx-group", "the saved group is empty; left as is")
+  """Take the rows this tool added out of each recorded group, if they are
+  still there; everything else in the group stays as it is now. Returns True
+  when nothing of ours is left recorded."""
+  # The bar widget switches between the two methods: while shell.json still
+  # uses it (the user's own setting now), both stay.
+  if shell_uses_widget():
+    say("kept", "fcitx-group", "shell.json still uses the bar widget, which needs both layouts; kept")
     return False
   bus = fcitx()
-  current = bus["group"]() if bus else None
-  if current is None:
+  names = bus["groups"]() if bus else None
+  if names is None:
     say("no-fcitx", "fcitx-group", "start Fcitx and run --revert again")
     return False
-  if current[0] == saved["group"] and current[1] == saved["layout"] and current[2] == saved["before"]:
-    state["fcitx"] = None  # never changed, or already back
-    return True
-  if current[0] == saved["group"] and current[1] == saved.get("after_layout", saved["layout"]) and \
-     current[2] == saved["after"]:
-    if bus["set_group"](saved["group"], saved["layout"], saved["before"]):
-      say("restored", "fcitx-group")
-      state["fcitx"] = None
-      return True
-    say("failed", "fcitx-group")
-    return False
-  say("changed", "fcitx-group", "changed since install; left as is")
-  return False
+  clean = True
+  for name in list(claimed_groups(state)):
+    if name not in names:
+      say("reset", "fcitx-group", "the group %s is gone; nothing to undo there" % name)
+      set_claim(state, name, [])
+      continue
+    now = bus["group_by"](name)
+    if now is None:
+      say("no-fcitx", "fcitx-group", "start Fcitx and run --revert again")
+      clean = False
+      continue
+    _, layout, items = now
+    entry = claimed_groups(state)[name]
+    if "legacy_after" in entry and legacy_unmatched(entry, layout, items):
+      clean = False  # said by settle_claim; the next --revert finds nothing to do
+    settle_claim(state, name, layout, items)
+    ours = claimed_rows(state, name)
+    remaining = [i for i in items if i not in ours]
+    if not ours:
+      set_claim(state, name, [])  # already gone, or changed by the user: theirs now
+    elif not remaining:
+      say("kept", "fcitx-group", "taking out ours would leave the group %s empty; left as is" % name)
+      clean = False
+    else:
+      bus["set_group"](name, layout, remaining)
+      back = bus["group_by"](name)  # a reply does not prove the rows are gone
+      if back is not None:
+        settle_claim(state, name, back[1], back[2])  # row by row: gone ones are done
+      if back is not None and not claimed_rows(state, name):
+        say("restored", "fcitx-group")
+      else:
+        say("failed", "fcitx-group")
+        clean = False
+  return clean
 
 
 def revert():
