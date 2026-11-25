@@ -1468,8 +1468,12 @@ def untracked_traces():
     if file_state(path) in (None, "symlink"):
       try:
         data = read(os.path.realpath(path))
-      except OSError:
-        data = None
+      except OSError as e:
+        # A regular file that cannot be read may still hold our lines: listed,
+        # so revert does not report "nothing to revert".
+        if e.errno in (errno.EACCES, errno.EPERM, errno.EIO):
+          found.append(path)
+        continue
       if data is not None and trace_in(path, data):
         found.append(path)
   if os.path.islink(PLUGIN_LINK) and os.path.realpath(PLUGIN_LINK) == os.path.realpath(WIDGET):

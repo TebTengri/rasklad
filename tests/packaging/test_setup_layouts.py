@@ -368,6 +368,7 @@ class Install(Base):
         self.setup.read = denied
         try:
             self.assertTrue(self.setup.layout_block_in_input())
+            self.assertIn(self.setup.INPUT, self.setup.untracked_traces())
         finally:
             self.setup.read = real
         self.input.unlink()
