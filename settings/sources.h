@@ -44,8 +44,8 @@ public:
     // Program names the addon saw with a focused text field since it started;
     // empty if Fcitx is not reachable or the addon is older than SYS-253.
     virtual QStringList seenApps() = 0;
-    // SYS-272: "TimesOn" from the addon status; none from an older addon.
-    virtual std::optional<qint64> timesOn() { return std::nullopt; }
+    // SYS-272: "OnEpoch" from the addon status; empty from an older addon.
+    virtual QString onEpoch() { return {}; }
 };
 
 // SYS-254: Hyprland's decoration:rounding over its request socket (no subprocess),
@@ -126,7 +126,7 @@ class FcitxSeenApps final : public AppSource
 {
 public:
     QStringList seenApps() override;
-    std::optional<qint64> timesOn() override;
+    QString onEpoch() override;
 };
 
 } // namespace rasklad::settings

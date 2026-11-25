@@ -105,7 +105,7 @@ private:
     QVariantMap m_raw; // the addon's config exactly as read last (SYS-272: conflict check)
     QStringList m_focused; // SYS-253: programs the addon saw with a focused field
     QStringList m_seen; // switched off in this session: stay visible to switch back on
-    std::optional<qint64> m_timesOn; // the addon's TimesOn at the last refresh
+    QString m_onEpoch; // the addon's OnEpoch at the last refresh
     // Group of each row, fixed at refresh: a switched row stays where it is under the cursor.
     QHash<QString, QString> m_groups;
     QVariantList m_apps;

@@ -10,6 +10,8 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <functional>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -29,8 +31,17 @@ public:
     // Starts the cue unless one is playing or the last began < 180 ms ago.
     void play();
     // Main thread: ends a cue in flight within ~10 ms; the next play() starts anew.
-    void stop() { m_stop.store(true); }
-    bool busy() const { return m_busy.load(); } // for tests
+    // Under the start lock: once stop() returns, queued samples are never started.
+    void stop()
+    {
+        std::lock_guard<std::mutex> lock(m_startLock);
+        m_stop.store(true);
+    }
+    // Tests: is a worker running, how many cues started, and a hook run by the
+    // worker after its samples are queued (before the start).
+    bool busy() const { return m_busy.load(); }
+    int starts() const { return m_starts.load(); }
+    std::function<void()> afterQueueForTest;
 
 private:
     const char *m_device;
@@ -38,6 +49,8 @@ private:
     std::thread m_worker;
     std::atomic<bool> m_busy{false};
     std::atomic<bool> m_stop{false};
+    std::atomic<int> m_starts{0};
+    std::mutex m_startLock; // stop() vs the start of queued samples
     std::chrono::steady_clock::time_point m_last{};
 };
 

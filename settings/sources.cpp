@@ -326,10 +326,10 @@ QStringList FcitxSeenApps::seenApps()
     return status ? seenAppsFromStatus(*status) : QStringList{};
 }
 
-std::optional<qint64> FcitxSeenApps::timesOn()
+QString FcitxSeenApps::onEpoch()
 {
     const auto status = statusMap();
-    return status ? timesOnFromStatus(*status) : std::nullopt;
+    return status ? onEpochFromStatus(*status) : QString();
 }
 
 } // namespace rasklad::settings

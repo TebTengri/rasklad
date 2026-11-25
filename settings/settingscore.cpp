@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 #include "settingscore.h"
 
+#include <QRegularExpression>
+
 #include "manualgesture.h"
 #include "terminalapps.h"
 
@@ -156,15 +158,13 @@ QStringList seenAppsFromStatus(const QVariantMap &status)
     return out;
 }
 
-std::optional<qint64> timesOnFromStatus(const QVariantMap &status)
+QString onEpochFromStatus(const QVariantMap &status)
 {
-    const QVariant raw = status.value(QStringLiteral("TimesOn"));
-    if (raw.metaType() != QMetaType::fromType<QString>()) return std::nullopt;
+    const QVariant raw = status.value(QStringLiteral("OnEpoch"));
+    if (raw.metaType() != QMetaType::fromType<QString>()) return {};
     const QString text = raw.toString();
-    if (text.isEmpty() || text.size() > 10) return std::nullopt;
-    for (const QChar c : text)
-        if (c < QLatin1Char('0') || c > QLatin1Char('9')) return std::nullopt;
-    return text.toLongLong();
+    static const QRegularExpression shape(QStringLiteral("^[0-9a-f]{1,16}-[0-9]{1,20}$"));
+    return text.size() <= 40 && shape.match(text).hasMatch() ? text : QString();
 }
 
 QVariantMap setupFromCheck(const QByteArray &output)

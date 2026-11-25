@@ -63,8 +63,8 @@ class FakeApps final : public AppSource
 public:
     QStringList open{QStringLiteral("foot"), QStringLiteral("chatgpt"), QStringLiteral("slack")};
     QStringList seenApps() override { return open; }
-    std::optional<qint64> times = 1;
-    std::optional<qint64> timesOn() override { return times; }
+    QString epoch = QStringLiteral("ab12-0");
+    QString onEpoch() override { return epoch; }
 };
 
 class FakeSetup final : public SetupTool
@@ -528,12 +528,19 @@ private Q_SLOTS:
         b.setAppEnabled(QStringLiteral("chromium"), false); // kept by the window
         b.refresh();
         QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
-        w.times = 2; // off and on through Fcitx between two refreshes
+        w.epoch = QStringLiteral("ab12-1"); // off and on through Fcitx between two refreshes
         b.refresh();
         QVERIFY(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString() != QStringLiteral("recent"));
-        QCOMPARE(timesOnFromStatus({{QStringLiteral("TimesOn"), QStringLiteral("12")}}), std::optional<qint64>(12));
-        QVERIFY(!timesOnFromStatus({{QStringLiteral("TimesOn"), QStringLiteral("-1")}}));
-        QVERIFY(!timesOnFromStatus({}));
+        b.setAppEnabled(QStringLiteral("chromium"), true);
+        b.setAppEnabled(QStringLiteral("chromium"), false);
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        w.epoch = QStringLiteral("cd34-1"); // Fcitx restarted: same count, another start
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString() != QStringLiteral("recent"));
+        QCOMPARE(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("0a1b-12")}}), QStringLiteral("0a1b-12"));
+        QVERIFY(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("x-1")}}).isEmpty());
+        QVERIFY(onEpochFromStatus({}).isEmpty());
     }
     void olderAddonNeverGetsWordOptions()
     {

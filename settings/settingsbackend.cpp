@@ -105,11 +105,11 @@ void SettingsBackend::refresh()
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
-    // Turned off and on again since the last refresh (or Fcitx restarted): the
+    // Turned off and on again since the last refresh, or Fcitx restarted: the
     // names this window kept itself go too, as the addon's did.
-    const auto timesOn = m_running ? m_appSource->timesOn() : std::nullopt;
-    if (timesOn && m_timesOn && *timesOn != *m_timesOn) m_seen.clear();
-    if (timesOn) m_timesOn = timesOn;
+    const QString epoch = m_running ? m_appSource->onEpoch() : QString();
+    if (!epoch.isEmpty() && !m_onEpoch.isEmpty() && epoch != m_onEpoch) m_seen.clear();
+    if (!epoch.isEmpty()) m_onEpoch = epoch;
     if (m_names) m_names->reload();
     if (m_setupTool) m_setupTool->requestCheck(); // answers later through updated()
     m_groups.clear(); // regrouped only here, never on a switch

@@ -79,7 +79,9 @@
 #include <cstring>
 #include <cstdint>
 #include <memory>
+#include <cstdio>
 #include <limits>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -137,9 +139,10 @@ FCITX_CONFIGURATION(RaskladStatus,
     fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
     fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
         "Applications with a focused text field since start", {}};
-    // SYS-272: how many times Rasklad was turned on since start, so the settings
-    // window forgets the names it kept itself after an off/on it did not see.
-    fcitx::Option<int> timesOn{this, "TimesOn", "Times turned on since start", 0};);
+    // SYS-272: "<random per addon start>-<times turned on since>", so the settings
+    // window forgets the names it kept itself after an off/on or a Fcitx restart it
+    // did not see. Random, not derived from anything about the user.
+    fcitx::Option<std::string> onEpoch{this, "OnEpoch", "Changes when turned on or restarted", ""};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 // Applications from the addon configuration (compositor app ids as Fcitx reports
 // them in InputContext::program()). Claims, not authentication: policy allows
@@ -531,8 +534,7 @@ public:
         status_.profileReady.setValue(profile_ && profile_->ready());
         status_.enabled.setValue(*config_.enabled);
         status_.autoCorrect.setValue(*config_.autoCorrect);
-        status_.timesOn.setValue(static_cast<int>(
-            std::min<std::uint64_t>(enableGeneration_, static_cast<std::uint64_t>(std::numeric_limits<int>::max()))));
+        status_.onEpoch.setValue(startId_ + "-" + std::to_string(enableGeneration_));
         status_.seenApplications.setValue(seenPrograms_);
         return &status_;
     }
@@ -1451,21 +1453,30 @@ private:
     bool selfSwitch_ = false;
     bool wasEnabled_ = false; // Enabled as of the last applied config
     std::uint64_t enableGeneration_ = 0; // bumped each time Rasklad is turned on
+    const std::string startId_ = randomId(); // OnEpoch: differs on every addon start
+    static std::string randomId() {
+        std::random_device device;
+        char out[17];
+        std::snprintf(out, sizeof out, "%08x%08x", device(), device());
+        return out;
+    }
     // Yes: the field reports its text and the cursor is at its start or after
-    // ASCII whitespace. No: it reports another character before the cursor, or a
-    // selection. Unknown: no surrounding text, oversized (as lastMatches), or
-    // invalid UTF-8.
+    // ASCII whitespace. Unknown: the field reports no text at all. No: anything
+    // else, including a report that cannot be used (oversized as in lastMatches,
+    // invalid UTF-8, a selection, a cursor out of range), so such a field never
+    // lifts the enable guard on a Space it may have ignored.
     enum class TokenStart { Yes, No, Unknown };
     static TokenStart tokenStart(fcitx::InputContext *ic) {
         const auto &st = ic->surroundingText();
-        if (!st.isValid() || st.text().size() > kMaxSurroundingBytes) return TokenStart::Unknown;
+        if (!st.isValid()) return TokenStart::Unknown;
+        if (st.text().size() > kMaxSurroundingBytes) return TokenStart::No;
         const std::string &text = st.text();
-        if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return TokenStart::Unknown;
+        if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return TokenStart::No;
         if (st.cursor() != st.anchor()) return TokenStart::No;
         if (st.cursor() == 0) return TokenStart::Yes;
-        if (st.cursor() > fcitx::utf8::length(text)) return TokenStart::Unknown;
+        if (st.cursor() > fcitx::utf8::length(text)) return TokenStart::No;
         const auto bytes = fcitx::utf8::ncharByteLength(text.begin(), st.cursor());
-        if (bytes <= 0) return TokenStart::Unknown;
+        if (bytes <= 0) return TokenStart::No;
         const char before = text[static_cast<std::size_t>(bytes) - 1];
         return before == ' ' || before == '\t' || before == '\n' || before == '\r' ? TokenStart::Yes : TokenStart::No;
     }
