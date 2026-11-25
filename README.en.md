@@ -103,12 +103,13 @@ letters only. If there are layouts other than `us` and `ru` (`kz`, for example),
 
 `rasklad-setup --revert` puts back what it changed. A file you changed yourself
 after the last install is normally left as it is, with a notice. From the Fcitx
-layout group it takes out only the layouts it added; the others, their order and
-the default layout stay as they are. What it counts as its own comes from its last
-saved record. Known gaps: an edit made in the instant between its check and the
-replacement is not caught, and if you remove a layout it added and later add the
-same one back yourself while that record never learned of the removal, it takes
-that one for its own and removes it. That happens when no `--install` or
+layout group it takes out only the layouts that its last saved record says it
+added; the others, their order and the default layout stay as they are. Known gaps: an edit made in the instant between its check and the
+replacement is not caught, and it removes a layout matching that record even if
+you added it yourself. That happens if you removed its layout and added the same
+one while the record never learned of the removal, or if a run recorded a layout
+but never got confirmation that it was added. The record does not learn of a
+change when no `--install` or
 `--revert` ran in between (`--check` and the settings window's check record
 nothing), when a run could not save its record (it stopped, Fcitx gave no answer,
 the disk was full), and with a Fcitx group deleted and created again under the
