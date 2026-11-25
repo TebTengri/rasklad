@@ -51,7 +51,7 @@ everywhere.
 | Enabled application | double Shift right after Space (or a word-ending mark) | undo the replacement, or put the word into the other layout |
 | Enabled application | double Shift on the underlined word | convert the word to the other layout |
 | Bar icon | left click | switch layout |
-| Bar icon | middle click | pause or resume auto-correction |
+| Bar icon | middle click | pause or resume auto-correction (nothing while Rasklad is off) |
 | Bar icon | right click | open the settings |
 
 In the settings window:
@@ -88,8 +88,9 @@ After installation Rasklad is off: the addon is loaded but does nothing — no
 correction, no double Shift, no sound. The «Rasklad is on» switch in the settings
 window turns it on at once, without restarting Fcitx, and off again.
 `rasklad-setup` does not turn it on. Right after it is turned on, the first word
-in each field may stay as typed (so the end of a word begun before is never
-corrected on its own).
+in each field may stay as typed (so the end of a word begun before is not
+corrected on its own; in Slack, where the message box and search share one input
+context, this is not guaranteed — see SECURITY.md).
 
 The detector profile (dictionaries and model) is not kept in Git. Where it comes
 from and how to reproduce it from a clean clone:
@@ -170,7 +171,8 @@ out counts as your own configuration.
   `libhunspell-1.7.so.0`, Fcitx does not load the add-on at all. A rebuild against
   Hunspell 1.8 brings back the double Shift but not auto-correction, which works
   with Hunspell 1.7 only. If the add-on loads but the profile fails its check,
-  auto-correction is off, the icon shows `EN!`/`RU!`, and the double Shift stays.
+  auto-correction is off; with Rasklad on, the icon shows `EN!`/`RU!` and the
+  double Shift stays (with Rasklad off, the icon only shows that it is off).
 
 ## Privacy
 
