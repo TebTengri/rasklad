@@ -123,7 +123,7 @@ void printUsage()
         << "usage: detector_benchmark --manifest <sources.json> --en <en.dic> --ru <ru.dic>\n"
            "           --eval-manifest <evaluation-002-sources.json> --eval-en <eng.tsv>\n"
            "           --eval-ru <rus.tsv> --protocol <experiment-002-protocol.json> --json\n"
-           "           [--artifact-dir <existing directory inside build/>]\n"
+           "           [--artifact-dir <existing directory inside build/>] [--dictionaries new]\n"
            "       detector_benchmark --probe model|exact --artifact <file>\n"
            "           --iterations <0..1000000> --json\n";
 }
@@ -312,6 +312,9 @@ struct Options {
     QString evalRu;
     QString protocol;
     QString artifactDir;
+    // SYS-272 (tools/update_dictionaries.py): "new" skips only the equality with
+    // experiment 001's dictionaries (filtered list, type counts) and reports them.
+    QString dictionaries;
 };
 
 QJsonObject lexiconJson(const FrontCodedLexicon &lexicon, const std::vector<KeySequence> &keys)
@@ -488,8 +491,9 @@ int runBenchmark(const Options &opt)
         if (parsed[li].error != ex::DicError::None)
             return fail(option + QStringLiteral(": ") + ex::dicErrorText(parsed[li].error));
         const QString filteredSha = ex::sha256Hex(parsed[li].words.join(QLatin1Char('\n')).toUtf8());
-        if (filteredSha != QLatin1String(kExpectedFilteredListSha256[li])
-            || parsed[li].report.accepted != kExpectedAcceptedTypes[li])
+        const bool newDictionaries = opt.dictionaries == QLatin1String("new");
+        if (!newDictionaries && (filteredSha != QLatin1String(kExpectedFilteredListSha256[li])
+            || parsed[li].report.accepted != kExpectedAcceptedTypes[li]))
             return fail(option + QStringLiteral(": filtered dictionary differs from experiment 001"),
                         kExitIntegrity);
         for (const QString &word : std::as_const(parsed[li].words)) {
@@ -504,7 +508,7 @@ int runBenchmark(const Options &opt)
                 trainKeys[li].push_back(canonical.keys);
             splitEntries[li].push_back({word, canonical.keys, part});
         }
-        if (qint64(trainKeys[li].size()) != kExpectedTrainTypes[li])
+        if (!newDictionaries && qint64(trainKeys[li].size()) != kExpectedTrainTypes[li])
             return fail(option + QStringLiteral(": train split differs from experiment 001"), kExitIntegrity);
         QJsonObject d;
         set(d, "acceptedTypes", parsed[li].report.accepted);
@@ -512,7 +516,9 @@ int runBenchmark(const Options &opt)
         set(d, "fullKeys", qint64(fullKeys[li].size()));
         set(d, "trainKeys", qint64(trainKeys[li].size()));
         set(d, "filteredListSha256", filteredSha);
-        set(d, "matchesExperiment001", true);
+        set(d, "matchesExperiment001", filteredSha == QLatin1String(kExpectedFilteredListSha256[li])
+                && parsed[li].report.accepted == kExpectedAcceptedTypes[li]
+                && qint64(trainKeys[li].size()) == kExpectedTrainTypes[li]);
         set(dictionariesJson, languageName(language), d);
     }
     const ex::LeakReport leaks = ex::countSplitLeaks(splitEntries[0], splitEntries[1]);
@@ -1140,7 +1146,8 @@ int main(int argc, char *argv[])
                        {"--eval-en", &opt.evalEn},
                        {"--eval-ru", &opt.evalRu},
                        {"--protocol", &opt.protocol},
-                       {"--artifact-dir", &opt.artifactDir}},
+                       {"--artifact-dir", &opt.artifactDir},
+                       {"--dictionaries", &opt.dictionaries}},
                       json, error)) {
         printUsage();
         return fail(error, kExitUsage);
@@ -1149,5 +1156,7 @@ int main(int argc, char *argv[])
         || opt.evalEn.isEmpty() || opt.evalRu.isEmpty() || opt.protocol.isEmpty() || !json)
         return usageError("--manifest, --en, --ru, --eval-manifest, --eval-en, --eval-ru, --protocol and "
                           "--json are required");
+    if (!opt.dictionaries.isEmpty() && opt.dictionaries != QLatin1String("new"))
+        return usageError("--dictionaries takes only: new");
     return runBenchmark(opt);
 }
