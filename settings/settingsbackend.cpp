@@ -57,6 +57,12 @@ void SettingsBackend::reloadConfig()
     if (parsed) {
         m_config = *parsed;
         m_raw = *map;
+        // Off, the addon forgets the program names, however it was turned off:
+        // so does the window, including names it kept itself.
+        if (m_config.switchable && !m_config.enabled) {
+            m_focused.clear();
+            m_seen.clear();
+        }
     }
     // Asked again on every read (refresh and before each change), so a restarted
     // Fcitx never keeps showing the previous daemon's warning.
@@ -262,6 +268,7 @@ void SettingsBackend::setRaskladEnabled(bool on)
     // Off, the addon forgets the program names: so does the window's list.
     if (commit(next) && !on) {
         m_focused.clear();
+        m_seen.clear();
         rebuildApps();
     }
 }

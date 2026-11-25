@@ -408,6 +408,7 @@ public:
         manager_(instance ? &instance->inputContextManager() : nullptr) {
         if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
         fcitx::readAsIni(config_, kConfigPath);
+        wasEnabled_ = *config_.enabled;
         rebuildExceptions();
         rebuildApps();
         // Missing/changed profile: no automatic correction; the gesture still works.
@@ -587,6 +588,7 @@ private:
         if (!registered_ || !manager_) {
             rebuildApps();
             enableFixturePermissions();
+            wasEnabled_ = *config_.enabled;
             applying_ = false;
             return;
         }
@@ -610,7 +612,17 @@ private:
             status_.seenApplications.setValue(std::vector<std::string>{});
             cue_.stop();
             switchEvent_.reset(); // a layout switch queued before: never runs
+        } else if (!wasEnabled_) {
+            // Turned on: the focused field may hold the start of a token typed
+            // while off. Its next presses stay raw up to a delimiter, so a suffix
+            // is never corrected on its own (as after a resume).
+            manager_->foreach([&](fcitx::InputContext *ic) {
+                if (ic->hasFocus())
+                    if (auto *s = state(ic, true)) s->needsBoundary = true;
+                return true;
+            });
         }
+        wasEnabled_ = *config_.enabled;
         applying_ = false;
     }
     void enableFixturePermissions() {
@@ -1412,6 +1424,7 @@ private:
             });
     }
     bool selfSwitch_ = false;
+    bool wasEnabled_ = false; // Enabled as of the last applied config
     rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
     // layout becomes the current Fcitx input method, so the owner keeps typing in it.

@@ -159,6 +159,13 @@ try{
    // The widget's middle click changes nothing while Rasklad is off (exit 1, no write).
    let toggled=true;try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});}catch(e){toggled=false;}
    report.productOffPauseRefused=!toggled;required.push('productOffPauseRefused');
+   // Turned on mid-token: the rest of that token stays raw (no suffix correction);
+   // the next word is corrected.
+   phase='product_off_enable';await reset();await type('word');
+   execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s','True'],{stdio:['ignore','ignore','pipe'],timeout:5000});
+   await type('word');await type('space');report.productEnableMidTokenRaw=await v()==='ghbdtnghbdtn ';
+   await type('word');await type('space');report.productEnabledCorrects=await v()==='ghbdtnghbdtn привет ';
+   required.push('productEnableMidTokenRaw','productEnabledCorrects');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
