@@ -165,11 +165,13 @@ try{
    execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s','True'],{stdio:['ignore','ignore','pipe'],timeout:5000});
    await type('word');await type('space');report.productEnableMidTokenRaw=await v()==='ghbdtnghbdtn ';
    await type('word');await type('space');report.productEnabledCorrects=await v()==='ghbdtnghbdtn привет ';
-   // Off and on again over an empty field: the cursor starts a token, so the
-   // first word is corrected at once.
+   // Off and on again over an empty field. Chromium reports no surrounding text
+   // before the first press, so the first token stays raw (fail closed); the next
+   // word is corrected.
    const setEnabled=(value)=>execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
-   setEnabled('False');await reset('other');await reset();setEnabled('True');
-   await type('word');await type('space');report.productEnabledEmptyValue=await v();report.productEnabledEmptyField=report.productEnabledEmptyValue==='привет ';
+   setEnabled('False');await reset();setEnabled('True');
+   await type('word');await type('space');await type('word');await type('space');
+   report.productEnabledEmptyField=await v()==='ghbdtn привет ';
    required.push('productEnableMidTokenRaw','productEnabledCorrects','productEnabledEmptyField');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);

@@ -87,7 +87,9 @@ rasklad-settings                                   # turn Rasklad on
 After installation Rasklad is off: the addon is loaded but does nothing — no
 correction, no double Shift, no sound. The «Rasklad is on» switch in the settings
 window turns it on at once, without restarting Fcitx, and off again.
-`rasklad-setup` does not turn it on.
+`rasklad-setup` does not turn it on. Right after it is turned on, the first word
+in each field may stay as typed (so the end of a word begun before is never
+corrected on its own).
 
 The detector profile (dictionaries and model) is not kept in Git. Where it comes
 from and how to reproduce it from a clean clone:
