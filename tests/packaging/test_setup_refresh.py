@@ -250,6 +250,13 @@ class Refresh(Base):
         self.assertEqual(plan(b'-- ' + load.replace(b'\n', b'\r'))[0], 'other')
         # An escaped CRLF inside a string does not open a comment on the next line.
         self.assertEqual(plan(b'local s = "a\\\r\n--[[ b"\n' + load)[0], 'ok')
+        # The loader text inside a long string is a string, not a loader.
+        self.assertEqual(plan(b'local example = [=[\n' + load + b']=]\n'), ('other', None))
+        # A constant path from a long string and a short one is still seen.
+        cut3 = r.index('rasklad') + 3
+        self.assertEqual(plan(('dofile([[%s]] .. "%s")\n' % (r[:cut3], r[cut3:])).encode()), ('other', None))
+        # Escapes are decoded: "\114asklad" is rasklad.
+        self.assertEqual(plan(b'local s = "\\114asklad"\n'), ('other', None))
 
     def test_recordless_revert_reads_through_a_symlink(self):
         import os
@@ -262,6 +269,10 @@ class Refresh(Base):
 
     def test_recordless_traces(self):
         s = self.setup
+        cut = s.RULE.index('rasklad') + 3
+        split = ('local p = "%s" .. "%s"\ndofile(p)\n' % (s.RULE[:cut], s.RULE[cut:])).encode()
+        self.assertTrue(s.trace_in(s.BINDINGS, split))
+        self.assertTrue(s.ours_in(s.BINDINGS, split))
         self.assertTrue(s.trace_in(s.INPUT, ('local rasklad_package = io.open("%s", "r")\n' % s.RULE).encode()))
         self.assertFalse(s.trace_in(s.INPUT, b'-- my rasklad notes\nlocal x = 1\n'))
         self.assertFalse(s.trace_in(s.SHELL_JSON, b'{ not json'))
