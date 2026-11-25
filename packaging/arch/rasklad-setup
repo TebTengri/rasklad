@@ -800,7 +800,8 @@ def install(assume_yes, single_layout=False):
     bad = file_state(path)
     if bad:
       say(bad, os.path.basename(path), "left as is")
-      fault = fault or path != INPUT
+      # A symlink is the user's own (dotfiles) setup, as settings shows it.
+      fault = fault or (path != INPUT and bad != "symlink")
       continue
     old = read(path)
     if old is None:

@@ -205,6 +205,14 @@ class Install(Base):
         self.assertEqual(code, 1, out)
         self.assertIn('Not everything is connected', out)
 
+    def test_symlinked_dotfiles_are_not_a_fault(self):
+        bindings = Path(self.setup.BINDINGS)
+        real = bindings.with_name('dotfiles-bindings.lua')
+        bindings.rename(real); bindings.symlink_to(real)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+        self.assertIn('Nothing to change', out)
+
     def test_nothing_to_change_when_all_is_done(self):
         code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
         self.assertEqual(code, 0, out)
