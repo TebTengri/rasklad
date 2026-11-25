@@ -121,14 +121,18 @@ def load_json(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
 
 
-def dump_json(path, data):
-    """A new file in place of any old one; never written through a symlink."""
+def new_file(path, mode='xb'):
+    """Opens a new file in place of any old one; never through a symlink."""
     path = Path(path)
     if os.path.lexists(path):
         if path.is_dir() and not path.is_symlink():
             raise SystemExit('%s is a directory' % path)
         path.unlink()
-    with open(path, 'x', encoding='utf-8') as out:
+    return open(path, mode)
+
+
+def dump_json(path, data):
+    with new_file(path, 'x') as out:
         out.write(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
 
 
@@ -277,7 +281,7 @@ def build(commit, accept_notices):
     evaluation['snapshot_date'] = record['date']
     dump_json(stage / 'data/evaluation-002-sources.json', evaluation)
 
-    with open(work / 'report.json', 'wb') as report:
+    with new_file(work / 'report.json') as report:
         run([benchmark, '--manifest', stage / 'data/sources.json',
              '--en', dic / 'en.dic', '--ru', dic / 'ru.dic',
              '--eval-manifest', stage / 'data/evaluation-002-sources.json',
@@ -295,7 +299,7 @@ def build(commit, accept_notices):
         (base / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / rel, base / rel)
     shutil.copyfile(stage / 'data/evaluation-002-sources.json', base / 'data/evaluation-002-sources.json')
-    with open(work / 'baseline-report.json', 'wb') as report:
+    with new_file(work / 'baseline-report.json') as report:
         run([benchmark, '--manifest', base / 'data/sources.json',
              '--en', down / 'old-en.dic', '--ru', down / 'old-ru.dic',
              '--eval-manifest', base / 'data/evaluation-002-sources.json',
@@ -554,7 +558,9 @@ def pin(commit):
         if target.exists() and not target.is_file():
             raise SystemExit('pin: %s is not a regular file' % rel)
         targets[rel] = target
-    temps, replaced = {}, {}
+    # Backups: a hard link to each existing target in a fresh directory beside it,
+    # so a failed replace is undone by rename whatever the files' modes.
+    temps, backups, replaced = {}, {}, []
     try:
         for rel, target in targets.items():
             fd, temp = tempfile.mkstemp(dir=target.parent, prefix='.%s.' % target.name, suffix='.pin')
@@ -562,22 +568,28 @@ def pin(commit):
             with os.fdopen(fd, 'wb') as out:
                 out.write((staged / rel).read_bytes())
             os.chmod(temp, stat.S_IMODE(target.stat().st_mode) if target.exists() else 0o644)
+            if target.exists():
+                keep = tempfile.mkdtemp(dir=target.parent, prefix='.%s.' % target.name, suffix='.keep')
+                backups[rel] = os.path.join(keep, 'old')
+                os.link(target, backups[rel])
         for rel, temp in temps.items():
-            target = targets[rel]
-            old = target.read_bytes() if target.exists() else None
-            os.replace(temp, target)
-            replaced[rel] = old
+            os.replace(temp, targets[rel])
+            replaced.append(rel)
     except BaseException:
-        for rel, old in replaced.items():
-            if old is None:
-                targets[rel].unlink(missing_ok=True)
+        for rel in reversed(replaced):
+            if rel in backups:
+                os.replace(backups[rel], targets[rel])
             else:
-                targets[rel].write_bytes(old)
+                targets[rel].unlink(missing_ok=True)
         raise
     finally:
         for temp in temps.values():
             if os.path.lexists(temp):
                 os.unlink(temp)
+        for backup in backups.values():
+            if os.path.lexists(backup):
+                os.unlink(backup)
+            os.rmdir(os.path.dirname(backup))
     print('pinned %s (%d files). Next: bin/build, the tests, tools/build_arch_package.sh %s, the stand; '
           'then review git diff and send it to independent review.' % (commit, len(changed), work / 'release'))
 

@@ -8,6 +8,7 @@ changed file is gone and every new one is in place. No network, no training.
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -250,6 +251,28 @@ class PinWrites(unittest.TestCase):
         for rel in ('tools/make_release_profile.py', 'data/sources.json'):
             self.assertEqual((self.tool.ROOT / rel).read_text(), 'old\n')
         self.assertEqual(list(self.tool.ROOT.rglob('*.pin')), [])
+
+
+    def test_a_failed_replace_restores_read_only_files(self):
+        for rel in ('tools/make_release_profile.py', 'data/sources.json'):
+            (self.tool.ROOT / rel).chmod(0o444)
+        real, calls = os.replace, []
+
+        def flaky(src, dst):
+            calls.append(dst)
+            if len(calls) == 2:
+                raise OSError('simulated')
+            return real(src, dst)
+        self.tool.os.replace = flaky
+        try:
+            with self.assertRaises(OSError):
+                self.tool.pin(NEW)
+        finally:
+            self.tool.os.replace = real
+        for rel in ('tools/make_release_profile.py', 'data/sources.json'):
+            self.assertEqual((self.tool.ROOT / rel).read_text(), 'old\n')
+        self.assertFalse((self.tool.ROOT / 'docs/results' / ('dictionary-update-%s.json' % NEW[:12])).exists())
+        self.assertEqual([p for p in self.tool.ROOT.rglob('.*') if 'build' not in p.parts], [])
 
 
 class WorkDir(unittest.TestCase):
