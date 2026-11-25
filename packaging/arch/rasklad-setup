@@ -43,8 +43,8 @@ END = "-- END rasklad-setup"
 # checks the live layouts and forgets it; --install after that adds the new one.
 LEGACY_ADVICE = ("an older or edited layout block: run --revert inside the Hyprland session; "
                  "if the block stays, remove it from input.lua and run --revert again, then --install")
-EDITED_ADVICE = ("the layout block was edited after install; left as is: run --revert, "
-                 "which keeps an edited input.lua, then remove the block yourself")
+EDITED_ADVICE = ("the layout block was edited after install; left as is "
+                 "(--revert keeps an edited input.lua too)")
 LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
@@ -633,7 +633,7 @@ def check():
     written = None
   state = input_plan(None, written)[0]
   if state == "edited":
-    report("edited", "hyprland-layout", EDITED_ADVICE)
+    say("edited", "hyprland-layout", EDITED_ADVICE)  # the user's choice, not a fault
   elif state == "unknown":
     say("unknown", "hyprland-layout", "Hyprland not running or its keyboard options not readable")
   elif state == "missing":

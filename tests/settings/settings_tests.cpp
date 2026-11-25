@@ -312,6 +312,8 @@ private Q_SLOTS:
         QCOMPARE(row(setupFromCheck("other-layouts hyprland-layout layouts other than us and ru\n"), layout),
                  QStringLiteral("other"));
         QCOMPARE(row(setupFromCheck("legacy hyprland-layout an older block\n"), layout), QStringLiteral("problem"));
+        QCOMPARE(row(setupFromCheck("edited hyprland-layout the layout block was edited\n"), layout),
+                 QStringLiteral("other"));
     }
     void setupShownAndOpened()
     {

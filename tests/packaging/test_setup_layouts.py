@@ -202,6 +202,11 @@ class Install(Base):
         state = self.setup.load_state()
         self.assertEqual(self.setup.input_plan(None, state['input_block'])[0], 'edited')
         self.assertEqual(self.setup.input_plan(None, None)[0], 'ok')  # no record: as before
+        self.setup.fcitx = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]).bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.check()
+        self.assertRegex(out.getvalue(), r'edited\s+hyprland-layout')
 
     def test_revert_drops_the_block_hash(self):
         self.hypr('ru,us', variant=',')
