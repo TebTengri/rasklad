@@ -1323,8 +1323,17 @@ def layout_block_in_input():
     return False
   if data is None:
     return False
-  return BEGIN.encode() in data or b"rasklad-setup layout" in data or \
-    ("name", b"rasklad_package") in lua_tokens(data)
+  return block_mark_in(data) or ("name", b"rasklad_package") in lua_tokens(data)
+
+
+# A line every version of our blocks writes: the BEGIN line, or a layout mark
+# ("-- rasklad-setup layout N: ..."). Whole lines, so prose that mentions them
+# does not match.
+BLOCK_MARK = re.compile(rb"^[ \t]*-- (?:BEGIN rasklad-setup|rasklad-setup layout [0-9]+:)", re.M)
+
+
+def block_mark_in(data):
+  return BLOCK_MARK.search(data.replace(b"\r", b"\n")) is not None
 
 
 def input_block_present():
@@ -1439,7 +1448,7 @@ def trace_in(path, data):
     except ValueError:
       return b"rasklad.layout" in data
     return names_widget(data)
-  return BEGIN.encode() in data or mentions_rasklad(data)
+  return block_mark_in(data) or mentions_rasklad(data)
 
 
 def untracked_traces():
