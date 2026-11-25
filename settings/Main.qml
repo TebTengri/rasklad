@@ -578,7 +578,7 @@ ApplicationWindow {
                             Button {
                                 visible: backend.setupInstalled
                                 flat: true
-                                text: qsTr("Restore Omarchy defaults…")
+                                text: qsTr("Undo the Rasklad setup…")
                                 onClicked: revertConfirm.open()
                             }
                         }
@@ -789,7 +789,7 @@ ApplicationWindow {
         modal: true
         anchors.centerIn: Overlay.overlay
         width: Math.min(window.width - 32, 440)
-        title: qsTr("Restore Omarchy defaults?")
+        title: qsTr("Undo the Rasklad setup?")
         background: Rectangle {
             color: theme.background
             radius: window.small
