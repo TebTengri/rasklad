@@ -206,15 +206,16 @@ def load_state():
     rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had and r[1] == ""]
     if not isinstance(saved.get("after_layout", saved.get("layout")), str):
       raise bad
-    entry = {"added": rows, "legacy_after": saved["after"],
+    entry = {"added": rows, "legacy_after": saved["after"], "legacy_before": saved["before"],
              "legacy_layout": saved.get("after_layout", saved.get("layout"))}
     state["fcitx"] = {"groups": {saved["group"]: entry}} if rows else None
   elif saved is not None:
     groups = saved.get("groups") if isinstance(saved, dict) else None
     if not (isinstance(groups, dict) and groups and all(
-        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after", "legacy_layout"} == {"added"} and
-        ("legacy_after" in v) == ("legacy_layout" in v) and isinstance(v.get("legacy_layout", ""), str) and
-        items(v["added"]) and items(v.get("legacy_after", [])) and
+        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after", "legacy_before", "legacy_layout"} == {"added"} and
+        len({"legacy_after", "legacy_before", "legacy_layout"} & set(v)) in (0, 3) and
+        isinstance(v.get("legacy_layout", ""), str) and
+        items(v["added"]) and items(v.get("legacy_after", [])) and items(v.get("legacy_before", [])) and
         v["added"] and all(r[0] in REQUIRED and r[1] == "" for r in v["added"]) for k, v in groups.items())):
       raise bad
   return state
@@ -398,6 +399,13 @@ def still_ours(rows, items):
   return [r for r in rows if r in items]
 
 
+def legacy_unmatched(entry, layout, items):
+  # An older install's record counts on its group as it left it (after); a group
+  # back as it was before (never applied, or restored) has nothing of ours.
+  return items != entry["legacy_after"] and items != entry["legacy_before"] or \
+    items == entry["legacy_after"] and layout != entry["legacy_layout"]
+
+
 def settle_claim(state, name, layout, items):
   """Bring the record for this group up to what Fcitx shows now: rows of ours the
   user removed or changed are theirs from here on. A record converted from an
@@ -409,7 +417,7 @@ def settle_claim(state, name, layout, items):
     return False
   rows = [list(r) for r in entry["added"]]
   if "legacy_after" in entry:
-    if items != entry["legacy_after"] or layout != entry["legacy_layout"]:
+    if legacy_unmatched(entry, layout, items):
       say("changed", "fcitx-group", "changed since an older install; its layouts left as is")
       rows = []
   set_claim(state, name, still_ours(rows, items))
@@ -1081,11 +1089,11 @@ def undo_group(state, name, rows):
   bus["set_group"](name, layout, remaining)
   # A reply does not prove the rows are gone: only a read does.
   back = bus["group_by"](name)
-  if back is None or any(r in back[2] for r in rows):
+  if back is None:
     say("failed", "fcitx-group")
     return
-  say("restored", "fcitx-group")
-  set_claim(state, name, [r for r in claim if r not in rows])
+  settle_claim(state, name, back[1], back[2])  # row by row: gone ones are done
+  say("restored" if not any(r in back[2] for r in rows) else "failed", "fcitx-group")
 
 
 def restore_fcitx(state):
@@ -1115,7 +1123,7 @@ def restore_fcitx(state):
       continue
     _, layout, items = now
     entry = claimed_groups(state)[name]
-    if "legacy_after" in entry and (items != entry["legacy_after"] or layout != entry["legacy_layout"]):
+    if "legacy_after" in entry and legacy_unmatched(entry, layout, items):
       clean = False  # said by settle_claim; the next --revert finds nothing to do
     settle_claim(state, name, layout, items)
     ours = claimed_rows(state, name)
@@ -1128,9 +1136,10 @@ def restore_fcitx(state):
     else:
       bus["set_group"](name, layout, remaining)
       back = bus["group_by"](name)  # a reply does not prove the rows are gone
-      if back is not None and not any(r in back[2] for r in ours):
+      if back is not None:
+        settle_claim(state, name, back[1], back[2])  # row by row: gone ones are done
+      if back is not None and not claimed_rows(state, name):
         say("restored", "fcitx-group")
-        set_claim(state, name, [])
       else:
         say("failed", "fcitx-group")
         clean = False

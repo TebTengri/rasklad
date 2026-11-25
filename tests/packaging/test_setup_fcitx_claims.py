@@ -454,6 +454,32 @@ class Claims(Base):
         self.assertRegex(out, r'failed\s+fcitx-group')
         self.assertEqual(self.claim(), [RU])
 
+    def test_old_record_with_the_group_back_as_before_is_clean(self):
+        self.old_state([US], [US, RU])
+        fake = FakeFcitx([US])  # never applied, or already put back
+        code, out = self.revert_with(fake)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn('changed since', out)
+        self.assertEqual(fake.calls, 0)
+
+    def test_partly_removed_rows_are_settled_one_by_one(self):
+        fake = FakeFcitx([PINYIN])
+        self.install_with(fake)  # us and ru ours
+        bus = fake.bus()
+
+        def half(name, layout, items):  # Fcitx takes out us but keeps ru
+            fake.calls += 1
+            fake.items = [PINYIN, RU]
+            return True
+        bus['set_group'] = half
+        self.setup.fcitx = lambda: bus
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertEqual(self.claim(), [RU])
+        fake.items = [PINYIN, US, RU]  # the user adds us back
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [PINYIN, US])
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}
