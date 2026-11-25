@@ -212,8 +212,12 @@ class Refresh(Base):
         # Our block with its BEGIN and END comments taken out still counts.
         self.assertTrue(ours(B, ('local rasklad = "%s"\n' % self.setup.RULE).encode()))
         # \z skips a newline inside a string; a long bracket may open after 64 bytes.
-        self.assertTrue(ours(B, b'local s = "a\\z\n  b" .. "rasklad"\n'))
-        self.assertFalse(ours(B, b'--[' + b'=' * 80 + b'[ rasklad ]' + b'=' * 80 + b']\nlocal x = 1\n'))
+        self.assertTrue(ours(B, b'local s = "a\\z\n  rasklad"\n'))
+        self.assertFalse(ours(B, b'local x = 1 --[' + b'=' * 80 + b'[\nrasklad\n]' + b'=' * 80 + b']\n'))
+        # A short long comment or string later in the file ends where it ends.
+        pad = b'local x = 1\n' * 20
+        self.assertTrue(ours(B, pad + b'--[[x]]\nlocal r = "rasklad"\n'))
+        self.assertFalse(ours(B, pad + b'local s = [[x]]\n-- rasklad\n'))
 
     def test_bindings_plan_reads_code_not_comments(self):
         plan = self.setup.bindings_plan

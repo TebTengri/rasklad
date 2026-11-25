@@ -753,7 +753,7 @@ def lua_code(data):
     if not m:
       return None
     close = b"]" + m.group(1) + b"]"
-    end = data.find(close, at + m.end())
+    end = data.find(close, m.end())  # m.end() indexes the whole buffer
     return n if end == -1 else end + len(close)
 
   while i < n:
