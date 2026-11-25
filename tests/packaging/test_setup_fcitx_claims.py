@@ -480,6 +480,13 @@ class Claims(Base):
         self.revert_with(fake)
         self.assertEqual(fake.items, [PINYIN, US])
 
+    def test_a_row_held_twice_is_left_alone(self):
+        fake = FakeFcitx([US])
+        self.install_with(fake)
+        fake.items = [US, RU, RU]  # the user added the same row again
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [US, RU, RU])
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}

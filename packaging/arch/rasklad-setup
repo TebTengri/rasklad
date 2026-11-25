@@ -395,8 +395,9 @@ def set_claim(state, name, rows):
 
 
 def still_ours(rows, items):
-  # A row the user removed, or gave another layout, is no longer ours.
-  return [r for r in rows if r in items]
+  # A row the user removed, or gave another layout, is no longer ours; nor is
+  # one the group holds twice (which of them is ours cannot be told).
+  return [r for r in rows if items.count(r) == 1]
 
 
 def legacy_unmatched(entry, layout, items):
