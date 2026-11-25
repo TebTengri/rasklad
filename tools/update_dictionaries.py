@@ -44,6 +44,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -121,7 +122,14 @@ def load_json(path):
 
 
 def dump_json(path, data):
-    Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    """A new file in place of any old one; never written through a symlink."""
+    path = Path(path)
+    if os.path.lexists(path):
+        if path.is_dir() and not path.is_symlink():
+            raise SystemExit('%s is a directory' % path)
+        path.unlink()
+    with open(path, 'x', encoding='utf-8') as out:
+        out.write(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
 
 
 def release_tool():
@@ -431,13 +439,13 @@ def compare(commit, baseline_profile):
     # evaluation manifest that build pinned.
     snapshot = fresh_dir(work / 'compare/eval')
     manifest = load_json(work / 'profile/data/evaluation-002-sources.json')
+    if sorted(s.get('language') for s in manifest['evaluation_sources']) != ['en', 'ru']:
+        raise SystemExit('compare: the staged evaluation manifest must name exactly en and ru')
     for s in manifest['evaluation_sources']:
         name = s['language'] + '.tsv'
         shutil.copyfile(work / 'eval' / name, snapshot / name)
         if file_pin(snapshot / name) != (s['sha256'], s['bytes']):
             raise SystemExit('compare: eval/%s does not match the staged evaluation manifest' % name)
-    if sorted(p.name for p in snapshot.iterdir()) != ['en.tsv', 'ru.tsv']:
-        raise SystemExit('compare: the staged evaluation manifest must name en and ru')
     base_tree = fresh_dir(work / 'compare/base-src')
     head_tree(base_tree, head)
     new_tree = fresh_dir(work / 'compare/new-src')
@@ -506,6 +514,11 @@ def pin_cpp(text, rel, digest, size, where):
     return pattern.sub(put, text)
 
 
+def local_edits(paths):
+    return subprocess.run(['git', '-C', ROOT, 'status', '--porcelain', '--'] + list(paths),
+                          check=True, capture_output=True, text=True).stdout
+
+
 def pin(commit):
     """Writes into the repository exactly what compare measured, or nothing."""
     work = work_dir(commit)
@@ -519,8 +532,7 @@ def pin(commit):
         raise SystemExit('pin: HEAD moved since compare; run compare again')
     if record.get('inputs') != inputs(work):
         raise SystemExit('pin: the work directory changed since compare; run compare again')
-    dirty = subprocess.run(['git', '-C', ROOT, 'status', '--porcelain', '--'] + list(touched(commit)),
-                           check=True, capture_output=True, text=True).stdout
+    dirty = local_edits(touched(commit))
     if dirty.strip():
         raise SystemExit('pin: local edits in the files it writes:\n' + dirty)
     staged = fresh_dir(work / 'pin-src')
@@ -529,21 +541,39 @@ def pin(commit):
     changed = changes(commit, staged, ROOT)
     if changed != record.get('changes'):
         raise SystemExit('pin: the pinned files differ from what compare measured')
-    # Every check passed. Each new file is first written to a temporary file
-    # created exclusively (O_EXCL; never through an existing path) beside its
-    # target; only when all are ready do they replace the tracked files.
-    temps = {}
+    # Every check passed. Each target must be a regular file or absent, reached
+    # without a symlink. Each new file is first written to a temporary created
+    # exclusively (O_EXCL) beside its target, with the target's mode; only when
+    # all are ready do they replace the tracked files. A failed replace restores
+    # the files already replaced.
+    targets = {}
+    for rel in changed:
+        target = ROOT / rel
+        if target.is_symlink() or target.parent.resolve() != target.parent.absolute():
+            raise SystemExit('pin: %s goes through a symlink' % rel)
+        if target.exists() and not target.is_file():
+            raise SystemExit('pin: %s is not a regular file' % rel)
+        targets[rel] = target
+    temps, replaced = {}, {}
     try:
-        for rel in changed:
-            target = ROOT / rel
-            if target.is_symlink() or target.parent.resolve() != (ROOT / rel).parent.absolute():
-                raise SystemExit('pin: %s goes through a symlink' % rel)
+        for rel, target in targets.items():
             fd, temp = tempfile.mkstemp(dir=target.parent, prefix='.%s.' % target.name, suffix='.pin')
+            temps[rel] = temp
             with os.fdopen(fd, 'wb') as out:
                 out.write((staged / rel).read_bytes())
-            temps[rel] = temp
+            os.chmod(temp, stat.S_IMODE(target.stat().st_mode) if target.exists() else 0o644)
         for rel, temp in temps.items():
-            os.replace(temp, ROOT / rel)
+            target = targets[rel]
+            old = target.read_bytes() if target.exists() else None
+            os.replace(temp, target)
+            replaced[rel] = old
+    except BaseException:
+        for rel, old in replaced.items():
+            if old is None:
+                targets[rel].unlink(missing_ok=True)
+            else:
+                targets[rel].write_bytes(old)
+        raise
     finally:
         for temp in temps.values():
             if os.path.lexists(temp):

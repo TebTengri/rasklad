@@ -8,4 +8,4 @@ CONFIG -= qt app_bundle
 QT -= core gui
 INCLUDEPATH += $$PWD/../../src
 SOURCES += product_core_tests.cpp $$PWD/../../src/applicationpolicy.cpp
-HEADERS += $$PWD/../../src/configrules.h $$PWD/../../src/wordrules.h $$PWD/../../src/wipe.h $$PWD/../../src/applicationpolicy.h
+HEADERS += $$PWD/../../src/autocorrect.h $$PWD/../../src/frequentwords.h $$PWD/../../src/configrules.h $$PWD/../../src/wordrules.h $$PWD/../../src/wipe.h $$PWD/../../src/applicationpolicy.h

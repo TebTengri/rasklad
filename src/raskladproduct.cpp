@@ -33,6 +33,7 @@
 // a double Shift toggles the CURRENT preedit word us<->ru view, Space commits
 // what is shown. Never touches text the application already accepted.
 #include "manualgesture.h"
+#include "autocorrect.h"
 #include "wordrules.h"
 
 // SYS-246 product build (docs/SYS-246-PRODUCT-ADDON.md): the manual double-Shift
@@ -942,60 +943,15 @@ private:
         whole = false;
         if (!*config_.autoCorrect) return false; // SYS-227: gestures only
         if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return false;
-        // Case: all lowercase, a capital first letter, or all capitals, judged on the
-        // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
-        const auto caseOk = [&s](std::size_t keys) { return rasklad::word::caseEligible(s.upper, keys); };
+        // The decision itself is shared with tools/product_eval (src/autocorrect.h).
         std::string w = s.word();
-        bool found = false;
-        std::size_t cut = w.size();
-        for (int pass = 0; pass < 2 && !found; ++pass) {
-            if (pass == 1) {
-                if (s.typedRu) break;
-                cut = rasklad::word::lettersBeforeTail(w);
-                if (cut == 0) break; // no letters, or nothing after them to strip
-                // An exception that itself ends in a letter key the fallback strips
-                // ("пою" is typed gj.) is never corrected to a shorter word.
-                bool kept = false;
-                for (std::size_t k = cut + 1; k < w.size() && !kept; ++k) {
-                    std::string longer = w.substr(0, k);
-                    kept = exception(longer);
-                    wipeString(longer);
-                }
-                if (kept) break;
-            }
-            std::string keys = w.substr(0, cut);
-            // The exception first: an excepted word is never corrected in a shorter
-            // form just because its own case was not eligible.
-            if (exception(keys)) { wipeString(keys); break; } // SYS-227: never this word
-            if (!caseOk(cut)) { wipeString(keys); continue; }
-            std::string typed = LabState::form(keys, s.typedRu);
-            std::string other = LabState::form(keys, !s.typedRu);
-            auto fix = profile_->correctTyped(typed, s.typedRu);
-            const bool ok = (fix && *fix == other && other != typed) ||
-                            (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
-            if (ok) {
-                if (pass == 0) {
-                    s.converted = true; whole = true;
-                    std::string shown = s.shown();
-                    out.assign(shown); // copied, then the local is wiped (SYS-272)
-                    wipeString(shown);
-                    found = true;
-                }
-                else {
-                    // The pieces are wiped after use (SYS-272).
-                    std::string tail = w.substr(cut);
-                    std::string both = rasklad::joined(other, tail);
-                    std::string shown = LabState::form(both, false, s.upper);
-                    out.assign(shown);
-                    wipeString(tail); wipeString(both); wipeString(shown);
-                    found = true;
-                }
-            }
-            if (fix) wipeString(*fix);
-            wipeString(keys); wipeString(typed); wipeString(other);
-        }
+        const auto result = rasklad::autocorrect::decide(
+            w, s.typedRu, s.upper,
+            [this](const std::string &typed, bool typedRu) { return profile_->correctTyped(typed, typedRu); },
+            [this](const std::string &keys) { return exception(keys); }, out);
         wipeString(w);
-        return found;
+        if (result == rasklad::autocorrect::Result::Whole) { s.converted = true; whole = true; }
+        return result != rasklad::autocorrect::Result::None;
     }
     // A press of a modifier or lock key alone (Ctrl, Alt, Super, Caps Lock, AltGr,
     // ...): it types nothing. The key it is combined with (Ctrl+A) is non-plain and

@@ -14,6 +14,7 @@ INCLUDEPATH += $$PWD/../src $$PWD
 SOURCES += product_eval.cpp \
     evaluationdata.cpp \
     detectormanifest.cpp \
+    $$PWD/../src/fcitxlabprofile.cpp \
     $$PWD/../src/decisionrouter.cpp \
     $$PWD/../src/profileverify.cpp \
     $$PWD/../src/localprofile.cpp \

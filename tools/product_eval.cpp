@@ -3,17 +3,22 @@
 // gate (tools/update_dictionaries.py). The profile is loaded exactly as the addon
 // loads it (LocalEvidenceProvider::load with the compiled-in production pins), so
 // a profile the addon would reject fails here too; each word then goes through
-// routing::route(SafeConfirmed), as the addon's correctTyped does.
+// the addon's own decision: rasklad::autocorrect::decide (src/autocorrect.h) over
+// ProfileDecision::correctTyped, with the case rule, the frequent words and the
+// trailing-key fallback, and no exception words.
 //
 // Cases, per language: every native-letter-only token of the frozen holdout
 // sample (protocol seed, 5000 sentences) is a valid case (typed in its own
 // layout; intent Keep) and a wrong case (the same keys in the other layout;
-// intent Correct back to the token). Offline; reads only the given files; prints
+// intent Correct back to the token: only the whole word equal to it is a recovery;
+// any other change, a partial one too, is a wrong conversion). Offline; reads only the given files; prints
 // aggregate counts and rates, never a word.
+#include "autocorrect.h"
 #include "benchmarkprotocol.h"
+#include "fcitxlabprofile.h"
+#include "manualgesture.h"
 #include "decisionrouter.h"
 #include "evaluationdata.h"
-#include "layoutconverter.h"
 #include "localprofile.h"
 #include "profileverify.h"
 
@@ -44,6 +49,29 @@ void add(Counts &into, const Counts &c)
     into.wrong += c.wrong;
     into.recovered += c.recovered;
     into.wrongConversion += c.wrongConversion;
+}
+
+// The token as the addon's buffer holds it: lowercase us keys and the capitals'
+// mask. False if a character has no key or the word does not fit the buffer.
+bool toKeys(const QString &token, std::string &keys, std::uint32_t &upper)
+{
+    keys.clear();
+    upper = 0;
+    const QList<uint> ucs4 = token.toUcs4();
+    if (ucs4.isEmpty() || ucs4.size() > 32) return false;
+    for (qsizetype i = 0; i < ucs4.size(); ++i) {
+        const QString one = QString::fromUcs4(reinterpret_cast<const char32_t *>(&ucs4[i]), 1);
+        const QString lower = one.toLower();
+        if (lower != one) upper |= std::uint32_t{1} << i;
+        const QList<uint> l = lower.toUcs4();
+        if (l.size() != 1) return false;
+        char key = 0;
+        if (l[0] >= 'a' && l[0] <= 'z') key = char(l[0]);
+        else key = manual::ruToUsKey(char32_t(l[0]));
+        if (key == 0) return false;
+        keys.push_back(key);
+    }
+    return true;
 }
 
 double rate(qint64 part, qint64 whole) { return whole > 0 ? double(part) / double(whole) : 0.0; }
@@ -88,6 +116,16 @@ int main(int argc, char **argv)
         return 3; // the addon would reject this profile too
     }
 
+    fcitxlab::ProfileDecision decision(root.toUtf8().constData());
+    if (!decision.ready()) {
+        std::fprintf(stderr, "product_eval: the addon's profile decision did not load\n");
+        return 3;
+    }
+    const auto correct = [&decision](const std::string &typed, bool typedRu) {
+        return decision.correctTyped(typed, typedRu);
+    };
+    const auto noException = [](const std::string &) { return false; };
+
     std::array<Counts, 2> occ{}, types{};
     for (const DetectorLanguage language : {DetectorLanguage::En, DetectorLanguage::Ru}) {
         const std::size_t li = std::size_t(language);
@@ -104,27 +142,26 @@ int main(int argc, char **argv)
             std::fprintf(stderr, "product_eval: fewer unique sentences than the frozen sample size\n");
             return 4;
         }
-        const bool en = language == DetectorLanguage::En;
-        const routing::InputLayout own = en ? routing::InputLayout::KnownUs : routing::InputLayout::KnownRu;
-        const routing::InputLayout other = en ? routing::InputLayout::KnownRu : routing::InputLayout::KnownUs;
-        const LayoutDirection toOther = en ? LayoutDirection::UsToRu : LayoutDirection::RuToUs;
+        const bool ownRu = language == DetectorLanguage::Ru;
         QSet<QString> seen;
         for (const SentenceRecord &record : selection.selected) {
             for (const QString &token : tokenizeSentence(record.text)) {
                 if (!isNativeLetterOnly(token, language)) continue;
+                std::string keys;
+                std::uint32_t upper = 0;
+                if (!toKeys(token, keys, upper)) continue; // the addon never buffers it
                 Counts c;
+                std::string out;
                 c.valid = 1;
-                const routing::RouteDecision keep = routing::route(
-                    {routing::FieldContext::Prose, own, QStringView(token)}, routing::RouteProfile::SafeConfirmed,
-                    provider.get());
-                c.falseChange = keep.action == routing::RouteAction::Correct ? 1 : 0;
-                const QString typed = convertLayout(token, toOther);
+                c.falseChange = autocorrect::decide(keys, ownRu, upper, correct, noException, out)
+                                        != autocorrect::Result::None ? 1 : 0;
+                out.clear();
                 c.wrong = 1;
-                const routing::RouteDecision fix = routing::route(
-                    {routing::FieldContext::Prose, other, QStringView(typed)}, routing::RouteProfile::SafeConfirmed,
-                    provider.get());
-                if (fix.action == routing::RouteAction::Correct)
-                    (fix.candidate == token ? c.recovered : c.wrongConversion) = 1;
+                const autocorrect::Result fix = autocorrect::decide(keys, !ownRu, upper, correct, noException, out);
+                if (fix == autocorrect::Result::Whole && out == token.toStdString())
+                    c.recovered = 1;
+                else if (fix != autocorrect::Result::None)
+                    c.wrongConversion = 1;
                 add(occ[li], c);
                 if (!seen.contains(token)) {
                     seen.insert(token);

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 #include "applicationpolicy.h"
+#include "autocorrect.h"
 #include "configrules.h"
 #include "wordrules.h"
 
 #include <array>
+#include <optional>
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -101,6 +103,39 @@ static void wordRules()
     }
 }
 
+// SYS-272: the shared decision (src/autocorrect.h) with a fake profile that knows
+// "слово" and "word" only.
+static void autoDecision()
+{
+    using autocorrect::Result;
+    const auto profile = [](const std::string &typed, bool typedRu) -> std::optional<std::string> {
+        if (!typedRu && typed == "ckjdj") return std::string("слово");
+        if (typedRu && typed == "цщкв") return std::string("word");
+        return std::nullopt;
+    };
+    const auto none = [](const std::string &) { return false; };
+    std::string out;
+    CHECK(autocorrect::decide("ckjdj", false, 0, profile, none, out) == Result::Whole && out == "слово");
+    out.clear();
+    CHECK(autocorrect::decide("ckjdj", false, 0b1, profile, none, out) == Result::Whole && out == "Слово");
+    out.clear();
+    CHECK(autocorrect::decide("ckjdj,", false, 0, profile, none, out) == Result::Prefix && out == "слово,");
+    out.clear();
+    CHECK(autocorrect::decide("ckjdj,", true, 0, profile, none, out) == Result::None && out.empty());
+    CHECK(autocorrect::decide("word", true, 0, profile, none, out) == Result::Whole && out == "word");
+    out.clear();
+    CHECK(autocorrect::decide("ckjdj", false, 0b10, profile, none, out) == Result::None); // mixed case
+    CHECK(autocorrect::decide("ckjdj", false, 0, profile,
+                              [](const std::string &k) { return k == "ckjdj"; }, out) == Result::None);
+    // An exception ending in a stripped key blocks the shorter correction.
+    CHECK(autocorrect::decide("ckjdj,", false, 0, profile,
+                              [](const std::string &k) { return k == "ckjdj,"; }, out) == Result::None);
+    // A frequent word of the other language needs no profile answer ("ns" -> "ты").
+    CHECK(autocorrect::decide("ns", false, 0, profile, none, out) == Result::Whole && out == "ты");
+    out.clear();
+    CHECK(autocorrect::decide("qqqq", false, 0, profile, none, out) == Result::None && out.empty());
+}
+
 static void registryOncePerRevision()
 {
     using namespace rasklad::policy;
@@ -127,6 +162,7 @@ int main()
     configRules();
     wordRules();
     registryOncePerRevision();
+    autoDecision();
     if (failures) return 1;
     std::printf("product core tests OK\n");
     return 0;

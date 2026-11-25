@@ -203,6 +203,55 @@ class Gates(unittest.TestCase):
         self.refused('changed since compare')
 
 
+class PinWrites(unittest.TestCase):
+    """The writes of a passing pin: modes kept, all or nothing."""
+
+    def setUp(self):
+        self.tool = load('update_dictionaries', 'tools/update_dictionaries.py')
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.tool.ROOT = self.tmp / 'repo'
+        self.work = self.tool.ROOT / 'build/dict-update' / NEW[:12]
+        self.work.mkdir(parents=True)
+        for rel in ('tools/make_release_profile.py', 'data/sources.json'):
+            (self.tool.ROOT / rel).parent.mkdir(parents=True, exist_ok=True)
+            (self.tool.ROOT / rel).write_text('old\n')
+        (self.tool.ROOT / 'tools/make_release_profile.py').chmod(0o755)
+        (self.tool.ROOT / 'docs/results').mkdir(parents=True)
+        self.tool.git_head = lambda: 'a' * 40
+        self.tool.inputs = lambda w: {}
+        self.tool.local_edits = lambda paths: ''
+        self.tool.head_tree = lambda dest, head: shutil.copytree(self.tool.ROOT, dest, dirs_exist_ok=True,
+                                                               ignore=shutil.ignore_patterns('build', 'dictionary-update-*'))
+
+        def pin_into(commit, root):
+            for rel in ('tools/make_release_profile.py', 'data/sources.json'):
+                (root / rel).write_text('new\n')
+            (root / 'docs/results' / ('dictionary-update-%s.json' % NEW[:12])).write_text('{}\n')
+        self.tool.pin_into = pin_into
+        staged = self.tmp / 'staged'
+        self.tool.head_tree(staged, None)
+        pin_into(NEW, staged)
+        changes = self.tool.changes(NEW, staged, self.tool.ROOT)
+        (self.work / 'compare.json').write_text(json.dumps(
+            {'commit': NEW, 'head': 'a' * 40, 'passed': True, 'inputs': {}, 'changes': changes}))
+
+    def test_modes_are_kept(self):
+        self.tool.pin(NEW)
+        script = self.tool.ROOT / 'tools/make_release_profile.py'
+        self.assertEqual(script.read_text(), 'new\n')
+        self.assertEqual(script.stat().st_mode & 0o777, 0o755)
+        self.assertEqual(list(self.tool.ROOT.rglob('*.pin')), [])
+
+    def test_a_directory_at_a_target_writes_nothing(self):
+        (self.tool.ROOT / 'docs/results' / ('dictionary-update-%s.json' % NEW[:12])).mkdir()
+        with self.assertRaises(SystemExit):
+            self.tool.pin(NEW)
+        for rel in ('tools/make_release_profile.py', 'data/sources.json'):
+            self.assertEqual((self.tool.ROOT / rel).read_text(), 'old\n')
+        self.assertEqual(list(self.tool.ROOT.rglob('*.pin')), [])
+
+
 class WorkDir(unittest.TestCase):
     def setUp(self):
         self.tool = load('update_dictionaries', 'tools/update_dictionaries.py')
