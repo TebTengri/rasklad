@@ -225,8 +225,17 @@ class Refresh(Base):
         # A commented-out loader is not installed: a new block is added.
         self.assertEqual(plan(b'--[[\n' + line + b']]\n')[0], 'missing')
         # A live loader in another form, with no BEGIN line, is: nothing added.
+        # A loader in another form, with no BEGIN line: set up by hand, never doubled.
         other = ("local rasklad = '%s'\ndofile(rasklad)\n" % self.setup.RULE).encode()
-        self.assertEqual(plan(other), ('ok', None))
+        self.assertEqual(plan(other), ('other', None))
+        self.assertEqual(plan(self.setup.LOADER_LINES), ('ok', None))
+        # The path with an unrelated dofile, or the word in a string: not ours, other.
+        self.assertEqual(plan(line + b'dofile("/etc/x.lua")\n'), ('other', None))
+        # A path split inside the word across adjacent literals is still seen.
+        r = self.setup.RULE
+        cut2 = r.index('rasklad') + 3
+        self.assertEqual(plan(('local p = "%s" .. \'%s\'\ndofile(p)\n' % (r[:cut2], r[cut2:])).encode()),
+                         ('other', None))
         # Rasklad in code that is not a plain loader: set up by hand, left as is.
         self.assertEqual(plan(b'local label = "Rasklad is useful"\n'), ('other', None))
         self.assertEqual(plan(line), ('other', None))  # the path, never loaded
@@ -235,12 +244,21 @@ class Refresh(Base):
         self.assertEqual(plan(split), ('other', None))
         self.assertEqual(plan(b'local x = 1\n')[0], 'missing')
         # CR-only line ends: a line comment ends at CR.
-        load = line + b'dofile(rasklad)\n'
+        load = self.setup.LOADER_LINES
         self.assertEqual(plan(b'-- note\r' + load.replace(b'\n', b'\r'))[0], 'ok')
         # The commented path line ends at CR: the dofile line after it is code.
         self.assertEqual(plan(b'-- ' + load.replace(b'\n', b'\r'))[0], 'other')
         # An escaped CRLF inside a string does not open a comment on the next line.
         self.assertEqual(plan(b'local s = "a\\\r\n--[[ b"\n' + load)[0], 'ok')
+
+    def test_recordless_revert_reads_through_a_symlink(self):
+        import os
+        s = self.setup
+        target = Path(self.tmp.name) / 'dotfiles-input.lua'
+        target.write_bytes(('local rasklad_package = io.open("%s", "r")\n' % s.RULE).encode())
+        Path(s.INPUT).unlink(missing_ok=True)
+        os.symlink(target, s.INPUT)
+        self.assertIn(s.INPUT, s.untracked_traces())
 
     def test_recordless_traces(self):
         s = self.setup

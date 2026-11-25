@@ -485,14 +485,14 @@ def bindings_plan(data=None):
   if data is None:
     data = read(BINDINGS)
   text = data.decode(errors="replace")
-  # SYS-272: Lua is not evaluated, so only a plain case counts as installed:
-  # the rule's path and a dofile/loadfile in code (comments taken out). Any
-  # other rasklad in code (the path built by concatenation, a string never
-  # loaded) is "other": set up by hand, left as is, never a second loader.
-  code = lua_code(data)
-  if RULE.encode() in code and re.search(rb"\b(dofile|loadfile)\b", code):
+  # SYS-272: Lua is not evaluated, so only the loader lines setup writes, in
+  # code (not a comment), count as installed. Any other rasklad in code, also
+  # after joining adjacent string literals ("ras" .. "klad"), is "other": set up
+  # by hand, left as is, never a second loader.
+  code = lua_code(data).replace(b"\r\n", b"\n").replace(b"\r", b"\n")  # any line ends
+  if LOADER_LINES in code:
     return "ok", None
-  if b"rasklad" in code.lower():
+  if b"rasklad" in joined_literals(code).lower():
     return "other", None
   block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
            "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
@@ -746,6 +746,21 @@ def names_widget(data):
 
 
 LONG_OPEN = re.compile(rb"\[(=*)\[")
+# The three lines of the double-Alt block that load the rule (bindings_plan).
+LOADER_LINES = ("local rasklad = \"%s\"\n"
+                "local found = io.open(rasklad, \"r\")\n"
+                "if found then found:close(); dofile(rasklad) end\n" % RULE).encode()
+ADJACENT = re.compile(rb"""(["'])((?:\\.|(?!\1)[^\\\r\n])*)\1\s*\.\.\s*(["'])((?:\\.|(?!\3)[^\\\r\n])*)\3""")
+
+
+def joined_literals(code):
+  """Lua code with adjacent short string literals joined ("a" .. 'b' -> "ab"),
+  so a constant path split across literals is still seen."""
+  while True:
+    joined = ADJACENT.sub(lambda m: b'"' + m.group(2) + m.group(4) + b'"', code)
+    if joined == code:
+      return code
+    code = joined
 
 
 def lua_code(data):
@@ -1351,8 +1366,13 @@ def untracked_traces():
   state directory deleted, or another home's copy). Names only, never contents."""
   found = []
   for path in (BINDINGS, INPUT, SHELL_JSON):
-    if file_state(path) is None:
-      data = read(path)
+    # A symlinked file (dotfiles) is read through the link: it is never written
+    # here, but a block left in its target is still a trace.
+    if file_state(path) in (None, "symlink"):
+      try:
+        data = read(os.path.realpath(path))
+      except OSError:
+        data = None
       if data is not None and trace_in(path, data):
         found.append(path)
   if os.path.islink(PLUGIN_LINK) and os.path.realpath(PLUGIN_LINK) == os.path.realpath(WIDGET):

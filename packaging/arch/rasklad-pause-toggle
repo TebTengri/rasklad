@@ -38,8 +38,10 @@ def main():
     if not isinstance(values, dict):
       return 1
     # Owner decision 2026-11-25: while Rasklad is off the middle click changes nothing.
-    if values.get("Enabled") == "False" or values.get("ProfileReady") != "True":
+    if values.get("Enabled") == "False" or values.get("ProfileReady") == "False":
       return 3
+    if values.get("Enabled") not in ("True", None) or values.get("ProfileReady") != "True":
+      return 1  # an incomplete or malformed reply is a failure, not a choice
     auto = values.get("AutoCorrect")
     if auto not in ("True", "False"):
       return 1
