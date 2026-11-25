@@ -52,13 +52,14 @@ void LayoutCue::play()
         m_worker = std::thread([this] {
             snd_pcm_t *pcm = nullptr;
             // Non-blocking: a busy or hung sound server never stalls this worker.
-            if (snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
+            // A stop() before the samples are handed over means no sound at all.
+            if (!m_stop.load() && snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
                 if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, kRate, 1,
                                        200000) == 0 &&
-                    snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
+                    !m_stop.load() && snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
                     // 70 ms is below the default start threshold: start explicitly.
                     if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED) snd_pcm_start(pcm);
-                    // Let it play: at most ~400 ms, or until stopped on unload.
+                    // Let it play: at most ~400 ms, or until stopped (off or unload).
                     for (int i = 0; i < 40 && !m_stop.load(); ++i) {
                         if (snd_pcm_state(pcm) != SND_PCM_STATE_RUNNING) break;
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -175,15 +175,16 @@ out counts as your own configuration.
 - Rasklad never sends typed text to the network or writes it to logs or files.
   (Like any program's memory, Fcitx's may still reach disk through swap or a core
   dump.)
-- The add-on keeps in memory, per field, only the word being typed and the last
-  finished word. The last word is dropped at the next key other than Shift, or at
+- Rasklad keeps nothing while it is off. When on, it keeps in memory, per field,
+  only the word being typed and the last finished word. The last word is dropped at the next key other than Shift, or at
   a focus change; after
   15 seconds it can no longer be swapped, and its stored copy is then wiped
   (temporary copies made while correcting may linger in freed memory).
 - The settings window stores only the application list, the exceptions and the
   switches, in `~/.config/fcitx5/conf/rasklad.conf`.
 - The names of programs where you placed the cursor, without any text, are kept
-  in Fcitx's memory while it runs and are readable by your own programs over the
+  in Fcitx's memory while it runs and Rasklad is on (cleared when it is turned
+  off), and are readable by your own programs over the
   session bus (the settings window shows them).
 
 Security boundaries and everything the add-on and the window run:

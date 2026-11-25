@@ -156,6 +156,9 @@ try{
    watcher.kill();
    try{report.productOffWatch=JSON.parse(line).correction==='off';}catch(e){report.productOffWatch=false;}
    required.push('productOffWatch');
+   // The widget's middle click changes nothing while Rasklad is off (exit 1, no write).
+   let toggled=true;try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});}catch(e){toggled=false;}
+   report.productOffPauseRefused=!toggled;required.push('productOffPauseRefused');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){

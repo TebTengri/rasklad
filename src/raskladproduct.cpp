@@ -609,6 +609,7 @@ private:
             seenPrograms_.clear();
             status_.seenApplications.setValue(std::vector<std::string>{});
             cue_.stop();
+            switchEvent_.reset(); // a layout switch queued before: never runs
         }
         applying_ = false;
     }

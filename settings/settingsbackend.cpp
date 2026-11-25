@@ -259,7 +259,11 @@ void SettingsBackend::setRaskladEnabled(bool on)
     }
     AddonConfig next = m_config;
     next.enabled = on;
-    commit(next);
+    // Off, the addon forgets the program names: so does the window's list.
+    if (commit(next) && !on) {
+        m_focused.clear();
+        rebuildApps();
+    }
 }
 
 bool SettingsBackend::addException(const QString &raw)
