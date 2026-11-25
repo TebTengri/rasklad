@@ -834,7 +834,9 @@ def install(assume_yes, single_layout=False):
       say("edited", os.path.basename(path), EDITED_ADVICE)
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
-      fault = fault or path != INPUT  # lua-error, no-slot, unparsable
+      # Broken files only; no-slot is a bar without the stock widget, the
+      # user's choice, as before (SYS-272).
+      fault = fault or (path != INPUT and status in ("lua-error", "unparsable"))
   link = link_state()
   if link == "other":
     say("other", "bar-widget-link", "something else is there; left as is")

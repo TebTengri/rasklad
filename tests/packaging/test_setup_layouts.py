@@ -213,6 +213,16 @@ class Install(Base):
         self.assertEqual(code, 0, out)
         self.assertIn('Nothing to change', out)
 
+    def test_bar_without_the_stock_widget_is_not_a_fault(self):
+        self.setup.shell_plan = lambda data=None: ('no-slot', None)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+
+    def test_unparsable_shell_json_is_a_fault(self):
+        self.setup.shell_plan = lambda data=None: ('unparsable', None)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 1, out)
+
     def test_nothing_to_change_when_all_is_done(self):
         code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
         self.assertEqual(code, 0, out)
