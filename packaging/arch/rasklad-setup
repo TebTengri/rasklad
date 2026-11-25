@@ -815,7 +815,7 @@ def install(assume_yes, single_layout=False):
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
       say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
-      fault = True
+      fault = fault or path != INPUT
     elif status == "missing" and path == INPUT:
       layout_change.append((path, old, new))
     elif status == "missing":
@@ -829,7 +829,7 @@ def install(assume_yes, single_layout=False):
           "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path), LEGACY_ADVICE)
-      fault = True
+      fault = fault or path != INPUT
     elif status == "edited":
       say("edited", os.path.basename(path), EDITED_ADVICE)
     elif status != "ok":
