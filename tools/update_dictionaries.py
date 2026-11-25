@@ -14,8 +14,9 @@ and the docs). An update is an ordinary reviewed change made in five steps:
   build   --commit SHA            control .aff, evaluation sets, model and word
                                   list (detector_benchmark --dictionaries new),
                                   release profile; nothing outside the work dir
-  compare --commit SHA            quality against the pinned report; exits 1 on
-                                  a regression beyond the allowed margin
+  compare --commit SHA            the new dictionaries against the pinned ones,
+                                  both on the same fresh export; exits 1 on a
+                                  regression beyond the allowed margin
   pin     --commit SHA            writes the new pins into the repository
 
 After `pin`: rebuild, run the tests and the stand on the new profile
@@ -37,6 +38,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -104,7 +106,20 @@ def plan(commit):
     rows = [(RAW.format(commit=commit, path=p), name) for p, name in DICTIONARY_FILES.items()]
     for s in load_json(ROOT / 'data/evaluation-002-sources.json')['evaluation_sources']:
         rows.append((s['url'], s['iso_language'] + '_sentences_CC0.tsv.bz2'))
+    # The pinned dictionaries too: compare scores old and new on the same export.
+    for s in load_json(ROOT / 'data/sources.json')['training_sources']:
+        rows.append((s['url'], 'old-%s.dic' % s['language']))
     return rows
+
+
+class SameHostHttps(urllib.request.HTTPRedirectHandler):
+    """A redirect is followed only to https on the same host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old, new = urllib.parse.urlsplit(req.full_url), urllib.parse.urlsplit(newurl)
+        if new.scheme != 'https' or new.hostname != old.hostname:
+            raise SystemExit('refused: redirect from %s to %s' % (req.full_url, newurl))
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 # ---- fetch -------------------------------------------------------------------
@@ -113,7 +128,8 @@ def download(url, target):
     if not url.startswith('https://'):
         raise SystemExit('refused: not https: ' + url)
     request = urllib.request.Request(url, headers={'User-Agent': 'rasklad-dictionary-update'})
-    with urllib.request.urlopen(request, timeout=60) as reply:
+    opener = urllib.request.build_opener(SameHostHttps)
+    with opener.open(request, timeout=60) as reply:
         data = reply.read(MAX_DOWNLOAD + 1)
     if len(data) > MAX_DOWNLOAD:
         raise SystemExit('refused: larger than %d bytes: %s' % (MAX_DOWNLOAD, url))
@@ -133,6 +149,10 @@ def fetch(commit, network):
     for url, name in plan(commit):
         files[name] = download(url, down / name)
         print('%s  %9d  %s' % (files[name]['sha256'][:12], files[name]['bytes'], name))
+    for s in load_json(ROOT / 'data/sources.json')['training_sources']:
+        got = files['old-%s.dic' % s['language']]
+        if (got['sha256'], got['bytes']) != (s['sha256'], s['bytes']):
+            raise SystemExit('the pinned %s dictionary did not match its pin' % s['language'])
     dump_json(work / 'fetch.json', {'commit': commit, 'date': datetime.date.today().isoformat(),
                                     'files': files})
 
@@ -156,7 +176,7 @@ def build(commit, accept_notices):
     if changed and not accept_notices:
         raise SystemExit('upstream notices changed: %s. Review the license text against data/notices/, '
                          'then run build again with --accept-notices.' % ', '.join(changed))
-    for sub in ('profile', 'eval', 'release'):
+    for sub in ('profile', 'eval', 'baseline', 'release'):
         if (work / sub).exists():
             raise SystemExit('already built: %s (remove it to build again)' % (work / sub))
     benchmark = ROOT / 'build/tools/detector_benchmark'
@@ -222,6 +242,24 @@ def build(commit, accept_notices):
              '--eval-en', eval_dir / 'en.tsv', '--eval-ru', eval_dir / 'ru.tsv',
              '--protocol', stage / 'data/experiment-002-protocol.json',
              '--artifact-dir', arts, '--dictionaries', 'new', '--json'], stdout=report)
+
+    # Baseline: the pinned dictionaries on the same fresh export, in a tree of
+    # their own (the pinned manifest and notices).
+    base = work / 'baseline'
+    (base / 'data/notices').mkdir(parents=True)
+    (base / 'build').mkdir()
+    for rel in ('data/sources.json', 'data/experiment-002-protocol.json', 'data/notices/Tatoeba-CC0-REVIEW.md') + \
+            tuple('data/notices/' + n for n in NOTICES) + ((licence,) if licence else ()):
+        (base / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / rel, base / rel)
+    shutil.copyfile(stage / 'data/evaluation-002-sources.json', base / 'data/evaluation-002-sources.json')
+    with open(work / 'baseline-report.json', 'wb') as report:
+        run([benchmark, '--manifest', base / 'data/sources.json',
+             '--en', down / 'old-en.dic', '--ru', down / 'old-ru.dic',
+             '--eval-manifest', base / 'data/evaluation-002-sources.json',
+             '--eval-en', eval_dir / 'en.tsv', '--eval-ru', eval_dir / 'ru.tsv',
+             '--protocol', base / 'data/experiment-002-protocol.json', '--json'], stdout=report)
+
     for name in NOTICES:
         shutil.copyfile(down / name, arts / name.replace('README', 'NOTICE'))
     (arts / 'MODIFICATIONS.txt').write_text(MODIFICATIONS, encoding='utf-8')
@@ -266,10 +304,11 @@ def worse(old, new, lower, margin):
 
 
 def compare(commit):
-    old = rates(load_json(ROOT / 'docs/results/experiment-002.json'))
+    # Both runs score the same fresh export: only the dictionaries differ.
+    old = rates(load_json(work_dir(commit) / 'baseline-report.json'))
     new = rates(load_json(work_dir(commit) / 'report.json'))
     if len(old) != len(SCOPES) * len(HEADLINE) * 2:
-        raise SystemExit('compare: the pinned report lacks headline rates')
+        raise SystemExit('compare: the baseline report lacks headline rates')
     failed = []
     for name, (value, lower, margin) in sorted(old.items()):
         if name not in new:

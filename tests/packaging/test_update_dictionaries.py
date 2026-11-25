@@ -129,6 +129,20 @@ class Steps(unittest.TestCase):
         for url, _ in self.tool.plan(NEW):
             self.assertTrue(url.startswith('https://'), url)
 
+    def test_redirect_only_to_https_on_the_same_host(self):
+        import urllib.request
+        handler = self.tool.SameHostHttps()
+        req = urllib.request.Request('https://downloads.tatoeba.org/a')
+        for bad in ('http://downloads.tatoeba.org/a', 'https://example.org/a'):
+            with self.assertRaises(SystemExit):
+                handler.redirect_request(req, None, 302, 'Found', {}, bad)
+        self.assertIsNotNone(handler.redirect_request(req, None, 302, 'Found', {}, 'https://downloads.tatoeba.org/b'))
+
+    def test_plan_includes_the_pinned_dictionaries(self):
+        names = [name for _, name in self.tool.plan(NEW)]
+        self.assertIn('old-en.dic', names)
+        self.assertIn('old-ru.dic', names)
+
     def test_compare_flags_a_drop(self):
         self.assertTrue(self.tool.worse(0.0004, 0.0010, True, 0.0005))
         self.assertFalse(self.tool.worse(0.0004, 0.0008, True, 0.0005))
