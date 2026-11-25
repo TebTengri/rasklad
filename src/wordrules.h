@@ -4,6 +4,7 @@
 // answers out. The addon keeps the key events, the field and the profile.
 #pragma once
 
+#include "wipe.h"
 #include "manualgesture.h"
 
 #include <cstddef>
@@ -36,9 +37,18 @@ inline bool caseEligible(std::uint32_t upper, std::size_t keys) noexcept
 // capitals of `upper`. A key with no Russian form keeps the typed text.
 inline std::string form(const std::string &typed, bool asRu, std::uint32_t upper = 0)
 {
+    // One returned variable, so the compiler can usually build the result in
+    // place; a return move may still leave a copy (see SECURITY.md, SYS-272).
     std::string out = asRu ? manual::usToRu(typed) : typed;
     if (out.empty()) out = typed;
-    return upper ? manual::applyUpper(out, upper) : out;
+    if (upper) {
+        std::string shown = manual::applyUpper(out, upper);
+        // Same length (capitals keep their UTF-8 size): copied into out's own
+        // buffer without reallocation; the other copy is wiped.
+        out.assign(shown);
+        wipe(shown);
+    }
+    return out;
 }
 
 // SYS-250: how many leading keys are letters before the keys that end a us-typed

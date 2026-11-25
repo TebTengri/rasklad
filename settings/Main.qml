@@ -578,7 +578,7 @@ ApplicationWindow {
                             Button {
                                 visible: backend.setupInstalled
                                 flat: true
-                                text: qsTr("Restore Omarchy defaults…")
+                                text: qsTr("Undo the Rasklad setup…")
                                 onClicked: revertConfirm.open()
                             }
                         }
@@ -789,14 +789,14 @@ ApplicationWindow {
         modal: true
         anchors.centerIn: Overlay.overlay
         width: Math.min(window.width - 32, 440)
-        title: qsTr("Restore Omarchy defaults?")
+        title: qsTr("Undo the Rasklad setup?")
         background: Rectangle {
             color: theme.background
             radius: window.small
             border.color: window.tint(0.4)
         }
         contentItem: Hint {
-            text: qsTr("The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.")
+            text: qsTr("Rasklad takes back what it changed in the Hyprland, bar and Fcitx settings. Files you have changed since are normally left as they are; from Fcitx only the layouts it added are removed. The exceptions are in SECURITY.md (/usr/share/doc/rasklad-fcitx5).")
             font.pixelSize: 12
         }
         footer: DialogButtonBox {

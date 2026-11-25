@@ -34,7 +34,7 @@ No automatic retries to burn further quota. The live trial has still NOT run.
 ## Executed owner-approved trial (2026-11-17)
 
 Explicit permission received. Original temporary worktree had disappeared;
-restored committed code into /home/mvn/Work/rasklad-message-adapter. Ten status
+restored committed code into <repo>. Ten status
 mock tests passed before execution. One actual false→true→false trial completed
 with restoration verified on first attempt, no app text/writes/restart. Slack
 was not running (0 target processes), so this cannot test compatibility.

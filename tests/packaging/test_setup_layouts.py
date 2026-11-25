@@ -69,6 +69,11 @@ class Base(unittest.TestCase):
         hypr.mkdir(parents=True)
         self.input = hypr / 'input.lua'
         self.input.write_bytes(b'-- user file\n')
+        # The other two steps are stubbed as done; their files exist (SYS-272: a
+        # missing one is a fault that makes --install exit 1).
+        (hypr / 'bindings.lua').write_bytes(b'-- bindings\n')
+        shell = Path(self.setup.SHELL_JSON); shell.parent.mkdir(parents=True, exist_ok=True)
+        shell.write_bytes(b'{}\n')
         self.setup.lua_ok = lambda data: True
         self.setup.hypr_errors = lambda: []
         self.setup.hypr_running = lambda: False
@@ -188,6 +193,119 @@ class Install(Base):
         self.assertEqual(fake.calls, 1)
         self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
 
+    def test_no_fcitx_is_not_nothing_to_change(self):
+        code, out = self.install(None)
+        self.assertEqual(code, 1, out)
+        self.assertIn('start Fcitx', out)
+        self.assertNotIn('Nothing to change', out)
+
+    def test_missing_bindings_is_a_fault(self):
+        (Path(self.setup.BINDINGS)).unlink()
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 1, out)
+        self.assertIn('Not everything is connected', out)
+
+    def test_symlinked_dotfiles_are_not_a_fault(self):
+        bindings = Path(self.setup.BINDINGS)
+        real = bindings.with_name('dotfiles-bindings.lua')
+        bindings.rename(real); bindings.symlink_to(real)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+        self.assertIn('Nothing to change', out)
+
+    def test_bar_without_the_stock_widget_is_not_a_fault(self):
+        self.setup.shell_plan = lambda data=None: ('no-slot', None)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+
+    def test_unparsable_shell_json_is_a_fault(self):
+        self.setup.shell_plan = lambda data=None: ('unparsable', None)
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 1, out)
+
+    def test_an_error_that_went_away_is_not_new(self):
+        self.hypr('ru,us', variant=',')
+        seen = iter([['old A', 'old B'], ['old A']])
+        self.setup.hypr_errors = lambda: next(seen)
+        self.setup.hypr_running = lambda: True
+        code, out = self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn('undoing', out)
+
+    def test_nothing_to_change_when_all_is_done(self):
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+        self.assertIn('Nothing to change', out)
+
+    def test_deleted_input_waits_for_hyprland_to_decide(self):
+        # Hyprland may still run with our block's layouts: outside a session the
+        # record stays and revert says where to run it (no temporary file left).
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.unlink()
+        self.setup.fcitx = fake.bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertIn('deleted since install', out.getvalue())
+        self.assertIn('inside the Hyprland session', out.getvalue())
+        self.assertIn(self.setup.INPUT, self.setup.load_state()['files'])
+        self.assertEqual([p.name for p in self.input.parent.iterdir() if p.name.startswith('.rasklad-setup.')], [])
+
+    def test_deleted_input_is_released_once_hyprland_reloaded_without_it(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.unlink()
+        self.setup.fcitx = fake.bus
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda state: True
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.revert()
+        state = self.setup.load_state() if os.path.exists(self.setup.STATE_FILE) else {'files': {}}
+        self.assertNotIn(self.setup.INPUT, state['files'], out.getvalue())
+
+    def test_failure_names_the_cause(self):
+        def boom(*a, **k):
+            raise PermissionError(13, 'Permission denied', '/some/where')
+        self.setup.install = boom
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.setup.main(['--install', '--yes']), 1)
+        self.assertIn('Permission denied (/some/where)', err.getvalue())
+
+    def test_block_as_written_is_ours(self):
+        self.hypr('ru,us', variant=',')
+        self.assertEqual(self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)[0], 0)
+        self.assertRegex(self.setup.load_state()['input_block'], r'^[0-9a-f]{64}$')
+        self.assertEqual(self.setup.input_plan(None, self.setup.load_state()['input_block'])[0], 'ok')
+
+    def test_edited_block_is_not_ours(self):
+        self.hypr('ru,us', variant=',')
+        self.assertEqual(self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)[0], 0)
+        data = self.input.read_bytes()
+        self.input.write_bytes(data.replace(b'kb_variant = ""', b'kb_variant = "intl"'))
+        state = self.setup.load_state()
+        self.assertEqual(self.setup.input_plan(None, state['input_block'])[0], 'edited')
+        self.assertEqual(self.setup.input_plan(None, None)[0], 'ok')  # no record: as before
+        self.setup.fcitx = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]).bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.check()
+        self.assertRegex(out.getvalue(), r'edited\s+hyprland-layout')
+
+    def test_revert_drops_the_block_hash(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.fcitx = fake.bus
+            self.setup.revert()
+        state = self.setup.load_state() if os.path.exists(self.setup.STATE_FILE) else {}
+        self.assertNotIn('input_block', state)
+
     def test_fcitx_reply_without_change_leaves_layouts(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')], apply=False)
@@ -282,11 +400,11 @@ class Install(Base):
         fake = FakeFcitx([('keyboard-us', '')])
         real = self.setup.input_plan
         calls = []
-        def plan_and_save(data=None):
+        def plan_and_save(data=None, written=None):
             calls.append(1)
             if len(calls) == 2:  # the re-check just before writing
                 self.input.write_bytes(b'-- saved meanwhile\n')
-            return real(data)
+            return real(data, written)
         self.setup.input_plan = plan_and_save
         code, out = self.install(fake, single_layout=True)
         self.assertEqual(code, 1)

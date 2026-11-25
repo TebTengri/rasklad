@@ -30,7 +30,7 @@ SOURCES += $$PWD/../src/raskladproduct.cpp \
     $$PWD/../src/spellengine.cpp \
     $$PWD/../tools/frontcodedlexicon.cpp
 LIBS += -ldl -lpthread
-HEADERS += $$PWD/../src/manualgesture.h
+HEADERS += $$PWD/../src/manualgesture.h $$PWD/../src/wipe.h
 
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
 QMAKE_LFLAGS += -Wl,--no-undefined

@@ -165,9 +165,9 @@ QVariantMap setupFromCheck(const QByteArray &output)
                                     QStringLiteral("no-slot"),  QStringLiteral("not-a-file"),  QStringLiteral("unparsable"),
                                     QStringLiteral("on"),       QStringLiteral("paused"),
                                     QStringLiteral("other-layouts"), QStringLiteral("optional"),
-                                    QStringLiteral("legacy")};
+                                    QStringLiteral("legacy"),   QStringLiteral("edited")};
     QVariantMap result;
-    if (output.size() > 4096) return result;
+    if (output.size() > 8192) return result; // as much as RaskladSetup accepts
     for (const QByteArray &raw : output.split('\n')) {
         const QList<QByteArray> words = raw.simplified().split(' ');
         if (words.size() < 2) continue;
@@ -192,7 +192,8 @@ QString setupRowState(const QVariantMap &setup, const QStringList &steps)
         else if (s == QLatin1String("missing") || s == QLatin1String("missing-file"))
             missing = true;
         else if (s == QLatin1String("other") || s == QLatin1String("symlink") ||
-                 s == QLatin1String("other-layouts")) // SYS-268: kz, de, ... left as is
+                 s == QLatin1String("other-layouts") || // SYS-268: kz, de, ... left as is
+                 s == QLatin1String("edited"))          // SYS-272: the user edited our block
             other = true;
         else
             unknown = true; // "unknown", "no-fcitx", or absent

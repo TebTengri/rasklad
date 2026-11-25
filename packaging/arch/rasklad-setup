@@ -43,6 +43,8 @@ END = "-- END rasklad-setup"
 # checks the live layouts and forgets it; --install after that adds the new one.
 LEGACY_ADVICE = ("an older or edited layout block: run --revert inside the Hyprland session; "
                  "if the block stays, remove it from input.lua and run --revert again, then --install")
+EDITED_ADVICE = ("the layout block was edited after install; left as is "
+                 "(--revert keeps an edited input.lua too)")
 LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
@@ -108,9 +110,10 @@ def sha(data):
   return hashlib.sha256(data).hexdigest()
 
 
-def write_atomic(path, data, mode=None):
-  # A fresh private temporary file beside the target (never a fixed name that
-  # could be a planted symlink), synced, then renamed over the target.
+def prepare_atomic(path, data, mode=None):
+  """A fresh private temporary file beside the target (never a fixed name that
+  could be a planted symlink), written and synced; returns its path. Made before
+  the last comparison, so only the rename follows it (SYS-272)."""
   if mode is None:
     mode = stat.S_IMODE(os.lstat(path).st_mode) if os.path.lexists(path) else 0o644
   fd, tmp = tempfile.mkstemp(prefix=".rasklad-setup.", dir=os.path.dirname(path))
@@ -120,13 +123,29 @@ def write_atomic(path, data, mode=None):
       f.flush()
       os.fchmod(f.fileno(), mode)
       os.fsync(f.fileno())
+  except BaseException:
+    discard(tmp)
+    raise
+  return tmp
+
+
+def discard(tmp):
+  try:
+    os.unlink(tmp)
+  except OSError:
+    pass
+
+
+def commit_atomic(tmp, path):
+  try:
     os.replace(tmp, path)
   except BaseException:
-    try:
-      os.unlink(tmp)
-    except OSError:
-      pass
+    discard(tmp)
     raise
+
+
+def write_atomic(path, data, mode=None):
+  commit_atomic(prepare_atomic(path, data, mode), path)
 
 
 def private_state_dir():
@@ -176,10 +195,13 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout"} or \
+  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout", "input_block"} or \
      not isinstance(state.get("files"), dict):
     raise bad
   if not isinstance(state.get("await_hypr", False), bool):
+    raise bad
+  ib = state.get("input_block")
+  if ib is not None and not (isinstance(ib, str) and re.fullmatch(r"[0-9a-f]{64}", ib)):
     raise bad
   hl = state.get("hypr_layout")
   if hl is not None and not (isinstance(hl, str) and hl and XKB.fullmatch(hl)):
@@ -476,7 +498,18 @@ def bindings_plan(data=None):
   return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
 
-def input_plan(data=None):
+def layout_block(data):
+  """Our BEGIN..END block in input.lua, or None."""
+  if BEGIN.encode() not in data:
+    return None
+  start = data.index(BEGIN.encode())
+  end = data.find(END.encode(), start)
+  return data[start:end] if end != -1 else b""
+
+
+def input_plan(data=None, written=None):
+  # written: the hash of the block this tool wrote (SYS-272); a block of ours
+  # with another variant or options is the user's edit, not ours as is.
   """Hyprland keeps one layout and no xkb group toggle: Fcitx switches layouts."""
   bad = file_state(INPUT)
   if bad:
@@ -488,10 +521,10 @@ def input_plan(data=None):
     # version wrote is ours as is: the mark and kb_layout = "us" inside the same
     # BEGIN..END block. Anything else (written before SYS-268, which may have
     # kept ru or dropped kz, or edited since) is reported for revert and reinstall.
-    start = data.index(BEGIN.encode())
-    end = data.find(END.encode(), start)
-    block = data[start:end] if end != -1 else b""
-    return ("ok", None) if LAYOUT_BLOCK_RE.fullmatch(block) else ("legacy", None)
+    block = layout_block(data)
+    if not LAYOUT_BLOCK_RE.fullmatch(block):
+      return "legacy", None
+    return ("edited", None) if written and sha(block) != written else ("ok", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
   if layout is None or options is None or variant is None:
     return "unknown", None
@@ -594,8 +627,14 @@ def check():
     say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
   report(bindings_plan()[0], "double-alt")
-  state = input_plan()[0]
-  if state == "unknown":
+  try:
+    written = load_state().get("input_block")
+  except Refused:
+    written = None
+  state = input_plan(None, written)[0]
+  if state == "edited":
+    say("edited", "hyprland-layout", EDITED_ADVICE)  # the user's choice, not a fault
+  elif state == "unknown":
     say("unknown", "hyprland-layout", "Hyprland not running or its keyboard options not readable")
   elif state == "missing":
     # SYS-268: a choice, not a fault. Hyprland keeps its layouts and switch.
@@ -642,6 +681,9 @@ def record_then_check(state, path, old, new):
   entry = state["files"].get(path)
   before = dict(entry) if entry else None
   bak_existed = os.path.lexists(path + ".rasklad.bak")
+  block_before = state.get("input_block")
+  if path == INPUT and layout_block(new):
+    state["input_block"] = sha(layout_block(new))  # the block as written (SYS-272)
   remember_file(state, path, old, new)
   save_state(state)
   try:
@@ -650,6 +692,11 @@ def record_then_check(state, path, old, new):
     same = False
   if same:
     return True  # only the rename follows; a save in that instant is not seen
+  if path == INPUT:
+    if block_before is None:
+      state.pop("input_block", None)
+    else:
+      state["input_block"] = block_before
   if before is not None:
     state["files"][path] = before
   else:
@@ -699,6 +746,8 @@ def forget_entry(state, path):
   before install and is kept as *.before-reset, written before the state forgets
   it. Returns where the old copy is."""
   entry = state["files"].pop(path)
+  if path == INPUT:
+    state.pop("input_block", None)
   if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
      read(entry["bak"]) == read(entry["backup"]):
     state.setdefault("_drop", []).append(entry["backup"])
@@ -743,23 +792,30 @@ def install(assume_yes, single_layout=False):
   stale = set()  # decided from the same bytes the preview shows, below
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
+  # SYS-272: a step skipped for a fault (not the user's own setup, not the
+  # optional input.lua step) makes the run exit 1, so "done" is never claimed.
+  fault = False
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
     # One read: the diff, the backup and the final comparison all use it.
     bad = file_state(path)
     if bad:
       say(bad, os.path.basename(path), "left as is")
+      # A symlink is the user's own (dotfiles) setup, as settings shows it.
+      fault = fault or (path != INPUT and bad != "symlink")
       continue
     old = read(path)
     if old is None:
       say("missing-file", os.path.basename(path), "left as is")
+      fault = fault or path != INPUT
       continue
-    status, new = plan(old)
+    status, new = input_plan(old, state.get("input_block")) if path == INPUT else plan(old)
     if path in (BINDINGS, SHELL_JSON) and path in state["files"] and not ours_in(path, old):
       stale.add(path)
     if status == "missing" and path in state["files"] and path not in stale:
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
       say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
+      fault = fault or path != INPUT
     elif status == "missing" and path == INPUT:
       layout_change.append((path, old, new))
     elif status == "missing":
@@ -773,8 +829,14 @@ def install(assume_yes, single_layout=False):
           "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path), LEGACY_ADVICE)
+      fault = fault or path != INPUT
+    elif status == "edited":
+      say("edited", os.path.basename(path), EDITED_ADVICE)
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
+      # Broken files only; no-slot is a bar without the stock widget, the
+      # user's choice, as before (SYS-272).
+      fault = fault or (path != INPUT and status in ("lua-error", "unparsable"))
   link = link_state()
   if link == "other":
     say("other", "bar-widget-link", "something else is there; left as is")
@@ -783,6 +845,7 @@ def install(assume_yes, single_layout=False):
   group = fcitx_plan(bus, live)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
+    fault = True
     # SYS-268: without Fcitx nothing else would switch layouts.
     if layout_change:
       say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
@@ -795,6 +858,9 @@ def install(assume_yes, single_layout=False):
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
+    if fault:
+      print("Not everything is connected; see the lines above.")
+      return 1
     print("Nothing to change.")
     return 0
   if main_steps:
@@ -849,18 +915,27 @@ def install(assume_yes, single_layout=False):
       say("reset", os.path.basename(path),
           "our change was gone (omarchy refresh?); old copy: %s" % copy)
       save_and_drop(state)
+    tmp = prepare_atomic(path, new)
     if not record_then_check(state, path, old, new):
+      discard(tmp)
       say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
-    write_atomic(path, new)
+    commit_atomic(tmp, path)
     say("done", os.path.basename(path))
   if link == "missing":
     state["link"] = WIDGET
     save_state(state)
     os.makedirs(os.path.dirname(PLUGIN_LINK), exist_ok=True)
-    os.symlink(WIDGET, PLUGIN_LINK)
-    say("done", "bar-widget-link")
+    try:
+      os.symlink(WIDGET, PLUGIN_LINK)
+      say("done", "bar-widget-link")
+    except FileExistsError:
+      # Made by something else meanwhile: not ours, so --revert leaves it.
+      state["link"] = None
+      save_state(state)
+      say("other", "bar-widget-link", "something else appeared there; left as is")
+      failed = True
   run_rows, fcitx_name = [], None
   if group[0] == "missing":
     # SYS-272: read again now, not the group from before the question, so a
@@ -916,17 +991,20 @@ def install(assume_yes, single_layout=False):
       # What "the user's layouts are back" means for --revert (SYS-268); asked
       # before the file comparison below, so nothing waits between it and the write.
       recorded = "".join((hypr_option("input:kb_layout") or "").split())
-      state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
-    if path == INPUT and input_plan(old) != ("missing", new):
+    if path == INPUT and input_plan(old, state.get("input_block")) != ("missing", new):
       say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
       failed = True
       continue
+    if path == INPUT:
+      state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
     # After the Hyprland queries above: a save made meanwhile is not overwritten.
+    tmp = prepare_atomic(path, new)
     if not record_then_check(state, path, old, new):
+      discard(tmp)
       say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
-    write_atomic(path, new)
+    commit_atomic(tmp, path)
     say("done", os.path.basename(path))
     changes.append((path, old, new))
 
@@ -936,8 +1014,13 @@ def install(assume_yes, single_layout=False):
   if hypr and hypr_running():
     run([HYPRCTL, "reload"])
     errors = hypr_errors()
-    if errors and errors != errors_before:
-      say("error", "hyprland", "new config errors after the change; undoing it")
+    # Only errors that were not there before count: one that went away is not new.
+    new_errors = [e for e in errors if e not in errors_before] if errors and errors_before is not None else errors
+    if new_errors:
+      # With no answer before the change, any error now is taken as ours: undoing
+      # our own edits is the safe side.
+      say("error", "hyprland", "new config errors after the change; undoing it" if errors_before is not None
+          else "config errors after the change (none could be read before); undoing it")
       # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
       if INPUT in hypr and not restore(state, INPUT):
         say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
@@ -960,7 +1043,11 @@ def install(assume_yes, single_layout=False):
             undo_group(state, fcitx_name, run_rows)
       save_and_drop(state)
       return 1
-  return 1 if failed else 0
+    if errors is None:
+      say("unverified", "hyprland", "Hyprland did not report its config errors after the change")
+  if fault and not failed:
+    print("Not everything is connected; see the lines above.")
+  return 1 if failed or fault else 0
 
 
 def restore(state, path):
@@ -975,20 +1062,45 @@ def restore(state, path):
   if bad not in (None, "missing-file"):
     say(bad, os.path.basename(path), "left as is")
     return False
-  current = read(path)
+  # Ready before the comparison: only the rename follows it (SYS-272).
+  tmp = prepare_atomic(path, old) if bad is None else None
+  try:
+    current = read(path)
+  except BaseException:
+    if tmp:
+      discard(tmp)
+    raise
   if current is not None and current == old:
-    pass  # never written (an interrupted install), or already restored
-  elif current is None or sha(current) != entry["written"]:
+    if tmp:
+      discard(tmp)  # never written (an interrupted install), or already restored
+  elif current is None:
+    if tmp:
+      discard(tmp)
+    if path == INPUT:
+      # Hyprland may still run with our block's layouts: revert decides by
+      # whether a running Hyprland has reloaded without it (block_gone).
+      say("gone", os.path.basename(path), "deleted since install")
+      return False
+    # SYS-272: deleted since install: our change went with it. The entry is
+    # forgotten (its copy kept), so revert can finish and install run again.
+    copy = forget_entry(state, path)
+    say("gone", os.path.basename(path), "deleted since install; nothing to put back (old copy: %s)" % copy)
+    return True
+  elif sha(current) != entry["written"]:
+    if tmp:
+      discard(tmp)
     say("changed", os.path.basename(path), "edited since install; left as is (copy: %s)" % entry["bak"])
     return False
   else:
-    write_atomic(path, old)
+    commit_atomic(tmp, path)
   bak = entry["bak"]
   if entry.get("bak_ours", False) and file_state(bak) is None and read(bak) == old:
     os.unlink(bak)
   # The private copy goes only after the state without this entry is saved.
   state.setdefault("_drop", []).append(entry["backup"])
   del state["files"][path]
+  if path == INPUT:
+    state.pop("input_block", None)
   say("restored", os.path.basename(path))
   return True
 
@@ -1254,7 +1366,14 @@ def main(argv):
     return check() if args[0] == "--check" else revert()
   except Refused as error:
     print("refused: %s" % error, file=sys.stderr)
-  except (OSError, ValueError, KeyError) as error:
+  except EOFError:
+    print("failed: no answer (input closed); nothing was changed after the question", file=sys.stderr)
+  except OSError as error:
+    # The cause and the path, never file contents.
+    print("failed: %s%s%s" % (error.__class__.__name__,
+                              ": " + error.strerror if error.strerror else "",
+                              " (%s)" % error.filename if error.filename else ""), file=sys.stderr)
+  except (ValueError, KeyError) as error:
     print("failed: %s" % error.__class__.__name__, file=sys.stderr)
   return 1
 

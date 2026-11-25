@@ -1,6 +1,6 @@
 # Границы безопасности
 
-## Кратко (продукт 0.5.27)
+## Кратко (продукт 0.5.29)
 
 **Аддон Fcitx** (`src/raskladproduct.cpp`):
 - получает от Fcitx все нажатия клавиш, как любой метод ввода. Слово он
@@ -8,8 +8,9 @@
   (по умолчанию Slack и Chromium); в остальных нажатия проходят без изменений и
   не запоминаются;
 - не трогает поля, которые приложение пометило как пароль, скрытый ввод,
-  терминал, e-mail, URL, число, телефон, дату или время, и известные
-  терминалы (даже вписанные вручную). Поле без такой пометки — в том числе поле
+  терминал, e-mail, URL, число, телефон, дату или время, и терминалы из
+  встроенного списка известных (даже вписанные вручную); терминал, которого в
+  списке нет, он не отличит. Поле без такой пометки — в том числе поле
   пароля — выглядит для него как обычный текст;
 - держит в памяти, отдельно для каждого поля, текущее слово (пока оно
   набирается) и последнее завершённое (обе его формы). Последнее слово
@@ -18,8 +19,12 @@
   поля. Через 15 секунд его уже нельзя сменить двойным Shift; стирает его таймер,
   когда Fcitx обработает его после этого срока (один таймер на все поля, на
   самый ранний срок; время сна компьютера не считается). Стираются хранимые
-  формы слова; временные копии, которые создаются при исправлении, затираются не
-  все и могут оставаться в освобождённой памяти, пока её не займут снова. Коды
+  формы слова и строки, в которых аддон собирает слово и исправление. Это не
+  полная очистка памяти: стандартная библиотека C++ и Qt (в том числе при
+  проверке слова по словарю и при возврате строк из функций) делают свои
+  промежуточные копии, а Fcitx и
+  приложение — свои, получая текст. Такие копии аддон не затирает, и они могут
+  оставаться в освобождённой памяти и в стеке, пока их не займут снова. Коды
   нажатых клавиш, чьи отпускания он поглощает, стираются при отпускании и при
   уходе фокуса;
 - окружающий текст, который приложение передаёт Fcitx, сверяет только пока
@@ -35,6 +40,11 @@
   приложений и 256 исключений;
 - в сеть не обращается, текст в журналы и файлы не пишет (память процесса,
   как у любой программы, может попасть на диск через swap или дамп);
+- короткий звук при смене раскладки (включён по умолчанию) играет через ALSA в
+  отдельном потоке процесса Fcitx. Звук не связан с текстом, но libasound
+  читает настройки ALSA пользователя и системы (`~/.asoundrc`,
+  `/etc/asound.conf`) и загружает указанные в них модули прямо в процесс,
+  который видит все нажатия;
 - пока работает Fcitx, помнит имена программ, в которых стоял курсор (не больше,
   чем помещается в список приложений), без текста. Их, вместе с флагами
   состояния, отдаёт объект состояния аддона на сессионной шине
@@ -92,6 +102,12 @@ Fcitx имя текущего метода ввода раз в полсекун
   обычной записью (если запись той версии в Fcitx когда-то не дошла, а
   пользователь добавил раскладку сам, это не различить); если группа вернулась
   к виду до той установки, записывать нечего; иначе группа остаётся как есть;
+- пока Hyprland держит одну раскладку `us` (блок в `input.lua` остался после
+  правки пользователя или Hyprland ещё не перечитал восстановленный файл),
+  `--revert` оставляет двойной Alt, виджет панели и раскладки Fcitx — иначе
+  переключить раскладку было бы нечем. Он говорит об этом и выходит с кодом 1;
+  его нужно запустить ещё раз внутри сессии Hyprland (после правки — убрав
+  блок из `input.lua`);
 - копии кладёт рядом с файлом и в своём каталоге состояния, файлы заменяет
   атомарно;
 - одновременно работает только один `--install` или `--revert` с тем же
@@ -483,7 +499,7 @@ The settings window starts no shell of its own and passes no text the user typed
 - A refresh happens on window focus, at most once every 3 s while Fcitx answers. While Fcitx is down, a refresh can happen on every focus.
 - The check runs asynchronously and never blocks the window. Only one runs at a time.
 - stdin and stderr go to `/dev/null`.
-- The tool is killed after 3 s, or as soon as its output passes 8 KiB. A killed or crashed check counts as no answer, and the section hides.
+- The tool is killed after 60 s (more than its explicit per-call limits add up to), or as soon as its output passes 8 KiB. A killed or crashed check counts as no answer: none of its output is used.
 - The output is reduced to known step and state words; notes are dropped.
 - The tool reads the user's own Hyprland, bar and Fcitx settings, reads no input, and changes nothing.
 - Only the direct child is killed. A helper the tool starts, such as `hyprctl`, is not killed and can outlive the timeout.
@@ -491,7 +507,7 @@ The settings window starts no shell of its own and passes no text the user typed
 **«Подключить…» and «Вернуть как было…»** start `/usr/bin/omarchy-launch-floating-terminal-with-presentation` with one of two fixed strings, `/usr/bin/rasklad-setup --install` or `/usr/bin/rasklad-setup --revert`. That Omarchy script runs the string with `bash -c`, and it finds its own helpers (`omarchy-show-logo`, `omarchy-restart-gum`) through PATH.
 - Without that script, `/usr/bin/xdg-terminal-exec /usr/bin/rasklad-setup --install` (or `--revert`) is used.
 - Clicks less than 2 s apart open one terminal, not several.
-- The changes happen in that terminal. `rasklad-setup` (SYS-252) shows the diff and asks before applying. It applies nothing when stdin is not a terminal.
+- The changes happen in that terminal. `rasklad-setup --install` (SYS-252) shows the diff and asks before applying; when stdin is not a terminal it changes no configuration file and no Fcitx group unless `--yes` is given (it may still update its own record of which Fcitx rows are ours). `--revert` does not ask (the window asks first): it takes back what setup changed, with the exceptions described in the rasklad-setup section above.
 - The window itself writes no Hyprland, bar or Fcitx group file.
 
 **Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.

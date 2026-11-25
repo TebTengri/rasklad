@@ -177,14 +177,7 @@ constexpr const char kRuleTo[] = "привет";
 
 // Wipes the whole buffer, not just the current length: a string shortened in
 // place (the double-Shift swap) keeps older bytes past size() (SYS-272).
-void wipeString(std::string &s) {
-    s.resize(s.capacity()); // no reallocation; the tail becomes addressable
-    volatile char *p = s.empty() ? nullptr : &s[0];
-    for (std::size_t i = 0; p && i < s.size(); ++i) {
-        p[i] = '\0';
-    }
-    s.clear();
-}
+void wipeString(std::string &s) { rasklad::wipe(s); }
 
 // Per-context state. Owned by Fcitx through the property factory; destroyed
 // with its InputContext. Contains only the current lab word and bounded
@@ -209,7 +202,12 @@ public:
     // Text to show/commit; empty conversion (never for a..z) keeps the original.
     // Bit i: the i-th key was typed as a capital letter (SYS-226). Keys are lowercase.
     std::uint32_t upper = 0;
-    std::string shown() const { return form(word(), typedRu != converted, upper); }
+    std::string shown() const {
+        std::string w = word();
+        std::string out = form(w, typedRu != converted, upper);
+        rasklad::wipe(w); // SYS-272: the copy of the word is wiped
+        return out;
+    }
     static std::string form(const std::string &typed, bool asRu, std::uint32_t mask = 0) {
         return rasklad::word::form(typed, asRu, mask);
     }
@@ -245,7 +243,7 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return lastNow() + lastSuffix; }
+    std::string lastText() const { return rasklad::joined(lastNow(), lastSuffix); }
     // SYS-271: bumped whenever the kept word is forgotten or replaced by another,
     // so a deferred undo acts only on the very word it was asked for.
     std::uint64_t lastGeneration = 0;
@@ -873,13 +871,12 @@ private:
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
     static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
-        std::string newText = s.lastOther() + s.lastSuffix;
+        std::string newText = rasklad::joined(s.lastOther(), s.lastSuffix);
         const auto &st = ic->surroundingText();
         const long n = rasklad::manual::codePointCount(s.lastNow()) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
-        const bool gated = true;
-        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
+        if (!ok) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastSwapped = !s.lastSwapped; s.lastOtherRu = !s.lastOtherRu; s.lastConfirmed = false;
@@ -906,17 +903,19 @@ private:
     // so the Space undo can restore it). Otherwise a us-typed word ending in keys that
     // carry Russian letters (",", ".", ";", ...) is tried without them, and those keys
     // stay as typed: "ckjdj," -> "слово,".
-    std::optional<std::string> autoText(LabState &s, bool &whole) {
+    // The corrected text goes into the caller's `out` (SYS-272: no returned
+    // optional whose moved-from copy could stay in a dead stack frame).
+    bool autoText(LabState &s, bool &whole, std::string &out) {
         whole = false;
-        if (!*config_.autoCorrect) return std::nullopt; // SYS-227: gestures only
-        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
+        if (!*config_.autoCorrect) return false; // SYS-227: gestures only
+        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return false;
         // Case: all lowercase, a capital first letter, or all capitals, judged on the
         // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
         const auto caseOk = [&s](std::size_t keys) { return rasklad::word::caseEligible(s.upper, keys); };
         std::string w = s.word();
-        std::optional<std::string> result;
+        bool found = false;
         std::size_t cut = w.size();
-        for (int pass = 0; pass < 2 && !result; ++pass) {
+        for (int pass = 0; pass < 2 && !found; ++pass) {
             if (pass == 1) {
                 if (s.typedRu) break;
                 cut = rasklad::word::lettersBeforeTail(w);
@@ -942,14 +941,45 @@ private:
             const bool ok = (fix && *fix == other && other != typed) ||
                             (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
             if (ok) {
-                if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
-                else result = LabState::form(other + w.substr(cut), false, s.upper);
+                if (pass == 0) {
+                    s.converted = true; whole = true;
+                    std::string shown = s.shown();
+                    out.assign(shown); // copied, then the local is wiped (SYS-272)
+                    wipeString(shown);
+                    found = true;
+                }
+                else {
+                    // The pieces are wiped after use (SYS-272).
+                    std::string tail = w.substr(cut);
+                    std::string both = rasklad::joined(other, tail);
+                    std::string shown = LabState::form(both, false, s.upper);
+                    out.assign(shown);
+                    wipeString(tail); wipeString(both); wipeString(shown);
+                    found = true;
+                }
             }
             if (fix) wipeString(*fix);
             wipeString(keys); wipeString(typed); wipeString(other);
         }
         wipeString(w);
-        return result;
+        return found;
+    }
+    // A press of a modifier or lock key alone (Ctrl, Alt, Super, Caps Lock, AltGr,
+    // ...): it types nothing. The key it is combined with (Ctrl+A) is non-plain and
+    // flushes and bypasses itself, so over an empty buffer the press alone must
+    // not latch bypass (SYS-272); over a word in progress it still commits it.
+    static bool bareModifier(fcitx::KeySym sym) {
+        switch (sym) {
+        case FcitxKey_Control_L: case FcitxKey_Control_R: case FcitxKey_Alt_L: case FcitxKey_Alt_R:
+        case FcitxKey_Meta_L: case FcitxKey_Meta_R: case FcitxKey_Super_L: case FcitxKey_Super_R:
+        case FcitxKey_Hyper_L: case FcitxKey_Hyper_R: case FcitxKey_Caps_Lock: case FcitxKey_Shift_Lock:
+        case FcitxKey_Num_Lock: case FcitxKey_ISO_Level3_Shift: case FcitxKey_ISO_Level5_Shift:
+        case FcitxKey_Mode_switch: case FcitxKey_ISO_Next_Group: case FcitxKey_ISO_Prev_Group:
+        case FcitxKey_ISO_First_Group: case FcitxKey_ISO_Last_Group:
+            return true;
+        default:
+            return false;
+        }
     }
     static bool isShift(const fcitx::Key &key) {
         if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
@@ -959,7 +989,9 @@ private:
         std::string w = s.shown();
         fcitx::Text text;
         const int cursor = static_cast<int>(w.size()); // Fcitx Text cursor is a byte offset
-        text.append(std::move(w), fcitx::TextFormatFlag::Underline);
+        // Copied, then wiped: copies Fcitx itself makes are beyond our reach (SYS-272).
+        text.append(w, fcitx::TextFormatFlag::Underline);
+        wipeString(w);
         text.setCursor(cursor);
         ic->inputPanel().setClientPreedit(text);
         s.setPreeditShown(true);
@@ -1092,8 +1124,11 @@ private:
 
         if (!eligible(ic)) {
             // Gates no longer hold: discard without commit, pass the key.
-            if (auto *s = state(ic, false); s && s->active()) {
-                discard(ic, *s);
+            if (auto *s = state(ic, false)) {
+                // discard() forgets the kept word too (invalidate) and may run a
+                // client callback that destroys this state: nothing after it.
+                if (s->active()) discard(ic, *s);
+                else if (s->lastValid) s->forgetLast(); // the kept word alone (SYS-272)
             }
             return;
         }
@@ -1127,6 +1162,12 @@ private:
         } else {
             s->gesture.feed(rasklad::manual::Input::Other, event.time());
             s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
+            // Over an empty buffer: no bypass, so Alt Alt or Caps Lock before a word
+            // does not leave that word uncorrected (SYS-272). Over a word in progress
+            // the word is still committed in the form shown (as typed, or as double
+            // Shift turned it): Alt may open a menu and take the focus, and
+            // focus-out would drop the uncommitted letters.
+            if (bareModifier(key.sym()) && s->empty()) return;
         }
         const bool boundary = plain && (sym == FcitxKey_space ||
             sym == FcitxKey_Tab || sym == FcitxKey_Return || sym == FcitxKey_KP_Enter);
@@ -1209,8 +1250,14 @@ private:
                 // the Space restores the original (replaceLast); SYS-250: also when
                 // only the letters were corrected and trailing keys kept ("ns," -> "ты,").
                 bool whole = false;
-                auto fixed = autoText(*s, whole);
-                std::string out = fixed ? std::move(*fixed) : s->shown();
+                std::string fixedText;
+                const bool fixed = autoText(*s, whole, fixedText);
+                // Copied, not moved: a short string's bytes would stay behind (SYS-272).
+                std::string shown = fixed ? std::string() : s->shown();
+                // Room for the space up front, so push_back does not reallocate (SYS-272).
+                std::string out = rasklad::joined(fixed ? fixedText : shown, std::string(), 1);
+                wipeString(fixedText);
+                wipeString(shown);
                 // The other form: after a correction (whole or letters only) the word
                 // exactly as typed; otherwise the whole word in the layout not shown.
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
@@ -1227,10 +1274,11 @@ private:
                 // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
-                const bool switchAfter = fixed.has_value();
+                const bool switchAfter = fixed;
                 const bool toRu = !s->typedRu;
                 auto ref = ic->watch();
-                commitAndClear(ic, *s, std::move(out));
+                commitAndClear(ic, *s, out);
+                wipeString(out);
                 if (switchAfter) switchLayout(ref, toRu); // the corrected word's layout
                 return;
             }
@@ -1255,13 +1303,14 @@ private:
             // the message) double Shift swaps the word back, with the character the
             // client inserted kept as it is.
             bool whole = false;
-            std::optional<std::string> fixed;
+            std::string fixedText;
             const bool ends = wordEnd(key);
-            if (ends) fixed = autoText(*s, whole);
+            const bool fixed = ends && autoText(*s, whole, fixedText);
             const bool toRu = !s->typedRu;
             auto ref = ic->watch();
-            const bool switchAfter = fixed.has_value();
-            std::string out = fixed ? std::move(*fixed) : s->shown();
+            const bool switchAfter = fixed;
+            std::string out = fixed ? fixedText : s->shown(); // copied, not moved (SYS-272)
+            wipeString(fixedText);
             const std::uint32_t mark = fcitx::Key::keySymToUnicode(sym);
             if (ends && mark > 0x20 && mark != 0x7f) {
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;
@@ -1271,7 +1320,8 @@ private:
                 armExpiry(ic, *s);
                 wipeString(w);
             }
-            commitAndClear(ic, *s, std::move(out));
+            commitAndClear(ic, *s, out);
+            wipeString(out);
             if (switchAfter) switchLayout(ref, toRu);
         }
     }

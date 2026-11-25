@@ -24,7 +24,7 @@ HOME/runtime/bus, без сети, host seat, GPU и пользовательс�
 
 Команды: `python3 bin/prepare-wayland-lab` проверяет закреплённые runtime
 артефакты и подписи; `python3 bin/test-wayland-ime` только показывает план.
-Явный запуск: `python3 bin/test-wayland-ime --run --input-root /home/mvn/Work/rasklad`.
+Явный запуск: `python3 bin/test-wayland-ime --run --input-root <input-root>`.
 Пакеты находятся только в ignored build/, в ОС ничего не установлено.
 Runtime pins: data/wayland-lab-runtime-lock.json. Неизменённый MIT protocol XML
 с notices и provenance находится в tests/wayland_ime/protocol/.

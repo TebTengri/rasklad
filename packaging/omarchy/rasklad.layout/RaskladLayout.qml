@@ -29,7 +29,10 @@ BarWidget {
   readonly property string code: method === "keyboard-us" ? "EN"
                                : method === "keyboard-ru" ? "RU"
                                : method === "" ? "" : "··"
-  readonly property string label: code === "" ? "" : correction === "broken" ? code + "!" : code
+  // SYS-272: unknown correction state is not shown as the ordinary label: the addon
+  // may be missing or not loaded, and then nothing is corrected.
+  readonly property string label: code === "" ? "" : correction === "broken" ? code + "!"
+                                : correction === "" ? code + "?" : code
 
   // One line from rasklad-layout-watch: {"method": "...", "correction": "..."}.
   // Validated here as well: only known shapes change the widget.
@@ -86,7 +89,7 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: root.label
-    dimmed: root.correction === "paused"
+    dimmed: root.correction === "paused" || root.correction === ""
     fontSize: Style.font.caption
     horizontalMargin: 6
     tooltipText: strings.t(root.correction === "on" ? "tooltip.on"

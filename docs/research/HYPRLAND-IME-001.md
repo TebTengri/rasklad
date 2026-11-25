@@ -25,7 +25,7 @@ live-проба использована; дополнительных окон 
 developer lab, не подключение к обычному Slack/IME и не готовый app adapter.
 
 `python3 bin/test-hyprland-ime` показывает инертный план. Подготовленный запуск:
-`python3 bin/test-hyprland-ime --run-approved --input-root /home/mvn/Work/rasklad`.
+`python3 bin/test-hyprland-ime --run-approved --input-root <input-root>`.
 Live запуск пока не выполнен и требует отдельного согласования. Предыдущая
 согласованная серия3/3 относилась только к startup diagnostics и завершена.
 

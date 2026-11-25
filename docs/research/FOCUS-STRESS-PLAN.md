@@ -64,10 +64,10 @@ DEPENDENT_NOT_RUN, а не независимыми продуктовыми о�
 abort, игнорируемый Escape, privacy ошибок, cleanup payload/контаминация,
 policy refusal без provenance/version/control и strict-default поведение.
 Команды: `node tests/wayland_ime/focus_oracle_tests.mjs`;
-`python3 bin/test-wayland-ime --run --focus-stress --input-root /home/mvn/Work/rasklad`.
+`python3 bin/test-wayland-ime --run --focus-stress --input-root <input-root>`.
 
 Следующий конкретный шаг: отдельно согласованная
-`bin/test-hyprland-ime --run-approved --focus-stress --input-root /home/mvn/Work/rasklad`.
+`bin/test-hyprland-ime --run-approved --focus-stress --input-root <input-root>`.
 Рабочий Slack/IME не подключён. После этого всё ещё нужен protocol-level
 cross-surface/stale-serial тест; readyForLiveUse=false. Ниже исходный контракт.
 

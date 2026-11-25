@@ -65,7 +65,7 @@ python3 bin/prepare-prosemirror
 node tests/browser/prosemirror.test.mjs
 python3 bin/test-reviewed-dictionaries --prosemirror
 # Explicitly scoped real integration only, no normal build/test auto-run:
-python3 bin/test-reviewed-dictionaries --real --prosemirror --input-root /home/mvn/Work/rasklad
+python3 bin/test-reviewed-dictionaries --real --prosemirror --input-root <input-root>
 ```
 
 The genuine upstream editor runs only in nested networkless Chromium, inside the

@@ -56,7 +56,7 @@ beforeinput(insertText) → input(insertText) → keyup на prose; value-class 
 не доказывает исправление. Исходный строгий сценарий сохраняется.
 
 Подготовлена команда test-hyprland-ime --run-approved --focus-stress
---space-telemetry --input-root /home/mvn/Work/rasklad. На момент подготовки она не была выполнена;
+--space-telemetry --input-root <input-root>. На момент подготовки она не была выполнена;
 ниже записан результат отдельно разрешённой пробы002.
 
 ## Exact Hyprland: диагностическая проба 002
@@ -101,7 +101,7 @@ primary snapshot и сразу после него. Любой input завер�
 Трасса отсекается до cleanup. Новый live допуск ещё требуется; не запускать
 повторно по уже использованному разрешению002. Команда прежняя:
 test-hyprland-ime --run-approved --focus-stress --space-telemetry
---input-root /home/mvn/Work/rasklad. Core, Slack и host настройки не менялись.
+--input-root <input-root>. Core, Slack и host настройки не менялись.
 
 ## Exact Hyprland diagnosticv2: проба003
 
