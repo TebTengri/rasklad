@@ -5,7 +5,8 @@
 # partial addon config) to the same Fcitx instance: both calls go to the unique
 # bus name that owned org.fcitx.Fcitx5 when the status was read, so a Fcitx that
 # restarted in between gets nothing. Does nothing unless the status is exactly
-# on or paused. Exit status 0 only after a write; it prints nothing.
+# on or paused (nothing while Rasklad is off). Exit status 0 only after a write;
+# it prints nothing.
 import re
 import sys
 
@@ -33,6 +34,9 @@ def main():
     values = call("GetConfig", GLib.Variant("(s)", ("fcitx://config/addon/%s/status" % addon,)),
                   "(va(sa(sssva{sv})))")[0]
     if not isinstance(values, dict) or values.get("ProfileReady") != "True":
+      return 1
+    # Owner decision 2026-11-25: while Rasklad is off the middle click changes nothing.
+    if values.get("Enabled") == "False":
       return 1
     auto = values.get("AutoCorrect")
     if auto not in ("True", "False"):

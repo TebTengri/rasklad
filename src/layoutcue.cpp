@@ -11,6 +11,17 @@ namespace {
 constexpr int kRate = 48000;
 constexpr int kCount = 3360; // 70 ms
 constexpr auto kMinGap = std::chrono::milliseconds(180);
+
+// The write never starts playback by itself (a small buffer would reach the
+// default start threshold): only the explicit start under the lock does.
+bool neverAutoStart(snd_pcm_t *pcm)
+{
+    snd_pcm_sw_params_t *sw = nullptr;
+    snd_pcm_sw_params_alloca(&sw);
+    snd_pcm_uframes_t boundary = 0;
+    return snd_pcm_sw_params_current(pcm, sw) == 0 && snd_pcm_sw_params_get_boundary(sw, &boundary) == 0 &&
+           snd_pcm_sw_params_set_start_threshold(pcm, sw, boundary) == 0 && snd_pcm_sw_params(pcm, sw) == 0;
+}
 } // namespace
 
 std::vector<std::int16_t> synthesize(double gain)
@@ -46,18 +57,29 @@ void LayoutCue::play()
     const auto now = std::chrono::steady_clock::now();
     if (m_busy.load() || (m_last != std::chrono::steady_clock::time_point{} && now - m_last < kMinGap)) return;
     if (m_worker.joinable()) m_worker.join();
+    m_stop.store(false); // no worker runs now: a stop() before this play() is spent
     m_busy.store(true);
     try {
         m_worker = std::thread([this] {
             snd_pcm_t *pcm = nullptr;
             // Non-blocking: a busy or hung sound server never stalls this worker.
-            if (snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
+            // A stop() before the samples are handed over means no sound at all.
+            if (!m_stop.load() && snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
                 if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, kRate, 1,
                                        200000) == 0 &&
-                    snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
-                    // 70 ms is below the default start threshold: start explicitly.
-                    if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED) snd_pcm_start(pcm);
-                    // Let it play: at most ~400 ms, or until stopped on unload.
+                    neverAutoStart(pcm) &&
+                    !m_stop.load() && snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
+                    if (afterQueueForTest) afterQueueForTest();
+                    // 70 ms is below the default start threshold: start explicitly,
+                    // unless stopped (the queued samples are then dropped). The lock
+                    // makes the check and the start one step against stop().
+                    {
+                        std::lock_guard<std::mutex> lock(m_startLock);
+                        if (!m_stop.load() && snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED &&
+                            snd_pcm_start(pcm) == 0)
+                            m_starts.fetch_add(1);
+                    }
+                    // Let it play: at most ~400 ms, or until stopped (off or unload).
                     for (int i = 0; i < 40 && !m_stop.load(); ++i) {
                         if (snd_pcm_state(pcm) != SND_PCM_STATE_RUNNING) break;
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));

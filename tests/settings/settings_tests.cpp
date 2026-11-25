@@ -63,6 +63,8 @@ class FakeApps final : public AppSource
 public:
     QStringList open{QStringLiteral("foot"), QStringLiteral("chatgpt"), QStringLiteral("slack")};
     QStringList seenApps() override { return open; }
+    QString epoch = QStringLiteral("ab12-0");
+    QString onEpoch() override { return epoch; }
 };
 
 class FakeSetup final : public SetupTool
@@ -491,6 +493,62 @@ private Q_SLOTS:
         QVERIFY(!configFromMap(f.stored)->autoCorrect);
         QVERIFY(!b.autoCorrect());
         QCOMPARE(b.error(), QString());
+    }
+    void onOffSwitch()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("AutoCorrect"), QStringLiteral("True"));
+        f.stored.insert(QStringLiteral("Enabled"), QStringLiteral("False"));
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        QVERIFY(b.switchable() && !b.raskladEnabled());
+        b.setRaskladEnabled(true);
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("True"));
+        QVERIFY(b.raskladEnabled());
+        b.setAutoCorrect(false); // other changes keep the switch
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("True"));
+        b.setRaskladEnabled(false);
+        QCOMPARE(f.stored.value(QStringLiteral("Enabled")).toString(), QStringLiteral("False"));
+        // An addon without the switch is always on and never gets the key.
+        FakeFcitx old;
+        SettingsBackend o(&old, &w);
+        QVERIFY(!o.switchable() && o.raskladEnabled());
+        const int before = old.writes;
+        o.setRaskladEnabled(false);
+        QCOMPARE(old.writes, before);
+        o.setSound(false);
+        QVERIFY(!old.stored.contains(QStringLiteral("Enabled")));
+    }
+    void offAndOnUnseenForgetsKeptNames()
+    {
+        FakeFcitx f;
+        f.stored.insert(QStringLiteral("Enabled"), QStringLiteral("True"));
+        FakeApps w;
+        SettingsBackend b(&f, &w);
+        b.setAppEnabled(QStringLiteral("chromium"), false); // kept by the window
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        w.epoch = QStringLiteral("ab12-1"); // off and on through Fcitx between two refreshes
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString() != QStringLiteral("recent"));
+        b.setAppEnabled(QStringLiteral("chromium"), true);
+        b.setAppEnabled(QStringLiteral("chromium"), false);
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
+        w.epoch = QStringLiteral("cd34-1"); // Fcitx restarted: same count, another start
+        b.refresh();
+        QVERIFY(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString() != QStringLiteral("recent"));
+        QCOMPARE(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("0a1b-12")}}), QStringLiteral("0a1b-12"));
+        QVERIFY(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("x-1")}}).isEmpty());
+        QVERIFY(onEpochFromStatus({}).isEmpty());
+        // Turned on here: a name kept after that survives the next refresh.
+        b.setRaskladEnabled(false);
+        w.epoch = QStringLiteral("cd34-2");
+        b.setRaskladEnabled(true);
+        b.setAppEnabled(QStringLiteral("chromium"), true);
+        b.setAppEnabled(QStringLiteral("chromium"), false);
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
     }
     void olderAddonNeverGetsWordOptions()
     {

@@ -37,6 +37,40 @@ int main(int argc, char **argv)
         }
         CHECK(std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(600));
     }
+    // SYS-272: stop() (Rasklad turned off) ends a cue in flight well before its
+    // ~400 ms bound, and a later play() is not stopped by it.
+    {
+        rasklad::cue::LayoutCue cue("null");
+        cue.play();
+        cue.stop();
+        const auto t0 = std::chrono::steady_clock::now();
+        while (cue.busy() && std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(600))
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        CHECK(!cue.busy());
+        CHECK(std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200)); // past the minimum gap
+        cue.play();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        CHECK(cue.busy()); // plays: the earlier stop() was spent
+    }
+    // A stop() after the samples are queued: they are never started.
+    {
+        rasklad::cue::LayoutCue cue("null");
+        cue.afterQueueForTest = [&cue] { cue.stop(); };
+        cue.play();
+        const auto t0 = std::chrono::steady_clock::now();
+        while (cue.busy() && std::chrono::steady_clock::now() - t0 < std::chrono::milliseconds(600))
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        CHECK(!cue.busy());
+        CHECK(cue.starts() == 0);
+        // Without the stop the same device does start (the check above means something).
+        rasklad::cue::LayoutCue plain("null");
+        plain.play();
+        const auto t1 = std::chrono::steady_clock::now();
+        while (plain.busy() && std::chrono::steady_clock::now() - t1 < std::chrono::milliseconds(600))
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        CHECK(plain.starts() == 1);
+    }
     // Optional: compare with the SOUND-001 WAV (44-byte header, S16LE mono).
     if (argc > 1) {
         std::ifstream f(argv[1], std::ios::binary);

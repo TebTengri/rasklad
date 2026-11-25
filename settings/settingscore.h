@@ -38,6 +38,9 @@ struct AddonConfig {
     bool wordOptions = false;
     bool autoCorrect = true;
     QStringList exceptions;
+    // The addon has the on/off switch (0.5.30 and later; off until turned on).
+    bool switchable = false;
+    bool enabled = false;
 };
 
 // From the a{sv} Fcitx returns for fcitx://config/addon/rasklad (nested maps,
@@ -54,6 +57,10 @@ QVariantMap mapFromConfig(const AddonConfig &config);
 // the settings app itself is left out. Empty if the key is missing (older addon)
 // or of another shape.
 QStringList seenAppsFromStatus(const QVariantMap &status);
+
+// SYS-272: "OnEpoch" from the addon status ("<hex>-<decimal>", at most 40
+// characters); empty if missing (older addon) or malformed.
+QString onEpochFromStatus(const QVariantMap &status);
 
 // SYS-254: Hyprland's reply to `j/getoption decoration:rounding`: the corner
 // radius Omarchy apps use. 0 (sharp, Omarchy's default) for any other reply;

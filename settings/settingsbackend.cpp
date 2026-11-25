@@ -57,6 +57,13 @@ void SettingsBackend::reloadConfig()
     if (parsed) {
         m_config = *parsed;
         m_raw = *map;
+        // Off, the addon forgets the program names, however it was turned off:
+        // so does the window, including names it kept itself.
+        if (m_config.switchable && !m_config.enabled) {
+            m_focused.clear();
+            m_seen.clear();
+            m_groups.clear();
+        }
     }
     // Asked again on every read (refresh and before each change), so a restarted
     // Fcitx never keeps showing the previous daemon's warning.
@@ -98,6 +105,11 @@ void SettingsBackend::refresh()
     reloadConfig();
     if (!m_loaded) m_error = QStringLiteral("fcitx");
     m_focused = m_running ? m_appSource->seenApps() : QStringList{};
+    // Turned off and on again since the last refresh, or Fcitx restarted: the
+    // names this window kept itself go too, as the addon's did.
+    const QString epoch = m_running ? m_appSource->onEpoch() : QString();
+    if (!epoch.isEmpty() && !m_onEpoch.isEmpty() && epoch != m_onEpoch) m_seen.clear();
+    if (!epoch.isEmpty()) m_onEpoch = epoch;
     if (m_names) m_names->reload();
     if (m_setupTool) m_setupTool->requestCheck(); // answers later through updated()
     m_groups.clear(); // regrouped only here, never on a switch
@@ -248,6 +260,29 @@ void SettingsBackend::setAutoCorrect(bool on)
     AddonConfig next = m_config;
     next.autoCorrect = on;
     commit(next);
+}
+
+void SettingsBackend::setRaskladEnabled(bool on)
+{
+    if (!fresh()) return;
+    if (!switchable() || on == m_config.enabled) {
+        rebuildApps();
+        return;
+    }
+    AddonConfig next = m_config;
+    next.enabled = on;
+    // Off, the addon forgets the program names: so does the window's list.
+    if (!commit(next)) return;
+    if (!on) {
+        m_focused.clear();
+        m_seen.clear();
+        m_groups.clear();
+        rebuildApps();
+    } else if (const QString epoch = m_appSource->onEpoch(); !epoch.isEmpty()) {
+        // Turned on here: names kept from now on belong to the new epoch, so the
+        // next refresh does not drop them.
+        m_onEpoch = epoch;
+    }
 }
 
 bool SettingsBackend::addException(const QString &raw)

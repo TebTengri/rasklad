@@ -79,7 +79,9 @@
 #include <cstring>
 #include <cstdint>
 #include <memory>
+#include <cstdio>
 #include <limits>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -118,6 +120,9 @@ constexpr policy::Registry kFixtureRegistry{kFixtureAdapters,
     sizeof(kFixtureAdapters) / sizeof(kFixtureAdapters[0]), 1};
 // Owner decision (2026-11-21): Slack and Chromium. Edited in the Fcitx settings.
 FCITX_CONFIGURATION(RaskladConfig,
+    // Owner decision 2026-11-25: off until the owner turns it on (settings app).
+    // Off, the addon is loaded but does nothing: no word, gesture, cue or status names.
+    fcitx::Option<bool> enabled{this, "Enabled", "Rasklad is on", false};
     fcitx::Option<std::vector<std::string>> applications{this, "Applications",
         "Applications (program names as Fcitx reports them)", {"slack", "chromium", "chromium-browser"}};
     fcitx::Option<bool> sound{this, "Sound", "Retro cue on us/ru layout switch", true};
@@ -130,9 +135,14 @@ FCITX_CONFIGURATION(RaskladConfig,
 // since SYS-253, program names (no text) of apps with a focused field, kept in memory.
 FCITX_CONFIGURATION(RaskladStatus,
     fcitx::Option<bool> profileReady{this, "ProfileReady", "Profile verified", false};
+    fcitx::Option<bool> enabled{this, "Enabled", "Rasklad is on", false};
     fcitx::Option<bool> autoCorrect{this, "AutoCorrect", "Correct words automatically", true};
     fcitx::Option<std::vector<std::string>> seenApplications{this, "SeenApplications",
-        "Applications with a focused text field since start", {}};);
+        "Applications with a focused text field since start", {}};
+    // SYS-272: "<random per addon start>-<times turned on since>", so the settings
+    // window forgets the names it kept itself after an off/on or a Fcitx restart it
+    // did not see. Random, not derived from anything about the user.
+    fcitx::Option<std::string> onEpoch{this, "OnEpoch", "Changes when turned on or restarted", ""};);
 constexpr const char kConfigPath[] = "conf/rasklad.conf";
 // Applications from the addon configuration (compositor app ids as Fcitx reports
 // them in InputContext::program()). Claims, not authentication: policy allows
@@ -284,7 +294,12 @@ public:
     // Survives lifecycle invalidation: an On transition must never capture
     // a suffix of raw input typed while Off, including in a later new context.
     std::uint64_t resumeGeneration = 0;
+    std::uint64_t enableGeneration = 0;
     bool needsBoundary = false;
+    // Since Rasklad was turned on, this field has not shown a token start yet
+    // (enableGuard); the last press under it was a Space (enableGuardSpace).
+    bool enableGuard = false;
+    bool enableGuardSpace = false;
     policy::Lease lease;
     std::shared_ptr<policy::CompositionDisable> disable =
         std::make_shared<policy::CompositionDisable>();
@@ -404,6 +419,7 @@ public:
         manager_(instance ? &instance->inputContextManager() : nullptr) {
         if (!instance_ || !fixtureScope()) return; // Default off outside the owned fixture contract.
         fcitx::readAsIni(config_, kConfigPath);
+        wasEnabled_ = *config_.enabled;
         rebuildExceptions();
         rebuildApps();
         // Missing/changed profile: no automatic correction; the gesture still works.
@@ -466,14 +482,14 @@ public:
             fcitx::EventType::InputContextFocusIn, fcitx::EventWatcherPhase::PreInputMethod,
             [this](fcitx::Event &event) {
                 auto *ic = static_cast<fcitx::InputContextEvent &>(event).inputContext();
-                if (ic) rasklad::rememberProgram(seenPrograms_, ic->program());
+                if (ic && *config_.enabled) rasklad::rememberProgram(seenPrograms_, ic->program());
             }));
         // SYS-226: the SOUND-001 cue when the layout changes between keyboard-us and
         // keyboard-ru, whoever switched it (double Alt in Hyprland, a correction or an undo).
         watchers_.emplace_back(instance_->watchEvent(
             fcitx::EventType::InputContextSwitchInputMethod, fcitx::EventWatcherPhase::Default,
             [this](fcitx::Event &event) {
-                if (!*config_.sound) return;
+                if (!*config_.enabled || !*config_.sound) return;
                 auto &e = static_cast<fcitx::InputContextSwitchInputMethodEvent &>(event);
                 auto *ic = e.inputContext();
                 const auto *entry = ic ? instance_->inputMethodEntry(ic) : nullptr;
@@ -516,7 +532,9 @@ public:
     const fcitx::Configuration *getSubConfig(const std::string &path) const override {
         if (path != "status") return nullptr;
         status_.profileReady.setValue(profile_ && profile_->ready());
+        status_.enabled.setValue(*config_.enabled);
         status_.autoCorrect.setValue(*config_.autoCorrect);
+        status_.onEpoch.setValue(startId_ + "-" + std::to_string(enableGeneration_));
         status_.seenApplications.setValue(seenPrograms_);
         return &status_;
     }
@@ -582,6 +600,7 @@ private:
         if (!registered_ || !manager_) {
             rebuildApps();
             enableFixturePermissions();
+            wasEnabled_ = *config_.enabled;
             applying_ = false;
             return;
         }
@@ -598,6 +617,20 @@ private:
         }
         rebuildApps();
         enableFixturePermissions();
+        if (!*config_.enabled) {
+            // Off keeps no names (nor the last status snapshot of them) and stops
+            // a cue in flight.
+            seenPrograms_.clear();
+            status_.seenApplications.setValue(std::vector<std::string>{});
+            cue_.stop();
+            switchEvent_.reset(); // a layout switch queued before: never runs
+        } else if (!wasEnabled_ && enableGeneration_ != std::numeric_limits<std::uint64_t>::max()) {
+            // Turned on (usually from the settings window, so the field is not
+            // focused now): any field may hold the start of a token typed while
+            // off. Each field checks at its next press (handleKey).
+            ++enableGeneration_;
+        }
+        wasEnabled_ = *config_.enabled;
         applying_ = false;
     }
     void enableFixturePermissions() {
@@ -638,7 +671,7 @@ private:
         if (!ic || !ic->hasFocus()) {
             return false;
         }
-        if (!productListed(ic->program())) return false;
+        if (!*config_.enabled || !productListed(ic->program())) return false;
         const fcitx::InputMethodEntry *entry = instance_->inputMethodEntry(ic);
         if (!entry || (entry->uniqueName() != kLabEntry && entry->uniqueName() != kRuEntry)) {
             return false;
@@ -1071,7 +1104,7 @@ private:
 
 
     void handleKey(fcitx::KeyEvent &event) {
-        if (!registered_ || event.filtered()) {
+        if (!registered_ || !*config_.enabled || event.filtered()) {
             return;
         }
         fcitx::InputContext *ic = event.inputContext();
@@ -1150,7 +1183,7 @@ private:
         // A bare Shift press over a non-empty word defers the decision (no flush,
         // no bypass) and passes unfiltered. Every other press breaks the gesture.
         if (isShift(key)) {
-            if ((!s->empty() || s->lastValid) && !s->bypass() && !s->needsBoundary) {
+            if ((!s->empty() || s->lastValid) && !s->bypass() && !s->needsBoundary && !s->enableGuard) {
                 s->gesture.feed(rasklad::manual::Input::ShiftPress, event.time());
                 return;
             }
@@ -1158,7 +1191,7 @@ private:
             // A bare Shift over an empty buffer must not latch bypass: the next
             // lowercase word is still a whole word. Shift+letter is non-plain and
             // takes the flush/bypass path itself.
-            if (s->empty() && !s->bypass() && !s->needsBoundary) return;
+            if (s->empty() && !s->bypass() && !s->needsBoundary && !s->enableGuard) return;
         } else {
             s->gesture.feed(rasklad::manual::Input::Other, event.time());
             s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
@@ -1174,6 +1207,25 @@ private:
         if (s->resumeGeneration != resumeGeneration_) {
             s->resumeGeneration = resumeGeneration_;
             s->needsBoundary = true;
+        }
+        // First press in this field since Rasklad was turned on: unless the cursor
+        // is known to start a token, the presses stay raw, so a suffix of a token
+        // typed while off is never corrected on its own. Only a Space ends the
+        // guard (Enter or Tab may insert nothing), and the press after it checks
+        // the field again: a Space the field ignored, with the cursor still after
+        // a letter, keeps the guard. A field that reports no text is trusted.
+        if (s->enableGeneration != enableGeneration_) {
+            s->enableGeneration = enableGeneration_;
+            s->enableGuardSpace = false;
+            s->enableGuard = tokenStart(ic) != TokenStart::Yes;
+        }
+        if (s->enableGuard && s->enableGuardSpace) {
+            s->enableGuardSpace = false;
+            if (tokenStart(ic) != TokenStart::No) s->enableGuard = false;
+        }
+        if (s->enableGuard) {
+            s->enableGuardSpace = plain && sym == FcitxKey_space;
+            return;
         }
         if (s->needsBoundary) {
             if (boundary) s->needsBoundary = false;
@@ -1399,6 +1451,36 @@ private:
             });
     }
     bool selfSwitch_ = false;
+    bool wasEnabled_ = false; // Enabled as of the last applied config
+    std::uint64_t enableGeneration_ = 0; // bumped each time Rasklad is turned on
+    const std::string startId_ = randomId(); // OnEpoch: differs on every addon start
+    static std::string randomId() {
+        std::random_device device;
+        char out[17];
+        std::snprintf(out, sizeof out, "%08x%08x", device(), device());
+        return out;
+    }
+    // Yes: the field reports its text and the cursor is at its start or after
+    // ASCII whitespace. Unknown: no valid report. Chromium declares the
+    // capability yet often has none at the next press, so this cannot be No;
+    // Fcitx also invalidates a report with bad UTF-8 or an out-of-range cursor,
+    // which then looks the same (SECURITY.md). No: anything else, including an
+    // oversized report (as in lastMatches) or a selection.
+    enum class TokenStart { Yes, No, Unknown };
+    static TokenStart tokenStart(fcitx::InputContext *ic) {
+        const auto &st = ic->surroundingText();
+        if (!st.isValid()) return TokenStart::Unknown;
+        if (st.text().size() > kMaxSurroundingBytes) return TokenStart::No;
+        const std::string &text = st.text();
+        if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return TokenStart::No;
+        if (st.cursor() != st.anchor()) return TokenStart::No;
+        if (st.cursor() == 0) return TokenStart::Yes;
+        if (st.cursor() > fcitx::utf8::length(text)) return TokenStart::No;
+        const auto bytes = fcitx::utf8::ncharByteLength(text.begin(), st.cursor());
+        if (bytes <= 0) return TokenStart::No;
+        const char before = text[static_cast<std::size_t>(bytes) - 1];
+        return before == ' ' || before == '\t' || before == '\n' || before == '\r' ? TokenStart::Yes : TokenStart::No;
+    }
     rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
     // layout becomes the current Fcitx input method, so the owner keeps typing in it.
@@ -1418,7 +1500,7 @@ private:
         if (!us || !ru) return;
         switchEvent_ = instance_->eventLoop().addDeferEvent([this, ref, target](fcitx::EventSource *) {
             auto *c = ref.get();
-            if (!c || !c->hasFocus()) return true;
+            if (!*config_.enabled || !c || !c->hasFocus()) return true; // turned off meanwhile
             if (auto *s = state(c, false); s && !s->empty()) return true;
             const auto *entry = instance_->inputMethodEntry(c);
             if (!entry || entry->uniqueName() == target) return true;

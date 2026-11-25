@@ -10,6 +10,7 @@ import importlib.util
 import io
 from unittest import mock
 import os
+import re
 import socket
 import sys
 import tempfile
@@ -295,6 +296,21 @@ class Install(Base):
         with contextlib.redirect_stdout(out):
             self.setup.check()
         self.assertRegex(out.getvalue(), r'edited\s+hyprland-layout')
+
+    def test_check_reports_rasklad_off(self):
+        # Owner decision 2026-11-25: the addon is off until turned on in the window;
+        # check says so and treats it as a choice, not a fault.
+        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
+        for enabled, shown in (('False', True), ('True', False), (None, False)):
+            values = {'ProfileReady': 'True', 'AutoCorrect': 'True'}
+            if enabled is not None:
+                values['Enabled'] = enabled
+            bus = dict(fake.bus(), status=lambda v=values: v)
+            self.setup.fcitx = lambda b=bus: b
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.setup.check()
+            self.assertEqual(bool(re.search(r'^off\s+rasklad\s', out.getvalue(), re.M)), shown)
 
     def test_revert_drops_the_block_hash(self):
         self.hypr('ru,us', variant=',')

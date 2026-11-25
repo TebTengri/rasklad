@@ -609,6 +609,10 @@ def fcitx_plan(bus, current=False):
 
 # --- modes --------------------------------------------------------------------
 
+# This tool never turns the addon on; the settings window's switch does.
+OFF_ADVICE = "Rasklad is off until you turn it on in its settings (rasklad-settings)"
+
+
 def check():
   ok = True
 
@@ -624,7 +628,12 @@ def check():
     report("missing", "fcitx-addon", "Fcitx not running or Rasklad not loaded")
   else:
     report("ok" if status.get("ProfileReady") == "True" else "broken", "fcitx-addon")
-    say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
+    # Owner decision 2026-11-25: off until turned on; the owner's choice, not a fault.
+    if status.get("Enabled") == "False":
+      say("off", "rasklad", OFF_ADVICE)
+      say("off", "auto-correction", "with Rasklad")
+    else:
+      say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
   report(bindings_plan()[0], "double-alt")
   try:
@@ -1362,7 +1371,12 @@ def main(argv):
     if args[0] != "--check":
       lock = lock_state()  # noqa: F841 - held until exit
     if args[0] == "--install":
-      return install("--yes" in argv, "--single-layout" in argv)
+      code = install("--yes" in argv, "--single-layout" in argv)
+      bus = fcitx()
+      status = bus["status"]() if bus else None
+      if status and status.get("Enabled") == "False":
+        say("off", "rasklad", OFF_ADVICE)
+      return code
     return check() if args[0] == "--check" else revert()
   except Refused as error:
     print("refused: %s" % error, file=sys.stderr)

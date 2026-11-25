@@ -51,7 +51,7 @@ everywhere.
 | Enabled application | double Shift right after Space (or a word-ending mark) | undo the replacement, or put the word into the other layout |
 | Enabled application | double Shift on the underlined word | convert the word to the other layout |
 | Bar icon | left click | switch layout |
-| Bar icon | middle click | pause or resume auto-correction |
+| Bar icon | middle click | pause or resume auto-correction (nothing while Rasklad is off) |
 | Bar icon | right click | open the settings |
 
 In the settings window:
@@ -81,7 +81,16 @@ tools/build_arch_package.sh "$profile"             # package in build/arch-packa
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # restart Fcitx
 rasklad-setup --install                            # connect it to the desktop
+rasklad-settings                                   # turn Rasklad on
 ```
+
+After installation Rasklad is off: the addon is loaded but does nothing — no
+correction, no double Shift, no sound. The «Rasklad is on» switch in the settings
+window turns it on at once, without restarting Fcitx, and off again.
+`rasklad-setup` does not turn it on. Right after it is turned on, the first word
+in each field may stay as typed (so the end of a word begun before is not
+corrected on its own; in Slack, where the message box and search share one input
+context, this is not guaranteed — see SECURITY.md).
 
 The detector profile (dictionaries and model) is not kept in Git. Where it comes
 from and how to reproduce it from a clean clone:
@@ -162,22 +171,24 @@ out counts as your own configuration.
   `libhunspell-1.7.so.0`, Fcitx does not load the add-on at all. A rebuild against
   Hunspell 1.8 brings back the double Shift but not auto-correction, which works
   with Hunspell 1.7 only. If the add-on loads but the profile fails its check,
-  auto-correction is off, the icon shows `EN!`/`RU!`, and the double Shift stays.
+  auto-correction is off; with Rasklad on, the icon shows `EN!`/`RU!` and the
+  double Shift stays (with Rasklad off, the icon only shows that it is off).
 
 ## Privacy
 
 - Rasklad never sends typed text to the network or writes it to logs or files.
   (Like any program's memory, Fcitx's may still reach disk through swap or a core
   dump.)
-- The add-on keeps in memory, per field, only the word being typed and the last
-  finished word. The last word is dropped at the next key other than Shift, or at
+- Rasklad keeps nothing while it is off. When on, it keeps in memory, per field,
+  only the word being typed and the last finished word. The last word is dropped at the next key other than Shift, or at
   a focus change; after
   15 seconds it can no longer be swapped, and its stored copy is then wiped
   (temporary copies made while correcting may linger in freed memory).
 - The settings window stores only the application list, the exceptions and the
   switches, in `~/.config/fcitx5/conf/rasklad.conf`.
 - The names of programs where you placed the cursor, without any text, are kept
-  in Fcitx's memory while it runs and are readable by your own programs over the
+  in Fcitx's memory while it runs and Rasklad is on (cleared when it is turned
+  off), and are readable by your own programs over the
   session bus (the settings window shows them).
 
 Security boundaries and everything the add-on and the window run:

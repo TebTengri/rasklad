@@ -479,6 +479,13 @@ ApplicationWindow {
                     SectionHeader { text: qsTr("CORRECTION"); rule: false }
                     ToggleRow {
                         id: firstRow
+                        title: qsTr("Rasklad is on")
+                        detail: qsTr("Off after installation. When off, Rasklad does nothing: no correction, no double Shift, no sound.")
+                        checked: backend.raskladEnabled
+                        available: backend.switchable
+                        onToggled: on => backend.setRaskladEnabled(on)
+                    }
+                    ToggleRow {
                         title: qsTr("Automatic correction")
                         detail: qsTr("When off, double Shift still fixes a word.")
                         checked: backend.autoCorrect
@@ -850,8 +857,8 @@ ApplicationWindow {
                     font.bold: true
                 }
                 Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
-                Hint { text: qsTr("To turn off automatic correction for a while, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
-                Hint { text: qsTr("An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts."); font.pixelSize: 12 }
+                Hint { text: qsTr("While Rasklad is on, you can turn off automatic correction for a while: switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
+                Hint { text: qsTr("While Rasklad is on, an application appears in the list once you click a text field in it. The list starts over when Fcitx restarts or Rasklad is turned off."); font.pixelSize: 12 }
                 Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
                 GridLayout {
                     columns: 2

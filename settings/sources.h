@@ -7,6 +7,7 @@
 #pragma once
 
 #include <QString>
+#include <optional>
 #include <QStringList>
 #include <QVariantMap>
 
@@ -43,6 +44,8 @@ public:
     // Program names the addon saw with a focused text field since it started;
     // empty if Fcitx is not reachable or the addon is older than SYS-253.
     virtual QStringList seenApps() = 0;
+    // SYS-272: "OnEpoch" from the addon status; empty from an older addon.
+    virtual QString onEpoch() { return {}; }
 };
 
 // SYS-254: Hyprland's decoration:rounding over its request socket (no subprocess),
@@ -123,6 +126,7 @@ class FcitxSeenApps final : public AppSource
 {
 public:
     QStringList seenApps() override;
+    QString onEpoch() override;
 };
 
 } // namespace rasklad::settings

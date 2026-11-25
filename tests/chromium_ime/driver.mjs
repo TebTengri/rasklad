@@ -138,8 +138,9 @@ try{
   report.submissionOnly=true;report.nativeDeliveryGuarantee=false;report.syntheticOffTrigger=true;
   const required=['disableCompositionStarted','disableOriginalSettled','disableNoDuplicateOriginal','disableRawPassthrough','disableOriginalUndo','onMidTokenPreserved','onNewWordCorrected','offAgainPassthrough'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
- }else if(process.env.RASKLAD_PRODUCT_SUITE==='unlisted'){
-  // SYS-246 product addon whose configuration does not list this app: fully inert.
+ }else if(process.env.RASKLAD_PRODUCT_SUITE==='unlisted'||process.env.RASKLAD_PRODUCT_SUITE==='off'){
+  // SYS-246 product addon whose configuration does not list this app, or (owner
+  // decision 2026-11-25) one that was never turned on: fully inert.
   if(!nativeWayland)throw Error('native product suite required');
   const v=()=>ev('prose.value');
   phase='product_unlisted';await reset();await type('word');await type('shift2');await type('space');
@@ -147,6 +148,32 @@ try{
   report.productUnlistedTyped=await v()==='ghbdtn ';
   await type('shift2');report.productUnlistedAfterSpace=await v()==='ghbdtn ';
   const required=['productUnlistedNoPreedit','productUnlistedTyped','productUnlistedAfterSpace'];
+  if(process.env.RASKLAD_PRODUCT_SUITE==='off'){
+   // The widget's helper reports the addon as off.
+   phase='product_off_watch';
+   const watcher=spawn('/usr/bin/python3',['-I','/lab/rasklad-layout-watch','raskladlab'],{stdio:['ignore','pipe','ignore']});
+   const line=await new Promise(resolve=>{let b='';const t=setTimeout(()=>resolve(null),3000);watcher.stdout.on('data',d=>{b+=d.toString();const i=b.indexOf('\n');if(i>=0){clearTimeout(t);resolve(b.slice(0,i));}});});
+   watcher.kill();
+   try{report.productOffWatch=JSON.parse(line).correction==='off';}catch(e){report.productOffWatch=false;}
+   required.push('productOffWatch');
+   // The widget's middle click changes nothing while Rasklad is off (exit 1, no write).
+   let toggled=true;try{execFileSync('/usr/bin/python3',['-I','/lab/rasklad-pause-toggle','raskladlab'],{stdio:['ignore','ignore','ignore'],timeout:5000});}catch(e){toggled=false;}
+   report.productOffPauseRefused=!toggled;required.push('productOffPauseRefused');
+   // Turned on mid-token: the rest of that token stays raw (no suffix correction);
+   // the next word is corrected.
+   phase='product_off_enable';await reset();await type('word');
+   execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s','True'],{stdio:['ignore','ignore','pipe'],timeout:5000});
+   await type('word');await type('space');report.productEnableMidTokenRaw=await v()==='ghbdtnghbdtn ';
+   await type('word');await type('space');report.productEnabledCorrects=await v()==='ghbdtnghbdtn привет ';
+   // Off and on again over an empty field. Chromium reports no surrounding text
+   // before the first press, so the first token stays raw (fail closed); the next
+   // word is corrected.
+   const setEnabled=(value)=>execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
+   setEnabled('False');await reset();setEnabled('True');
+   await type('word');await type('space');await type('word');await type('space');
+   report.productEnabledEmptyField=await v()==='ghbdtn привет ';
+   required.push('productEnableMidTokenRaw','productEnabledCorrects','productEnabledEmptyField');
+  }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
   // SYS-226: keyboard-us and keyboard-ru in Fcitx. A correction makes the corrected
