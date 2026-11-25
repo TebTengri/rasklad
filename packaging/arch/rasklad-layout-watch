@@ -101,8 +101,13 @@ def main():
       state["status_now"] = bool(state["owner"])  # a Fcitx just found: its status now
     owner = state["owner"]
     method = current_method(bus, owner) if owner else ""
-    if state["status_now"] or now_ms() >= state["status_due"] or not method:
-      state["correction"] = correction(bus, owner, status) if method else ""
+    if not method:
+      # No answer this time: the next answer reads the status at once, so a
+      # passing failure never shows as an unknown state for 2 s (SYS-272).
+      state["correction"] = ""
+      state["status_now"] = True
+    elif state["status_now"] or now_ms() >= state["status_due"]:
+      state["correction"] = correction(bus, owner, status)
       state["status_due"] = now_ms() + STATUS_EVERY_MS
       state["status_now"] = False
     line = {"method": method, "correction": state["correction"]}

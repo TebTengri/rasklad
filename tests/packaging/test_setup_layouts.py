@@ -210,7 +210,9 @@ class Install(Base):
         self.assertEqual(code, 0, out)
         self.assertIn('Nothing to change', out)
 
-    def test_revert_finishes_when_a_file_was_deleted(self):
+    def test_deleted_input_waits_for_hyprland_to_decide(self):
+        # Hyprland may still run with our block's layouts: outside a session the
+        # record stays and revert says where to run it (no temporary file left).
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
         self.assertEqual(self.install(fake, single_layout=True)[0], 0)
@@ -218,10 +220,25 @@ class Install(Base):
         self.setup.fcitx = fake.bus
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            self.setup.revert()
+            self.assertEqual(self.setup.revert(), 1)
         self.assertIn('deleted since install', out.getvalue())
+        self.assertIn('inside the Hyprland session', out.getvalue())
+        self.assertIn(self.setup.INPUT, self.setup.load_state()['files'])
+        self.assertEqual([p.name for p in self.input.parent.iterdir() if p.name.startswith('.rasklad-setup.')], [])
+
+    def test_deleted_input_is_released_once_hyprland_reloaded_without_it(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.unlink()
+        self.setup.fcitx = fake.bus
+        self.setup.hypr_session = lambda: 'running'
+        self.setup.hypr_layouts_back = lambda state: True
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.revert()
         state = self.setup.load_state() if os.path.exists(self.setup.STATE_FILE) else {'files': {}}
-        self.assertNotIn(self.setup.INPUT, state['files'])
+        self.assertNotIn(self.setup.INPUT, state['files'], out.getvalue())
 
     def test_failure_names_the_cause(self):
         def boom(*a, **k):

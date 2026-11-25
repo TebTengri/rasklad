@@ -1159,9 +1159,11 @@ private:
         } else {
             s->gesture.feed(rasklad::manual::Input::Other, event.time());
             s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
-            // No flush and no bypass: Alt Alt or Caps Lock before a word must not
-            // leave that word uncorrected (SYS-272).
-            if (bareModifier(key.sym())) return;
+            // Over an empty buffer: no bypass, so Alt Alt or Caps Lock before a word
+            // does not leave that word uncorrected (SYS-272). Over a word in progress
+            // the word is still committed as typed: Alt may open a menu and take
+            // the focus, and focus-out would drop the uncommitted letters.
+            if (bareModifier(key.sym()) && s->empty()) return;
         }
         const bool boundary = plain && (sym == FcitxKey_space ||
             sym == FcitxKey_Tab || sym == FcitxKey_Return || sym == FcitxKey_KP_Enter);

@@ -37,12 +37,16 @@ inline bool caseEligible(std::uint32_t upper, std::size_t keys) noexcept
 // capitals of `upper`. A key with no Russian form keeps the typed text.
 inline std::string form(const std::string &typed, bool asRu, std::uint32_t upper = 0)
 {
+    // One returned variable (NRVO): a moved short string would leave its bytes
+    // in a dead frame (SYS-272).
     std::string out = asRu ? manual::usToRu(typed) : typed;
     if (out.empty()) out = typed;
-    if (!upper) return out;
-    std::string shown = manual::applyUpper(out, upper);
-    wipe(out); // SYS-272: the intermediate copy of the word
-    return shown;
+    if (upper) {
+        std::string shown = manual::applyUpper(out, upper);
+        out.swap(shown);
+        wipe(shown); // now the copy without capitals
+    }
+    return out;
 }
 
 // SYS-250: how many leading keys are letters before the keys that end a us-typed

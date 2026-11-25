@@ -1069,6 +1069,13 @@ def restore(state, path):
     if tmp:
       discard(tmp)  # never written (an interrupted install), or already restored
   elif current is None:
+    if tmp:
+      discard(tmp)
+    if path == INPUT:
+      # Hyprland may still run with our block's layouts: revert decides by
+      # whether a running Hyprland has reloaded without it (block_gone).
+      say("gone", os.path.basename(path), "deleted since install")
+      return False
     # SYS-272: deleted since install: our change went with it. The entry is
     # forgotten (its copy kept), so revert can finish and install run again.
     copy = forget_entry(state, path)
