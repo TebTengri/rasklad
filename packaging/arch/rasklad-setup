@@ -1316,11 +1316,14 @@ def shell_uses_widget():
 
 def layout_block_in_input():
   """SYS-272: input.lua holds a layout block of ours: its BEGIN or layout mark,
-  or its rasklad_package code. A user's comment that mentions Rasklad is not one."""
+  or its rasklad_package code. A user's comment that mentions Rasklad is not one.
+  A regular input.lua that cannot be read (permissions, I/O) counts as holding
+  one: the controls stay until it can be checked. Not a regular file (a
+  directory, a FIFO) is no Lua file Hyprland reads."""
   try:
     data = read(os.path.realpath(INPUT))
-  except OSError:
-    return False
+  except OSError as e:
+    return e.errno in (errno.EACCES, errno.EPERM, errno.EIO)
   if data is None:
     return False
   return block_mark_in(data) or ("name", b"rasklad_package") in lua_tokens(data)

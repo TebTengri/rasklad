@@ -361,6 +361,17 @@ class Install(Base):
         self.assertTrue(self.setup.layout_block_in_input())
         self.assertTrue(self.setup.trace_in(self.setup.INPUT, v2))
         self.assertTrue(self.setup.block_mark_in(self.setup.LAYOUT_BLOCK.encode()))
+        # Unreadable is not proof that the block is gone.
+        real = self.setup.read
+        def denied(path):
+            raise PermissionError(13, 'denied', path)
+        self.setup.read = denied
+        try:
+            self.assertTrue(self.setup.layout_block_in_input())
+        finally:
+            self.setup.read = real
+        self.input.unlink()
+        self.assertFalse(self.setup.layout_block_in_input())  # gone is gone
 
     def test_check_reports_rasklad_off(self):
         # Owner decision 2026-11-25: the addon is off until turned on in the window;
