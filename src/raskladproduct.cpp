@@ -876,8 +876,7 @@ private:
         const long n = rasklad::manual::codePointCount(s.lastNow()) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
             st.cursor() == s.lastCursor;
-        const bool gated = true;
-        if (!ok || !gated) { s.forgetLast(); wipeString(newText); return false; }
+        if (!ok) { s.forgetLast(); wipeString(newText); return false; }
         // Staged before any client call: the new form is Pending until the client
         // confirms it with a fresh update (so a repeat toggle never acts on stale text).
         s.lastSwapped = !s.lastSwapped; s.lastOtherRu = !s.lastOtherRu; s.lastConfirmed = false;
@@ -960,6 +959,22 @@ private:
         }
         wipeString(w);
         return result;
+    }
+    // A press of a modifier or lock key alone (Ctrl, Alt, Super, Caps Lock, AltGr,
+    // ...): it types nothing. The key it is combined with (Ctrl+A) is non-plain and
+    // flushes and bypasses itself, so the press alone must not (SYS-272).
+    static bool bareModifier(fcitx::KeySym sym) {
+        switch (sym) {
+        case FcitxKey_Control_L: case FcitxKey_Control_R: case FcitxKey_Alt_L: case FcitxKey_Alt_R:
+        case FcitxKey_Meta_L: case FcitxKey_Meta_R: case FcitxKey_Super_L: case FcitxKey_Super_R:
+        case FcitxKey_Hyper_L: case FcitxKey_Hyper_R: case FcitxKey_Caps_Lock: case FcitxKey_Shift_Lock:
+        case FcitxKey_Num_Lock: case FcitxKey_ISO_Level3_Shift: case FcitxKey_ISO_Level5_Shift:
+        case FcitxKey_Mode_switch: case FcitxKey_ISO_Next_Group: case FcitxKey_ISO_Prev_Group:
+        case FcitxKey_ISO_First_Group: case FcitxKey_ISO_Last_Group:
+            return true;
+        default:
+            return false;
+        }
     }
     static bool isShift(const fcitx::Key &key) {
         if (key.sym() != FcitxKey_Shift_L && key.sym() != FcitxKey_Shift_R) return false;
@@ -1104,8 +1119,9 @@ private:
 
         if (!eligible(ic)) {
             // Gates no longer hold: discard without commit, pass the key.
-            if (auto *s = state(ic, false); s && s->active()) {
-                discard(ic, *s);
+            if (auto *s = state(ic, false)) {
+                if (s->active()) discard(ic, *s);
+                if (s->lastValid) s->forgetLast(); // the kept word too (SYS-272)
             }
             return;
         }
@@ -1139,6 +1155,9 @@ private:
         } else {
             s->gesture.feed(rasklad::manual::Input::Other, event.time());
             s->forgetLast(); // any other key (letters, arrows, BackSpace, ...) ends the chance
+            // No flush and no bypass: Alt Alt or Caps Lock before a word must not
+            // leave that word uncorrected (SYS-272).
+            if (bareModifier(key.sym())) return;
         }
         const bool boundary = plain && (sym == FcitxKey_space ||
             sym == FcitxKey_Tab || sym == FcitxKey_Return || sym == FcitxKey_KP_Enter);

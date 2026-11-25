@@ -69,6 +69,11 @@ class Base(unittest.TestCase):
         hypr.mkdir(parents=True)
         self.input = hypr / 'input.lua'
         self.input.write_bytes(b'-- user file\n')
+        # The other two steps are stubbed as done; their files exist (SYS-272: a
+        # missing one is a fault that makes --install exit 1).
+        (hypr / 'bindings.lua').write_bytes(b'-- bindings\n')
+        shell = Path(self.setup.SHELL_JSON); shell.parent.mkdir(parents=True, exist_ok=True)
+        shell.write_bytes(b'{}\n')
         self.setup.lua_ok = lambda data: True
         self.setup.hypr_errors = lambda: []
         self.setup.hypr_running = lambda: False
@@ -187,6 +192,45 @@ class Install(Base):
         self.assertEqual(code, 0, out)
         self.assertEqual(fake.calls, 1)
         self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
+
+    def test_no_fcitx_is_not_nothing_to_change(self):
+        code, out = self.install(None)
+        self.assertEqual(code, 1, out)
+        self.assertIn('start Fcitx', out)
+        self.assertNotIn('Nothing to change', out)
+
+    def test_missing_bindings_is_a_fault(self):
+        (Path(self.setup.BINDINGS)).unlink()
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 1, out)
+        self.assertIn('Not everything is connected', out)
+
+    def test_nothing_to_change_when_all_is_done(self):
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]))
+        self.assertEqual(code, 0, out)
+        self.assertIn('Nothing to change', out)
+
+    def test_revert_finishes_when_a_file_was_deleted(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.unlink()
+        self.setup.fcitx = fake.bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.revert()
+        self.assertIn('deleted since install', out.getvalue())
+        state = self.setup.load_state() if os.path.exists(self.setup.STATE_FILE) else {'files': {}}
+        self.assertNotIn(self.setup.INPUT, state['files'])
+
+    def test_failure_names_the_cause(self):
+        def boom(*a, **k):
+            raise PermissionError(13, 'Permission denied', '/some/where')
+        self.setup.install = boom
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.setup.main(['--install', '--yes']), 1)
+        self.assertIn('Permission denied (/some/where)', err.getvalue())
 
     def test_block_as_written_is_ours(self):
         self.hypr('ru,us', variant=',')

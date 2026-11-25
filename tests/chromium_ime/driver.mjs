@@ -338,6 +338,10 @@ bus.call_sync('org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','Se
   await settle();await type('shift2');report.autoRedoValue=await v();
   report.autoUndo=strictUndo?report.autoUndoRestored&&report.autoRedoValue==='привет ':
     ['привет ','ghbdtn '].includes(report.autoUndoValue)&&['привет ','ghbdtn '].includes(report.autoRedoValue);
+  // SYS-272: a lone Alt (or Caps Lock, Ctrl) before a word types nothing and must not
+  // leave that word uncorrected.
+  phase='auto_after_alt';await reset();await type('alt1');await type('word');await type('space');
+  report.autoAfterAltValue=await v();report.autoAfterAlt=report.autoAfterAltValue==='привет ';
   phase='auto_english_kept';await reset();await type('hello');report.autoEnglishKept=await v()==='hello ';
   await reset();await type('hellocomma');report.autoEnglishCommaKept=await v()==='hello, ';
   phase='auto_punct_key';await reset();await type('zhurnal');await type('space');
@@ -385,7 +389,7 @@ bus.call_sync('org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','Se
   report.autoFocusNoLeak=await ev(`other.value===' '`);
   phase='auto_shift_letter';await reset();await type('word');await type('shifta');await type('space');
   report.autoShiftLetterOriginal=await v()==='ghbdtnA ';
-  const required=['autoUsToRu','autoUndo','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','autoBeforeComma','autoBeforeExclaim','autoBeforeEnter','undoComma','undoPeriod','undoQuestion','undoCapsComma','noUndoAfterEnter','autoEnglishExclaimKept','autoCapital','autoShort','autoHyphen','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
+  const required=['autoUsToRu','autoUndo','autoAfterAlt','autoEnglishKept','autoEnglishCommaKept','autoZhurnal','autoBeforeComma','autoBeforeExclaim','autoBeforeEnter','undoComma','undoPeriod','undoQuestion','undoCapsComma','noUndoAfterEnter','autoEnglishExclaimKept','autoCapital','autoShort','autoHyphen','gestureChoiceKept','autoAfterGestureWord','gesturePreedit','gestureCommit','flushNoAuto','autoRuToUs','autoRuUndo','autoRussianKept','ruGesturePreedit','ruGestureCommit','autoPasswordUntouched','autoFocusNoLeak','autoShiftLetterOriginal'];
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_MANUAL_LAB==='1'){
   // SYS-225 slice 1: no automatic correction; double Shift toggles the preedit word.

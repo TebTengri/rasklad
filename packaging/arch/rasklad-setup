@@ -792,15 +792,20 @@ def install(assume_yes, single_layout=False):
   stale = set()  # decided from the same bytes the preview shows, below
   changes = []
   layout_change = []  # SYS-268: its own question, never part of "Apply these changes?"
+  # SYS-272: a step skipped for a fault (not the user's own setup, not the
+  # optional input.lua step) makes the run exit 1, so "done" is never claimed.
+  fault = False
   for path, plan in ((BINDINGS, bindings_plan), (INPUT, input_plan), (SHELL_JSON, shell_plan)):
     # One read: the diff, the backup and the final comparison all use it.
     bad = file_state(path)
     if bad:
       say(bad, os.path.basename(path), "left as is")
+      fault = fault or path != INPUT
       continue
     old = read(path)
     if old is None:
       say("missing-file", os.path.basename(path), "left as is")
+      fault = fault or path != INPUT
       continue
     status, new = input_plan(old, state.get("input_block")) if path == INPUT else plan(old)
     if path in (BINDINGS, SHELL_JSON) and path in state["files"] and not ours_in(path, old):
@@ -809,6 +814,7 @@ def install(assume_yes, single_layout=False):
       # Installed before and edited since: a second copy would let --revert
       # drop those edits. The user reverts first.
       say("changed", os.path.basename(path), "edited since an earlier install; run --revert first")
+      fault = True
     elif status == "missing" and path == INPUT:
       layout_change.append((path, old, new))
     elif status == "missing":
@@ -822,10 +828,12 @@ def install(assume_yes, single_layout=False):
           "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path), LEGACY_ADVICE)
+      fault = True
     elif status == "edited":
       say("edited", os.path.basename(path), EDITED_ADVICE)
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
+      fault = fault or path != INPUT  # lua-error, no-slot, unparsable
   link = link_state()
   if link == "other":
     say("other", "bar-widget-link", "something else is there; left as is")
@@ -834,6 +842,7 @@ def install(assume_yes, single_layout=False):
   group = fcitx_plan(bus, live)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
+    fault = True
     # SYS-268: without Fcitx nothing else would switch layouts.
     if layout_change:
       say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
@@ -846,6 +855,9 @@ def install(assume_yes, single_layout=False):
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
+    if fault:
+      print("Not everything is connected; see the lines above.")
+      return 1
     print("Nothing to change.")
     return 0
   if main_steps:
@@ -912,8 +924,15 @@ def install(assume_yes, single_layout=False):
     state["link"] = WIDGET
     save_state(state)
     os.makedirs(os.path.dirname(PLUGIN_LINK), exist_ok=True)
-    os.symlink(WIDGET, PLUGIN_LINK)
-    say("done", "bar-widget-link")
+    try:
+      os.symlink(WIDGET, PLUGIN_LINK)
+      say("done", "bar-widget-link")
+    except FileExistsError:
+      # Made by something else meanwhile: not ours, so --revert leaves it.
+      state["link"] = None
+      save_state(state)
+      say("other", "bar-widget-link", "something else appeared there; left as is")
+      failed = True
   run_rows, fcitx_name = [], None
   if group[0] == "missing":
     # SYS-272: read again now, not the group from before the question, so a
@@ -969,11 +988,12 @@ def install(assume_yes, single_layout=False):
       # What "the user's layouts are back" means for --revert (SYS-268); asked
       # before the file comparison below, so nothing waits between it and the write.
       recorded = "".join((hypr_option("input:kb_layout") or "").split())
-      state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
     if path == INPUT and input_plan(old, state.get("input_block")) != ("missing", new):
       say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
       failed = True
       continue
+    if path == INPUT:
+      state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
     # After the Hyprland queries above: a save made meanwhile is not overwritten.
     tmp = prepare_atomic(path, new)
     if not record_then_check(state, path, old, new):
@@ -992,7 +1012,10 @@ def install(assume_yes, single_layout=False):
     run([HYPRCTL, "reload"])
     errors = hypr_errors()
     if errors and errors != errors_before:
-      say("error", "hyprland", "new config errors after the change; undoing it")
+      # With no answer before the change, any error now is taken as ours: undoing
+      # our own edits is the safe side.
+      say("error", "hyprland", "new config errors after the change; undoing it" if errors_before is not None
+          else "config errors after the change (none could be read before); undoing it")
       # SYS-268: input.lua first; while it keeps one layout, double Alt stays.
       if INPUT in hypr and not restore(state, INPUT):
         say("kept", "rasklad-controls", "input.lua not restored; double Alt kept")
@@ -1015,7 +1038,11 @@ def install(assume_yes, single_layout=False):
             undo_group(state, fcitx_name, run_rows)
       save_and_drop(state)
       return 1
-  return 1 if failed else 0
+    if errors is None:
+      say("unverified", "hyprland", "Hyprland did not report its config errors after the change")
+  if fault and not failed:
+    print("Not everything is connected; see the lines above.")
+  return 1 if failed or fault else 0
 
 
 def restore(state, path):
@@ -1041,7 +1068,13 @@ def restore(state, path):
   if current is not None and current == old:
     if tmp:
       discard(tmp)  # never written (an interrupted install), or already restored
-  elif current is None or sha(current) != entry["written"]:
+  elif current is None:
+    # SYS-272: deleted since install: our change went with it. The entry is
+    # forgotten (its copy kept), so revert can finish and install run again.
+    copy = forget_entry(state, path)
+    say("gone", os.path.basename(path), "deleted since install; nothing to put back (old copy: %s)" % copy)
+    return True
+  elif sha(current) != entry["written"]:
     if tmp:
       discard(tmp)
     say("changed", os.path.basename(path), "edited since install; left as is (copy: %s)" % entry["bak"])
@@ -1321,7 +1354,14 @@ def main(argv):
     return check() if args[0] == "--check" else revert()
   except Refused as error:
     print("refused: %s" % error, file=sys.stderr)
-  except (OSError, ValueError, KeyError) as error:
+  except EOFError:
+    print("failed: no answer (input closed); nothing was changed after the question", file=sys.stderr)
+  except OSError as error:
+    # The cause and the path, never file contents.
+    print("failed: %s%s%s" % (error.__class__.__name__,
+                              ": " + error.strerror if error.strerror else "",
+                              " (%s)" % error.filename if error.filename else ""), file=sys.stderr)
+  except (ValueError, KeyError) as error:
     print("failed: %s" % error.__class__.__name__, file=sys.stderr)
   return 1
 

@@ -26,7 +26,7 @@ class Refresh(Base):
         config = Path(self.tmp.name) / 'config'
         self.bindings = config / 'hypr' / 'bindings.lua'
         self.bindings.write_bytes(b'-- user bindings\n')
-        (config / 'omarchy').mkdir()
+        (config / 'omarchy').mkdir(exist_ok=True)
         self.shell = config / 'omarchy' / 'shell.json'
         self.shell.write_bytes(SHELL)
         # Base stubs these two plans out; here they are the real ones.
