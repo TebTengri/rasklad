@@ -204,11 +204,13 @@ def load_state():
       raise bad
     had = set(ids(saved["before"]))
     rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had and r[1] == ""]
-    state["fcitx"] = {"groups": {saved["group"]: {"added": rows}}} if rows else None
+    entry = {"added": rows, "legacy_after": saved["after"]}
+    state["fcitx"] = {"groups": {saved["group"]: entry}} if rows else None
   elif saved is not None:
     groups = saved.get("groups") if isinstance(saved, dict) else None
     if not (isinstance(groups, dict) and groups and all(
-        isinstance(k, str) and isinstance(v, dict) and set(v) == {"added"} and items(v["added"]) and
+        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after"} == {"added"} and
+        items(v["added"]) and items(v.get("legacy_after", [])) and
         v["added"] and all(r[0] in REQUIRED and r[1] == "" for r in v["added"]) for k, v in groups.items())):
       raise bad
   return state
@@ -387,6 +389,24 @@ def set_claim(state, name, rows):
 def still_ours(rows, items):
   # A row the user removed, or gave another layout, is no longer ours.
   return [r for r in rows if r in items]
+
+
+def settle_claim(state, name, items):
+  """Bring the record for this group up to what Fcitx shows now: rows of ours the
+  user removed or changed are theirs from here on. A record converted from an
+  older version only counts if the group is still exactly as that install left
+  it (as the older --revert required); otherwise its rows are left as they are.
+  Saves the state when it changed."""
+  entry = claimed_groups(state).get(name)
+  if not entry:
+    return
+  rows = [list(r) for r in entry["added"]]
+  if "legacy_after" in entry:
+    if items != entry["legacy_after"]:
+      say("changed", "fcitx-group", "changed since an older install; its layouts left as is")
+      rows = []
+  set_claim(state, name, still_ours(rows, items))
+  save_state(state)
 
 
 # --- the steps: (state, new bytes) --------------------------------------------
@@ -749,14 +769,11 @@ def install(assume_yes, single_layout=False):
       say("skipped", os.path.basename(INPUT), "Hyprland layouts left as is until Fcitx runs")
       layout_change = []
 
-  if group[0] == "ok":
-    # SYS-272: both are there; rows of ours the user removed or changed since
-    # are theirs now, so a later --revert never takes a re-added one out.
-    now = bus["group"]()
-    rows = claimed_rows(state, now[0]) if now else []
-    if rows and still_ours(rows, now[2]) != rows:
-      set_claim(state, now[0], still_ours(rows, now[2]))
-      save_state(state)
+  # SYS-272: what this run sees is settled at once: a row of ours the user
+  # removed is theirs if it comes back, even while the question waits.
+  live = bus["group"]() if bus and group[0] != "no-fcitx" else None
+  if live:
+    settle_claim(state, live[0], live[2])
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
@@ -1078,7 +1095,8 @@ def restore_fcitx(state):
       clean = False
       continue
     _, layout, items = now
-    ours = still_ours(claimed_rows(state, name), items)
+    settle_claim(state, name, items)
+    ours = claimed_rows(state, name)
     remaining = [i for i in items if i not in ours]
     if not ours:
       set_claim(state, name, [])  # already gone, or changed by the user: theirs now

@@ -280,9 +280,9 @@ class Claims(Base):
         custom = ('keyboard-ru', 'ru(phonetic)')
         self.old_state([DE], [DE, custom, US])
         self.assertEqual(self.claim(), [US])
-        fake = FakeFcitx([DE, custom, US, ('keyboard-fr', '')])
+        fake = FakeFcitx([DE, custom, US])  # still as that install left it
         self.revert_with(fake)
-        self.assertEqual(fake.items, [DE, custom, ('keyboard-fr', '')])
+        self.assertEqual(fake.items, [DE, custom])
 
     def test_a_group_named_before_is_just_a_name(self):
         fake = FakeFcitx([US])
@@ -301,6 +301,33 @@ class Claims(Base):
         fake.items = [US, RU]  # the user puts the plain ru back
         self.revert_with(fake)
         self.assertEqual(fake.items, [US, RU])
+
+    def test_ru_put_back_while_the_question_waits_is_the_users(self):
+        fake = FakeFcitx([US])
+        self.install_with(fake)
+        fake.items = [US]  # ru removed by hand
+        bus = fake.bus()
+        first = bus['group']
+        calls = iter(range(100))
+
+        def group():
+            if next(calls) == 2:  # after this run has seen it gone
+                fake.items = [US, RU]
+            return first()
+        bus['group'] = group
+        self.install_with(fake, bus=lambda: bus)
+        self.assertEqual(self.claim(), [])
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [US, RU])
+
+    def test_old_record_counts_only_if_the_group_is_as_it_left_it(self):
+        # main: an install whose write failed still recorded ru in after; the
+        # user then added ru and de by hand. Nothing of that is ours.
+        self.old_state([US], [US, RU])
+        fake = FakeFcitx([US, RU, DE])
+        code, out = self.revert_with(fake)
+        self.assertIn('changed since an older install', out)
+        self.assertEqual(fake.items, [US, RU, DE])
 
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
