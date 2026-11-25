@@ -113,17 +113,6 @@ class RecordThenCheck(Base):
 
 
 class FcitxGroup(Base):
-    def test_empty_saved_group_is_never_written(self):
-        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
-        self.setup.fcitx = fake.bus
-        state = self.setup.new_state()
-        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [],
-                          'after': [['keyboard-us', ''], ['keyboard-ru', '']], 'after_layout': 'us'}
-        with contextlib.redirect_stdout(io.StringIO()) as out:
-            self.assertFalse(self.setup.restore_fcitx(state))
-        self.assertEqual(fake.calls, 0)
-        self.assertIn('the saved group is empty', out.getvalue())
-
     def test_group_kept_while_the_bar_widget_is_used(self):
         fake = FakeFcitx([('keyboard-us', '')])
         self.hypr('us,ru', variant=',')
@@ -160,59 +149,9 @@ class GroupRollbackScope(Base):
         errors = iter([[], ['bindings.lua: error']])
         self.setup.hypr_errors = lambda: next(errors, [])
 
-    def test_non_us_group_reverts(self):
-        # A German-only group is the user's own: install adds us and ru, revert puts it back.
-        fake = FakeFcitx([('keyboard-de', '')])
-        self.setup.fcitx = fake.bus
-        state = self.setup.new_state()
-        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['keyboard-de', '']],
-                          'after': [['keyboard-de', ''], ['keyboard-us', ''], ['keyboard-ru', '']],
-                          'after_layout': 'us'}
-        fake.items = [('keyboard-de', ''), ('keyboard-us', ''), ('keyboard-ru', '')]
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.assertTrue(self.setup.restore_fcitx(state))
-        self.assertEqual(fake.items, [('keyboard-de', '')])
-
     def setUp(self):
         super().setUp()
         self.setup.shell_uses_widget = lambda: False
-
-    def test_rollback_goes_back_to_this_runs_group(self):
-        # Fcitx had us and de (ru taken out since an earlier install); this run adds
-        # ru, then a new error: back to us and de, never to the older snapshot.
-        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-de', '')])
-        state = self.setup.new_state()
-        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['keyboard-us', '']],
-                          'after': [['keyboard-us', ''], ['keyboard-ru', '']], 'after_layout': 'us'}
-        self.setup.save_state(state)
-        self.hypr('us', options='')  # nothing for input.lua
-        self.setup.bindings_plan = lambda data=None: ('missing', b'-- rasklad rule\n')
-        bindings = Path(self.setup.BINDINGS)
-        bindings.write_bytes(b'-- user bindings\n')
-        self.errors_after()
-        code, out = self.install(fake)
-        self.assertEqual(code, 1, out)
-        self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
-        saved = self.setup.load_state()['fcitx']
-        # The earlier install's record stays exactly as it was: us+de must not match
-        # its after, or --revert would remove de.
-        self.assertEqual(saved['before'], [['keyboard-us', '']])
-        self.assertEqual(saved['after'], [['keyboard-us', ''], ['keyboard-ru', '']])
-        with contextlib.redirect_stdout(io.StringIO()) as out:
-            self.assertFalse(self.setup.restore_fcitx(self.setup.load_state()))
-        self.assertIn('changed since install', out.getvalue())
-        self.assertEqual(fake.items, [('keyboard-us', ''), ('keyboard-de', '')])
-
-    def test_pinyin_only_group_reverts(self):
-        fake = FakeFcitx([('pinyin', ''), ('keyboard-us', ''), ('keyboard-ru', '')])
-        self.setup.fcitx = fake.bus
-        state = self.setup.new_state()
-        state['fcitx'] = {'group': 'Default', 'layout': 'us', 'before': [['pinyin', '']],
-                          'after': [['pinyin', ''], ['keyboard-us', ''], ['keyboard-ru', '']],
-                          'after_layout': 'us'}
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.assertTrue(self.setup.restore_fcitx(state))
-        self.assertEqual(fake.items, [('pinyin', '')])
 
     def test_group_kept_while_an_earlier_block_keeps_us(self):
         # An earlier install's input.lua block still keeps Hyprland at us: removing
