@@ -188,6 +188,31 @@ class Install(Base):
         self.assertEqual(fake.calls, 1)
         self.assertIn(b'kb_layout = "us"', self.input.read_bytes())
 
+    def test_block_as_written_is_ours(self):
+        self.hypr('ru,us', variant=',')
+        self.assertEqual(self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)[0], 0)
+        self.assertRegex(self.setup.load_state()['input_block'], r'^[0-9a-f]{64}$')
+        self.assertEqual(self.setup.input_plan(None, self.setup.load_state()['input_block'])[0], 'ok')
+
+    def test_edited_block_is_not_ours(self):
+        self.hypr('ru,us', variant=',')
+        self.assertEqual(self.install(FakeFcitx([('keyboard-us', '')]), single_layout=True)[0], 0)
+        data = self.input.read_bytes()
+        self.input.write_bytes(data.replace(b'kb_variant = ""', b'kb_variant = "intl"'))
+        state = self.setup.load_state()
+        self.assertEqual(self.setup.input_plan(None, state['input_block'])[0], 'edited')
+        self.assertEqual(self.setup.input_plan(None, None)[0], 'ok')  # no record: as before
+
+    def test_revert_drops_the_block_hash(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.fcitx = fake.bus
+            self.setup.revert()
+        state = self.setup.load_state() if os.path.exists(self.setup.STATE_FILE) else {}
+        self.assertNotIn('input_block', state)
+
     def test_fcitx_reply_without_change_leaves_layouts(self):
         self.hypr('ru,us', variant=',')
         fake = FakeFcitx([('keyboard-us', '')], apply=False)
@@ -282,11 +307,11 @@ class Install(Base):
         fake = FakeFcitx([('keyboard-us', '')])
         real = self.setup.input_plan
         calls = []
-        def plan_and_save(data=None):
+        def plan_and_save(data=None, written=None):
             calls.append(1)
             if len(calls) == 2:  # the re-check just before writing
                 self.input.write_bytes(b'-- saved meanwhile\n')
-            return real(data)
+            return real(data, written)
         self.setup.input_plan = plan_and_save
         code, out = self.install(fake, single_layout=True)
         self.assertEqual(code, 1)

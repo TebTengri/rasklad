@@ -43,6 +43,8 @@ END = "-- END rasklad-setup"
 # checks the live layouts and forgets it; --install after that adds the new one.
 LEGACY_ADVICE = ("an older or edited layout block: run --revert inside the Hyprland session; "
                  "if the block stays, remove it from input.lua and run --revert again, then --install")
+EDITED_ADVICE = ("the layout block was edited after install; left as is: run --revert, "
+                 "which keeps an edited input.lua, then remove the block yourself")
 LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
 RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
@@ -193,10 +195,13 @@ def load_state():
     raise Refused("unknown state file: %s" % STATE_FILE)
   # Only paths this tool itself would ever record are trusted.
   bad = Refused("unexpected entry in the state file: %s" % STATE_FILE)
-  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout"} or \
+  if set(state) - {"version", "files", "link", "fcitx", "await_hypr", "hypr_layout", "input_block"} or \
      not isinstance(state.get("files"), dict):
     raise bad
   if not isinstance(state.get("await_hypr", False), bool):
+    raise bad
+  ib = state.get("input_block")
+  if ib is not None and not (isinstance(ib, str) and re.fullmatch(r"[0-9a-f]{64}", ib)):
     raise bad
   hl = state.get("hypr_layout")
   if hl is not None and not (isinstance(hl, str) and hl and XKB.fullmatch(hl)):
@@ -493,7 +498,18 @@ def bindings_plan(data=None):
   return ("missing", new) if lua_ok(new) else ("lua-error", None)
 
 
-def input_plan(data=None):
+def layout_block(data):
+  """Our BEGIN..END block in input.lua, or None."""
+  if BEGIN.encode() not in data:
+    return None
+  start = data.index(BEGIN.encode())
+  end = data.find(END.encode(), start)
+  return data[start:end] if end != -1 else b""
+
+
+def input_plan(data=None, written=None):
+  # written: the hash of the block this tool wrote (SYS-272); a block of ours
+  # with another variant or options is the user's edit, not ours as is.
   """Hyprland keeps one layout and no xkb group toggle: Fcitx switches layouts."""
   bad = file_state(INPUT)
   if bad:
@@ -505,10 +521,10 @@ def input_plan(data=None):
     # version wrote is ours as is: the mark and kb_layout = "us" inside the same
     # BEGIN..END block. Anything else (written before SYS-268, which may have
     # kept ru or dropped kz, or edited since) is reported for revert and reinstall.
-    start = data.index(BEGIN.encode())
-    end = data.find(END.encode(), start)
-    block = data[start:end] if end != -1 else b""
-    return ("ok", None) if LAYOUT_BLOCK_RE.fullmatch(block) else ("legacy", None)
+    block = layout_block(data)
+    if not LAYOUT_BLOCK_RE.fullmatch(block):
+      return "legacy", None
+    return ("edited", None) if written and sha(block) != written else ("ok", None)
   layout, options, variant = (hypr_option("input:" + k) for k in ("kb_layout", "kb_options", "kb_variant"))
   if layout is None or options is None or variant is None:
     return "unknown", None
@@ -611,8 +627,14 @@ def check():
     say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
   report(bindings_plan()[0], "double-alt")
-  state = input_plan()[0]
-  if state == "unknown":
+  try:
+    written = load_state().get("input_block")
+  except Refused:
+    written = None
+  state = input_plan(None, written)[0]
+  if state == "edited":
+    report("edited", "hyprland-layout", EDITED_ADVICE)
+  elif state == "unknown":
     say("unknown", "hyprland-layout", "Hyprland not running or its keyboard options not readable")
   elif state == "missing":
     # SYS-268: a choice, not a fault. Hyprland keeps its layouts and switch.
@@ -659,6 +681,9 @@ def record_then_check(state, path, old, new):
   entry = state["files"].get(path)
   before = dict(entry) if entry else None
   bak_existed = os.path.lexists(path + ".rasklad.bak")
+  block_before = state.get("input_block")
+  if path == INPUT and layout_block(new):
+    state["input_block"] = sha(layout_block(new))  # the block as written (SYS-272)
   remember_file(state, path, old, new)
   save_state(state)
   try:
@@ -667,6 +692,11 @@ def record_then_check(state, path, old, new):
     same = False
   if same:
     return True  # only the rename follows; a save in that instant is not seen
+  if path == INPUT:
+    if block_before is None:
+      state.pop("input_block", None)
+    else:
+      state["input_block"] = block_before
   if before is not None:
     state["files"][path] = before
   else:
@@ -716,6 +746,8 @@ def forget_entry(state, path):
   before install and is kept as *.before-reset, written before the state forgets
   it. Returns where the old copy is."""
   entry = state["files"].pop(path)
+  if path == INPUT:
+    state.pop("input_block", None)
   if entry.get("bak_ours", False) and file_state(entry["bak"]) is None and \
      read(entry["bak"]) == read(entry["backup"]):
     state.setdefault("_drop", []).append(entry["backup"])
@@ -770,7 +802,7 @@ def install(assume_yes, single_layout=False):
     if old is None:
       say("missing-file", os.path.basename(path), "left as is")
       continue
-    status, new = plan(old)
+    status, new = input_plan(old, state.get("input_block")) if path == INPUT else plan(old)
     if path in (BINDINGS, SHELL_JSON) and path in state["files"] and not ours_in(path, old):
       stale.add(path)
     if status == "missing" and path in state["files"] and path not in stale:
@@ -790,6 +822,8 @@ def install(assume_yes, single_layout=False):
           "not exactly us and ru, or a us variant that is not Latin: Hyprland keeps its layouts and switch; left as is")
     elif status == "legacy":
       say("legacy", os.path.basename(path), LEGACY_ADVICE)
+    elif status == "edited":
+      say("edited", os.path.basename(path), EDITED_ADVICE)
     elif status != "ok":
       say(status, os.path.basename(path), "left as is")
   link = link_state()
@@ -936,7 +970,7 @@ def install(assume_yes, single_layout=False):
       # before the file comparison below, so nothing waits between it and the write.
       recorded = "".join((hypr_option("input:kb_layout") or "").split())
       state["hypr_layout"] = recorded if recorded and XKB.fullmatch(recorded) else None
-    if path == INPUT and input_plan(old) != ("missing", new):
+    if path == INPUT and input_plan(old, state.get("input_block")) != ("missing", new):
       say("changed", os.path.basename(path), "Hyprland layouts changed while waiting; left as is")
       failed = True
       continue
@@ -1020,6 +1054,8 @@ def restore(state, path):
   # The private copy goes only after the state without this entry is saved.
   state.setdefault("_drop", []).append(entry["backup"])
   del state["files"][path]
+  if path == INPUT:
+    state.pop("input_block", None)
   say("restored", os.path.basename(path))
   return True
 
