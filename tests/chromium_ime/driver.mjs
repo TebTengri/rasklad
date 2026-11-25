@@ -165,7 +165,12 @@ try{
    execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s','True'],{stdio:['ignore','ignore','pipe'],timeout:5000});
    await type('word');await type('space');report.productEnableMidTokenRaw=await v()==='ghbdtnghbdtn ';
    await type('word');await type('space');report.productEnabledCorrects=await v()==='ghbdtnghbdtn привет ';
-   required.push('productEnableMidTokenRaw','productEnabledCorrects');
+   // Off and on again over an empty field: the cursor starts a token, so the
+   // first word is corrected at once.
+   const setEnabled=(value)=>execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
+   setEnabled('False');await reset('other');await reset();setEnabled('True');
+   await type('word');await type('space');report.productEnabledEmptyValue=await v();report.productEnabledEmptyField=report.productEnabledEmptyValue==='привет ';
+   required.push('productEnableMidTokenRaw','productEnabledCorrects','productEnabledEmptyField');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){

@@ -1434,9 +1434,9 @@ private:
     // whitespace. Anything else (no surrounding text, a selection, invalid UTF-8,
     // another character before the cursor) counts as mid-token.
     static bool atTokenStart(fcitx::InputContext *ic) {
-        if (!ic->capabilityFlags().test(fcitx::CapabilityFlag::SurroundingText)) return false;
         const auto &st = ic->surroundingText();
-        if (!st.isValid() || st.cursor() != st.anchor()) return false;
+        // As lastMatches: an oversized surrounding text counts as unknown.
+        if (!st.isValid() || st.cursor() != st.anchor() || st.text().size() > kMaxSurroundingBytes) return false;
         const std::string &text = st.text();
         if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return false;
         if (st.cursor() == 0) return true;
