@@ -243,7 +243,7 @@ public:
     enum class Confirm { Never, AfterCommit, AfterReplace };
     Confirm lastRule = Confirm::Never;
     unsigned lastPreCursor = 0;
-    std::string lastText() const { return lastNow() + lastSuffix; }
+    std::string lastText() const { return rasklad::joined(lastNow(), lastSuffix); }
     // SYS-271: bumped whenever the kept word is forgotten or replaced by another,
     // so a deferred undo acts only on the very word it was asked for.
     std::uint64_t lastGeneration = 0;
@@ -871,7 +871,7 @@ private:
         if (!match || ic->surroundingText().cursor() != s.lastCursor) s.forgetLast();
     }
     static bool replaceLast(fcitx::InputContext *ic, LabState &s) {
-        std::string newText = s.lastOther() + s.lastSuffix;
+        std::string newText = rasklad::joined(s.lastOther(), s.lastSuffix);
         const auto &st = ic->surroundingText();
         const long n = rasklad::manual::codePointCount(s.lastNow()) + rasklad::manual::codePointCount(s.lastSuffix);
         const bool ok = ic->hasFocus() && s.lastConfirmed && n > 1 && lastMatches(ic, s) &&
@@ -943,10 +943,10 @@ private:
                 if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
                 else {
                     // Built in place and wiped: no unwiped temporaries (SYS-272).
-                    std::string joined = other;
-                    joined.append(w, cut, std::string::npos);
-                    result = LabState::form(joined, false, s.upper);
-                    wipeString(joined);
+                    std::string tail = w.substr(cut);
+                    std::string both = rasklad::joined(other, tail);
+                    result = LabState::form(both, false, s.upper);
+                    wipeString(tail); wipeString(both);
                 }
             }
             if (fix) wipeString(*fix);
@@ -1217,8 +1217,11 @@ private:
                 bool whole = false;
                 auto fixed = autoText(*s, whole);
                 // Copied, not moved: a short string's bytes would stay behind (SYS-272).
-                std::string out = fixed ? *fixed : s->shown();
+                std::string shown = fixed ? std::string() : s->shown();
+                // Room for the space up front: push_back never reallocates (SYS-272).
+                std::string out = rasklad::joined(fixed ? *fixed : shown, std::string(), 1);
                 if (fixed) wipeString(*fixed);
+                wipeString(shown);
                 // The other form: after a correction (whole or letters only) the word
                 // exactly as typed; otherwise the whole word in the layout not shown.
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;

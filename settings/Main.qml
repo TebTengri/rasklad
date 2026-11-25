@@ -796,7 +796,7 @@ ApplicationWindow {
             border.color: window.tint(0.4)
         }
         contentItem: Hint {
-            text: qsTr("Rasklad takes back what it changed in the Hyprland, bar and Fcitx settings. Files you have changed since are normally left as they are; from Fcitx only the layouts it added are removed. The exceptions are in the README.")
+            text: qsTr("Rasklad takes back what it changed in the Hyprland, bar and Fcitx settings. Files you have changed since are normally left as they are; from Fcitx only the layouts it added are removed. The exceptions are in SECURITY.md (/usr/share/doc/rasklad-fcitx5).")
             font.pixelSize: 12
         }
         footer: DialogButtonBox {

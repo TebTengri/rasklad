@@ -18,4 +18,15 @@ inline void wipe(std::string &s) noexcept
     s.clear();
 }
 
+// a + b in one buffer sized up front (plus room for `spare` more bytes), so no
+// reallocation frees an unwiped copy of either part.
+inline std::string joined(const std::string &a, const std::string &b, std::size_t spare = 0)
+{
+    std::string out;
+    out.reserve(a.size() + b.size() + spare);
+    out.append(a);
+    out.append(b);
+    return out;
+}
+
 } // namespace rasklad
