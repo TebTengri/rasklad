@@ -2,5 +2,5 @@
   "tooltip.on": "Rasklad · %1 · auto-correction on\nDouble left Alt or click: switch layout · Middle click: pause · Right click: settings",
   "tooltip.paused": "Rasklad · %1 · auto-correction paused\nMiddle click: resume · Right click: settings",
   "tooltip.broken": "Rasklad · %1 · auto-correction off: the dictionary profile did not pass verification\nDouble Shift still converts a word · Right click: settings",
-  "tooltip.unknown": "Rasklad · %1"
+  "tooltip.unknown": "Rasklad · %1 · auto-correction state unknown: the Rasklad addon does not answer\nRight click: settings"
 }

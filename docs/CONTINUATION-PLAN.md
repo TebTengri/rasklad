@@ -165,7 +165,7 @@ No otherprojects,installedIME,Slacksettings,globalkeybinds/autostart changed.
 
 UserexplicitlyapprovedONE75s keep-grab nestedHyprlandprobe andwasready nottotype.
 Ran ONCE: python3 tools/hyprland_ime_lab.py --run-approved --focus-stress
- --space-telemetry --frontend-variant keep-grab --input-root /home/mvn/Work/rasklad.
+ --space-telemetry --frontend-variant keep-grab --input-root <input-root>.
 Exit0,18checksPASS,all4focuscasesPASS (inclpreviousmissingSpacecase2), cleanupPASS,
 selectedmoduledev/inodemapped,compositorStayedAlive=true. Source/data artifacthash
 matchesnormalisedkeepbuild. Usertoldprobecompleteandmaytype. Rawreportexcludedprivate
@@ -202,7 +202,7 @@ Peerlaunchercontrols11 PASS; broadprivateboundaryguards105 PASS.
 
 ExactHyprlandselector is alreadypreparedandindependentlyreviewed/dry-only:
 python3 tools/hyprland_ime_lab.py --run-approved --focus-stress --space-telemetry
- --frontend-variant keep-grab --input-root /home/mvn/Work/rasklad.
+ --frontend-variant keep-grab --input-root <input-root>.
 This woulduseoneparentWaylandFD+renderD128+fiveboundedGPUmetadata/NODEVcardstat,
 max75s,ownprivateChrome/Fcitx; NOTauthorizedyet. Oldhostapprovalsconsumed; don't
 run withoutfreshuserconsent. No host permission is conveyed by this handoff.
@@ -275,7 +275,7 @@ smoke; CLOSED headless Sway only, nohostpermission new. AgentdidnotrunFcitx.
 
 NEXT: finish immutable pairedpeerreports on finalserver/runner/controlmodule;
 then run CLOSED Sway/Chromium baseline+keep with --focus-stress --space-telemetry
---frontend-variant baseline|keep-grab --input-root /home/mvn/Work/rasklad.
+--frontend-variant baseline|keep-grab --input-root <input-root>.
 Nohostdisplay/GPU/network. Module/privateconfigchangedonlyownprocess. Review
 results; don'tclaimHyprland/Slack until exact separatelyauthorized trial. Preserve
 negativecontrol1/2 as counterexample notsuccess. Data fcixtkeep001 currentlyearly
@@ -633,7 +633,7 @@ reviewer самостоятельно тесты не запускали. Пер
 
 Следующий запуск — ОДНА отдельно согласуемая проба Hyprland до75s:
 bin/test-hyprland-ime --run-approved --focus-stress --space-telemetry
---addon-witness --core-entry-witness --input-root /home/mvn/Work/rasklad.
+--addon-witness --core-entry-witness --input-root <input-root>.
 Нового host-разрешения ещё нет. Corepress0/own0 укажет до Core entry;
 Corepress1/own0 — между entry и watcher; focus0/false выделит no-focus entry.
 Это счётчики интервала, не pairing/protocol trace; getter/shim могут менять

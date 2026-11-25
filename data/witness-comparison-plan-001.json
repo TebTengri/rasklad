@@ -26,7 +26,7 @@
         "--focus-stress",
         "--space-telemetry",
         "--input-root",
-        "/home/mvn/Work/rasklad"
+        "<input-root>"
       ],
       "queryExpected": false
     },
@@ -39,7 +39,7 @@
         "--focus-stress",
         "--space-telemetry",
         "--input-root",
-        "/home/mvn/Work/rasklad",
+        "<input-root>",
         "--addon-witness",
         "--witness-no-query"
       ],
@@ -54,7 +54,7 @@
         "--focus-stress",
         "--space-telemetry",
         "--input-root",
-        "/home/mvn/Work/rasklad",
+        "<input-root>",
         "--addon-witness"
       ],
       "queryExpected": true

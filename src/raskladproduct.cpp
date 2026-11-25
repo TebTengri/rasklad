@@ -903,17 +903,19 @@ private:
     // so the Space undo can restore it). Otherwise a us-typed word ending in keys that
     // carry Russian letters (",", ".", ";", ...) is tried without them, and those keys
     // stay as typed: "ckjdj," -> "слово,".
-    std::optional<std::string> autoText(LabState &s, bool &whole) {
+    // The corrected text goes into the caller's `out` (SYS-272: no returned
+    // optional whose moved-from copy could stay in a dead stack frame).
+    bool autoText(LabState &s, bool &whole, std::string &out) {
         whole = false;
-        if (!*config_.autoCorrect) return std::nullopt; // SYS-227: gestures only
-        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return std::nullopt;
+        if (!*config_.autoCorrect) return false; // SYS-227: gestures only
+        if (s.chosen || s.converted || !profile_ || !profile_->ready() || s.empty()) return false;
         // Case: all lowercase, a capital first letter, or all capitals, judged on the
         // keys that are converted (SYS-250: "NS," is all capitals plus a comma).
         const auto caseOk = [&s](std::size_t keys) { return rasklad::word::caseEligible(s.upper, keys); };
         std::string w = s.word();
-        std::optional<std::string> result;
+        bool found = false;
         std::size_t cut = w.size();
-        for (int pass = 0; pass < 2 && !result; ++pass) {
+        for (int pass = 0; pass < 2 && !found; ++pass) {
             if (pass == 1) {
                 if (s.typedRu) break;
                 cut = rasklad::word::lettersBeforeTail(w);
@@ -942,23 +944,25 @@ private:
                 if (pass == 0) {
                     s.converted = true; whole = true;
                     std::string shown = s.shown();
-                    result = shown; // copied, then wiped: a moved short temporary keeps its bytes
+                    out.assign(shown); // copied, then wiped: a moved short string keeps its bytes
                     wipeString(shown);
+                    found = true;
                 }
                 else {
                     // Built in place and wiped: no unwiped temporaries (SYS-272).
                     std::string tail = w.substr(cut);
                     std::string both = rasklad::joined(other, tail);
                     std::string shown = LabState::form(both, false, s.upper);
-                    result = shown;
+                    out.assign(shown);
                     wipeString(tail); wipeString(both); wipeString(shown);
+                    found = true;
                 }
             }
             if (fix) wipeString(*fix);
             wipeString(keys); wipeString(typed); wipeString(other);
         }
         wipeString(w);
-        return result;
+        return found;
     }
     // A press of a modifier or lock key alone (Ctrl, Alt, Super, Caps Lock, AltGr,
     // ...): it types nothing. The key it is combined with (Ctrl+A) is non-plain and
@@ -1240,12 +1244,13 @@ private:
                 // the Space restores the original (replaceLast); SYS-250: also when
                 // only the letters were corrected and trailing keys kept ("ns," -> "ты,").
                 bool whole = false;
-                auto fixed = autoText(*s, whole);
+                std::string fixedText;
+                const bool fixed = autoText(*s, whole, fixedText);
                 // Copied, not moved: a short string's bytes would stay behind (SYS-272).
                 std::string shown = fixed ? std::string() : s->shown();
                 // Room for the space up front: push_back never reallocates (SYS-272).
-                std::string out = rasklad::joined(fixed ? *fixed : shown, std::string(), 1);
-                if (fixed) wipeString(*fixed);
+                std::string out = rasklad::joined(fixed ? fixedText : shown, std::string(), 1);
+                wipeString(fixedText);
                 wipeString(shown);
                 // The other form: after a correction (whole or letters only) the word
                 // exactly as typed; otherwise the whole word in the layout not shown.
@@ -1263,7 +1268,7 @@ private:
                 // No callbacks between this final check and staged commit.
                 s->addPending(key);
                 event.filterAndAccept();
-                const bool switchAfter = fixed.has_value();
+                const bool switchAfter = fixed;
                 const bool toRu = !s->typedRu;
                 auto ref = ic->watch();
                 commitAndClear(ic, *s, out);
@@ -1292,14 +1297,14 @@ private:
             // the message) double Shift swaps the word back, with the character the
             // client inserted kept as it is.
             bool whole = false;
-            std::optional<std::string> fixed;
+            std::string fixedText;
             const bool ends = wordEnd(key);
-            if (ends) fixed = autoText(*s, whole);
+            const bool fixed = ends && autoText(*s, whole, fixedText);
             const bool toRu = !s->typedRu;
             auto ref = ic->watch();
-            const bool switchAfter = fixed.has_value();
-            std::string out = fixed ? *fixed : s->shown(); // copied, not moved (SYS-272)
-            if (fixed) wipeString(*fixed);
+            const bool switchAfter = fixed;
+            std::string out = fixed ? fixedText : s->shown(); // copied, not moved (SYS-272)
+            wipeString(fixedText);
             const std::uint32_t mark = fcitx::Key::keySymToUnicode(sym);
             if (ends && mark > 0x20 && mark != 0x7f) {
                 const bool otherRu = fixed ? s->typedRu : s->typedRu == s->converted;

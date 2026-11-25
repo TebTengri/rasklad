@@ -167,7 +167,7 @@ QVariantMap setupFromCheck(const QByteArray &output)
                                     QStringLiteral("other-layouts"), QStringLiteral("optional"),
                                     QStringLiteral("legacy"),   QStringLiteral("edited")};
     QVariantMap result;
-    if (output.size() > 4096) return result;
+    if (output.size() > 8192) return result; // as much as RaskladSetup accepts
     for (const QByteArray &raw : output.split('\n')) {
         const QList<QByteArray> words = raw.simplified().split(' ');
         if (words.size() < 2) continue;

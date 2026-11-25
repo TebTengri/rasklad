@@ -229,7 +229,7 @@ Reproduction (default is fully fictional):
 node tests/browser/session.test.mjs
 python3 bin/test-reviewed-dictionaries --editor
 # Explicit scoped real integration only, not run by normal build/test:
-python3 bin/test-reviewed-dictionaries --real --editor --input-root /home/mvn/Work/rasklad
+python3 bin/test-reviewed-dictionaries --real --editor --input-root <input-root>
 ```
 
 The separate [profile review](../data/notices/BROWSER-PROFILE-REVIEW.md) and

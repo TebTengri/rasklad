@@ -92,7 +92,7 @@ No model, stem lexicon, corpus, real user text or actual editor is loaded.
 The separately authorized real command is:
 
 ```sh
-python3 bin/test-reviewed-dictionaries --real --input-root /home/mvn/Work/rasklad
+python3 bin/test-reviewed-dictionaries --real --input-root <input-root>
 ```
 
 It mounts read-only exactly the four project files described in

@@ -162,7 +162,7 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
 namespace {
 const QString kSetupTool = QStringLiteral("/usr/bin/rasklad-setup");
 constexpr qsizetype kMaxSetupOutput = 8192;
-constexpr int kSetupTimeoutMs = 3000;
+constexpr int kSetupTimeoutMs = 15000; // the check's worst case: several 2 s D-Bus calls and hyprctl
 } // namespace
 
 RaskladSetup::RaskladSetup() = default;
@@ -192,7 +192,7 @@ void RaskladSetup::finish(std::optional<QByteArray> result)
 void RaskladSetup::requestCheck()
 {
     // Fixed program and argument, no shell, no input; asynchronous, so a stuck
-    // tool never freezes the window: killed after 3 s or 8 KiB of output.
+    // tool never freezes the window: killed after 15 s or 8 KiB of output.
     if (m_process) {
         m_again = true;
         return;
