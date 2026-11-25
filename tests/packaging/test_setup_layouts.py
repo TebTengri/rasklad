@@ -349,13 +349,18 @@ class Install(Base):
         self.assertFalse(self.setup.layout_block_in_input())
         self.input.write_bytes(b'-- I use Rasklad for corrections\n')
         self.assertFalse(self.setup.layout_block_in_input())
-        self.input.write_bytes(b'-- Keep the rasklad-setup layout step disabled here.\n')
-        self.assertFalse(self.setup.layout_block_in_input())
+        for prose in (b'-- Keep the rasklad-setup layout step disabled here.\n',
+                      b'-- BEGIN rasklad-setup instructions for dotfiles\n',
+                      b'-- rasklad-setup layout 3: my own notes\n'):
+            self.input.write_bytes(prose)
+            self.assertFalse(self.setup.layout_block_in_input(), prose)
+            self.assertFalse(self.setup.trace_in(self.setup.INPUT, prose), prose)
         # A legacy v2 block with its BEGIN line removed: the layout mark remains.
         v2 = b'-- rasklad-setup layout 2: us kept for the lock screen, chosen by the user\nhl.config({})\n'
         self.input.write_bytes(v2)
         self.assertTrue(self.setup.layout_block_in_input())
         self.assertTrue(self.setup.trace_in(self.setup.INPUT, v2))
+        self.assertTrue(self.setup.block_mark_in(self.setup.LAYOUT_BLOCK.encode()))
 
     def test_check_reports_rasklad_off(self):
         # Owner decision 2026-11-25: the addon is off until turned on in the window;

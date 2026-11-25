@@ -1326,14 +1326,18 @@ def layout_block_in_input():
   return block_mark_in(data) or ("name", b"rasklad_package") in lua_tokens(data)
 
 
-# A line every version of our blocks writes: the BEGIN line, or a layout mark
-# ("-- rasklad-setup layout N: ..."). Whole lines, so prose that mentions them
-# does not match.
-BLOCK_MARK = re.compile(rb"^[ \t]*-- (?:BEGIN rasklad-setup|rasklad-setup layout [0-9]+:)", re.M)
+# The exact first lines every version of our blocks wrote (git history: two
+# BEGIN lines and the layout marks 2 and 3). Whole lines only, so prose that
+# mentions rasklad-setup never matches.
+BLOCK_MARKS = {
+  (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland").encode(),
+  (BEGIN + ": two quick left-Alt taps switch the Fcitx layout us <-> ru.").encode(),
+} | {("-- rasklad-setup layout %d: us kept for the lock screen, chosen by the user" % v).encode()
+     for v in (2, 3)}
 
 
 def block_mark_in(data):
-  return BLOCK_MARK.search(data.replace(b"\r", b"\n")) is not None
+  return any(line.strip() in BLOCK_MARKS for line in data.replace(b"\r", b"\n").split(b"\n"))
 
 
 def input_block_present():
