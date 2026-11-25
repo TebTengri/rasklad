@@ -1124,8 +1124,10 @@ private:
         if (!eligible(ic)) {
             // Gates no longer hold: discard without commit, pass the key.
             if (auto *s = state(ic, false)) {
+                // discard() forgets the kept word too (invalidate) and may run a
+                // client callback that destroys this state: nothing after it.
                 if (s->active()) discard(ic, *s);
-                if (s->lastValid) s->forgetLast(); // the kept word too (SYS-272)
+                else if (s->lastValid) s->forgetLast(); // the kept word alone (SYS-272)
             }
             return;
         }
