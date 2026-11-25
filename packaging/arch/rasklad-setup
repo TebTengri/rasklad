@@ -204,12 +204,16 @@ def load_state():
       raise bad
     had = set(ids(saved["before"]))
     rows = [r for r in saved["after"] if r[0] in REQUIRED and r[0] not in had and r[1] == ""]
-    entry = {"added": rows, "legacy_after": saved["after"]}
+    if not isinstance(saved.get("after_layout", saved.get("layout")), str):
+      raise bad
+    entry = {"added": rows, "legacy_after": saved["after"],
+             "legacy_layout": saved.get("after_layout", saved.get("layout"))}
     state["fcitx"] = {"groups": {saved["group"]: entry}} if rows else None
   elif saved is not None:
     groups = saved.get("groups") if isinstance(saved, dict) else None
     if not (isinstance(groups, dict) and groups and all(
-        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after"} == {"added"} and
+        isinstance(k, str) and isinstance(v, dict) and set(v) - {"legacy_after", "legacy_layout"} == {"added"} and
+        ("legacy_after" in v) == ("legacy_layout" in v) and isinstance(v.get("legacy_layout", ""), str) and
         items(v["added"]) and items(v.get("legacy_after", [])) and
         v["added"] and all(r[0] in REQUIRED and r[1] == "" for r in v["added"]) for k, v in groups.items())):
       raise bad
@@ -391,7 +395,7 @@ def still_ours(rows, items):
   return [r for r in rows if r in items]
 
 
-def settle_claim(state, name, items):
+def settle_claim(state, name, layout, items):
   """Bring the record for this group up to what Fcitx shows now: rows of ours the
   user removed or changed are theirs from here on. A record converted from an
   older version only counts if the group is still exactly as that install left
@@ -402,7 +406,7 @@ def settle_claim(state, name, items):
     return
   rows = [list(r) for r in entry["added"]]
   if "legacy_after" in entry:
-    if items != entry["legacy_after"]:
+    if items != entry["legacy_after"] or layout != entry["legacy_layout"]:
       say("changed", "fcitx-group", "changed since an older install; its layouts left as is")
       rows = []
   set_claim(state, name, still_ours(rows, items))
@@ -545,8 +549,10 @@ def link_state():
   return "other" if os.path.lexists(PLUGIN_LINK) else "missing"
 
 
-def fcitx_plan(bus):
-  current = bus["group"]() if bus else None
+def fcitx_plan(bus, current=False):
+  # current: a group already read (one snapshot for the plan and the record).
+  if current is False:
+    current = bus["group"]() if bus else None
   if current is None:
     return "no-fcitx", None
   name, layout, items = current
@@ -761,7 +767,8 @@ def install(assume_yes, single_layout=False):
   if link == "other":
     say("other", "bar-widget-link", "something else is there; left as is")
   bus = fcitx()
-  group = fcitx_plan(bus)
+  live = bus["group"]() if bus else None
+  group = fcitx_plan(bus, live)
   if group[0] == "no-fcitx":
     say("no-fcitx", "fcitx-group", "start Fcitx and run again")
     # SYS-268: without Fcitx nothing else would switch layouts.
@@ -771,9 +778,8 @@ def install(assume_yes, single_layout=False):
 
   # SYS-272: what this run sees is settled at once: a row of ours the user
   # removed is theirs if it comes back, even while the question waits.
-  live = bus["group"]() if bus and group[0] != "no-fcitx" else None
   if live:
-    settle_claim(state, live[0], live[2])
+    settle_claim(state, live[0], live[1], live[2])
 
   main_steps = bool(changes) or link == "missing" or group[0] == "missing"
   if not main_steps and not layout_change:
@@ -1095,7 +1101,7 @@ def restore_fcitx(state):
       clean = False
       continue
     _, layout, items = now
-    settle_claim(state, name, items)
+    settle_claim(state, name, layout, items)
     ours = claimed_rows(state, name)
     remaining = [i for i in items if i not in ours]
     if not ours:

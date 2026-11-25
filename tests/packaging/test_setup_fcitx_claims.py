@@ -311,7 +311,7 @@ class Claims(Base):
         calls = iter(range(100))
 
         def group():
-            if next(calls) == 2:  # after this run has seen it gone
+            if next(calls) == 1:  # after this run has seen it gone (its first read)
                 fake.items = [US, RU]
             return first()
         bus['group'] = group
@@ -328,6 +328,14 @@ class Claims(Base):
         code, out = self.revert_with(fake)
         self.assertIn('changed since an older install', out)
         self.assertEqual(fake.items, [US, RU, DE])
+
+    def test_old_record_needs_its_default_layout_too(self):
+        self.old_state([US], [US, RU])
+        fake = FakeFcitx([US, RU])
+        fake.layout = 'de'  # the user changed only the group's default layout
+        code, out = self.revert_with(fake)
+        self.assertIn('changed since an older install', out)
+        self.assertEqual(fake.items, [US, RU])
 
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()

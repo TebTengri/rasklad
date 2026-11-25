@@ -254,9 +254,9 @@ class Install(Base):
         self.hypr('us,ru', variant=',')
         fake = FakeFcitx([('keyboard-us', '')])
         real = self.setup.fcitx_plan
-        def plan_then_kz(bus):
+        def plan_then_kz(bus, *current):
             self.hypr('us,ru,kz', variant=',,')  # after the question
-            return real(bus)
+            return real(bus, *current)
         self.setup.fcitx_plan = plan_then_kz
         code, out = self.install(fake, single_layout=True)
         self.assertEqual(code, 1)
