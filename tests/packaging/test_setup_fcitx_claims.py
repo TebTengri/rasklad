@@ -392,6 +392,57 @@ class Claims(Base):
             self.setup.install(True, single_layout=True)
         self.assertEqual(fake.items, [US, RU], out.getvalue())
 
+    def test_rollback_never_revives_a_cleared_earlier_claim(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([DE, US])
+        state = self.setup.new_state()
+        self.setup.set_claim(state, 'Default', [list(US)])  # an earlier install's us
+        self.setup.save_state(state)
+        bus = fake.bus()
+        first = bus['group']
+        calls = iter(range(100))
+
+        def group():
+            if next(calls) == 2:  # the last check: us gone (and ru too)
+                fake.items = [DE]
+            return first()
+        bus['group'] = group
+        self.setup.fcitx = lambda: bus
+        self.errors_after()
+        back = [True]
+
+        def reload(argv, timeout=5):  # the user adds us back before the rollback
+            if back[0]:
+                back[0] = False
+                fake.items = [DE, US]
+        self.setup.run = reload
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.setup.install(True, single_layout=True)
+        self.assertEqual(self.claim(), [])
+        self.revert_with(fake)
+        self.assertEqual(fake.items, [DE, US])
+
+    def test_other_tracked_group_read_while_waiting_is_settled(self):
+        fake = FakeFcitx([US])
+        self.install_with(fake)  # Default: ru ours
+        work = FakeFcitx([PINYIN])
+        work.name = 'Work'
+        state = self.setup.load_state()
+        self.setup.set_claim(state, 'Work', [list(US)])  # an older claim in Work
+        self.setup.save_state(state)
+        fake.items = [US]  # ru removed from Default: missing again
+        bus = fake.bus()
+        calls = iter(range(100))
+
+        def group():  # Work becomes current while the question waits
+            return fake.info('Default') if next(calls) == 0 else work.info('Work')
+        bus['group'] = group
+        self.setup.fcitx = lambda: bus
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.setup.install(True)
+        self.assertIn('another group became current', out.getvalue())
+        self.assertEqual(self.claim('Work'), [])  # us is not in Work: not ours
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}

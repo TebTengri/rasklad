@@ -852,11 +852,13 @@ def install(assume_yes, single_layout=False):
     os.makedirs(os.path.dirname(PLUGIN_LINK), exist_ok=True)
     os.symlink(WIDGET, PLUGIN_LINK)
     say("done", "bar-widget-link")
-  run_rows, fcitx_name, prior_rows = [], None, []
+  run_rows, fcitx_name = [], None
   if group[0] == "missing":
     # SYS-272: read again now, not the group from before the question, so a
     # change made while it waited is kept; the default layout is passed through.
     now = bus["group"]()
+    if now and settle_claim(state, now[0], now[1], now[2]):
+      save_state(state)  # whichever group this is: what is seen is settled
     if now is None:
       say("no-fcitx", "fcitx-group", "start Fcitx and run again")
       failed = True
@@ -868,11 +870,11 @@ def install(assume_yes, single_layout=False):
     else:
       name, layout, items = now
       new = [[m, ""] for m in REQUIRED if m not in ids(items)]
-      fcitx_name, prior_rows = name, claimed_rows(state, name)
-      # Rows of ours the user removed or changed since are no longer ours; new
-      # ones are missing now, so never among them. Recorded before the write: an
-      # interruption after it still lets --revert take these rows out.
-      kept = still_ours(prior_rows, items)
+      fcitx_name = name
+      # Settled against this read just above; new rows are missing now, so
+      # never among them. Recorded before the write: an interruption after it
+      # still lets --revert take these rows out.
+      kept = claimed_rows(state, name)
       set_claim(state, name, kept + new)
       save_state(state)
       replied = bus["set_group"](name, layout, items + new)
@@ -946,7 +948,7 @@ def install(assume_yes, single_layout=False):
           if shell_uses_widget():
             say("kept", "fcitx-group", "the bar widget switches between both layouts; kept")
           else:
-            undo_group(state, fcitx_name, run_rows, prior_rows)
+            undo_group(state, fcitx_name, run_rows)
       save_and_drop(state)
       return 1
   return 1 if failed else 0
@@ -1056,25 +1058,23 @@ def input_block_present():
       os.close(fd)
 
 
-def undo_group(state, name, rows, prior):
-  """Auto-rollback of this run's Fcitx change: only the rows this run added are
-  taken out of the group as it is now; the record goes back to the earlier
-  install's rows that are still there."""
+def undo_group(state, name, rows):
+  """Auto-rollback of this run's Fcitx change: only the rows this run added that
+  are still ours are taken out of the group as it is now; whatever else is
+  recorded stays recorded, settled against that same read."""
   bus = fcitx()
   now = bus["group_by"](name) if bus else None
   if now is None:
     say("kept", "fcitx-group", "Fcitx did not answer; run --revert later")
     return
   _, layout, items = now
-  # Only rows still ours: one this run saw removed is the user's if it is back.
+  settle_claim(state, name, layout, items)
+  # A row this run saw removed is the user's if it is back: not ours any more.
   claim = claimed_rows(state, name)
   rows = [r for r in rows if r in claim]
-  remaining = [i for i in items if i not in rows]
-  # The earlier install's rows still there; never this run's (missing before it).
-  prior = [r for r in prior if r not in rows]
-  if remaining == items:
-    set_claim(state, name, still_ours(prior, items))  # already gone
+  if not rows:
     return
+  remaining = [i for i in items if i not in rows]
   if not remaining:
     say("kept", "fcitx-group", "the group would be left empty; left as is")
     return
@@ -1082,7 +1082,7 @@ def undo_group(state, name, rows, prior):
     say("failed", "fcitx-group")
     return
   say("restored", "fcitx-group")
-  set_claim(state, name, still_ours(prior, remaining))
+  set_claim(state, name, [r for r in claim if r not in rows])
 
 
 def restore_fcitx(state):
