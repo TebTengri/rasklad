@@ -940,13 +940,19 @@ private:
             const bool ok = (fix && *fix == other && other != typed) ||
                             (other != typed && rasklad::frequent::isFrequent(other, s.typedRu));
             if (ok) {
-                if (pass == 0) { s.converted = true; whole = true; result = s.shown(); }
+                if (pass == 0) {
+                    s.converted = true; whole = true;
+                    std::string shown = s.shown();
+                    result = shown; // copied, then wiped: a moved short temporary keeps its bytes
+                    wipeString(shown);
+                }
                 else {
                     // Built in place and wiped: no unwiped temporaries (SYS-272).
                     std::string tail = w.substr(cut);
                     std::string both = rasklad::joined(other, tail);
-                    result = LabState::form(both, false, s.upper);
-                    wipeString(tail); wipeString(both);
+                    std::string shown = LabState::form(both, false, s.upper);
+                    result = shown;
+                    wipeString(tail); wipeString(both); wipeString(shown);
                 }
             }
             if (fix) wipeString(*fix);
