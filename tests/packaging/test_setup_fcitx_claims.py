@@ -366,6 +366,32 @@ class Claims(Base):
         self.assertIn('Fcitx does not have both layouts', out.getvalue())
         self.assertEqual(self.claim(), [])
 
+    def test_rollback_spares_a_row_this_run_saw_removed(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([US])
+        bus = fake.bus()
+        first = bus['group']
+        calls = iter(range(100))
+
+        def group():
+            if next(calls) == 2:  # the last check before input.lua: ru gone
+                fake.items = [US]
+            return first()
+        bus['group'] = group
+        self.setup.fcitx = lambda: bus
+        self.errors_after()
+        back = [True]
+
+        def reload(argv, timeout=5):  # the user adds ru back before the rollback
+            if back[0]:
+                back[0] = False
+                fake.items = [US, RU]
+        self.setup.run = reload
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.setup.install(True, single_layout=True)
+        self.assertEqual(fake.items, [US, RU], out.getvalue())
+
     def test_record_claiming_other_methods_is_refused(self):
         state = self.setup.new_state()
         state['fcitx'] = {'groups': {'Default': {'added': [list(DE)]}}}

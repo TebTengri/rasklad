@@ -1066,6 +1066,9 @@ def undo_group(state, name, rows, prior):
     say("kept", "fcitx-group", "Fcitx did not answer; run --revert later")
     return
   _, layout, items = now
+  # Only rows still ours: one this run saw removed is the user's if it is back.
+  claim = claimed_rows(state, name)
+  rows = [r for r in rows if r in claim]
   remaining = [i for i in items if i not in rows]
   # The earlier install's rows still there; never this run's (missing before it).
   prior = [r for r in prior if r not in rows]
