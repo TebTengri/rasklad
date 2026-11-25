@@ -319,6 +319,25 @@ class Install(Base):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.setup.revert(), 0)
 
+    def test_revert_keeps_controls_for_an_untracked_layout_block(self):
+        # SYS-272: the record is lost, Fcitx's group is reset and a new --install
+        # records only the Fcitx row; the old input.lua block still keeps Hyprland
+        # on us. --revert must not take keyboard-ru away.
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        block = self.input.read_bytes()
+        Path(self.setup.STATE_FILE).unlink()
+        fake2 = FakeFcitx([('keyboard-us', '')])
+        self.install(fake2)  # re-adds keyboard-ru; the block is not recorded again
+        self.assertEqual(self.input.read_bytes(), block)
+        self.setup.fcitx = fake2.bus
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertRegex(out.getvalue(), r'untracked\s+input\.lua')
+        self.assertIn('keyboard-ru', [name for name, _ in fake2.items])
+
     def test_check_reports_rasklad_off(self):
         # Owner decision 2026-11-25: the addon is off until turned on in the window;
         # check says so and treats it as a choice, not a fault.

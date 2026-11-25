@@ -1489,6 +1489,12 @@ def revert():
     input_kept, input_left = False, True
     copy = forget_entry(state, INPUT)
     say("reset", os.path.basename(INPUT), "our block is gone; left as is (old copy: %s)" % copy)
+  if not had_input and input_block_present():
+    # SYS-272: our layout block without an entry (the record was lost and a
+    # later --install made a new one): Hyprland still keeps one layout, so every
+    # control stays, Fcitx's layouts included, until the block is removed.
+    say("untracked", os.path.basename(INPUT), "a Rasklad layout block this record does not cover")
+    input_kept = True
   restored_hypr = had_input and not input_kept and not input_left
   session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
   if session != "none":
