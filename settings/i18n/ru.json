@@ -13,7 +13,7 @@
     "Automatic correction": "Автоисправление",
     "Another file or link named rasklad.layout is in the Omarchy plugins folder; left as is.": "В папке плагинов Omarchy уже есть другой файл или ссылка rasklad.layout; оставлено как есть.",
     "The settings file is a link (for example, to dotfiles); Rasklad does not change it.": "Файл настроек — ссылка (например, на dotfiles); Rasklad его не меняет.",
-    "Hyprland has layouts besides us and ru; they are left as they are.": "В Hyprland есть раскладки кроме us и ru; они оставлены как есть.",
+    "Hyprland layouts are not exactly us and ru (or us is not a Latin variant); they are left as they are.": "Раскладки Hyprland — не ровно us и ru (или us не латинский); они оставлены как есть.",
     "You edited the Rasklad lines in input.lua; they are left as they are.": "Вы изменили строки Rasklad в input.lua; они оставлены как есть.",
     "Set up by hand or by another tool; left as is.": "Настроено вручную или другой программой; оставлено как есть.",
     "Rasklad is on": "Rasklad включён",

@@ -566,7 +566,7 @@ ApplicationWindow {
                                             visible: text !== ""
                                             text: why === "link-taken" ? qsTr("Another file or link named rasklad.layout is in the Omarchy plugins folder; left as is.")
                                                 : why === "symlink" ? qsTr("The settings file is a link (for example, to dotfiles); Rasklad does not change it.")
-                                                : why === "other-layouts" ? qsTr("Hyprland has layouts besides us and ru; they are left as they are.")
+                                                : why === "other-layouts" ? qsTr("Hyprland layouts are not exactly us and ru (or us is not a Latin variant); they are left as they are.")
                                                 : why === "edited" ? qsTr("You edited the Rasklad lines in input.lua; they are left as they are.")
                                                 : why === "other" ? qsTr("Set up by hand or by another tool; left as is.") : ""
                                             font.pixelSize: 11

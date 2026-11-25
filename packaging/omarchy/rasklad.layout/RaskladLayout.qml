@@ -74,9 +74,11 @@ BarWidget {
   Process {
     id: toggle
     command: ["/usr/bin/rasklad-layout-toggle"]
-    onExited: function(exitCode) { if (exitCode !== 0) root.fail("toggle") }
+    onExited: function(exitCode) { if (exitCode !== 0) root.fail("toggle"); else root.clearFail("toggle") }
   }
   function fail(what) { root.failed = what; failedTimer.restart() }
+  // A later success of the same action takes the mark off at once.
+  function clearFail(what) { if (root.failed === what) { root.failed = ""; failedTimer.stop() } }
   Timer { id: failedTimer; interval: 3000; onTriggered: root.failed = "" }
 
   // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
@@ -85,7 +87,7 @@ BarWidget {
     id: pause
     command: ["/usr/bin/rasklad-pause-toggle"]
     // While Rasklad is off the middle click does nothing by design: no complaint.
-    onExited: function(exitCode) { if (exitCode !== 0 && root.correction !== "off") root.fail("pause") }
+    onExited: function(exitCode) { if (exitCode !== 0 && root.correction !== "off") root.fail("pause"); else if (exitCode === 0) root.clearFail("pause") }
   }
 
   visible: label !== ""

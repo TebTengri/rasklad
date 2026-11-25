@@ -211,6 +211,18 @@ class Refresh(Base):
         self.assertTrue(ours(B, b'local s = "a\\"b" .. "rasklad"\n'))
         # Our block with its BEGIN and END comments taken out still counts.
         self.assertTrue(ours(B, ('local rasklad = "%s"\n' % self.setup.RULE).encode()))
+        # \z skips a newline inside a string; a long bracket may open after 64 bytes.
+        self.assertTrue(ours(B, b'local s = "a\\z\n  b" .. "rasklad"\n'))
+        self.assertFalse(ours(B, b'--[' + b'=' * 80 + b'[ rasklad ]' + b'=' * 80 + b']\nlocal x = 1\n'))
+
+    def test_bindings_plan_reads_code_not_comments(self):
+        plan = self.setup.bindings_plan
+        line = ('local rasklad = "%s"\n' % self.setup.RULE).encode()
+        # A commented-out loader is not installed: a new block is added.
+        self.assertEqual(plan(b'--[[\n' + line + b']]\n')[0], 'missing')
+        # A live loader in another form, with no BEGIN line, is: nothing added.
+        other = ("local rasklad = '%s'\ndofile(rasklad)\n" % self.setup.RULE).encode()
+        self.assertEqual(plan(other), ('ok', None))
 
     def test_reload_with_config_errors_does_not_count(self):
         self.setup = load_setup(self.tmp.name)

@@ -47,7 +47,6 @@ EDITED_ADVICE = ("the layout block was edited after install; left as is "
                  "(--revert keeps an edited input.lua too)")
 LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
-RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
 # SYS-268: us variants that type Latin letters (the lock screen keeps only us).
@@ -486,8 +485,10 @@ def bindings_plan(data=None):
   if data is None:
     data = read(BINDINGS)
   text = data.decode(errors="replace")
-  # SYS-272: a BEGIN comment left alone (code taken out) is not a working block.
-  if (BEGIN in text and ours_in(BINDINGS, data)) or RULE_LINE.search(text):
+  # SYS-272: the same test as --revert (ours_in): rasklad in code, not in a
+  # comment. A commented-out loader is not installed; a loader of any other form
+  # (no BEGIN line, another quoting) is, so a second one is never added.
+  if ours_in(BINDINGS, data):
     return "ok", None
   block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
            "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
@@ -738,6 +739,9 @@ def names_widget(data):
   return False
 
 
+LONG_OPEN = re.compile(rb"\[(=*)\[")
+
+
 def lua_code(data):
   """Lua source with its comments taken out (strings kept), as bytes. SYS-272:
   a user's own comment that mentions rasklad is not our change."""
@@ -745,7 +749,7 @@ def lua_code(data):
 
   def long_end(at):
     # [[ or [=*[ opening at `at`: the index past its closing bracket, or None.
-    m = re.match(rb"\[(=*)\[", data[at:at + 64])
+    m = LONG_OPEN.match(data, at)
     if not m:
       return None
     close = b"]" + m.group(1) + b"]"
@@ -764,7 +768,13 @@ def lua_code(data):
     elif c in (b'"', b"'"):
       j = i + 1
       while j < n and data[j:j + 1] != c and data[j:j + 1] != b"\n":
-        j += 2 if data[j:j + 1] == b"\\" else 1
+        if data.startswith(b"\\z", j):
+          # \z skips the whitespace after it, newlines included.
+          j += 2
+          while j < n and data[j:j + 1] in b" \t\r\n\v\f":
+            j += 1
+        else:
+          j += 2 if data[j:j + 1] == b"\\" else 1
       out += data[i:j + 1]
       i = j + 1
     elif c == b"[" and long_end(i) is not None:
