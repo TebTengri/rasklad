@@ -30,7 +30,8 @@ class RunnerGuards(unittest.TestCase):
         pairs=[(argv[i+1],argv[i+2]) for i,a in enumerate(argv) if a=='--ro-bind']
         self.assertEqual({target for source,target in pairs}, {'/usr','/lab/runner.py','/lab/rasklad-ime-lab','/lab/addons/raskladlab.so','/lab/addon.conf','/lab/session-bus.conf'})
         self.assertNotIn((str(ROOT),'/lab'),pairs)
-        self.assertFalse(any('/home/user' in source for source,target in pairs))
+        home=os.path.expanduser('~')  # the real host home: never mounted
+        self.assertFalse(any(source==home or source.startswith(home+'/') for source,target in pairs if not source.startswith(str(ROOT))))
 
     def test_identity_files_are_synthetic_not_host_mounts(self):
         files={name:Path('/generated')/name for name in ('passwd','group','machine-id')}
