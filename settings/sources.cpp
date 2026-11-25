@@ -13,7 +13,9 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
+#include <QDBusError>
 #include <QDBusMessage>
+#include <QElapsedTimer>
 #include <QDBusVariant>
 
 #include <sys/socket.h>
@@ -32,12 +34,27 @@ constexpr int kTimeoutMs = 800; // the UI waits on these calls; Fcitx answers in
 const QString kService = QStringLiteral("org.fcitx.Fcitx5");
 const QString kUri = QStringLiteral("fcitx://config/addon/rasklad");
 
+// SYS-272: a hung Fcitx would freeze the window for every call of a refresh in
+// turn. After one call times out, the calls of the next few seconds fail at once
+// (as if Fcitx were gone), so a refresh waits at most one timeout.
+constexpr qint64 kStallMs = 3000;
+QElapsedTimer g_stalled; // invalid while Fcitx answers
+
 QDBusMessage call(const QString &method, const QVariantList &args = {})
 {
     QDBusMessage m = QDBusMessage::createMethodCall(kService, QStringLiteral("/controller"),
                                                     QStringLiteral("org.fcitx.Fcitx.Controller1"), method);
     m.setArguments(args);
-    return QDBusConnection::sessionBus().call(m, QDBus::Block, kTimeoutMs);
+    if (g_stalled.isValid() && g_stalled.elapsed() < kStallMs)
+        return m.createErrorReply(QDBusError::NoReply, QStringLiteral("Fcitx did not answer recently"));
+    const QDBusMessage r = QDBusConnection::sessionBus().call(m, QDBus::Block, kTimeoutMs);
+    if (r.type() == QDBusMessage::ErrorMessage &&
+        (r.errorName() == QLatin1String("org.freedesktop.DBus.Error.NoReply") ||
+         r.errorName() == QLatin1String("org.freedesktop.DBus.Error.Timeout")))
+        g_stalled.start();
+    else
+        g_stalled.invalidate();
+    return r;
 }
 
 // Nested a{sv} as QVariantMap, string leaves as QString.

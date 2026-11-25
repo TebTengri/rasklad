@@ -486,7 +486,8 @@ def bindings_plan(data=None):
   if data is None:
     data = read(BINDINGS)
   text = data.decode(errors="replace")
-  if BEGIN in text or RULE_LINE.search(text):
+  # SYS-272: a BEGIN comment left alone (code taken out) is not a working block.
+  if (BEGIN in text and ours_in(BINDINGS, data)) or RULE_LINE.search(text):
     return "ok", None
   block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
            "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
@@ -737,6 +738,45 @@ def names_widget(data):
   return False
 
 
+def lua_code(data):
+  """Lua source with its comments taken out (strings kept), as bytes. SYS-272:
+  a user's own comment that mentions rasklad is not our change."""
+  out, i, n = bytearray(), 0, len(data)
+
+  def long_end(at):
+    # [[ or [=*[ opening at `at`: the index past its closing bracket, or None.
+    m = re.match(rb"\[(=*)\[", data[at:at + 64])
+    if not m:
+      return None
+    close = b"]" + m.group(1) + b"]"
+    end = data.find(close, at + m.end())
+    return n if end == -1 else end + len(close)
+
+  while i < n:
+    c = data[i:i + 1]
+    if data.startswith(b"--", i):
+      end = long_end(i + 2)
+      if end is None:
+        nl = data.find(b"\n", i)
+        end = n if nl == -1 else nl
+      out += b" "
+      i = end
+    elif c in (b'"', b"'"):
+      j = i + 1
+      while j < n and data[j:j + 1] != c and data[j:j + 1] != b"\n":
+        j += 2 if data[j:j + 1] == b"\\" else 1
+      out += data[i:j + 1]
+      i = j + 1
+    elif c == b"[" and long_end(i) is not None:
+      end = long_end(i)
+      out += data[i:end]
+      i = end
+    else:
+      out += c
+      i += 1
+  return bytes(out)
+
+
 def ours_in(path, data):
   """Does this file still carry our change? (SYS-270) Any trace counts: the
   BEGIN comment alone may have been taken out while what follows still runs."""
@@ -745,7 +785,12 @@ def ours_in(path, data):
   # Lua files: every block version and the rule loader name rasklad (in a
   # comment, a variable or the rule's path, even split by concatenation as
   # "rasklad" .. "-fcitx5"). A file with every mention of rasklad taken out is
-  # the user's own configuration, whatever it sets.
+  # the user's own configuration, whatever it sets. SYS-272: in bindings.lua only
+  # code counts (every block loads the rule by a path in code), so a user's
+  # comment about rasklad no longer keeps the file ours. input.lua keeps any
+  # trace: an older block may be left with only its comment and its setting.
+  if path == BINDINGS:
+    return b"rasklad" in lua_code(data).lower()
   return b"rasklad" in data.lower()
 
 

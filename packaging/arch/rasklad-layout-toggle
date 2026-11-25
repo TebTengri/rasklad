@@ -1,18 +1,20 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
 # Rasklad: switch the focused window's Fcitx layout between keyboard-us and
-# keyboard-ru. Run by the double-Alt Hyprland bind (double-alt.lua). Anything
-# else current, or Fcitx not running, does nothing. Reads and sends only the
-# input method names, never text.
+# keyboard-ru. Run by the double-Alt Hyprland bind (double-alt.lua) and the bar
+# widget's click. Anything else current, or Fcitx not running, does nothing.
+# SYS-272: exit status 1 when the layout did not change, so the widget can say so
+# (Hyprland ignores it). Reads and sends only the input method names, never text.
 call() {
   busctl --user --timeout=1 call org.fcitx.Fcitx5 /controller org.fcitx.Fcitx.Controller1 "$@"
 }
 case $(call CurrentInputMethod 2>/dev/null) in
   's "keyboard-us"') next=keyboard-ru ;;
   's "keyboard-ru"') next=keyboard-us ;;
-  *) exit 0 ;;
+  *) exit 1 ;;
 esac
-# Fcitx ignores a method that is not in the current group.
-call SetCurrentIM s "$next" >/dev/null 2>&1 || exit 0
+# Fcitx ignores a method that is not in the current group: read it back.
+call SetCurrentIM s "$next" >/dev/null 2>&1 || exit 1
 # SYS-272: the bar widget's helper shows the new layout now, not on its next poll.
 busctl --user emit /org/rasklad/Widget org.rasklad.Widget1 Poke >/dev/null 2>&1 || true
+[ "$(call CurrentInputMethod 2>/dev/null)" = "s \"$next\"" ]

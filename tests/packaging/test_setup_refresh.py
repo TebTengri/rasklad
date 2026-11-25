@@ -200,6 +200,18 @@ class Refresh(Base):
         split = b'local r = "/usr/share/rasklad" .. "-fcitx5/hyprland/double-alt.lua"\ndofile(r)\n'
         self.assertTrue(self.setup.ours_in(self.setup.BINDINGS, split))
 
+    def test_a_comment_about_rasklad_is_not_ours(self):
+        ours = self.setup.ours_in
+        B = self.setup.BINDINGS
+        self.assertFalse(ours(B, b'-- I use Rasklad for layouts\nbind("SUPER", "Q", "kill")\n'))
+        self.assertFalse(ours(B, b'--[[ rasklad\nnotes ]]\nlocal x = 1\n'))
+        self.assertFalse(ours(B, b'--[==[ rasklad ]] still comment ]==]\nlocal x = 1\n'))
+        self.assertTrue(ours(B, b'local s = "-- not a comment rasklad"\n'))
+        self.assertTrue(ours(B, b'local s = [[rasklad]] -- c\n'))
+        self.assertTrue(ours(B, b'local s = "a\\"b" .. "rasklad"\n'))
+        # Our block with its BEGIN and END comments taken out still counts.
+        self.assertTrue(ours(B, ('local rasklad = "%s"\n' % self.setup.RULE).encode()))
+
     def test_reload_with_config_errors_does_not_count(self):
         self.setup = load_setup(self.tmp.name)
         self.setup.run = lambda argv, timeout=5: type('Done', (), {'returncode': 0})()

@@ -31,7 +31,10 @@ BarWidget {
                                : method === "" ? "" : "··"
   // SYS-272: unknown correction state is not shown as the ordinary label: the addon
   // may be missing or not loaded, and then nothing is corrected.
-  readonly property string label: code === "" ? "" : correction === "broken" ? code + "!"
+  // SYS-272: a click that did not go through ("toggle" or "pause"), for 3 s.
+  property string failed: ""
+  readonly property string label: code === "" ? "" : failed !== "" ? code + "×"
+                                : correction === "broken" ? code + "!"
                                 : correction === "" ? code + "?" : code
 
   // One line from rasklad-layout-watch: {"method": "...", "correction": "..."}.
@@ -71,13 +74,18 @@ BarWidget {
   Process {
     id: toggle
     command: ["/usr/bin/rasklad-layout-toggle"]
+    onExited: function(exitCode) { if (exitCode !== 0) root.fail("toggle") }
   }
+  function fail(what) { root.failed = what; failedTimer.restart() }
+  Timer { id: failedTimer; interval: 3000; onTriggered: root.failed = "" }
 
   // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
   // the same Fcitx instance. The widget shows only what the watcher reports.
   Process {
     id: pause
     command: ["/usr/bin/rasklad-pause-toggle"]
+    // While Rasklad is off the middle click does nothing by design: no complaint.
+    onExited: function(exitCode) { if (exitCode !== 0 && root.correction !== "off") root.fail("pause") }
   }
 
   visible: label !== ""
@@ -92,7 +100,9 @@ BarWidget {
     dimmed: root.correction === "paused" || root.correction === "off" || root.correction === ""
     fontSize: Style.font.caption
     horizontalMargin: 6
-    tooltipText: strings.t(root.correction === "on" ? "tooltip.on"
+    tooltipText: strings.t(root.failed === "toggle" ? "tooltip.toggleFailed"
+                         : root.failed === "pause" ? "tooltip.pauseFailed"
+                         : root.correction === "on" ? "tooltip.on"
                          : root.correction === "paused" ? "tooltip.paused"
                          : root.correction === "broken" ? "tooltip.broken"
                          : root.correction === "off" ? "tooltip.off"
