@@ -227,11 +227,20 @@ class Refresh(Base):
         # A live loader in another form, with no BEGIN line, is: nothing added.
         other = ("local rasklad = '%s'\ndofile(rasklad)\n" % self.setup.RULE).encode()
         self.assertEqual(plan(other), ('ok', None))
-        # A mention of rasklad is not a loader.
-        self.assertEqual(plan(b'local label = "Rasklad is useful"\n')[0], 'missing')
+        # Rasklad in code that is not a plain loader: set up by hand, left as is.
+        self.assertEqual(plan(b'local label = "Rasklad is useful"\n'), ('other', None))
+        self.assertEqual(plan(line), ('other', None))  # the path, never loaded
+        cut = self.setup.RULE.index('rasklad') + len('rasklad')
+        split = ('local p = "%s" .. "%s"\ndofile(p)\n' % (self.setup.RULE[:cut], self.setup.RULE[cut:])).encode()
+        self.assertEqual(plan(split), ('other', None))
+        self.assertEqual(plan(b'local x = 1\n')[0], 'missing')
         # CR-only line ends: a line comment ends at CR.
-        self.assertEqual(plan(b'-- note\r' + line.replace(b'\n', b'\r'))[0], 'ok')
-        self.assertEqual(plan(b'-- ' + line.replace(b'\n', b'\r'))[0], 'missing')
+        load = line + b'dofile(rasklad)\n'
+        self.assertEqual(plan(b'-- note\r' + load.replace(b'\n', b'\r'))[0], 'ok')
+        # The commented path line ends at CR: the dofile line after it is code.
+        self.assertEqual(plan(b'-- ' + load.replace(b'\n', b'\r'))[0], 'other')
+        # An escaped CRLF inside a string does not open a comment on the next line.
+        self.assertEqual(plan(b'local s = "a\\\r\n--[[ b"\n' + load)[0], 'ok')
 
     def test_recordless_traces(self):
         s = self.setup

@@ -87,10 +87,10 @@ BarWidget {
   Process {
     id: pause
     command: ["/usr/bin/rasklad-pause-toggle"]
-    // Off or broken, the middle click does nothing by design (the tooltip says
-    // why): a complaint only where pausing is possible.
+    // Exit 3: off or not verified, nothing to pause by design (the tooltip says
+    // why). Only a Fcitx failure (1) is marked, whatever the watcher shows now.
     onExited: function(exitCode) {
-      if (exitCode !== 0 && (root.correction === "on" || root.correction === "paused")) root.fail("pause")
+      if (exitCode === 1) root.fail("pause")
       else if (exitCode === 0) root.clearFail("pause")
     }
   }

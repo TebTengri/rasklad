@@ -485,12 +485,15 @@ def bindings_plan(data=None):
   if data is None:
     data = read(BINDINGS)
   text = data.decode(errors="replace")
-  # SYS-272: installed = the rule's path in Lua code (not in a comment). A
-  # commented-out loader is not; a loader of another form that names the path
-  # (no BEGIN line, another quoting) is, so a second one is not added. A mere
-  # mention of rasklad is not a loader. (--revert still keeps any trace.)
-  if RULE.encode() in lua_code(data):
+  # SYS-272: Lua is not evaluated, so only a plain case counts as installed:
+  # the rule's path and a dofile/loadfile in code (comments taken out). Any
+  # other rasklad in code (the path built by concatenation, a string never
+  # loaded) is "other": set up by hand, left as is, never a second loader.
+  code = lua_code(data)
+  if RULE.encode() in code and re.search(rb"\b(dofile|loadfile)\b", code):
     return "ok", None
+  if b"rasklad" in code.lower():
+    return "other", None
   block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
            "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
            "local rasklad = \"%s\"\n"
@@ -638,7 +641,9 @@ def check():
     else:
       say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
-  report(bindings_plan()[0], "double-alt")
+  alt = bindings_plan()[0]
+  report(alt, "double-alt", "Rasklad lines in bindings.lua that setup did not write; left as is"
+         if alt == "other" else "")
   try:
     written = load_state().get("input_block")
   except Refused:
@@ -775,6 +780,8 @@ def lua_code(data):
           j += 2
           while j < n and data[j:j + 1] in b" \t\r\n\v\f":
             j += 1
+        elif data[j:j + 1] == b"\\" and data[j + 1:j + 3] in (b"\r\n", b"\n\r"):
+          j += 3  # an escaped CRLF (or LFCR) is one line break in the string
         else:
           j += 2 if data[j:j + 1] == b"\\" else 1
       out += data[i:j + 1]

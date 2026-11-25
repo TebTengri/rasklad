@@ -564,7 +564,6 @@ ApplicationWindow {
                                         // SYS-272: why "set up differently" (fixed strings only).
                                         Label {
                                             id: stateWhy
-                                            Accessible.ignored: true
                                             readonly property string why: stateRow.modelData.state === "other" ? (stateRow.modelData.why || "") : ""
                                             visible: text !== ""
                                             text: why === "link-taken" ? qsTr("Another file or link named rasklad.layout is in the Omarchy plugins folder; left as is.")
