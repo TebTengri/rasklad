@@ -84,7 +84,7 @@ class Pin(unittest.TestCase):
         old_commit = json.loads((ROOT / 'data/sources.json').read_text())['commit']
         old_dic = sha((PROFILE / 'build/experiment-data/en.dic').read_bytes())
         old_model = sha((PROFILE / 'build/experiment-002-artifacts/detector-model.rskn').read_bytes())
-        self.tool.pin(NEW, root=self.root)
+        self.tool.pin_into(NEW, self.root)
         new_dic = sha(self.source['build/experiment-data/en.dic'])
         new_model = sha((self.work / 'release/build/experiment-002-artifacts/detector-model.rskn').read_bytes())
         for rel in ('src/profileverify.cpp', 'data/product-profile-sources.json', 'data/morphology-003-sources.json'):
@@ -113,7 +113,7 @@ class Pin(unittest.TestCase):
     def test_refuses_the_same_commit(self):
         old_commit = json.loads((ROOT / 'data/sources.json').read_text())['commit']
         with self.assertRaises(SystemExit):
-            self.tool.pin(old_commit, root=self.root)
+            self.tool.pin_into(old_commit, self.root)
 
 
 class Steps(unittest.TestCase):
@@ -149,8 +149,81 @@ class Steps(unittest.TestCase):
         self.assertTrue(self.tool.worse(0.65, 0.63, False, 0.01))
         self.assertFalse(self.tool.worse(0.65, 0.70, False, 0.01))
         self.assertTrue(self.tool.worse(0.0, 0.0001, True, 0.0))  # ambiguous words never change
-        rates = self.tool.rates(json.loads((ROOT / 'docs/results/experiment-002.json').read_text()))
+        part = {'valid': {'count': 10, 'falseChangeRate': 0.0},
+                'wrong': {'count': 10, 'recoveryRate': 0.9, 'wrongConversionRate': 0.0}}
+        unit = dict(part, byIntendedLanguage={'en': part, 'ru': part})
+        report = {'loaded': True, 'methods': {'production': {'occurrences': unit, 'uniqueTypes': unit}}}
+        rates = self.tool.rates(report)
         self.assertEqual(len(rates), len(self.tool.SCOPES) * len(self.tool.HEADLINE) * 2)
+
+    def test_evaluate_stops_on_a_profile_the_addon_rejects(self):
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp)
+        fake = tmp / 'product_eval'
+        fake.write_text('#!/bin/sh\necho \'{"loaded":false,"error":"hash mismatch"}\'\nexit 3\n')
+        fake.chmod(0o755)
+        with self.assertRaises(SystemExit) as raised:
+            self.tool.evaluate(fake, tmp, tmp, 'new')
+        self.assertIn('reject', str(raised.exception))
+
+
+class Gates(unittest.TestCase):
+    """pin writes nothing without a passing compare on the same HEAD and inputs."""
+
+    def setUp(self):
+        self.tool = load('update_dictionaries', 'tools/update_dictionaries.py')
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.tool.work_dir = lambda commit: self.tmp
+        self.tool.git_head = lambda: 'a' * 40
+        self.tool.pin_into = lambda commit, root: self.fail('pin_into must not run')
+
+    def write(self, **record):
+        (self.tmp / 'compare.json').write_text(json.dumps(dict({'commit': NEW, 'head': 'a' * 40}, **record)))
+
+    def refused(self, needle):
+        with self.assertRaises(SystemExit) as raised:
+            self.tool.pin(NEW)
+        self.assertIn(needle, str(raised.exception))
+
+    def test_without_compare(self):
+        self.refused('run compare first')
+
+    def test_after_a_failed_compare(self):
+        self.write(passed=False)
+        self.refused('did not pass')
+
+    def test_after_head_moved(self):
+        self.write(passed=True, head='b' * 40)
+        self.refused('HEAD moved')
+
+    def test_after_the_work_files_changed(self):
+        self.tool.inputs = lambda work: {'release/x': '1'}
+        self.write(passed=True, inputs={'release/x': '0'})
+        self.refused('changed since compare')
+
+
+class WorkDir(unittest.TestCase):
+    def setUp(self):
+        self.tool = load('update_dictionaries', 'tools/update_dictionaries.py')
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.tool.ROOT = self.tmp / 'repo'
+        (self.tool.ROOT / 'build').mkdir(parents=True)
+        (self.tmp / 'elsewhere').mkdir()
+
+    def test_a_symlinked_component_is_refused(self):
+        (self.tool.ROOT / 'build/dict-update').symlink_to(self.tmp / 'elsewhere')
+        with self.assertRaises(SystemExit):
+            self.tool.work_dir(NEW)
+        (self.tool.ROOT / 'build/dict-update').unlink()
+        (self.tool.ROOT / 'build/dict-update').mkdir()
+        (self.tool.ROOT / 'build/dict-update' / NEW[:12]).symlink_to(self.tmp / 'elsewhere')
+        with self.assertRaises(SystemExit):
+            self.tool.work_dir(NEW)
+
+    def test_a_plain_path_is_accepted(self):
+        self.assertEqual(self.tool.work_dir(NEW), self.tool.ROOT / 'build/dict-update' / NEW[:12])
 
 if __name__ == '__main__':
     unittest.main()

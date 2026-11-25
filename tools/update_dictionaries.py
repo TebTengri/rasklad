@@ -14,10 +14,16 @@ and the docs). An update is an ordinary reviewed change made in five steps:
   build   --commit SHA            control .aff, evaluation sets, model and word
                                   list (detector_benchmark --dictionaries new),
                                   release profile; nothing outside the work dir
-  compare --commit SHA            the new dictionaries against the pinned ones,
-                                  both on the same fresh export; exits 1 on a
-                                  regression beyond the allowed margin
-  pin     --commit SHA            writes the new pins into the repository
+  compare --commit SHA            writes the new pins into a copy of HEAD, builds
+                                  tools/product_eval from it and from HEAD (the
+                                  addon's loader and router, pins compiled in)
+                                  and runs both profiles on the same fresh export;
+                                  exits 1 on a regression beyond the allowed
+                                  margin, stops if the addon would reject the
+                                  new profile
+  pin     --commit SHA            after a passing compare on the same HEAD and
+                                  unchanged work files: writes exactly the files
+                                  compare measured (checked first, then written)
 
 After `pin`: rebuild, run the tests and the stand on the new profile
 (tools/build_arch_package.sh build/dict-update/<commit12>/release), review the
@@ -33,11 +39,14 @@ import bz2
 import datetime
 import hashlib
 import importlib.util
+import io
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -77,9 +86,25 @@ def commit_arg(value):
 
 
 def work_dir(commit):
-    if (ROOT / 'build').is_symlink():
-        raise SystemExit('build/ is a symlink')
-    return ROOT / 'build' / 'dict-update' / commit[:12]
+    """build/dict-update/<commit>: no component a symlink, the path inside build/."""
+    path = ROOT
+    for part in ('build', 'dict-update', commit[:12]):
+        path = path / part
+        if path.is_symlink():
+            raise SystemExit('%s is a symlink' % path)
+    if not path.resolve().is_relative_to((ROOT / 'build').resolve()):
+        raise SystemExit('%s is outside build/' % path)
+    return path
+
+
+def fresh_dir(path):
+    """An empty directory of our own under the work directory."""
+    if path.is_symlink():
+        raise SystemExit('%s is a symlink' % path)
+    if path.exists():
+        shutil.rmtree(path)
+    path.mkdir(parents=True)
+    return path
 
 
 def load_json(path):
@@ -142,7 +167,7 @@ def fetch(commit, network):
         raise SystemExit("fetch downloads from the network: pass --network (only with the owner's OK)")
     work = work_dir(commit)
     down = work / 'download'
-    if down.exists():
+    if os.path.lexists(down):
         raise SystemExit('already fetched: %s (remove it to fetch again)' % down)
     down.mkdir(parents=True)
     files = {}
@@ -277,13 +302,17 @@ def build(commit, accept_notices):
 
 # ---- compare -----------------------------------------------------------------
 
-# The product's method (exactFullThenTwoScore) and its headline rates, overall and
-# per language, by occurrence and by unique word: (rate, lower is better, margin).
-METHOD = 'exactFullThenTwoScore'
-HEADLINE = (('valid/falseChangeRate', True, 0.0005),      # a correct word changed
+# The gate runs the product's own decision path (tools/product_eval: the addon's
+# profile loader with the pins compiled in, then route(SafeConfirmed)) for the
+# pinned profile and for the new one, on the same fresh export. The new pins are
+# first written into a copy of HEAD (pin_into), so a profile the addon would
+# reject fails here, and a pin that does not apply stops before the repository.
+# Headline rates, overall and per language, by occurrence and by unique word:
+# (rate, lower is better, margin).
+METHOD = 'production'
+HEADLINE = (('valid/falseChangeRate', True, 0.0005),      # a correct word changed (ambiguous ones too)
             ('wrong/recoveryRate', False, 0.01),          # a mistyped word fixed
-            ('ambiguousValid/changeRate', True, 0.0),     # never change an ambiguous word
-            ('ambiguousWrong/changeRate', True, 0.0))
+            ('wrong/wrongConversionRate', True, 0.0))     # a mistyped word changed into another word
 SCOPES = ('', 'byIntendedLanguage/en/', 'byIntendedLanguage/ru/')
 
 
@@ -306,12 +335,104 @@ def worse(old, new, lower, margin):
     return (new - old > margin) if lower else (old - new > margin)
 
 
-def compare(commit):
-    # Both runs score the same fresh export: only the dictionaries differ.
-    old = rates(load_json(work_dir(commit) / 'baseline-report.json'))
-    new = rates(load_json(work_dir(commit) / 'report.json'))
+def git_head():
+    return subprocess.run(['git', '-C', ROOT, 'rev-parse', 'HEAD'], check=True, capture_output=True,
+                          text=True).stdout.strip()
+
+
+def head_tree(dest, head):
+    """The committed tree at `head` (no local edits) into `dest`."""
+    data = subprocess.run(['git', '-C', ROOT, 'archive', '--format=tar', head], check=True,
+                          capture_output=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+        tar.extractall(dest, filter='data')
+
+
+def profile_files(tree):
+    lines = (tree / 'packaging/arch/profile-files.txt').read_text(encoding='utf-8').splitlines()
+    return [l.strip() for l in lines if l.strip() and not l.lstrip().startswith('#')]
+
+
+def profile_root(dest, tree, build):
+    """The profile as packaged: data/ from `tree`, build/ from `build`."""
+    for rel in profile_files(tree):
+        source = (tree if rel.startswith('data/') else build) / rel
+        if source.is_symlink() or not source.is_file():
+            raise SystemExit('profile file missing: %s' % source)
+        (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, dest / rel)
+    return dest
+
+
+def product_eval(tree, out):
+    """Builds tools/product_eval from `tree` (its pins compiled in)."""
+    fresh_dir(out)
+    run(['qmake6', tree / 'tools/product_eval.pro'], cwd=out, stdout=subprocess.DEVNULL)
+    run(['make', '-j%d' % (os.cpu_count() or 2)], cwd=out, stdout=subprocess.DEVNULL)
+    return out / 'product_eval'
+
+
+def evaluate(binary, root, eval_dir, what):
+    done = subprocess.run([str(binary), '--root', str(root), '--eval-en', str(eval_dir / 'en.tsv'),
+                           '--eval-ru', str(eval_dir / 'ru.tsv')], capture_output=True, text=True)
+    report = json.loads(done.stdout) if done.stdout.strip().startswith('{') else {}
+    if done.returncode == 3:
+        raise SystemExit('compare: the addon would reject the %s profile (%s)' % (what, report.get('error')))
+    if done.returncode != 0 or not report.get('loaded'):
+        raise SystemExit('compare: product_eval failed on the %s profile: %s' % (what, done.stderr.strip()))
+    return report
+
+
+TOUCHED = ('data/sources.json', 'data/evaluation-002-sources.json', 'data/morphology-003-sources.json',
+           'data/product-profile-sources.json', 'data/notices/en_US.README.txt', 'data/notices/ru_RU.README.txt',
+           'src/profileverify.cpp', 'tools/make_release_profile.py', 'tests/app/app_tests.cpp') + TEXT_FILES
+
+
+def touched(commit):
+    return TOUCHED + ('docs/results/dictionary-update-%s.json' % commit[:12],)
+
+
+def changes(commit, pinned, base):
+    """{rel: sha256} of the files `pin_into` changed in `pinned` against `base`."""
+    out = {}
+    for rel in touched(commit):
+        new = pinned / rel
+        if not new.is_file():
+            continue
+        if not (base / rel).is_file() or (base / rel).read_bytes() != new.read_bytes():
+            out[rel] = file_pin(new)[0]
+    return out
+
+
+def inputs(work):
+    """What pin takes from the work directory, as compare saw it."""
+    files = [p for sub in ('profile', 'release') for p in sorted((work / sub).rglob('*')) if p.is_file()]
+    files += [work / 'source-pins.json', work / 'report.json', work / 'eval/en.tsv', work / 'eval/ru.tsv']
+    return {str(p.relative_to(work)): file_pin(p)[0] for p in files}
+
+
+def compare(commit, baseline_profile):
+    work = work_dir(commit)
+    record = work / 'compare.json'
+    if os.path.lexists(record):
+        os.unlink(record)
+    head = git_head()
+    base_tree = fresh_dir(work / 'compare/base-src')
+    head_tree(base_tree, head)
+    new_tree = fresh_dir(work / 'compare/new-src')
+    head_tree(new_tree, head)
+    pin_into(commit, new_tree)  # every replacement applies, or nothing reaches the repository
+    old = evaluate(product_eval(base_tree, work / 'compare/base-bin'),
+                   profile_root(fresh_dir(work / 'compare/base-root'), base_tree, baseline_profile),
+                   work / 'eval', 'pinned')
+    new = evaluate(product_eval(new_tree, work / 'compare/new-bin'),
+                   profile_root(fresh_dir(work / 'compare/new-root'), new_tree, work / 'release'),
+                   work / 'eval', 'new')
+    dump_json(work / 'product-baseline.json', old)
+    dump_json(work / 'product-report.json', new)
+    old, new = rates(old), rates(new)
     if len(old) != len(SCOPES) * len(HEADLINE) * 2:
-        raise SystemExit('compare: the baseline report lacks headline rates')
+        raise SystemExit('compare: the pinned profile report lacks headline rates')
     failed = []
     for name, (value, lower, margin) in sorted(old.items()):
         if name not in new:
@@ -322,7 +443,10 @@ def compare(commit):
         if bad:
             failed.append(name)
         print('%-70s %9.5f %9.5f %s' % (name, value, new[name][0], 'WORSE' if bad else ''))
-    if failed:
+    passed = not failed
+    dump_json(record, {'commit': commit, 'head': head, 'passed': passed,
+                       'changes': changes(commit, new_tree, base_tree), 'inputs': inputs(work)})
+    if not passed:
         print('quality: %d headline rates worse beyond their margin (or missing): do not pin' % len(failed))
         return 1
     print('quality: no headline rate worse beyond its margin')
@@ -358,8 +482,41 @@ def pin_cpp(text, rel, digest, size, where):
     return pattern.sub(put, text)
 
 
-def pin(commit, root=ROOT):
-    """Writes the pins into `root` (the repository; a copy in the tests)."""
+def pin(commit):
+    """Writes into the repository exactly what compare measured, or nothing."""
+    work = work_dir(commit)
+    try:
+        record = load_json(work / 'compare.json')
+    except (OSError, ValueError):
+        raise SystemExit('pin: run compare first')
+    if record.get('commit') != commit or not record.get('passed'):
+        raise SystemExit('pin: compare did not pass for this commit')
+    if record.get('head') != git_head():
+        raise SystemExit('pin: HEAD moved since compare; run compare again')
+    if record.get('inputs') != inputs(work):
+        raise SystemExit('pin: the work directory changed since compare; run compare again')
+    dirty = subprocess.run(['git', '-C', ROOT, 'status', '--porcelain', '--'] + list(touched(commit)),
+                           check=True, capture_output=True, text=True).stdout
+    if dirty.strip():
+        raise SystemExit('pin: local edits in the files it writes:\n' + dirty)
+    staged = fresh_dir(work / 'pin-src')
+    head_tree(staged, record['head'])
+    pin_into(commit, staged)
+    changed = changes(commit, staged, ROOT)
+    if changed != record.get('changes'):
+        raise SystemExit('pin: the pinned files differ from what compare measured')
+    for rel in changed:  # every check passed: now the writes, each atomic
+        target = ROOT / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temp = target.with_name('.%s.pin' % target.name)
+        shutil.copyfile(staged / rel, temp)
+        os.replace(temp, target)
+    print('pinned %s (%d files). Next: bin/build, the tests, tools/build_arch_package.sh %s, the stand; '
+          'then review git diff and send it to independent review.' % (commit, len(changed), work / 'release'))
+
+
+def pin_into(commit, root):
+    """Writes the pins into the tree `root` (a copy of HEAD)."""
     work = work_dir(commit)
     profile, release = work / 'profile', work / 'release'
     stage = profile  # the manifests and notices as built
@@ -438,8 +595,6 @@ def pin(commit, root=ROOT):
 
     # 5. The new quality report beside the pinned one.
     shutil.copyfile(work / 'report.json', root / 'docs/results' / ('dictionary-update-%s.json' % commit[:12]))
-    print('pinned %s. Next: bin/build, the tests, tools/build_arch_package.sh %s, the stand; '
-          'then review git diff and send it to independent review.' % (commit, release))
 
 
 def main():
@@ -448,6 +603,8 @@ def main():
     ap.add_argument('--commit', type=commit_arg, required=True)
     ap.add_argument('--network', action='store_true', help='fetch: allow the download')
     ap.add_argument('--accept-notices', action='store_true', help='build: the changed upstream notices were reviewed')
+    ap.add_argument('--baseline-profile', type=Path, default=ROOT / 'build/release-profile',
+                    help="compare: the pinned profile's build/ tree (default build/release-profile)")
     args = ap.parse_args()
     if args.step == 'plan':
         for url, name in plan(args.commit):
@@ -458,7 +615,7 @@ def main():
     elif args.step == 'build':
         build(args.commit, args.accept_notices)
     elif args.step == 'compare':
-        return compare(args.commit)
+        return compare(args.commit, args.baseline_profile)
     else:
         pin(args.commit)
     return 0
