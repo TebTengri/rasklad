@@ -162,8 +162,8 @@ bool DBusFcitx::writeConfig(const QVariantMap &config)
 namespace {
 const QString kSetupTool = QStringLiteral("/usr/bin/rasklad-setup");
 constexpr qsizetype kMaxSetupOutput = 8192;
-// More than the check's own limits add up to (hyprctl and luac 5 s per call,
-// D-Bus 2 s per call): a slow but working check is not cut off.
+// More than the check's explicit per-call limits add up to (hyprctl and luac
+// 5 s per call, D-Bus 2 s per call).
 constexpr int kSetupTimeoutMs = 60000;
 } // namespace
 

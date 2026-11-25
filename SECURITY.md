@@ -493,7 +493,7 @@ The settings window starts no shell of its own and passes no text the user typed
 - A refresh happens on window focus, at most once every 3 s while Fcitx answers. While Fcitx is down, a refresh can happen on every focus.
 - The check runs asynchronously and never blocks the window. Only one runs at a time.
 - stdin and stderr go to `/dev/null`.
-- The tool is killed after 60 s (more than its own time limits add up to), or as soon as its output passes 8 KiB. A killed or crashed check counts as no answer, and the section hides.
+- The tool is killed after 60 s (more than its explicit per-call limits add up to), or as soon as its output passes 8 KiB. A killed or crashed check counts as no answer, and the section hides.
 - The output is reduced to known step and state words; notes are dropped.
 - The tool reads the user's own Hyprland, bar and Fcitx settings, reads no input, and changes nothing.
 - Only the direct child is killed. A helper the tool starts, such as `hyprctl`, is not killed and can outlive the timeout.
