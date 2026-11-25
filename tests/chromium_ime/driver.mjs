@@ -170,12 +170,17 @@ try{
    // does report the empty field, the first token starts at the field's start and
    // is corrected. Both are right; the next word is always corrected.
    const setEnabled=(value)=>execFileSync('/usr/bin/busctl',['--user','--timeout=2','call','org.fcitx.Fcitx5','/controller','org.fcitx.Fcitx.Controller1','SetConfig','sv','fcitx://config/addon/raskladlab','a{sv}','1','Enabled','s',value],{stdio:['ignore','ignore','pipe'],timeout:5000});
+   // A second enable mid-token: deterministic whatever Chromium reports (the text
+   // before the cursor is a letter, or unknown), so a guard that only works the
+   // first time fails here.
+   setEnabled('False');await reset();await type('word');setEnabled('True');
+   await type('word');await type('space');report.productReenableMidTokenRaw=await v()==='ghbdtnghbdtn ';
    setEnabled('False');await reset();setEnabled('True');
    await type('word');await type('space');await type('word');await type('space');
    const emptyField=await v();
    report.productEnabledEmptyFieldFirstRaw=emptyField==='ghbdtn привет ';
    report.productEnabledEmptyField=report.productEnabledEmptyFieldFirstRaw||emptyField==='привет привет ';
-   required.push('productEnableMidTokenRaw','productEnabledCorrects','productEnabledEmptyField');
+   required.push('productEnableMidTokenRaw','productEnabledCorrects','productReenableMidTokenRaw','productEnabledEmptyField');
   }
   report.checks=required.length;report.passed=required.every(k=>report[k]===true);
  }else if(process.env.RASKLAD_PRODUCT_SUITE==='layout'){
