@@ -86,6 +86,39 @@ class RecordThenCheck(Base):
         self.assertFalse(Path(self.setup.INPUT + '.rasklad.bak').exists())
         self.assertEqual(self.input.read_bytes(), b'-- edited meanwhile\n')
 
+    def test_temporary_file_is_ready_before_the_last_comparison(self):
+        # The comparison must come after the temporary file is written and synced.
+        order = []
+        real_prepare, real_check = self.setup.prepare_atomic, self.setup.record_then_check
+        self.setup.prepare_atomic = lambda *a, **k: (order.append('prepare'), real_prepare(*a, **k))[1]
+        self.setup.record_then_check = lambda *a: (order.append('check'), real_check(*a))[1]
+        self.hypr('ru,us', variant=',')
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]), single_layout=True)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(order[:2], ['prepare', 'check'])  # later ones: the state file
+
+    def test_no_temporary_file_left_when_edited_meanwhile(self):
+        self.hypr('ru,us', variant=',')
+        real = self.setup.record_then_check
+
+        def edited(state, path, old, new):
+            Path(path).write_bytes(b'-- edited meanwhile\n')
+            return real(state, path, old, new)
+        self.setup.record_then_check = edited
+        code, out = self.install(FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')]), single_layout=True)
+        self.assertEqual(code, 1)
+        self.assertEqual([p.name for p in self.input.parent.iterdir() if p.name.startswith('.rasklad-setup.')], [])
+        self.assertEqual(self.input.read_bytes(), b'-- edited meanwhile\n')
+
+    def test_revert_leaves_no_temporary_file_for_an_edited_file(self):
+        self.hypr('ru,us', variant=',')
+        fake = FakeFcitx([('keyboard-us', ''), ('keyboard-ru', '')])
+        self.assertEqual(self.install(fake, single_layout=True)[0], 0)
+        self.input.write_bytes(b'-- edited after install\n')
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(self.setup.restore(self.setup.load_state(), self.setup.INPUT))
+        self.assertEqual([p.name for p in self.input.parent.iterdir() if p.name.startswith('.rasklad-setup.')], [])
+
     def test_file_swapped_for_a_fifo_takes_the_record_back(self):
         old = self.input.read_bytes()
         state = self.setup.new_state()

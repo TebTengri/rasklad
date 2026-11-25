@@ -108,9 +108,10 @@ def sha(data):
   return hashlib.sha256(data).hexdigest()
 
 
-def write_atomic(path, data, mode=None):
-  # A fresh private temporary file beside the target (never a fixed name that
-  # could be a planted symlink), synced, then renamed over the target.
+def prepare_atomic(path, data, mode=None):
+  """A fresh private temporary file beside the target (never a fixed name that
+  could be a planted symlink), written and synced; returns its path. Made before
+  the last comparison, so only the rename follows it (SYS-272)."""
   if mode is None:
     mode = stat.S_IMODE(os.lstat(path).st_mode) if os.path.lexists(path) else 0o644
   fd, tmp = tempfile.mkstemp(prefix=".rasklad-setup.", dir=os.path.dirname(path))
@@ -120,13 +121,29 @@ def write_atomic(path, data, mode=None):
       f.flush()
       os.fchmod(f.fileno(), mode)
       os.fsync(f.fileno())
+  except BaseException:
+    discard(tmp)
+    raise
+  return tmp
+
+
+def discard(tmp):
+  try:
+    os.unlink(tmp)
+  except OSError:
+    pass
+
+
+def commit_atomic(tmp, path):
+  try:
     os.replace(tmp, path)
   except BaseException:
-    try:
-      os.unlink(tmp)
-    except OSError:
-      pass
+    discard(tmp)
     raise
+
+
+def write_atomic(path, data, mode=None):
+  commit_atomic(prepare_atomic(path, data, mode), path)
 
 
 def private_state_dir():
@@ -849,11 +866,13 @@ def install(assume_yes, single_layout=False):
       say("reset", os.path.basename(path),
           "our change was gone (omarchy refresh?); old copy: %s" % copy)
       save_and_drop(state)
+    tmp = prepare_atomic(path, new)
     if not record_then_check(state, path, old, new):
+      discard(tmp)
       say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
-    write_atomic(path, new)
+    commit_atomic(tmp, path)
     say("done", os.path.basename(path))
   if link == "missing":
     state["link"] = WIDGET
@@ -922,11 +941,13 @@ def install(assume_yes, single_layout=False):
       failed = True
       continue
     # After the Hyprland queries above: a save made meanwhile is not overwritten.
+    tmp = prepare_atomic(path, new)
     if not record_then_check(state, path, old, new):
+      discard(tmp)
       say("changed", os.path.basename(path), "edited while waiting; left as is")
       failed = True
       continue
-    write_atomic(path, new)
+    commit_atomic(tmp, path)
     say("done", os.path.basename(path))
     changes.append((path, old, new))
 
@@ -975,14 +996,24 @@ def restore(state, path):
   if bad not in (None, "missing-file"):
     say(bad, os.path.basename(path), "left as is")
     return False
-  current = read(path)
+  # Ready before the comparison: only the rename follows it (SYS-272).
+  tmp = prepare_atomic(path, old) if bad is None else None
+  try:
+    current = read(path)
+  except BaseException:
+    if tmp:
+      discard(tmp)
+    raise
   if current is not None and current == old:
-    pass  # never written (an interrupted install), or already restored
+    if tmp:
+      discard(tmp)  # never written (an interrupted install), or already restored
   elif current is None or sha(current) != entry["written"]:
+    if tmp:
+      discard(tmp)
     say("changed", os.path.basename(path), "edited since install; left as is (copy: %s)" % entry["bak"])
     return False
   else:
-    write_atomic(path, old)
+    commit_atomic(tmp, path)
   bak = entry["bak"]
   if entry.get("bak_ours", False) and file_state(bak) is None and read(bak) == old:
     os.unlink(bak)

@@ -796,7 +796,7 @@ ApplicationWindow {
             border.color: window.tint(0.4)
         }
         contentItem: Hint {
-            text: qsTr("The Hyprland, bar and Fcitx settings go back to how they were before Rasklad was connected. Files you have changed since then are left as they are.")
+            text: qsTr("Rasklad takes back what it changed in the Hyprland, bar and Fcitx settings. Files you have changed since are normally left as they are; from Fcitx only the layouts it added are removed. The exceptions are in the README.")
             font.pixelSize: 12
         }
         footer: DialogButtonBox {
