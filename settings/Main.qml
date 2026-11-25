@@ -514,9 +514,9 @@ ApplicationWindow {
                         spacing: 8
                         Layout.fillWidth: true
                         readonly property var rows: !hasRows ? [] : [
-                            { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon },
-                            { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt },
-                            { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts }
+                            { title: qsTr("Layout icon at the top right"), state: backend.setupRows.icon, why: backend.setupRows.iconWhy },
+                            { title: qsTr("Double Alt switches the layout"), state: backend.setupRows.alt, why: backend.setupRows.altWhy },
+                            { title: qsTr("English and Russian layouts in Fcitx"), state: backend.setupRows.layouts, why: backend.setupRows.layoutsWhy }
                         ]
                         readonly property bool anyMissing: rows.some(r => r.state === "missing")
                         // All connected: one line instead of three rows with nothing to do.
@@ -550,12 +550,31 @@ ApplicationWindow {
                                     anchors.leftMargin: 14
                                     anchors.rightMargin: 14
                                     spacing: 12
-                                    Label {
-                                        text: stateRow.modelData.title
-                                        font.pixelSize: 13
-                                        wrapMode: Text.WordWrap
+                                    ColumnLayout {
                                         Layout.fillWidth: true
-                                        Accessible.ignored: true
+                                        spacing: 2
+                                        Label {
+                                            text: stateRow.modelData.title
+                                            font.pixelSize: 13
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                            Accessible.ignored: true
+                                        }
+                                        // SYS-272: why "set up differently" (fixed strings only).
+                                        Label {
+                                            readonly property string why: stateRow.modelData.state === "other" ? (stateRow.modelData.why || "") : ""
+                                            visible: text !== ""
+                                            text: why === "link-taken" ? qsTr("Another file or link named rasklad.layout is in the Omarchy plugins folder; left as is.")
+                                                : why === "symlink" ? qsTr("The settings file is a link (for example, to dotfiles); Rasklad does not change it.")
+                                                : why === "other-layouts" ? qsTr("Hyprland has layouts besides us and ru; they are left as they are.")
+                                                : why === "edited" ? qsTr("You edited the Rasklad lines in input.lua; they are left as they are.")
+                                                : why === "other" ? qsTr("Set up by hand or by another tool; left as is.") : ""
+                                            font.pixelSize: 11
+                                            color: window.secondary
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                            Accessible.ignored: true
+                                        }
                                     }
                                     Label {
                                         id: stateLabel

@@ -297,6 +297,28 @@ class Install(Base):
             self.setup.check()
         self.assertRegex(out.getvalue(), r'edited\s+hyprland-layout')
 
+    def test_revert_without_record_lists_traces(self):
+        # SYS-272: the state directory is gone but our block is still there.
+        fake = FakeFcitx([('keyboard-us', '')])
+        self.assertEqual(self.install(fake)[0], 0)
+        Path(self.setup.STATE_FILE).unlink()
+        self.setup.fcitx = fake.bus
+        Path(self.setup.BINDINGS).write_bytes(('-- user\nlocal rasklad = "%s"\n' % self.setup.RULE).encode())
+        before = Path(self.setup.BINDINGS).read_bytes()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.setup.revert(), 1)
+        self.assertRegex(out.getvalue(), r'untracked\s+bindings\.lua')
+        self.assertEqual(Path(self.setup.BINDINGS).read_bytes(), before)  # nothing guessed
+        # Nothing of ours anywhere: nothing to revert.
+        Path(self.setup.BINDINGS).write_bytes(b'-- bindings\n')
+        Path(self.setup.SHELL_JSON).write_bytes(b'{}\n')
+        self.input.write_bytes(b'-- user file\n')
+        if os.path.islink(self.setup.PLUGIN_LINK):
+            os.unlink(self.setup.PLUGIN_LINK)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.setup.revert(), 0)
+
     def test_check_reports_rasklad_off(self):
         # Owner decision 2026-11-25: the addon is off until turned on in the window;
         # check says so and treats it as a choice, not a fault.

@@ -1313,10 +1313,34 @@ def restore_fcitx(state):
   return clean
 
 
+def untracked_traces():
+  """SYS-272: our changes still in the files although the record is gone (the
+  state directory deleted, or another home's copy). Names only, never contents."""
+  found = []
+  for path in (BINDINGS, INPUT, SHELL_JSON):
+    if file_state(path) is None:
+      data = read(path)
+      if data is not None and (ours_in(path, data) if path != INPUT else BEGIN.encode() in data):
+        found.append(path)
+  if os.path.islink(PLUGIN_LINK) and os.path.realpath(PLUGIN_LINK) == os.path.realpath(WIDGET):
+    found.append(PLUGIN_LINK)
+  return found
+
+
 def revert():
   if read(STATE_FILE) is None:
-    print("Nothing to revert.")
-    return 0
+    # Without the record there are no saved copies to put back: never guess.
+    traces = untracked_traces()
+    if not traces:
+      print("Nothing to revert.")
+      return 0
+    for path in traces:
+      say("untracked", os.path.basename(path), path)
+    print("The record of what --install changed is gone (%s), so nothing was changed.\n"
+          "Remove the Rasklad lines (between BEGIN and END rasklad-setup), the\n"
+          "rasklad.layout widget entry and the link listed above by hand; any\n"
+          "*.rasklad.bak beside a file is its copy from before install." % STATE_FILE)
+    return 1
   state = load_state()
   # SYS-270: input.lua is left to the SYS-268 checks below, which keep the
   # controls until Hyprland shows the user's layouts.
