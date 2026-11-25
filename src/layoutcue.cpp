@@ -11,6 +11,17 @@ namespace {
 constexpr int kRate = 48000;
 constexpr int kCount = 3360; // 70 ms
 constexpr auto kMinGap = std::chrono::milliseconds(180);
+
+// The write never starts playback by itself (a small buffer would reach the
+// default start threshold): only the explicit start under the lock does.
+bool neverAutoStart(snd_pcm_t *pcm)
+{
+    snd_pcm_sw_params_t *sw = nullptr;
+    snd_pcm_sw_params_alloca(&sw);
+    snd_pcm_uframes_t boundary = 0;
+    return snd_pcm_sw_params_current(pcm, sw) == 0 && snd_pcm_sw_params_get_boundary(sw, &boundary) == 0 &&
+           snd_pcm_sw_params_set_start_threshold(pcm, sw, boundary) == 0 && snd_pcm_sw_params(pcm, sw) == 0;
+}
 } // namespace
 
 std::vector<std::int16_t> synthesize(double gain)
@@ -56,6 +67,7 @@ void LayoutCue::play()
             if (!m_stop.load() && snd_pcm_open(&pcm, m_device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
                 if (snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, kRate, 1,
                                        200000) == 0 &&
+                    neverAutoStart(pcm) &&
                     !m_stop.load() && snd_pcm_writei(pcm, m_samples.data(), m_samples.size()) > 0) {
                     if (afterQueueForTest) afterQueueForTest();
                     // 70 ms is below the default start threshold: start explicitly,

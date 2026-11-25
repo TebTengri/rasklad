@@ -541,6 +541,14 @@ private Q_SLOTS:
         QCOMPARE(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("0a1b-12")}}), QStringLiteral("0a1b-12"));
         QVERIFY(onEpochFromStatus({{QStringLiteral("OnEpoch"), QStringLiteral("x-1")}}).isEmpty());
         QVERIFY(onEpochFromStatus({}).isEmpty());
+        // Turned on here: a name kept after that survives the next refresh.
+        b.setRaskladEnabled(false);
+        w.epoch = QStringLiteral("cd34-2");
+        b.setRaskladEnabled(true);
+        b.setAppEnabled(QStringLiteral("chromium"), true);
+        b.setAppEnabled(QStringLiteral("chromium"), false);
+        b.refresh();
+        QCOMPARE(entry(b, QStringLiteral("chromium")).value(QStringLiteral("group")).toString(), QStringLiteral("recent"));
     }
     void olderAddonNeverGetsWordOptions()
     {

@@ -272,11 +272,16 @@ void SettingsBackend::setRaskladEnabled(bool on)
     AddonConfig next = m_config;
     next.enabled = on;
     // Off, the addon forgets the program names: so does the window's list.
-    if (commit(next) && !on) {
+    if (!commit(next)) return;
+    if (!on) {
         m_focused.clear();
         m_seen.clear();
         m_groups.clear();
         rebuildApps();
+    } else if (const QString epoch = m_appSource->onEpoch(); !epoch.isEmpty()) {
+        // Turned on here: names kept from now on belong to the new epoch, so the
+        // next refresh does not drop them.
+        m_onEpoch = epoch;
     }
 }
 
