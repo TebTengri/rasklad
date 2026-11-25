@@ -47,6 +47,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -98,9 +99,17 @@ def work_dir(commit):
 
 
 def fresh_dir(path):
-    """An empty directory of our own under the work directory."""
-    if path.is_symlink():
-        raise SystemExit('%s is a symlink' % path)
+    """An empty directory of our own under build/: no component up to the
+    repository a symlink, checked before anything is removed."""
+    for p in (path,) + tuple(path.parents):
+        if p == ROOT:
+            break
+        if p.is_symlink():
+            raise SystemExit('%s is a symlink' % p)
+    else:
+        raise SystemExit('%s is outside the repository' % path)
+    if not path.resolve().is_relative_to((ROOT / 'build').resolve()):
+        raise SystemExit('%s is outside build/' % path)
     if path.exists():
         shutil.rmtree(path)
     path.mkdir(parents=True)
@@ -417,6 +426,18 @@ def compare(commit, baseline_profile):
     if os.path.lexists(record):
         os.unlink(record)
     head = git_head()
+    seen = inputs(work)
+    # One snapshot of the holdout for both runs, checked against the staged
+    # evaluation manifest that build pinned.
+    snapshot = fresh_dir(work / 'compare/eval')
+    manifest = load_json(work / 'profile/data/evaluation-002-sources.json')
+    for s in manifest['evaluation_sources']:
+        name = s['language'] + '.tsv'
+        shutil.copyfile(work / 'eval' / name, snapshot / name)
+        if file_pin(snapshot / name) != (s['sha256'], s['bytes']):
+            raise SystemExit('compare: eval/%s does not match the staged evaluation manifest' % name)
+    if sorted(p.name for p in snapshot.iterdir()) != ['en.tsv', 'ru.tsv']:
+        raise SystemExit('compare: the staged evaluation manifest must name en and ru')
     base_tree = fresh_dir(work / 'compare/base-src')
     head_tree(base_tree, head)
     new_tree = fresh_dir(work / 'compare/new-src')
@@ -424,10 +445,10 @@ def compare(commit, baseline_profile):
     pin_into(commit, new_tree)  # every replacement applies, or nothing reaches the repository
     old = evaluate(product_eval(base_tree, work / 'compare/base-bin'),
                    profile_root(fresh_dir(work / 'compare/base-root'), base_tree, baseline_profile),
-                   work / 'eval', 'pinned')
+                   snapshot, 'pinned')
     new = evaluate(product_eval(new_tree, work / 'compare/new-bin'),
                    profile_root(fresh_dir(work / 'compare/new-root'), new_tree, work / 'release'),
-                   work / 'eval', 'new')
+                   snapshot, 'new')
     dump_json(work / 'product-baseline.json', old)
     dump_json(work / 'product-report.json', new)
     old, new = rates(old), rates(new)
@@ -443,9 +464,12 @@ def compare(commit, baseline_profile):
         if bad:
             failed.append(name)
         print('%-70s %9.5f %9.5f %s' % (name, value, new[name][0], 'WORSE' if bad else ''))
+    if inputs(work) != seen or {n: file_pin(snapshot / n)[0] for n in ('en.tsv', 'ru.tsv')} != \
+            {n: seen['eval/' + n] for n in ('en.tsv', 'ru.tsv')}:
+        raise SystemExit('compare: the work directory changed during compare; run it again')
     passed = not failed
     dump_json(record, {'commit': commit, 'head': head, 'passed': passed,
-                       'changes': changes(commit, new_tree, base_tree), 'inputs': inputs(work)})
+                       'changes': changes(commit, new_tree, base_tree), 'inputs': seen})
     if not passed:
         print('quality: %d headline rates worse beyond their margin (or missing): do not pin' % len(failed))
         return 1
@@ -505,12 +529,25 @@ def pin(commit):
     changed = changes(commit, staged, ROOT)
     if changed != record.get('changes'):
         raise SystemExit('pin: the pinned files differ from what compare measured')
-    for rel in changed:  # every check passed: now the writes, each atomic
-        target = ROOT / rel
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temp = target.with_name('.%s.pin' % target.name)
-        shutil.copyfile(staged / rel, temp)
-        os.replace(temp, target)
+    # Every check passed. Each new file is first written to a temporary file
+    # created exclusively (O_EXCL; never through an existing path) beside its
+    # target; only when all are ready do they replace the tracked files.
+    temps = {}
+    try:
+        for rel in changed:
+            target = ROOT / rel
+            if target.is_symlink() or target.parent.resolve() != (ROOT / rel).parent.absolute():
+                raise SystemExit('pin: %s goes through a symlink' % rel)
+            fd, temp = tempfile.mkstemp(dir=target.parent, prefix='.%s.' % target.name, suffix='.pin')
+            with os.fdopen(fd, 'wb') as out:
+                out.write((staged / rel).read_bytes())
+            temps[rel] = temp
+        for rel, temp in temps.items():
+            os.replace(temp, ROOT / rel)
+    finally:
+        for temp in temps.values():
+            if os.path.lexists(temp):
+                os.unlink(temp)
     print('pinned %s (%d files). Next: bin/build, the tests, tools/build_arch_package.sh %s, the stand; '
           'then review git diff and send it to independent review.' % (commit, len(changed), work / 'release'))
 

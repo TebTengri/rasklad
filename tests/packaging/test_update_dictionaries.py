@@ -222,6 +222,29 @@ class WorkDir(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.tool.work_dir(NEW)
 
+    def test_scratch_under_a_symlinked_parent_is_not_removed(self):
+        work = self.tool.ROOT / 'build/dict-update' / NEW[:12]
+        work.mkdir(parents=True)
+        (self.tmp / 'elsewhere/base-src').mkdir()
+        (work / 'compare').symlink_to(self.tmp / 'elsewhere')
+        with self.assertRaises(SystemExit):
+            self.tool.fresh_dir(work / 'compare/base-src')
+        self.assertTrue((self.tmp / 'elsewhere/base-src').is_dir())
+
+    def test_compare_refuses_a_holdout_unlike_the_staged_manifest(self):
+        work = self.tool.ROOT / 'build/dict-update' / NEW[:12]
+        (work / 'eval').mkdir(parents=True)
+        (work / 'profile/data').mkdir(parents=True)
+        for lang in ('en', 'ru'):
+            (work / 'eval' / (lang + '.tsv')).write_text('swapped\n')
+        (work / 'profile/data/evaluation-002-sources.json').write_text(json.dumps({'evaluation_sources': [
+            {'language': lang, 'sha256': '0' * 64, 'bytes': 8} for lang in ('en', 'ru')]}))
+        self.tool.git_head = lambda: 'a' * 40
+        self.tool.inputs = lambda w: {}
+        with self.assertRaises(SystemExit) as raised:
+            self.tool.compare(NEW, self.tmp)
+        self.assertIn('does not match', str(raised.exception))
+
     def test_a_plain_path_is_accepted(self):
         self.assertEqual(self.tool.work_dir(NEW), self.tool.ROOT / 'build/dict-update' / NEW[:12])
 
