@@ -83,10 +83,15 @@ bool SettingsBackend::openSetup(const QString &action)
 QVariantMap SettingsBackend::setupRows() const
 {
     if (m_setup.isEmpty()) return {};
-    return {{QStringLiteral("icon"), setupRowState(m_setup, {QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")})},
-            {QStringLiteral("alt"), setupRowState(m_setup, {QStringLiteral("double-alt")})},
-            {QStringLiteral("layouts"),
-             setupRowState(m_setup, {QStringLiteral("fcitx-group"), QStringLiteral("hyprland-layout")})}};
+    const QStringList icon{QStringLiteral("bar-widget-link"), QStringLiteral("bar-widget")};
+    const QStringList alt{QStringLiteral("double-alt")};
+    const QStringList layouts{QStringLiteral("fcitx-group"), QStringLiteral("hyprland-layout")};
+    return {{QStringLiteral("icon"), setupRowState(m_setup, icon)},
+            {QStringLiteral("alt"), setupRowState(m_setup, alt)},
+            {QStringLiteral("layouts"), setupRowState(m_setup, layouts)},
+            {QStringLiteral("iconWhy"), setupRowReason(m_setup, icon)},
+            {QStringLiteral("altWhy"), setupRowReason(m_setup, alt)},
+            {QStringLiteral("layoutsWhy"), setupRowReason(m_setup, layouts)}};
 }
 
 void SettingsBackend::refreshIfStale()
@@ -99,6 +104,7 @@ void SettingsBackend::refreshIfStale()
 void SettingsBackend::refresh()
 {
     m_error.clear();
+    m_fcitx->forgetStall();
     m_running = m_fcitx->running();
     m_addon = m_running && m_fcitx->addonEnabled();
     m_layouts = m_running && settings::layoutsReady(m_fcitx->groupMethods());

@@ -47,7 +47,6 @@ EDITED_ADVICE = ("the layout block was edited after install; left as is "
                  "(--revert keeps an edited input.lua too)")
 LAYOUT_MARK = "-- rasklad-setup layout 3: us kept for the lock screen, chosen by the user"
 # The rule loaded by an uncommented line, as INSTALL.md shows it (a manual setup).
-RULE_LINE = re.compile(r'^\s*local\s+rasklad\s*=\s*"' + re.escape(RULE) + r'"', re.M)
 STOCK_ID = re.compile(rb'("id"\s*:\s*)"omarchy\.keyboard-layout"')
 XKB = re.compile(r"[A-Za-z0-9_:,.+-]*")
 # SYS-268: us variants that type Latin letters (the lock screen keeps only us).
@@ -486,8 +485,14 @@ def bindings_plan(data=None):
   if data is None:
     data = read(BINDINGS)
   text = data.decode(errors="replace")
-  if BEGIN in text or RULE_LINE.search(text):
+  # SYS-272: Lua is not evaluated. Installed = the tokens of the loader lines
+  # setup writes (comments dropped; inside a string they are a string, not code).
+  # Any other rasklad in a name or string, also across literals joined by ..,
+  # is "other": set up by hand, left as is, never a second loader.
+  if has_loader(data):
     return "ok", None
+  if mentions_rasklad(data):
+    return "other", None
   block = ("\n%s: two quick left-Alt taps switch the Fcitx layout us <-> ru.\n"
            "-- Loaded only while the package is installed; remove with rasklad-setup --revert.\n"
            "local rasklad = \"%s\"\n"
@@ -635,7 +640,9 @@ def check():
     else:
       say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
-  report(bindings_plan()[0], "double-alt")
+  alt = bindings_plan()[0]
+  report(alt, "double-alt", "Rasklad lines in bindings.lua that setup did not write; left as is"
+         if alt == "other" else "")
   try:
     written = load_state().get("input_block")
   except Refused:
@@ -737,6 +744,141 @@ def names_widget(data):
   return False
 
 
+LONG_OPEN = re.compile(rb"\[(=*)\[")
+NAME = re.compile(rb"[A-Za-z_][A-Za-z0-9_]*")
+SYMBOLS = (b"...", b"..", b"==", b"~=", b"<=", b">=", b"//", b"::", b"<<", b">>")
+# Operators that bind tighter than .. (arithmetic, unary, power, and a call,
+# index or method on a string): a string next to one is not folded.
+TIGHTER_LEFT = {("sym", s) for s in (b"+", b"-", b"*", b"/", b"//", b"%", b"^", b"#", b"~")} | {("name", b"not")}
+TIGHTER_RIGHT = {("sym", s) for s in (b"+", b"-", b"*", b"/", b"//", b"%", b"^", b":", b"[", b"(", b".")}
+ESCAPES = {b"a": b"\a", b"b": b"\b", b"f": b"\f", b"n": b"\n", b"r": b"\r", b"t": b"\t", b"v": b"\v"}
+
+
+def lua_tokens(data):
+  """SYS-272: Lua source as tokens, comments dropped: ("name", b"..."), ("str",
+  decoded bytes), ("num", text) or ("sym", text). Adjacent string literals
+  joined by .. are one string, so a constant split path is still seen. Lua is
+  never evaluated: this only reads the text."""
+  out, i, n = [], 0, len(data)
+  bad = False
+
+  def long_bracket(at):
+    # [[ or [=*[ at `at`: (body, index past the close), or None. Unclosed: to the end.
+    m = LONG_OPEN.match(data, at)
+    if not m:
+      return None
+    close = b"]" + m.group(1) + b"]"
+    end = data.find(close, m.end())
+    body = data[m.end():] if end == -1 else data[m.end():end]
+    if body[:2] in (b"\r\n", b"\n\r"):
+      body = body[2:]
+    elif body[:1] in (b"\n", b"\r"):
+      body = body[1:]
+    return body, n if end == -1 else end + len(close)
+
+  # Lua skips a first line starting with # (a shebang) when it loads a file.
+  if data.startswith(b"#"):
+    ends = [e for e in (data.find(b"\n"), data.find(b"\r")) if e != -1]
+    i = min(ends) if ends else n
+  while i < n:
+    c = data[i:i + 1]
+    if c in b" \t\r\n\v\f":
+      i += 1
+    elif data.startswith(b"--", i):
+      long = long_bracket(i + 2)
+      if long:
+        i = long[1]
+      else:
+        # A line comment ends at LF or CR (Lua takes either as a line end).
+        ends = [e for e in (data.find(b"\n", i), data.find(b"\r", i)) if e != -1]
+        i = min(ends) if ends else n
+    elif c in (b'"', b"'"):
+      j, value = i + 1, bytearray()
+      while j < n and data[j:j + 1] != c and data[j:j + 1] not in (b"\n", b"\r"):
+        ch = data[j:j + 1]
+        if ch != b"\\":
+          value += ch
+          j += 1
+          continue
+        e = data[j + 1:j + 2]
+        if e == b"z":  # skips the whitespace after it, newlines included
+          j += 2
+          while j < n and data[j:j + 1] in b" \t\r\n\v\f":
+            j += 1
+        elif e in (b"\r", b"\n"):  # an escaped line break (CRLF or LFCR is one)
+          value += b"\n"
+          j += 3 if data[j + 1:j + 3] in (b"\r\n", b"\n\r") else 2
+        elif e == b"x" and re.fullmatch(rb"[0-9A-Fa-f]{2}", data[j + 2:j + 4]):
+          value.append(int(data[j + 2:j + 4], 16))
+          j += 4
+        elif e.isdigit():
+          m = re.match(rb"[0-9]{1,3}", data[j + 1:j + 4])
+          value.append(int(m.group(0)) & 0xFF)
+          j += 1 + len(m.group(0))
+        elif e == b"u" and re.match(rb"\{[0-9A-Fa-f]+\}", data[j + 2:]):
+          m = re.match(rb"\{([0-9A-Fa-f]+)\}", data[j + 2:])
+          code = int(m.group(1), 16)
+          value += chr(code).encode("utf-8", "surrogatepass") if code <= 0x10FFFF else b"?"
+          j += 2 + len(m.group(0))
+        elif e in ESCAPES or e in (b"\\", b'"', b"'"):
+          value += ESCAPES.get(e, e)
+          j += 2
+        else:
+          # Not a Lua escape: Lua rejects the file, so it is never our loader.
+          bad = True
+          value += e
+          j += 2
+      out.append(("str", bytes(value)))
+      i = j + 1
+    elif c == b"[" and long_bracket(i):
+      body, i = long_bracket(i)
+      out.append(("str", body))
+    elif NAME.match(data, i):
+      m = NAME.match(data, i)
+      out.append(("name", m.group(0)))
+      i = m.end()
+    elif c.isdigit():
+      m = re.match(rb"[0-9A-Za-z_]*(?:\.(?!\.)[0-9A-Za-z_]*)?", data[i:])
+      out.append(("num", m.group(0)))
+      i += max(1, len(m.group(0)))
+    else:
+      sym = next((s for s in SYMBOLS if data.startswith(s, i)), c)
+      out.append(("sym", sym))
+      i += len(sym)
+  # Fold "a" .. "b" into one string, left to right, only where no operator that
+  # binds tighter than .. touches either side (#"a" .. "b" is not "ab").
+  folded = []
+  for k, tok in enumerate(out):
+    after = out[k + 1] if k + 1 < len(out) else None
+    if tok[0] == "str" and len(folded) >= 2 and folded[-1] == ("sym", b"..") and folded[-2][0] == "str" \
+       and (len(folded) < 3 or folded[-3] not in TIGHTER_LEFT) and after not in TIGHTER_RIGHT:
+      folded[-2:] = [("str", folded[-2][1] + tok[1])]
+    else:
+      folded.append(tok)
+  if bad:
+    folded.append(("bad", b""))
+  return folded
+
+
+def mentions_rasklad(data):
+  """A name or a string (after folding) in Lua code names rasklad."""
+  return any(kind in ("name", "str") and b"rasklad" in value.lower() for kind, value in lua_tokens(data))
+
+
+# The three lines of the double-Alt block that load the rule (bindings_plan), as
+# tokens: any quoting, spacing or line ends of the same code match.
+LOADER_LINES = ("local rasklad = \"%s\"\n"
+                "local found = io.open(rasklad, \"r\")\n"
+                "if found then found:close(); dofile(rasklad) end\n" % RULE).encode()
+
+
+def has_loader(data):
+  tokens, want = lua_tokens(data), lua_tokens(LOADER_LINES)
+  if ("bad", b"") in tokens:
+    return False
+  return any(tokens[k:k + len(want)] == want for k in range(len(tokens) - len(want) + 1))
+
+
 def ours_in(path, data):
   """Does this file still carry our change? (SYS-270) Any trace counts: the
   BEGIN comment alone may have been taken out while what follows still runs."""
@@ -745,7 +887,12 @@ def ours_in(path, data):
   # Lua files: every block version and the rule loader name rasklad (in a
   # comment, a variable or the rule's path, even split by concatenation as
   # "rasklad" .. "-fcitx5"). A file with every mention of rasklad taken out is
-  # the user's own configuration, whatever it sets.
+  # the user's own configuration, whatever it sets. SYS-272: in bindings.lua only
+  # code counts (every block loads the rule by a path in code), so a user's
+  # comment about rasklad no longer keeps the file ours. input.lua keeps any
+  # trace: an older block may be left with only its comment and its setting.
+  if path == BINDINGS:
+    return mentions_rasklad(data)
   return b"rasklad" in data.lower()
 
 
@@ -1167,6 +1314,35 @@ def shell_uses_widget():
       return True
 
 
+def layout_block_in_input():
+  """SYS-272: input.lua holds a layout block of ours: its BEGIN or layout mark,
+  or its rasklad_package code. A user's comment that mentions Rasklad is not one.
+  A regular input.lua that cannot be read (permissions, I/O) counts as holding
+  one: the controls stay until it can be checked. Not a regular file (a
+  directory, a FIFO) is no Lua file Hyprland reads."""
+  try:
+    data = read(os.path.realpath(INPUT))
+  except OSError as e:
+    return e.errno in (errno.EACCES, errno.EPERM, errno.EIO)
+  if data is None:
+    return False
+  return block_mark_in(data) or ("name", b"rasklad_package") in lua_tokens(data)
+
+
+# The exact first lines every version of our blocks wrote (git history: two
+# BEGIN lines and the layout marks 2 and 3). Whole lines only, so prose that
+# mentions rasklad-setup never matches.
+BLOCK_MARKS = {
+  (BEGIN + ": Fcitx switches layouts (keyboard-us, keyboard-ru), so Hyprland").encode(),
+  (BEGIN + ": two quick left-Alt taps switch the Fcitx layout us <-> ru.").encode(),
+} | {("-- rasklad-setup layout %d: us kept for the lock screen, chosen by the user" % v).encode()
+     for v in (2, 3)}
+
+
+def block_mark_in(data):
+  return any(line.strip() in BLOCK_MARKS for line in data.replace(b"\r", b"\n").split(b"\n"))
+
+
 def input_block_present():
   # Opened without blocking and checked on the open file: a path swapped for a
   # FIFO in between cannot stall revert.
@@ -1268,10 +1444,57 @@ def restore_fcitx(state):
   return clean
 
 
+def trace_in(path, data):
+  """Without the record: does this file still carry something of ours? Lua: the
+  BEGIN mark or rasklad in code (an input.lua block with its comments taken out
+  still names the rule and rasklad_package). shell.json: our widget id, and a
+  file that does not parse only if it names it at all."""
+  if path == SHELL_JSON:
+    try:
+      json.loads(data)
+    except ValueError:
+      return b"rasklad.layout" in data
+    return names_widget(data)
+  return block_mark_in(data) or mentions_rasklad(data)
+
+
+def untracked_traces():
+  """SYS-272: our changes still in the files although the record is gone (the
+  state directory deleted, or another home's copy). Names only, never contents."""
+  found = []
+  for path in (BINDINGS, INPUT, SHELL_JSON):
+    # A symlinked file (dotfiles) is read through the link: it is never written
+    # here, but a block left in its target is still a trace.
+    if file_state(path) in (None, "symlink"):
+      try:
+        data = read(os.path.realpath(path))
+      except OSError as e:
+        # A regular file that cannot be read may still hold our lines: listed,
+        # so revert does not report "nothing to revert".
+        if e.errno in (errno.EACCES, errno.EPERM, errno.EIO):
+          found.append(path)
+        continue
+      if data is not None and trace_in(path, data):
+        found.append(path)
+  if os.path.islink(PLUGIN_LINK) and os.path.realpath(PLUGIN_LINK) == os.path.realpath(WIDGET):
+    found.append(PLUGIN_LINK)
+  return found
+
+
 def revert():
   if read(STATE_FILE) is None:
-    print("Nothing to revert.")
-    return 0
+    # Without the record there are no saved copies to put back: never guess.
+    traces = untracked_traces()
+    if not traces:
+      print("Nothing to revert.")
+      return 0
+    for path in traces:
+      say("untracked", os.path.basename(path), path)
+    print("The record of what --install changed is gone (%s), so nothing was changed.\n"
+          "Remove the Rasklad lines (between BEGIN and END rasklad-setup), the\n"
+          "rasklad.layout widget entry and the link listed above by hand; any\n"
+          "*.rasklad.bak beside a file is its copy from before install." % STATE_FILE)
+    return 1
   state = load_state()
   # SYS-270: input.lua is left to the SYS-268 checks below, which keep the
   # controls until Hyprland shows the user's layouts.
@@ -1299,6 +1522,13 @@ def revert():
     input_kept, input_left = False, True
     copy = forget_entry(state, INPUT)
     say("reset", os.path.basename(INPUT), "our block is gone; left as is (old copy: %s)" % copy)
+  untracked_block = not had_input and layout_block_in_input()
+  if untracked_block:
+    # SYS-272: our layout block without an entry (the record was lost and a
+    # later --install made a new one): Hyprland still keeps one layout, so every
+    # control stays, Fcitx's layouts included, until the block is removed.
+    say("untracked", os.path.basename(INPUT), "a Rasklad layout block this record does not cover")
+    input_kept = True
   restored_hypr = had_input and not input_kept and not input_left
   session = hypr_session() if (restored_hypr or state.get("await_hypr")) else "none"
   if session != "none":
@@ -1310,6 +1540,10 @@ def revert():
       save_and_drop(state)
       return 1
     state.pop("await_hypr", None)
+  if untracked_block:
+    # The next run, once the block is removed, waits for Hyprland to show the
+    # user's layouts again before the controls go (as after a restore).
+    state["await_hypr"] = True
   if input_kept and block_gone:
     clean = False
     say("kept", "rasklad-controls",

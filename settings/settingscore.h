@@ -78,6 +78,9 @@ QVariantMap setupFromCheck(const QByteArray &output);
 //   "unknown" a step absent or not checkable. Worst first: problem, missing,
 //   unknown, other; never "ok" with an unknown step.
 QString setupRowState(const QVariantMap &setup, const QStringList &steps);
+// SYS-272: why a row is "set up differently": "link-taken", "symlink",
+// "other-layouts", "edited" or "other" for the first such step; "" if none.
+QString setupRowReason(const QVariantMap &setup, const QStringList &steps);
 
 // True if the current input-method group has both keyboard-us and keyboard-ru.
 bool layoutsReady(const QStringList &groupMethods);

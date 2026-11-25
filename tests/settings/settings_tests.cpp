@@ -304,6 +304,13 @@ private Q_SLOTS:
         QCOMPARE(row(m, {QStringLiteral("c"), QStringLiteral("e")}), QStringLiteral("problem"));
         QCOMPARE(row(m, {QStringLiteral("f")}), QStringLiteral("unknown"));
         QCOMPARE(row(m, {QStringLiteral("g")}), QStringLiteral("problem"));
+        // SYS-272: the reason for "set up differently", first such step.
+        QCOMPARE(setupRowReason(m, {QStringLiteral("a"), QStringLiteral("d")}), QStringLiteral("symlink"));
+        QCOMPARE(setupRowReason(m, {QStringLiteral("a")}), QString());
+        const QVariantMap link{{QStringLiteral("bar-widget-link"), QStringLiteral("other")},
+                               {QStringLiteral("fcitx-group"), QStringLiteral("other")}};
+        QCOMPARE(setupRowReason(link, {QStringLiteral("bar-widget-link")}), QStringLiteral("link-taken"));
+        QCOMPARE(setupRowReason(link, {QStringLiteral("fcitx-group")}), QStringLiteral("other"));
         QCOMPARE(setupFromCheck("unparsable bar-widget\n").value(QStringLiteral("bar-widget")).toString(),
                  QStringLiteral("unparsable"));
         // SYS-268: the layout step through the real parser. Keeping Hyprland's

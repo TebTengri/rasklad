@@ -220,6 +220,18 @@ QString setupRowState(const QVariantMap &setup, const QStringList &steps)
     return QStringLiteral("ok");
 }
 
+QString setupRowReason(const QVariantMap &setup, const QStringList &steps)
+{
+    for (const QString &step : steps) {
+        const QString s = setup.value(step).toString();
+        if (s == QLatin1String("symlink") || s == QLatin1String("other-layouts") || s == QLatin1String("edited"))
+            return s;
+        if (s == QLatin1String("other"))
+            return step == QLatin1String("bar-widget-link") ? QStringLiteral("link-taken") : QStringLiteral("other");
+    }
+    return {};
+}
+
 int roundingFromReply(const QByteArray &json)
 {
     const QJsonDocument doc = QJsonDocument::fromJson(json.left(4096));

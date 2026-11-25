@@ -31,7 +31,11 @@ BarWidget {
                                : method === "" ? "" : "··"
   // SYS-272: unknown correction state is not shown as the ordinary label: the addon
   // may be missing or not loaded, and then nothing is corrected.
-  readonly property string label: code === "" ? "" : correction === "broken" ? code + "!"
+  // SYS-272: a click that did not go through ("toggle" or "pause"), for 3 s.
+  property string failed: ""
+  // A failed click shows even while the watcher has no answer (Fcitx stalled).
+  readonly property string label: failed !== "" ? code + "×" : code === "" ? ""
+                                : correction === "broken" ? code + "!"
                                 : correction === "" ? code + "?" : code
 
   // One line from rasklad-layout-watch: {"method": "...", "correction": "..."}.
@@ -71,13 +75,24 @@ BarWidget {
   Process {
     id: toggle
     command: ["/usr/bin/rasklad-layout-toggle"]
+    onExited: function(exitCode) { if (exitCode !== 0) root.fail("toggle"); else root.clearFail("toggle") }
   }
+  function fail(what) { root.failed = what; failedTimer.restart() }
+  // A later success of the same action takes the mark off at once.
+  function clearFail(what) { if (root.failed === what) { root.failed = ""; failedTimer.stop() } }
+  Timer { id: failedTimer; interval: 3000; onTriggered: root.failed = "" }
 
   // Middle click: rasklad-pause-toggle reads the status and writes AutoCorrect to
   // the same Fcitx instance. The widget shows only what the watcher reports.
   Process {
     id: pause
     command: ["/usr/bin/rasklad-pause-toggle"]
+    // Exit 3: off or not verified, nothing to pause by design (the tooltip says
+    // why). Only a Fcitx failure (1) is marked, whatever the watcher shows now.
+    onExited: function(exitCode) {
+      if (exitCode === 1) root.fail("pause")
+      else if (exitCode === 0) root.clearFail("pause")
+    }
   }
 
   visible: label !== ""
@@ -92,7 +107,9 @@ BarWidget {
     dimmed: root.correction === "paused" || root.correction === "off" || root.correction === ""
     fontSize: Style.font.caption
     horizontalMargin: 6
-    tooltipText: strings.t(root.correction === "on" ? "tooltip.on"
+    tooltipText: strings.t(root.failed === "toggle" ? "tooltip.toggleFailed"
+                         : root.failed === "pause" ? "tooltip.pauseFailed"
+                         : root.correction === "on" ? "tooltip.on"
                          : root.correction === "paused" ? "tooltip.paused"
                          : root.correction === "broken" ? "tooltip.broken"
                          : root.correction === "off" ? "tooltip.off"
