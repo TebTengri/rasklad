@@ -62,6 +62,7 @@ void SettingsBackend::reloadConfig()
         if (m_config.switchable && !m_config.enabled) {
             m_focused.clear();
             m_seen.clear();
+            m_groups.clear();
         }
     }
     // Asked again on every read (refresh and before each change), so a restarted
@@ -269,6 +270,7 @@ void SettingsBackend::setRaskladEnabled(bool on)
     if (commit(next) && !on) {
         m_focused.clear();
         m_seen.clear();
+        m_groups.clear();
         rebuildApps();
     }
 }

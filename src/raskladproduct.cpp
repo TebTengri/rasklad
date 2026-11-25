@@ -288,6 +288,7 @@ public:
     // Survives lifecycle invalidation: an On transition must never capture
     // a suffix of raw input typed while Off, including in a later new context.
     std::uint64_t resumeGeneration = 0;
+    std::uint64_t enableGeneration = 0;
     bool needsBoundary = false;
     policy::Lease lease;
     std::shared_ptr<policy::CompositionDisable> disable =
@@ -612,15 +613,11 @@ private:
             status_.seenApplications.setValue(std::vector<std::string>{});
             cue_.stop();
             switchEvent_.reset(); // a layout switch queued before: never runs
-        } else if (!wasEnabled_) {
-            // Turned on: the focused field may hold the start of a token typed
-            // while off. Its next presses stay raw up to a delimiter, so a suffix
-            // is never corrected on its own (as after a resume).
-            manager_->foreach([&](fcitx::InputContext *ic) {
-                if (ic->hasFocus())
-                    if (auto *s = state(ic, true)) s->needsBoundary = true;
-                return true;
-            });
+        } else if (!wasEnabled_ && enableGeneration_ != std::numeric_limits<std::uint64_t>::max()) {
+            // Turned on (usually from the settings window, so the field is not
+            // focused now): any field may hold the start of a token typed while
+            // off. Each field checks at its next press (handleKey).
+            ++enableGeneration_;
         }
         wasEnabled_ = *config_.enabled;
         applying_ = false;
@@ -1200,6 +1197,13 @@ private:
             s->resumeGeneration = resumeGeneration_;
             s->needsBoundary = true;
         }
+        // First press in this field since Rasklad was turned on: unless the cursor
+        // is known to start a token, the presses stay raw up to a delimiter, so a
+        // suffix of a token typed while off is never corrected on its own.
+        if (s->enableGeneration != enableGeneration_) {
+            s->enableGeneration = enableGeneration_;
+            if (!atTokenStart(ic)) s->needsBoundary = true;
+        }
         if (s->needsBoundary) {
             if (boundary) s->needsBoundary = false;
             return; // The delimiter itself and all preceding presses stay raw.
@@ -1425,6 +1429,23 @@ private:
     }
     bool selfSwitch_ = false;
     bool wasEnabled_ = false; // Enabled as of the last applied config
+    std::uint64_t enableGeneration_ = 0; // bumped each time Rasklad is turned on
+    // The field reports its text and the cursor is at its start or after ASCII
+    // whitespace. Anything else (no surrounding text, a selection, invalid UTF-8,
+    // another character before the cursor) counts as mid-token.
+    static bool atTokenStart(fcitx::InputContext *ic) {
+        if (!ic->capabilityFlags().test(fcitx::CapabilityFlag::SurroundingText)) return false;
+        const auto &st = ic->surroundingText();
+        if (!st.isValid() || st.cursor() != st.anchor()) return false;
+        const std::string &text = st.text();
+        if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return false;
+        if (st.cursor() == 0) return true;
+        if (st.cursor() > fcitx::utf8::length(text)) return false;
+        const auto bytes = fcitx::utf8::ncharByteLength(text.begin(), st.cursor());
+        if (bytes <= 0) return false;
+        const char before = text[static_cast<std::size_t>(bytes) - 1];
+        return before == ' ' || before == '\t' || before == '\n' || before == '\r';
+    }
     rasklad::cue::LayoutCue cue_; // declared before watchers_: destroyed after them
     // SYS-226 (owner decision 2026-11-21): after a correction the corrected word's
     // layout becomes the current Fcitx input method, so the owner keeps typing in it.
