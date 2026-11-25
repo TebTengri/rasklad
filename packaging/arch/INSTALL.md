@@ -41,7 +41,7 @@ fcitx5 -rd
 ```
 rasklad-setup --check     # что работает и чего не хватает
 rasklad-setup --install   # показывает изменения, спрашивает, применяет
-rasklad-setup --revert    # возвращает всё, как было до --install
+rasklad-setup --revert    # убирает то, что изменил --install (исключения — в SECURITY.md)
 ```
 
 `--install` делает пять шагов, каждый только если он ещё не сделан:

@@ -501,7 +501,7 @@ The settings window starts no shell of its own and passes no text the user typed
 **«Подключить…» and «Вернуть как было…»** start `/usr/bin/omarchy-launch-floating-terminal-with-presentation` with one of two fixed strings, `/usr/bin/rasklad-setup --install` or `/usr/bin/rasklad-setup --revert`. That Omarchy script runs the string with `bash -c`, and it finds its own helpers (`omarchy-show-logo`, `omarchy-restart-gum`) through PATH.
 - Without that script, `/usr/bin/xdg-terminal-exec /usr/bin/rasklad-setup --install` (or `--revert`) is used.
 - Clicks less than 2 s apart open one terminal, not several.
-- The changes happen in that terminal. `rasklad-setup --install` (SYS-252) shows the diff and asks before applying; when stdin is not a terminal it applies nothing unless `--yes` is given. `--revert` does not ask (the window asks first): it puts back only what setup changed.
+- The changes happen in that terminal. `rasklad-setup --install` (SYS-252) shows the diff and asks before applying; when stdin is not a terminal it changes no configuration file and no Fcitx group unless `--yes` is given (it may still update its own record of which Fcitx rows are ours). `--revert` does not ask (the window asks first): it takes back what setup changed, with the exceptions described in the rasklad-setup section above.
 - The window itself writes no Hyprland, bar or Fcitx group file.
 
 **Hyprland's `decoration:rounding`** is read once, over the Hyprland request socket. It does not run `hyprctl`. The read is non-blocking and bounded by an 800 ms deadline.
