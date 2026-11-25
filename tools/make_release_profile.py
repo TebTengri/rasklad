@@ -12,8 +12,12 @@ things change, so that every distributed copy carries its notices and marks:
   - artifact-metadata.json records the new sizes and hashes.
 
 usage: make_release_profile.py --from <profile root> --out <new dir inside build/>
+                               [--source-pins <json> --commit <40-hex>]
 The source must match the pins below (the reviewed profile); the output directory
-must not exist. Prints the changed files' new pins as JSON.
+must not exist. Prints the changed files' new pins as JSON. SYS-272: for a
+dictionary update (tools/update_dictionaries.py) --source-pins names the new
+source profile's pins ({path: [sha256, bytes]}, the same paths) and --commit
+the new LibreOffice/dictionaries commit.
 """
 import argparse
 import hashlib
@@ -51,11 +55,14 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def embedded_notice(what, en, ru):
+DICTIONARY_COMMIT = 'c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb'
+
+
+def embedded_notice(what, en, ru, commit=DICTIONARY_COMMIT):
     """en and ru are the verified notice bytes of the source profile."""
     head = (
         f'Rasklad {what}: data derived from the en_US and ru_RU Hunspell dictionaries\n'
-        'of LibreOffice/dictionaries commit c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb.\n'
+        f'of LibreOffice/dictionaries commit {commit}.\n'
         'Modified by Rasklad; not an upstream file, not endorsed by the dictionary authors.\n'
         "Rasklad's MIT license does not cover this data. The full notices of both\n"
         'dictionaries follow. The UKACD document is in\n'
@@ -72,7 +79,7 @@ def wrap(notice, payload):
     return b'RSKX' + struct.pack('<I', len(notice)) + notice + payload
 
 
-def build_profile(data):
+def build_profile(data, commit=DICTIONARY_COMMIT):
     """Returns the release profile (relative path -> bytes) for the reviewed one."""
     data = dict(data)
     en = data['build/experiment-002-artifacts/en_US.NOTICE.txt']
@@ -82,8 +89,8 @@ def build_profile(data):
         data[rel] = CONTROL_AFF_HEADER + data[rel]
     model_rel = 'build/experiment-002-artifacts/detector-model.rskn'
     stem_rel = 'build/experiment-002-artifacts/exact-full-lexicons.rskp'
-    data[model_rel] = wrap(embedded_notice('detector model', en, ru), data[model_rel])
-    data[stem_rel] = wrap(embedded_notice('word list', en, ru), data[stem_rel])
+    data[model_rel] = wrap(embedded_notice('detector model', en, ru, commit), data[model_rel])
+    data[stem_rel] = wrap(embedded_notice('word list', en, ru, commit), data[stem_rel])
 
     meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
     meta = json.loads(data[meta_rel])
@@ -102,7 +109,21 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--from', dest='source', required=True)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--source-pins')
+    ap.add_argument('--commit')
     args = ap.parse_args()
+    pins_in, commit = SOURCE_PINS, DICTIONARY_COMMIT
+    if (args.source_pins is None) != (args.commit is None):
+        raise SystemExit('--source-pins and --commit go together')
+    if args.source_pins:
+        loaded = json.loads(Path(args.source_pins).read_text())
+        if set(loaded) != set(SOURCE_PINS) or any(
+                not (isinstance(v, list) and len(v) == 2 and isinstance(v[0], str) and len(v[0]) == 64
+                     and isinstance(v[1], int) and v[1] > 0) for v in loaded.values()):
+            raise SystemExit('--source-pins: the same paths, each [sha256, bytes]')
+        if not (len(args.commit) == 40 and all(c in '0123456789abcdef' for c in args.commit)):
+            raise SystemExit('--commit: 40 lowercase hex')
+        pins_in, commit = {k: tuple(v) for k, v in loaded.items()}, args.commit
     source = Path(args.source).resolve()
     build = (ROOT / 'build').resolve()
     out = Path(args.out).absolute()
@@ -110,7 +131,7 @@ def main():
         raise SystemExit("--out must be a new directory inside this project's build/")
 
     data = {}
-    for rel, (digest, size) in SOURCE_PINS.items():
+    for rel, (digest, size) in pins_in.items():
         path = source / rel
         if path.is_symlink() or not path.is_file():
             raise SystemExit(f'missing or not a regular file: {rel}')
@@ -119,14 +140,14 @@ def main():
             raise SystemExit(f'not the reviewed profile: {rel}')
         data[rel] = blob
 
-    data = build_profile(data)
+    data = build_profile(data, commit)
     out.mkdir()
     for rel, blob in data.items():
         target = out / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(blob)
     pins = {rel: {'sha256': sha256(blob), 'bytes': len(blob)} for rel, blob in sorted(data.items())
-            if sha256(blob) != SOURCE_PINS[rel][0]}
+            if sha256(blob) != pins_in[rel][0]}
     json.dump(pins, sys.stdout, indent=2)
     print()
 
