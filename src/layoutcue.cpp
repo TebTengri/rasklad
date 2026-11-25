@@ -46,6 +46,7 @@ void LayoutCue::play()
     const auto now = std::chrono::steady_clock::now();
     if (m_busy.load() || (m_last != std::chrono::steady_clock::time_point{} && now - m_last < kMinGap)) return;
     if (m_worker.joinable()) m_worker.join();
+    m_stop.store(false); // no worker runs now: a stop() before this play() is spent
     m_busy.store(true);
     try {
         m_worker = std::thread([this] {

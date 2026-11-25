@@ -28,6 +28,8 @@ public:
 
     // Starts the cue unless one is playing or the last began < 180 ms ago.
     void play();
+    // Main thread: ends a cue in flight within ~10 ms; the next play() starts anew.
+    void stop() { m_stop.store(true); }
 
 private:
     const char *m_device;

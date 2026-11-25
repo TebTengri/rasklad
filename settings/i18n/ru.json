@@ -6,7 +6,7 @@
     "Add": "Добавить",
     "Add manually…": "Добавить вручную…",
     "Add the English and Russian layouts (keyboard-us, keyboard-ru) to the Fcitx group.": "Добавьте в группу Fcitx английскую и русскую раскладки (keyboard-us, keyboard-ru).",
-    "An application appears in the list once you click a text field in it. The list starts over when Fcitx restarts.": "Приложение появляется в списке, когда вы щёлкаете по полю ввода в нём. После перезапуска Fcitx список собирается заново.",
+    "While Rasklad is on, an application appears in the list once you click a text field in it. The list starts over when Fcitx restarts or Rasklad is turned off.": "Пока Rasklad включён, приложение появляется в списке, когда вы щёлкнете в нём по полю ввода. Список начинается заново после перезапуска Fcitx или выключения Rasklad.",
     "Applications": "Приложения",
     "At most 256 exceptions.": "Не больше 256 исключений.",
     "At most 64 applications can be on.": "Включить можно не больше 64 приложений.",

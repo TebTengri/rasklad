@@ -609,7 +609,7 @@ def fcitx_plan(bus, current=False):
 
 # --- modes --------------------------------------------------------------------
 
-# This tool never turns the addon on: that is the owner's switch in the window.
+# This tool never turns the addon on; the settings window's switch does.
 OFF_ADVICE = "Rasklad is off until you turn it on in its settings (rasklad-settings)"
 
 
@@ -631,7 +631,9 @@ def check():
     # Owner decision 2026-11-25: off until turned on; the owner's choice, not a fault.
     if status.get("Enabled") == "False":
       say("off", "rasklad", OFF_ADVICE)
-    say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
+      say("off", "auto-correction", "with Rasklad")
+    else:
+      say("on" if status.get("AutoCorrect") == "True" else "paused", "auto-correction")
   report(fcitx_plan(bus)[0], "fcitx-group")
   report(bindings_plan()[0], "double-alt")
   try:

@@ -603,7 +603,13 @@ private:
         }
         rebuildApps();
         enableFixturePermissions();
-        if (!*config_.enabled) seenPrograms_.clear(); // off keeps no names either
+        if (!*config_.enabled) {
+            // Off keeps no names (nor the last status snapshot of them) and stops
+            // a cue in flight.
+            seenPrograms_.clear();
+            status_.seenApplications.setValue(std::vector<std::string>{});
+            cue_.stop();
+        }
         applying_ = false;
     }
     void enableFixturePermissions() {
@@ -1424,7 +1430,7 @@ private:
         if (!us || !ru) return;
         switchEvent_ = instance_->eventLoop().addDeferEvent([this, ref, target](fcitx::EventSource *) {
             auto *c = ref.get();
-            if (!c || !c->hasFocus()) return true;
+            if (!*config_.enabled || !c || !c->hasFocus()) return true; // turned off meanwhile
             if (auto *s = state(c, false); s && !s->empty()) return true;
             const auto *entry = instance_->inputMethodEntry(c);
             if (!entry || entry->uniqueName() == target) return true;
