@@ -1461,17 +1461,15 @@ private:
         return out;
     }
     // Yes: the field reports its text and the cursor is at its start or after
-    // ASCII whitespace. Unknown: the field cannot report text (no surrounding-text
-    // capability). No: anything else, including a report that cannot be used
-    // (oversized as in lastMatches, a selection; Fcitx itself invalidates one with
-    // bad UTF-8 or an out-of-range cursor), so such a field never lifts the
-    // enable guard on a Space it may have ignored.
+    // ASCII whitespace. Unknown: no valid report. Chromium declares the
+    // capability yet often has none at the next press, so this cannot be No;
+    // Fcitx also invalidates a report with bad UTF-8 or an out-of-range cursor,
+    // which then looks the same (SECURITY.md). No: anything else, including an
+    // oversized report (as in lastMatches) or a selection.
     enum class TokenStart { Yes, No, Unknown };
     static TokenStart tokenStart(fcitx::InputContext *ic) {
         const auto &st = ic->surroundingText();
-        if (!st.isValid())
-            return ic->capabilityFlags().test(fcitx::CapabilityFlag::SurroundingText) ? TokenStart::No
-                                                                                    : TokenStart::Unknown;
+        if (!st.isValid()) return TokenStart::Unknown;
         if (st.text().size() > kMaxSurroundingBytes) return TokenStart::No;
         const std::string &text = st.text();
         if (fcitx::utf8::lengthValidated(text) == fcitx::utf8::INVALID_LENGTH) return TokenStart::No;
