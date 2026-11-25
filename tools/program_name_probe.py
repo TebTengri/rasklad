@@ -139,6 +139,9 @@ def inside(addon_dir=None):
         shutil.copy2(Path(addon_dir) / 'rasklad.so', lib / 'rasklad.so')
         (home / '.local/share/fcitx5/addon').mkdir(parents=True)
         shutil.copy2(ROOT / 'addon/rasklad.conf', home / '.local/share/fcitx5/addon/rasklad.conf')
+        # Off until turned on (owner decision 2026-11-25): names are seen only while on.
+        (home / '.config/fcitx5/conf').mkdir(parents=True, exist_ok=True)
+        (home / '.config/fcitx5/conf/rasklad.conf').write_text('Enabled=True\n')
         env['FCITX_ADDON_DIRS'] = f'{lib}:/usr/lib/fcitx5'
     procs = []
     result = {'cases': [], 'addon': bool(addon_dir)}

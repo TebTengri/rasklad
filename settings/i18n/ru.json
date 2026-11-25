@@ -67,7 +67,7 @@
     "Rasklad takes back what it changed in the Hyprland, bar and Fcitx settings. Files you have changed since are normally left as they are; from Fcitx only the layouts it added are removed. The exceptions are in SECURITY.md (/usr/share/doc/rasklad-fcitx5).": "Rasklad уберёт то, что сам изменил в настройках Hyprland, панели и Fcitx. Файлы, которые вы с тех пор меняли, обычно останутся как есть, а из Fcitx уйдут только добавленные им раскладки. Исключения описаны в SECURITY.md (/usr/share/doc/rasklad-fcitx5).",
     "The Rasklad addon is older than this window. Update Rasklad and restart Fcitx.": "Аддон Rasklad устарел. Обновите Rasklad и перезапустите Fcitx.",
     "The text is not installed. It is in /usr/share/licenses/rasklad-fcitx5/ of the package.": "Текст не установлен. В пакете он лежит в /usr/share/licenses/rasklad-fcitx5/.",
-    "To turn off automatic correction for a while, switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working.": "Чтобы временно отключить автоисправление, выключите его здесь или щёлкните средней кнопкой мыши по значку раскладки вверху справа. Двойной Shift и двойной Alt продолжают работать.",
+    "While Rasklad is on, you can turn off automatic correction for a while: switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working.": "Пока Rasklad включён, автоисправление можно на время выключить: здесь или средним кликом по значку раскладки в правом верхнем углу. Двойной Shift и двойной Alt продолжают работать.",
     "Use Latin letters, digits, dot, dash or underscore.": "Только латиница, цифры, точка, дефис и подчёркивание.",
     "Web app": "Веб-приложение",
     "What Rasklad changed": "Что изменил Rasklad",
