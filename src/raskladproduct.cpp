@@ -629,7 +629,7 @@ private:
             // Turned on (usually from the settings window, so the field is not
             // focused now): any field may hold the start of a token typed while
             // off. Each field checks at its next press (handleKey).
-            if (enableGeneration_ == 0) ++enableGeneration_; // MUTATION: only the first enable
+            ++enableGeneration_;
         }
         wasEnabled_ = *config_.enabled;
         applying_ = false;
