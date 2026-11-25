@@ -43,8 +43,10 @@ inline std::string form(const std::string &typed, bool asRu, std::uint32_t upper
     if (out.empty()) out = typed;
     if (upper) {
         std::string shown = manual::applyUpper(out, upper);
-        out.swap(shown);
-        wipe(shown); // now the copy without capitals
+        // Same length (capitals keep their UTF-8 size): copied into out's own
+        // buffer, no reallocation and no swap temporary.
+        out.assign(shown);
+        wipe(shown);
     }
     return out;
 }
