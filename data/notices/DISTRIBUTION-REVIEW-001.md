@@ -11,7 +11,8 @@ owner decides. Flipping it is one separate change: passports, the profile's
 
 ## Exact contents
 
-Package 0.5.19, `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes), built by
+Package 0.5.19 (checked again against 0.5.31 on 2026-11-26: every hash below
+matches), `/usr/share/fcitx5/rasklad/profile/` (SHA-256, bytes), built by
 `tools/make_release_profile.py` from the reviewed experiment profile. The
 hashes are of the profile the owner's packages are built from; any rebuilt
 profile must be compared again.
