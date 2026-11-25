@@ -258,7 +258,10 @@ def build(commit, accept_notices):
              '--en', down / 'old-en.dic', '--ru', down / 'old-ru.dic',
              '--eval-manifest', base / 'data/evaluation-002-sources.json',
              '--eval-en', eval_dir / 'en.tsv', '--eval-ru', eval_dir / 'ru.tsv',
-             '--protocol', base / 'data/experiment-002-protocol.json', '--json'], stdout=report)
+             # After one update the pinned dictionaries are no longer experiment
+             # 001's; their pins were checked at fetch and build.
+             '--protocol', base / 'data/experiment-002-protocol.json', '--dictionaries', 'new', '--json'],
+            stdout=report)
 
     for name in NOTICES:
         shutil.copyfile(down / name, arts / name.replace('README', 'NOTICE'))
