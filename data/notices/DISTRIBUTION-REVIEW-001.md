@@ -4,10 +4,13 @@ Prepared by Claude, 2026-11-24. Independent review: Codex (see the PR). This is 
 technical check of the reviewed notices against the exact package contents. It is
 not legal advice and not a guarantee of uncontested rights.
 
-**Decision: pending the owner.** `release_approved` stays `false` everywhere
-(passports, `MODIFICATIONS.txt`, the check in `src/profileverify.cpp`) until the
-owner decides. Flipping it is one separate change: passports, the profile's
-`MODIFICATIONS.txt`, the verifier and its pins together.
+**Decision: approved by the owner on 2026-11-26.** The shipped passports
+(`data/sources.json`, `data/product-profile-sources.json`) say
+`release_approved: true` with `distribution_review` naming this file; the release
+profile's `MODIFICATIONS.txt` and metadata scope state the approval; the addon
+(`src/profileverify.cpp`) requires all of it. The research passports of experiments
+001–006 keep `release_approved: false`: they record local experiments. Approval
+covers the files below at these hashes; a changed profile needs this review again.
 
 ## Exact contents
 
@@ -28,15 +31,15 @@ profile must be compared again.
 | build/experiment-003-data/control/MODIFIED.txt | — | — | Rasklad marker, a copy of `packaging/arch/DATA-NOTICE.txt`; not part of the verified profile |
 | build/experiment-002-artifacts/detector-model.rskn | d30f471a13be898514b030fbab95872b69d431beb8e105bc56b860a3c163509a | 106396 | **derived**: model weights; full notices inside (RSKX) |
 | build/experiment-002-artifacts/exact-full-lexicons.rskp | ff325623b4dd2fe871195138d7b09c1c5dd0384152bca85e8c9f66789dd15da3 | 1218480 | **derived**: word list; full notices inside (RSKX) |
-| build/experiment-002-artifacts/artifact-metadata.json | 6117d5273c24c81d7aefdf472fb46e59b4b446179c14beb93f38db436637cbdf | 1892 | Rasklad metadata |
-| build/experiment-002-artifacts/MODIFICATIONS.txt | e2a4d9b6956c3210d0f60cf65432c7f8bfe3b891852f39832e46e4e6b3408af5 | 182 | Rasklad record |
+| build/experiment-002-artifacts/artifact-metadata.json | 4b0b0994e25cf8f0a325fa30e95f9fd849517dd29de7625d195b61e98c714e8c | 1917 | Rasklad metadata (0.5.32: states the approval) |
+| build/experiment-002-artifacts/MODIFICATIONS.txt | ae36f26833e66a6902accc2e7128ef0ad3102046613c0e9820657fb6a3398f46 | 381 | Rasklad record (0.5.32: states the approval) |
 | build/experiment-002-artifacts/en_US.NOTICE.txt | 168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371 | 15732 | upstream notice, unmodified |
 | build/experiment-002-artifacts/ru_RU.NOTICE.txt | 262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52 | 1886 | upstream notice, unmodified |
 
 What the addon enforces at load time (`src/profileverify.cpp`): size and SHA-256 of
 the dictionaries, `.aff`, control `.aff`, model and word list; the notice copies by
 SHA-256; `artifact-metadata.json` by its fields and `MODIFICATIONS.txt` by content
-(UTF-8, the `release_approved=false` marker). The hashes of those two files above
+(UTF-8, the `release_approved=true` statement). The hashes of those two files above
 are recorded here, not enforced by the addon.
 
 The notice hashes equal `data/notices/en_US.README.txt` and `ru_RU.README.txt`,
@@ -68,10 +71,9 @@ the owner to accept or not.
   the package is not advertised as anonymized data.
 - Additional languages: each needs its own review.
 
-## What the owner decides
+## The owner's decision
 
-The joint agent plan (Linear SYS-256) closed the open questions in the strictest
-reading: the UKACD document ships, the derived files embed the notices, the
-modified `.aff` carry a mark. What remains is the owner's final "publish", then one
-change flips `release_approved` (passports, `MODIFICATIONS.txt`, metadata scope
-and the verifier) and is checked like any release.
+2026-11-26: approved. The change that records it (0.5.32) flips `release_approved`
+in the shipped passports, `MODIFICATIONS.txt`, the metadata scope and the verifier
+together, and is checked like any release. Publishing itself is a separate decision
+of the owner.

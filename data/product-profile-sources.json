@@ -3,7 +3,8 @@
   "review_date": "2026-11-24",
   "status": "approved-local-morphology",
   "scope": "local-experiment-only",
-  "release_approved": false,
+  "release_approved": true,
+  "distribution_review": "data/notices/DISTRIBUTION-REVIEW-001.md",
   "repository": "https://github.com/LibreOffice/dictionaries",
   "commit": "c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb",
   "hunspell": {

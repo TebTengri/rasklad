@@ -317,7 +317,8 @@ def build(commit, accept_notices):
     source_pins = {rel: list(file_pin(profile / rel)) for rel in release_tool().SOURCE_PINS}
     dump_json(work / 'source-pins.json', source_pins)
     run([sys.executable, '-I', ROOT / 'tools/make_release_profile.py', '--from', profile,
-         '--out', work / 'release', '--source-pins', work / 'source-pins.json', '--commit', commit],
+         '--out', work / 'release', '--source-pins', work / 'source-pins.json', '--commit', commit,
+         '--training-manifest', stage / 'data/sources.json'],
         stdout=subprocess.DEVNULL)
     print('built: %s' % (work / 'release'))
 

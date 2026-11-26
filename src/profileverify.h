@@ -20,8 +20,10 @@
 //   * .dic/.aff/control .aff: exact size, SHA-256 and strict UTF-8; the
 //     control .aff equals the deterministic PFX/SFX-row removal of the .aff;
 //   * artifact metadata lists the pinned model/stem files, protocol and
-//     training sources and forbids distribution; notice copies match;
-//     MODIFICATIONS.txt is strict UTF-8 and states release_approved=false;
+//     training sources and states the distribution approval (SYS-256,
+//     DISTRIBUTION-REVIEW-001); notice copies match; the shipped manifests say
+//     release_approved=true with that review; MODIFICATIONS.txt is strict UTF-8
+//     and states release_approved=true;
 //   * model and stem pair: exact size, SHA-256 and serialization round trip.
 // Missing or mismatched data makes the whole profile unavailable; there is no
 // weaker fallback profile.

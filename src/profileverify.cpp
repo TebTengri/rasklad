@@ -71,10 +71,13 @@ bool numberEquals(const QJsonObject &o, const char *name, double expected)
     return value.isDouble() && value.toDouble() == expected;
 }
 
-bool releaseForbidden(const QJsonObject &o)
+// SYS-256: the owner approved distribution on 2026-11-26 after
+// data/notices/DISTRIBUTION-REVIEW-001.md; each shipped manifest says so.
+bool releaseApproved(const QJsonObject &o)
 {
     const QJsonValue release = o.value(key("release_approved"));
-    return release.isBool() && !release.toBool();
+    return release.isBool() && release.toBool()
+        && stringEquals(o, "distribution_review", latin("data/notices/DISTRIBUTION-REVIEW-001.md"));
 }
 
 bool isSafeSegmentChar(QChar ch)
@@ -173,9 +176,9 @@ ProfilePins makeProductionPins()
     // SYS-256: the product's own manifest (the research one, morphology-003, keeps the
     // unmarked control .aff); see tools/make_release_profile.py.
     p.morphManifest = {QStringLiteral("data/product-profile-sources.json"),
-                       QStringLiteral("5d7bb7cb856d94a4a59bf410248d382f1f526d452601afb05db3c4697ece277e"), 0};
+                       QStringLiteral("240be04b9ef252eaccc6ca55fb263da15c03f36e79be4532e1e7e7cc718e522a"), 0};
     p.trainingManifest = {QStringLiteral("data/sources.json"),
-                          QStringLiteral("29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20"), 0};
+                          QStringLiteral("f769131d04ce9f4eca74d57786e10c9e1d64478955e1077555d86ca23b3d920c"), 0};
     p.protocol002 = {QStringLiteral("data/experiment-002-protocol.json"),
                      QStringLiteral("4e38458069c2aa0eb884392dc8eda841d2ecf1f27bcb7e2174c87d1e6c1889b8"), 0};
     p.hunspellVersion = QStringLiteral("1.7.5");
@@ -490,8 +493,9 @@ bool verifyArtifactMetadata(const QByteArray &bytes, const ProfilePins &pins)
             return false;
     }
     const QJsonValue scope = root.value(key("scope"));
-    return scope.isString() && scope.toString().contains(QLatin1String("release_approved=false"))
-        && scope.toString().contains(QLatin1String("not approved for distribution"));
+    return scope.isString() && scope.toString().contains(QLatin1String("release_approved=true"))
+        && scope.toString().contains(QLatin1String("data/notices/DISTRIBUTION-REVIEW-001.md"))
+        && !scope.toString().contains(QLatin1String("not approved"));
 }
 
 bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
@@ -502,7 +506,7 @@ bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
     if (!parseObject(bytes, root))
         return false;
     if (!integerEquals(root, "schema_version", 1) || !stringEquals(root, "status", latin("approved-local-morphology"))
-        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseForbidden(root)
+        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseApproved(root)
         || !stringEquals(root, "commit", pins.dictionaryCommit))
         return false;
     const QJsonValue hunspellValue = root.value(key("hunspell"));
@@ -557,7 +561,7 @@ bool verifyTrainingManifest(const QByteArray &bytes, const ProfilePins &pins)
     if (!parseObject(bytes, root))
         return false;
     if (!integerEquals(root, "schema_version", 1) || !stringEquals(root, "status", latin("approved-local-experiment"))
-        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseForbidden(root)
+        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseApproved(root)
         || !stringEquals(root, "commit", pins.dictionaryCommit))
         return false;
     const QJsonValue sourcesValue = root.value(key("training_sources"));
@@ -696,7 +700,7 @@ ProfileError verifyProfileFiles(const QString &projectRoot, const ProfilePins &p
             return ProfileError::MissingFile;
         QByteArray modifications;
         if (!readBounded(modificationsPath, kMaxModificationsBytes, modifications) || modifications.isEmpty()
-            || !isStrictUtf8(modifications) || !modifications.contains("release_approved=false"))
+            || !isStrictUtf8(modifications) || !modifications.contains("release_approved=true"))
             return ProfileError::ModificationsMismatch;
     }
 

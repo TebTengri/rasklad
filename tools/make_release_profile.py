@@ -9,10 +9,16 @@ things change, so that every distributed copy carries its notices and marks:
   - detector-model.rskn and exact-full-lexicons.rskp are wrapped in the RSKX
     container (wrapNoticeContainer): the full en_US and ru_RU notices, then the
     unchanged RSKN/RSKP payload;
-  - artifact-metadata.json records the new sizes and hashes.
+  - artifact-metadata.json records the new sizes and hashes;
+  - SYS-256 (owner's decision 2026-11-26, DISTRIBUTION-REVIEW-001): the release
+    profile states the distribution approval. MODIFICATIONS.txt becomes
+    RELEASE_MODIFICATIONS, the metadata scope RELEASE_SCOPE, and the metadata
+    records the hash of the approved training manifest (data/sources.json, which
+    differs from the one the model was built with only by the approval).
 
 usage: make_release_profile.py --from <profile root> --out <new dir inside build/>
                                [--source-pins <json> --commit <40-hex>]
+                               [--training-manifest <data/sources.json of the update>]
 The source must match the pins below (the reviewed profile); the output directory
 must not exist. Prints the changed files' new pins as JSON. SYS-272: for a
 dictionary update (tools/update_dictionaries.py) --source-pins names the new
@@ -57,6 +63,31 @@ def sha256(data):
 
 DICTIONARY_COMMIT = 'c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb'
 
+REVIEW = 'data/notices/DISTRIBUTION-REVIEW-001.md'
+RELEASE_SCOPE = ('release_approved=true; approved for distribution by the owner after ' + REVIEW +
+                 '; derived from the reviewed training dictionaries')
+RELEASE_MODIFICATIONS = (
+    'Modified numerical artifacts derived from reviewed LibreOffice dictionaries: the detector '
+    'model and the word list (with the full notices inside), and control .aff files without '
+    'their PFX/SFX rules. release_approved=true: distribution approved by the owner after '
+    + REVIEW + '. See data/sources.json and /usr/share/licenses/rasklad-fcitx5/DATA-NOTICE.txt.\n'
+).encode()
+
+
+def training_manifest_sha256():
+    return sha256((ROOT / 'data/sources.json').read_bytes())
+
+
+def approve(data, training_sha):
+    """The release statement: MODIFICATIONS.txt and the metadata scope and manifest hash."""
+    meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
+    meta = json.loads(data[meta_rel])
+    meta['scope'] = RELEASE_SCOPE
+    meta['trainingManifestSha256'] = training_sha
+    data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
+    data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = RELEASE_MODIFICATIONS
+    return data
+
 
 def embedded_notice(what, en, ru, commit=DICTIONARY_COMMIT):
     """en and ru are the verified notice bytes of the source profile."""
@@ -79,7 +110,7 @@ def wrap(notice, payload):
     return b'RSKX' + struct.pack('<I', len(notice)) + notice + payload
 
 
-def build_profile(data, commit=DICTIONARY_COMMIT):
+def build_profile(data, commit=DICTIONARY_COMMIT, training_sha=None):
     """Returns the release profile (relative path -> bytes) for the reviewed one."""
     data = dict(data)
     en = data['build/experiment-002-artifacts/en_US.NOTICE.txt']
@@ -102,7 +133,7 @@ def build_profile(data, commit=DICTIONARY_COMMIT):
         entry['bytes'] = len(data[rel])
         entry['format'] = f'RSKX v1 notice container around {inner}'
     data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
-    return data
+    return approve(data, training_sha or training_manifest_sha256())
 
 
 def main():
@@ -111,6 +142,8 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--source-pins')
     ap.add_argument('--commit')
+    ap.add_argument('--training-manifest', default=str(ROOT / 'data/sources.json'),
+                    help='the approved training manifest whose hash the metadata records')
     args = ap.parse_args()
     pins_in, commit = SOURCE_PINS, DICTIONARY_COMMIT
     if (args.source_pins is None) != (args.commit is None):
@@ -140,7 +173,7 @@ def main():
             raise SystemExit(f'not the reviewed profile: {rel}')
         data[rel] = blob
 
-    data = build_profile(data, commit)
+    data = build_profile(data, commit, sha256(Path(args.training_manifest).read_bytes()))
     out.mkdir()
     for rel, blob in data.items():
         target = out / rel

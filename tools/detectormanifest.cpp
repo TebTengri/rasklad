@@ -112,7 +112,7 @@ QString manifestErrorText(ManifestError error)
     case ManifestError::ScopeMismatch:
         return QStringLiteral("manifest scope is not local-experiment-only");
     case ManifestError::ReleaseApproved:
-        return QStringLiteral("manifest release_approved must be boolean false");
+        return QStringLiteral("manifest release_approved must be false, or true with the distribution review");
     case ManifestError::BadCommit:
         return QStringLiteral("manifest commit is not a 40-digit lowercase hex id");
     case ManifestError::BadSources:
@@ -155,8 +155,12 @@ ManifestParseResult parseExperimentManifest(const QByteArray &bytes)
         result.error = ManifestError::ScopeMismatch;
         return result;
     }
+    // SYS-256: true only with the owner's distribution review (2026-11-26).
     const QJsonValue release = root.value(QLatin1String("release_approved"));
-    if (!release.isBool() || release.toBool()) {
+    if (!release.isBool()
+        || (release.toBool()
+            && root.value(QLatin1String("distribution_review")).toString()
+                   != QLatin1String("data/notices/DISTRIBUTION-REVIEW-001.md"))) {
         result.error = ManifestError::ReleaseApproved;
         return result;
     }

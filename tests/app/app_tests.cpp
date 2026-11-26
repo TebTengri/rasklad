@@ -839,10 +839,27 @@ private Q_SLOTS:
              ProfileError::ModificationsMismatch},
             {[](testfixture::ProfileFixture &f) {
                  QJsonObject m = f.morphObject();
-                 m.insert(QStringLiteral("release_approved"), true);
+                 m.insert(QStringLiteral("release_approved"), false); // SYS-256: approval required
                  return f.writeManifest(f.pins.morphManifest.path, testfixture::json(m), f.pins.morphManifest);
              },
              ProfileError::ManifestMismatch},
+            {[](testfixture::ProfileFixture &f) {
+                 QJsonObject m = f.morphObject(); // approved, but not by the distribution review
+                 m.insert(QStringLiteral("distribution_review"), QStringLiteral("data/notices/OTHER.md"));
+                 return f.writeManifest(f.pins.morphManifest.path, testfixture::json(m), f.pins.morphManifest);
+             },
+             ProfileError::ManifestMismatch},
+            {[](testfixture::ProfileFixture &f) {
+                 QJsonObject m = f.metadataObject(); // approved without naming the review
+                 m.insert(QStringLiteral("scope"), QStringLiteral("release_approved=true"));
+                 return testfixture::writeBytes(f.root, f.pins.artifactMetadataPath, testfixture::json(m));
+             },
+             ProfileError::MetadataMismatch},
+            {[](testfixture::ProfileFixture &f) {
+                 return testfixture::writeBytes(f.root, f.pins.modificationsPath,
+                                                QByteArray("modified; release_approved=false\n"));
+             },
+             ProfileError::ModificationsMismatch},
             {[](testfixture::ProfileFixture &f) {
                  // The manifest bytes differ from the pinned SHA-256.
                  return testfixture::writeBytes(f.root, f.pins.trainingManifest.path, QByteArray("{}"));
