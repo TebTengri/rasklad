@@ -1,0 +1,33 @@
+# SYS-258: automatic checks on GitHub. Runs tools/ci.sh in an Arch container as an
+# unprivileged user: the product build as PKGBUILD does it, the unit and packaging
+# tests, the rasklad-setup sandbox and the script linters. No secrets, no profile,
+# no real input, nothing written to the repository; the Sway/Fcitx stand stays local.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    container: archlinux:latest
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git qt6-base qt6-declarative fcitx5 \
+            hunspell alsa-lib wayland libxkbcommon python python-gobject shellcheck lua
+          useradd -m ci
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Checks
+        run: |
+          chown -R ci: "$GITHUB_WORKSPACE"
+          runuser -u ci -- git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          runuser -u ci -- env CI=true QT_QPA_PLATFORM=offscreen bash tools/ci.sh
