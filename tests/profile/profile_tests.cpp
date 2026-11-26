@@ -35,6 +35,9 @@ profile::ProfilePins researchPins()
     p.model.bytes = 88290;
     p.stem.sha256 = QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871");
     p.stem.bytes = 1200379;
+    // The research verifier pins the frozen training passport; after a dictionary
+    // update the product's pin moves, the research one does not.
+    p.trainingManifest.sha256 = QString::fromLatin1(domain::kTrainingManifestSha256);
     return p;
 }
 

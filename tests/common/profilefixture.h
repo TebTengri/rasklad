@@ -192,7 +192,7 @@ struct ProfileFixture {
                            {QStringLiteral("status"), QStringLiteral("approved-local-morphology")},
                            {QStringLiteral("scope"), QStringLiteral("local-experiment-only")},
                            {QStringLiteral("release_approved"), true},
-                           {QStringLiteral("distribution_review"), QStringLiteral("data/notices/DISTRIBUTION-REVIEW-001.md")},
+                           {QStringLiteral("distribution_review"), QString::fromLatin1(profile::kDistributionReview)},
                            {QStringLiteral("commit"), p.dictionaryCommit},
                            {QStringLiteral("hunspell"), hunspell},
                            {QStringLiteral("languages"), QJsonArray{languageEntry(0), languageEntry(1)}}};
