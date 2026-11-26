@@ -6,8 +6,7 @@
   "commit": "c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb",
   "scope": "local-experiment-only",
   "status": "approved-local-experiment",
-  "release_approved": true,
-  "distribution_review": "data/notices/DISTRIBUTION-REVIEW-001.md",
+  "release_approved": false,
   "training_sources": [
     {
       "language": "ru",

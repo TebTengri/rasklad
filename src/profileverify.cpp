@@ -71,13 +71,21 @@ bool numberEquals(const QJsonObject &o, const char *name, double expected)
     return value.isDouble() && value.toDouble() == expected;
 }
 
-// SYS-256: the owner approved distribution on 2026-11-26 after
-// data/notices/DISTRIBUTION-REVIEW-001.md; each shipped manifest says so.
+bool releaseForbidden(const QJsonObject &o)
+{
+    const QJsonValue release = o.value(key("release_approved"));
+    return release.isBool() && !release.toBool();
+}
+
+// SYS-256: the product passport records the owner's approval (2026-11-26) and names
+// the review. The training passport (data/sources.json) stays the frozen research
+// record the model was built from: its bytes are pinned and its release_approved
+// stays false (see DISTRIBUTION-REVIEW-001).
 bool releaseApproved(const QJsonObject &o)
 {
     const QJsonValue release = o.value(key("release_approved"));
     return release.isBool() && release.toBool()
-        && stringEquals(o, "distribution_review", latin("data/notices/DISTRIBUTION-REVIEW-001.md"));
+        && stringEquals(o, "distribution_review", latin(kDistributionReview));
 }
 
 bool isSafeSegmentChar(QChar ch)
@@ -178,7 +186,7 @@ ProfilePins makeProductionPins()
     p.morphManifest = {QStringLiteral("data/product-profile-sources.json"),
                        QStringLiteral("240be04b9ef252eaccc6ca55fb263da15c03f36e79be4532e1e7e7cc718e522a"), 0};
     p.trainingManifest = {QStringLiteral("data/sources.json"),
-                          QStringLiteral("f769131d04ce9f4eca74d57786e10c9e1d64478955e1077555d86ca23b3d920c"), 0};
+                          QStringLiteral("29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20"), 0};
     p.protocol002 = {QStringLiteral("data/experiment-002-protocol.json"),
                      QStringLiteral("4e38458069c2aa0eb884392dc8eda841d2ecf1f27bcb7e2174c87d1e6c1889b8"), 0};
     p.hunspellVersion = QStringLiteral("1.7.5");
@@ -493,9 +501,13 @@ bool verifyArtifactMetadata(const QByteArray &bytes, const ProfilePins &pins)
             return false;
     }
     const QJsonValue scope = root.value(key("scope"));
-    return scope.isString() && scope.toString().contains(QLatin1String("release_approved=true"))
-        && scope.toString().contains(QLatin1String("data/notices/DISTRIBUTION-REVIEW-001.md"))
-        && !scope.toString().contains(QLatin1String("not approved"));
+    if (!scope.isString())
+        return false;
+    if (pins.requireReleaseApproval)
+        return scope.toString() == QLatin1String(kReleaseScope);
+    return scope.toString().contains(QLatin1String("release_approved=false"))
+        && scope.toString().contains(QLatin1String("not approved for distribution"))
+        && !scope.toString().contains(QLatin1String("release_approved=true"));
 }
 
 bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
@@ -506,7 +518,9 @@ bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
     if (!parseObject(bytes, root))
         return false;
     if (!integerEquals(root, "schema_version", 1) || !stringEquals(root, "status", latin("approved-local-morphology"))
-        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseApproved(root)
+        || !stringEquals(root, "scope", latin("local-experiment-only"))
+        || !(pins.requireReleaseApproval ? releaseApproved(root)
+                                         : releaseForbidden(root) && !root.contains(key("distribution_review")))
         || !stringEquals(root, "commit", pins.dictionaryCommit))
         return false;
     const QJsonValue hunspellValue = root.value(key("hunspell"));
@@ -561,7 +575,7 @@ bool verifyTrainingManifest(const QByteArray &bytes, const ProfilePins &pins)
     if (!parseObject(bytes, root))
         return false;
     if (!integerEquals(root, "schema_version", 1) || !stringEquals(root, "status", latin("approved-local-experiment"))
-        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseApproved(root)
+        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseForbidden(root)
         || !stringEquals(root, "commit", pins.dictionaryCommit))
         return false;
     const QJsonValue sourcesValue = root.value(key("training_sources"));
@@ -700,7 +714,10 @@ ProfileError verifyProfileFiles(const QString &projectRoot, const ProfilePins &p
             return ProfileError::MissingFile;
         QByteArray modifications;
         if (!readBounded(modificationsPath, kMaxModificationsBytes, modifications) || modifications.isEmpty()
-            || !isStrictUtf8(modifications) || !modifications.contains("release_approved=true"))
+            || (pins.requireReleaseApproval
+                    ? modifications != QByteArray(kReleaseModifications)
+                    : !isStrictUtf8(modifications) || !modifications.contains("release_approved=false")
+                          || modifications.contains("release_approved=true")))
             return ProfileError::ModificationsMismatch;
     }
 

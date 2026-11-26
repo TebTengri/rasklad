@@ -35,9 +35,6 @@ profile::ProfilePins researchPins()
     p.model.bytes = 88290;
     p.stem.sha256 = QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871");
     p.stem.bytes = 1200379;
-    // The research artifacts were made with the training manifest before the
-    // distribution approval (SYS-256), whose hash the research tools pin.
-    p.trainingManifest.sha256 = QString::fromLatin1(domain::kTrainingManifestSha256);
     return p;
 }
 
@@ -64,8 +61,7 @@ QJsonObject productionMetadata()
                        {QStringLiteral("trainingManifestSha256"), p.trainingManifest.sha256},
                        {QStringLiteral("trainingSources"), training},
                        {QStringLiteral("scope"),
-                        QStringLiteral("release_approved=true; approved for distribution by the owner after "
-                                       "data/notices/DISTRIBUTION-REVIEW-001.md")}};
+                        QString::fromLatin1(profile::kReleaseScope)}};
 }
 
 QByteArray bytesOf(const QJsonObject &o)
@@ -244,9 +240,14 @@ private Q_SLOTS:
             variants.push_back(bytesOf(o));
         }
         {
-            QJsonObject o = valid; // both statements
-            o.insert(QStringLiteral("scope"), QStringLiteral("release_approved=true; data/notices/DISTRIBUTION-REVIEW-001.md; "
-                                                             "not approved"));
+            QJsonObject o = valid; // contradicting statement appended
+            o.insert(QStringLiteral("scope"), QString::fromLatin1(profile::kReleaseScope) + QStringLiteral("; release_approved=false"));
+            variants.push_back(bytesOf(o));
+        }
+        {
+            QJsonObject o = valid; // another review file
+            o.insert(QStringLiteral("scope"), QString::fromLatin1(profile::kReleaseScope)
+                                                  .replace(QStringLiteral("REVIEW-001.md"), QStringLiteral("REVIEW-001.md.bak")));
             variants.push_back(bytesOf(o));
         }
         {

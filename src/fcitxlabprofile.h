@@ -20,7 +20,8 @@ class ProfileDecision final
 {
 public:
     // root: directory holding the pinned profile files at their relative paths.
-    explicit ProfileDecision(const char *root = "/lab/profile") noexcept;
+    // unreviewedUpdate: tools/product_eval only (ProfilePins::requireReleaseApproval).
+    explicit ProfileDecision(const char *root = "/lab/profile", bool unreviewedUpdate = false) noexcept;
     ~ProfileDecision();
     ProfileDecision(const ProfileDecision &) = delete;
     ProfileDecision &operator=(const ProfileDecision &) = delete;

@@ -12,7 +12,9 @@
 // layout; intent Keep) and a wrong case (the same keys in the other layout;
 // intent Correct back to the token: only the whole word equal to it is a recovery;
 // any other change, a partial one too, is a wrong conversion). Offline; reads only the given files; prints
-// aggregate counts and rates, never a word.
+// aggregate counts and rates, never a word. --unreviewed-update: the profile is a
+// dictionary update the owner has not reviewed for distribution (SYS-256); it must
+// say release_approved=false everywhere, and every other check stays.
 #include "autocorrect.h"
 #include "benchmarkprotocol.h"
 #include "fcitxlabprofile.h"
@@ -88,7 +90,7 @@ QJsonObject json(const Counts &c)
 
 int usage()
 {
-    std::fprintf(stderr, "usage: product_eval --root <profile root> --eval-en <tsv> --eval-ru <tsv>\n");
+    std::fprintf(stderr, "usage: product_eval [--unreviewed-update] --root <profile root> --eval-en <tsv> --eval-ru <tsv>\n");
     return 2;
 }
 
@@ -97,7 +99,10 @@ int usage()
 int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
-    const QStringList args = app.arguments();
+    QStringList args = app.arguments();
+    const bool unreviewed = args.size() > 1 && args[1] == QLatin1String("--unreviewed-update");
+    if (unreviewed)
+        args.removeAt(1);
     QString root, evalPath[2];
     for (qsizetype i = 1; i + 1 < args.size(); i += 2) {
         if (args[i] == QLatin1String("--root")) root = args[i + 1];
@@ -108,7 +113,9 @@ int main(int argc, char **argv)
     if (args.size() != 7 || root.isEmpty() || evalPath[0].isEmpty() || evalPath[1].isEmpty()) return usage();
 
     profile::ProfileError error = profile::ProfileError::None;
-    const auto provider = profile::LocalEvidenceProvider::load(root, profile::productionPins(), error);
+    profile::ProfilePins pins = profile::productionPins();
+    pins.requireReleaseApproval = !unreviewed;
+    const auto provider = profile::LocalEvidenceProvider::load(root, pins, error);
     if (!provider || error != profile::ProfileError::None) {
         const QJsonObject out{{QStringLiteral("loaded"), false},
                               {QStringLiteral("error"), QString::fromLatin1(profile::profileErrorName(error))}};
@@ -116,7 +123,7 @@ int main(int argc, char **argv)
         return 3; // the addon would reject this profile too
     }
 
-    fcitxlab::ProfileDecision decision(root.toUtf8().constData());
+    fcitxlab::ProfileDecision decision(root.toUtf8().constData(), unreviewed);
     if (!decision.ready()) {
         std::fprintf(stderr, "product_eval: the addon's profile decision did not load\n");
         return 3;

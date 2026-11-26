@@ -4,13 +4,18 @@ Prepared by Claude, 2026-11-24. Independent review: Codex (see the PR). This is 
 technical check of the reviewed notices against the exact package contents. It is
 not legal advice and not a guarantee of uncontested rights.
 
-**Decision: approved by the owner on 2026-11-26.** The shipped passports
-(`data/sources.json`, `data/product-profile-sources.json`) say
-`release_approved: true` with `distribution_review` naming this file; the release
-profile's `MODIFICATIONS.txt` and metadata scope state the approval; the addon
-(`src/profileverify.cpp`) requires all of it. The research passports of experiments
-001–006 keep `release_approved: false`: they record local experiments. Approval
-covers the files below at these hashes; a changed profile needs this review again.
+**Decision: approved by the owner on 2026-11-26.** The product passport
+(`data/product-profile-sources.json`) says `release_approved: true` with
+`distribution_review` naming this file; the release profile's `MODIFICATIONS.txt`
+and metadata scope state the approval word for word; the addon
+(`src/profileverify.h`, `.cpp`) requires all of it, and the package ships this file
+with the profile. The training passport `data/sources.json` and the research passports
+of experiments 001–006 stay unchanged with `release_approved: false`: they are the
+frozen records the model and the experiments were built from (their hashes are pinned
+by the research tools), and this decision supersedes them for distribution. Approval
+covers the files below at these hashes. A dictionary update (`tools/update_dictionaries.py`)
+writes `release_approved: false` into the product passport, so the addon and the
+package refuse the new profile until a new review is approved.
 
 ## Exact contents
 
@@ -31,7 +36,7 @@ profile must be compared again.
 | build/experiment-003-data/control/MODIFIED.txt | — | — | Rasklad marker, a copy of `packaging/arch/DATA-NOTICE.txt`; not part of the verified profile |
 | build/experiment-002-artifacts/detector-model.rskn | d30f471a13be898514b030fbab95872b69d431beb8e105bc56b860a3c163509a | 106396 | **derived**: model weights; full notices inside (RSKX) |
 | build/experiment-002-artifacts/exact-full-lexicons.rskp | ff325623b4dd2fe871195138d7b09c1c5dd0384152bca85e8c9f66789dd15da3 | 1218480 | **derived**: word list; full notices inside (RSKX) |
-| build/experiment-002-artifacts/artifact-metadata.json | 4b0b0994e25cf8f0a325fa30e95f9fd849517dd29de7625d195b61e98c714e8c | 1917 | Rasklad metadata (0.5.32: states the approval) |
+| build/experiment-002-artifacts/artifact-metadata.json | 58391a58d040e7987e697ef0d40da767df43e7cae2339b0fe9dcbc351dd3338a | 1917 | Rasklad metadata (0.5.32: states the approval) |
 | build/experiment-002-artifacts/MODIFICATIONS.txt | ae36f26833e66a6902accc2e7128ef0ad3102046613c0e9820657fb6a3398f46 | 381 | Rasklad record (0.5.32: states the approval) |
 | build/experiment-002-artifacts/en_US.NOTICE.txt | 168b4c01cb841f766a72f310b065c04d09cff46376c37a81d799593ce751c371 | 15732 | upstream notice, unmodified |
 | build/experiment-002-artifacts/ru_RU.NOTICE.txt | 262af2f6ad70a61e5ee1332ff44fa8ee50edca819cf33207d8ad6ba6a0c9be52 | 1886 | upstream notice, unmodified |

@@ -67,8 +67,7 @@ struct ManifestParseResult {
 
 // Проверки: размер <= kMaxManifestBytes, корень — JSON-объект,
 // schema_version == 1, status и scope равны обязательным значениям,
-// release_approved — логическое false или true вместе с distribution_review =
-// data/notices/DISTRIBUTION-REVIEW-001.md (SYS-256), commit — 40 строчных hex,
+// release_approved — логическое false, commit — 40 строчных hex,
 // training_sources — ровно en и ru; у каждого sha256 и notice_sha256 —
 // 64 строчных hex, bytes — целое в [1, kMaxDicBytes], notice — безопасный
 // относительный путь (isSafeNoticePath).

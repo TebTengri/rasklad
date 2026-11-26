@@ -33,13 +33,14 @@ struct ProfileDecision::Impl {
     std::unique_ptr<profile::LocalEvidenceProvider> provider;
 };
 
-ProfileDecision::ProfileDecision(const char *root) noexcept
+ProfileDecision::ProfileDecision(const char *root, bool unreviewedUpdate) noexcept
 {
     try {
         auto impl = std::make_unique<Impl>();
         profile::ProfileError error = profile::ProfileError::None;
-        impl->provider = profile::LocalEvidenceProvider::load(QString::fromUtf8(root ? root : ""),
-                                                               profile::productionPins(), error);
+        profile::ProfilePins pins = profile::productionPins();
+        pins.requireReleaseApproval = !unreviewedUpdate;
+        impl->provider = profile::LocalEvidenceProvider::load(QString::fromUtf8(root ? root : ""), pins, error);
         if (impl->provider && error == profile::ProfileError::None)
             m_impl = std::move(impl);
     } catch (...) {

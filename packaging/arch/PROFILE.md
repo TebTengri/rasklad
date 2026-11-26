@@ -37,9 +37,15 @@ tools/build_arch_package.sh "/путь/к/профилю"
 - модель и словарь стеблей — что в начале файла есть уведомления (контейнер RSKX);
 - копии уведомлений — по SHA-256 оригиналов из `data/notices/`;
 - `artifact-metadata.json` — по полям;
-- `MODIFICATIONS.txt` — UTF-8, не пустой, содержит `release_approved=true`;
-- манифесты `data/sources.json` и `data/product-profile-sources.json` — `release_approved: true`
-  и `distribution_review` с путём к ревью распространения.
+- `MODIFICATIONS.txt` и поле `scope` метаданных — дословно тексты одобрения из
+  `src/profileverify.h` (`kReleaseModifications`, `kReleaseScope`);
+- продуктовый паспорт `data/product-profile-sources.json` — `release_approved: true`
+  и `distribution_review` с путём к ревью; учебный паспорт `data/sources.json` —
+  неизменная запись опыта (`release_approved: false`), его байты закреплены.
+
+Обновление словарей (`tools/update_dictionaries.py`) одобрение не наследует: оно
+пишет `release_approved: false`, и аддон с пакетом не примут новый профиль, пока
+владелец не одобрит новое ревью распространения.
 
 Если что-то не сходится, автоисправление выключается, а значок показывает
 `EN!`/`RU!`.

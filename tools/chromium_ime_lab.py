@@ -23,7 +23,7 @@ base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
 TIMEOUT=60
 PROFILE_PATHS=[
  'data/product-profile-sources.json','data/sources.json','data/experiment-002-protocol.json',
- 'data/notices/MORPHOLOGY-003-REVIEW.md','data/notices/Hunspell-COPYING.MPL.txt',
+ 'data/notices/MORPHOLOGY-003-REVIEW.md','data/notices/DISTRIBUTION-REVIEW-001.md','data/notices/Hunspell-COPYING.MPL.txt',
  'data/notices/Hunspell-license.myspell.txt','data/notices/en_US.README.txt','data/notices/ru_RU.README.txt',
  'build/experiment-data/en.dic','build/experiment-data/ru.dic',
  'build/experiment-003-data/en.aff','build/experiment-003-data/ru.aff',

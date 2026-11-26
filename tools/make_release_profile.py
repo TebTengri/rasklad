@@ -12,13 +12,12 @@ things change, so that every distributed copy carries its notices and marks:
   - artifact-metadata.json records the new sizes and hashes;
   - SYS-256 (owner's decision 2026-11-26, DISTRIBUTION-REVIEW-001): the release
     profile states the distribution approval. MODIFICATIONS.txt becomes
-    RELEASE_MODIFICATIONS, the metadata scope RELEASE_SCOPE, and the metadata
-    records the hash of the approved training manifest (data/sources.json, which
-    differs from the one the model was built with only by the approval).
+    RELEASE_MODIFICATIONS and the metadata scope RELEASE_SCOPE, word for word as
+    src/profileverify.h requires. The training passport data/sources.json is the
+    frozen record the model was built from and is not changed.
 
 usage: make_release_profile.py --from <profile root> --out <new dir inside build/>
                                [--source-pins <json> --commit <40-hex>]
-                               [--training-manifest <data/sources.json of the update>]
 The source must match the pins below (the reviewed profile); the output directory
 must not exist. Prints the changed files' new pins as JSON. SYS-272: for a
 dictionary update (tools/update_dictionaries.py) --source-pins names the new
@@ -74,16 +73,11 @@ RELEASE_MODIFICATIONS = (
 ).encode()
 
 
-def training_manifest_sha256():
-    return sha256((ROOT / 'data/sources.json').read_bytes())
-
-
-def approve(data, training_sha):
-    """The release statement: MODIFICATIONS.txt and the metadata scope and manifest hash."""
+def approve(data):
+    """The release statement: MODIFICATIONS.txt and the metadata scope."""
     meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
     meta = json.loads(data[meta_rel])
     meta['scope'] = RELEASE_SCOPE
-    meta['trainingManifestSha256'] = training_sha
     data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
     data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = RELEASE_MODIFICATIONS
     return data
@@ -110,7 +104,7 @@ def wrap(notice, payload):
     return b'RSKX' + struct.pack('<I', len(notice)) + notice + payload
 
 
-def build_profile(data, commit=DICTIONARY_COMMIT, training_sha=None):
+def build_profile(data, commit=DICTIONARY_COMMIT, approved=True):
     """Returns the release profile (relative path -> bytes) for the reviewed one."""
     data = dict(data)
     en = data['build/experiment-002-artifacts/en_US.NOTICE.txt']
@@ -133,7 +127,7 @@ def build_profile(data, commit=DICTIONARY_COMMIT, training_sha=None):
         entry['bytes'] = len(data[rel])
         entry['format'] = f'RSKX v1 notice container around {inner}'
     data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
-    return approve(data, training_sha or training_manifest_sha256())
+    return approve(data) if approved else data
 
 
 def main():
@@ -142,8 +136,6 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--source-pins')
     ap.add_argument('--commit')
-    ap.add_argument('--training-manifest', default=str(ROOT / 'data/sources.json'),
-                    help='the approved training manifest whose hash the metadata records')
     args = ap.parse_args()
     pins_in, commit = SOURCE_PINS, DICTIONARY_COMMIT
     if (args.source_pins is None) != (args.commit is None):
@@ -173,7 +165,9 @@ def main():
             raise SystemExit(f'not the reviewed profile: {rel}')
         data[rel] = blob
 
-    data = build_profile(data, commit, sha256(Path(args.training_manifest).read_bytes()))
+    # A dictionary update (--source-pins) is not reviewed for distribution: its
+    # profile keeps the source's release_approved=false statements (SYS-256).
+    data = build_profile(data, commit, approved=args.source_pins is None)
     out.mkdir()
     for rel, blob in data.items():
         target = out / rel

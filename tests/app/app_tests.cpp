@@ -851,13 +851,13 @@ private Q_SLOTS:
              ProfileError::ManifestMismatch},
             {[](testfixture::ProfileFixture &f) {
                  QJsonObject m = f.metadataObject(); // approved without naming the review
-                 m.insert(QStringLiteral("scope"), QStringLiteral("release_approved=true"));
+                 m.insert(QStringLiteral("scope"), QStringLiteral("release_approved=trueish"));
                  return testfixture::writeBytes(f.root, f.pins.artifactMetadataPath, testfixture::json(m));
              },
              ProfileError::MetadataMismatch},
             {[](testfixture::ProfileFixture &f) {
                  return testfixture::writeBytes(f.root, f.pins.modificationsPath,
-                                                QByteArray("modified; release_approved=false\n"));
+                                                QByteArray(profile::kReleaseModifications) + QByteArray("release_approved=false\n"));
              },
              ProfileError::ModificationsMismatch},
             {[](testfixture::ProfileFixture &f) {

@@ -26,6 +26,36 @@ class ReleaseProfile(unittest.TestCase):
         text = ''.join(ast.literal_eval(part) for part in re.findall(r'"(?:[^"\\]|\\.)*"', block))
         self.assertEqual(load_tool().CONTROL_AFF_HEADER, text.encode())
 
+    def test_release_statements_equal_addon_constants(self):
+        """SYS-256: the addon compares the scope and MODIFICATIONS.txt word for word."""
+        header = (ROOT / 'src/profileverify.h').read_text()
+        def constant(name):
+            block = re.search(name + r'\[\] =\s*((?:"(?:[^"\\]|\\.)*"\s*)+);', header).group(1)
+            return ''.join(ast.literal_eval(part) for part in re.findall(r'"(?:[^"\\]|\\.)*"', block))
+        tool = load_tool()
+        self.assertEqual(tool.REVIEW, constant('kDistributionReview'))
+        self.assertEqual(tool.RELEASE_SCOPE, constant('kReleaseScope'))
+        self.assertEqual(tool.RELEASE_MODIFICATIONS, constant('kReleaseModifications').encode())
+        product = json.loads((ROOT / 'data/product-profile-sources.json').read_text())
+        self.assertIs(product['release_approved'], True)
+        self.assertEqual(product['distribution_review'], tool.REVIEW)
+        self.assertTrue((ROOT / tool.REVIEW).is_file())
+        self.assertIn(tool.REVIEW, (ROOT / 'packaging/arch/profile-files.txt').read_text().split())
+
+    def test_update_profile_is_not_approved(self):
+        """A dictionary update keeps release_approved=false until a new review."""
+        tool = load_tool()
+        data = {rel: b'' for rel in tool.SOURCE_PINS}
+        data['build/experiment-002-artifacts/artifact-metadata.json'] = json.dumps(
+            {'artifacts': {'model': {}, 'exactFullLexicons': {}}, 'scope': 'local; release_approved=false'}).encode()
+        data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = b'release_approved=false\n'
+        out = tool.build_profile(data, approved=False)
+        self.assertEqual(out['build/experiment-002-artifacts/MODIFICATIONS.txt'], b'release_approved=false\n')
+        meta = json.loads(out['build/experiment-002-artifacts/artifact-metadata.json'])
+        self.assertEqual(meta['scope'], 'local; release_approved=false')
+        approved = tool.build_profile(data)
+        self.assertEqual(approved['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.RELEASE_MODIFICATIONS)
+
     def test_container_and_metadata(self):
         tool = load_tool()
         data = {rel: b'' for rel in tool.SOURCE_PINS}
