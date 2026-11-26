@@ -250,7 +250,8 @@ private Q_SLOTS:
         {
             QJsonObject o = valid; // another review file
             o.insert(QStringLiteral("scope"), QString::fromLatin1(profile::kReleaseScope)
-                                                  .replace(QStringLiteral("REVIEW-001.md"), QStringLiteral("REVIEW-001.md.bak")));
+                                                  .replace(QString::fromLatin1(profile::kDistributionReview),
+                                                           QString::fromLatin1(profile::kDistributionReview) + QStringLiteral(".bak")));
             variants.push_back(bytesOf(o));
         }
         {
