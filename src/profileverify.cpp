@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QJsonValue>
+#include <QSet>
 #include <QStringDecoder>
 #include <QStringList>
 
@@ -16,6 +17,7 @@
 #include <initializer_list>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace rasklad::profile {
 
@@ -31,11 +33,58 @@ QString latin(const char *text)
     return QString::fromLatin1(text);
 }
 
+// SYS-256: Qt keeps the last of duplicate members, so a file could carry two
+// contradicting values and pass on the second. Every object of a pinned or checked
+// JSON file must name each member once (keys compared after unescaping). Called on
+// bytes Qt has already parsed, so the structure is valid JSON.
+bool hasDuplicateMembers(const QByteArray &bytes)
+{
+    std::vector<QSet<QString>> objects; // one key set per open object; arrays push none
+    std::vector<bool> isObject;
+    bool expectKey = false;
+    for (qsizetype i = 0; i < bytes.size(); ++i) {
+        const char c = bytes[i];
+        if (c == '{') {
+            isObject.push_back(true);
+            objects.emplace_back();
+            expectKey = true;
+        } else if (c == '[') {
+            isObject.push_back(false);
+            expectKey = false;
+        } else if (c == '}' || c == ']') {
+            if (isObject.empty())
+                return true;
+            if (isObject.back())
+                objects.pop_back();
+            isObject.pop_back();
+            expectKey = false;
+        } else if (c == ',') {
+            expectKey = !isObject.empty() && isObject.back();
+        } else if (c == '"') {
+            qsizetype end = i + 1;
+            while (end < bytes.size() && bytes[end] != '"')
+                end += bytes[end] == '\\' ? 2 : 1;
+            if (end >= bytes.size())
+                return true;
+            if (expectKey) {
+                const QJsonDocument one = QJsonDocument::fromJson('[' + bytes.mid(i, end - i + 1) + ']');
+                const QString name = one.array().at(0).toString();
+                if (objects.back().contains(name))
+                    return true;
+                objects.back().insert(name);
+                expectKey = false;
+            }
+            i = end;
+        }
+    }
+    return false;
+}
+
 bool parseObject(const QByteArray &bytes, QJsonObject &out)
 {
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(bytes, &parseError);
-    if (parseError.error != QJsonParseError::NoError || !document.isObject())
+    if (parseError.error != QJsonParseError::NoError || !document.isObject() || hasDuplicateMembers(bytes))
         return false;
     out = document.object();
     return true;

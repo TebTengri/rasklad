@@ -73,6 +73,14 @@ RELEASE_MODIFICATIONS = (
 ).encode()
 
 
+def passport_approved():
+    try:
+        passport = json.loads((ROOT / 'data/product-profile-sources.json').read_bytes())
+    except (OSError, ValueError):
+        return False
+    return passport.get('release_approved') is True and passport.get('distribution_review') == REVIEW
+
+
 def approve(data):
     """The release statement: MODIFICATIONS.txt and the metadata scope."""
     meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
@@ -165,9 +173,10 @@ def main():
             raise SystemExit(f'not the reviewed profile: {rel}')
         data[rel] = blob
 
-    # A dictionary update (--source-pins) is not reviewed for distribution: its
-    # profile keeps the source's release_approved=false statements (SYS-256).
-    data = build_profile(data, commit, approved=args.source_pins is None)
+    # Only the reviewed dictionaries are approved: the product passport must record
+    # the owner's approval, and a dictionary update (--source-pins) never is. After
+    # update_dictionaries pin the passport says false until a new review (SYS-256).
+    data = build_profile(data, commit, approved=args.source_pins is None and passport_approved())
     out.mkdir()
     for rel, blob in data.items():
         target = out / rel

@@ -320,6 +320,26 @@ private Q_SLOTS:
         QJsonObject research = valid;
         research.insert(QStringLiteral("scope"), researchScope);
         QVERIFY(!profile::verifyArtifactMetadata(bytesOf(research), pins)); // not approved: refused
+        // Qt keeps the last duplicate member: an unapproved scope followed by the
+        // approved one, in the object or nested, is refused (SYS-256).
+        QByteArray compact = bytesOf(valid);
+        QVERIFY(profile::verifyArtifactMetadata(compact, pins));
+        QByteArray dup = compact;
+        dup.insert(1, "\"scope\":\"release_approved=false; not approved for distribution\",");
+        QVERIFY(QJsonDocument::fromJson(dup).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(dup, pins));
+        QByteArray escaped = compact;
+        escaped.insert(1, "\"sc\\u006fpe\":\"x\",");
+        QVERIFY(QJsonDocument::fromJson(escaped).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(escaped, pins));
+        QByteArray nested = compact;
+        const qsizetype at = nested.indexOf("\"model\":{") + 9;
+        nested.insert(at, "\"file\":\"other\",");
+        QVERIFY(QJsonDocument::fromJson(nested).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(nested, pins));
+        QByteArray strings = compact; // braces and quotes inside strings are not structure
+        strings.insert(1, "\"note\":\"{\\\"scope\\\":[}\",");
+        QVERIFY(profile::verifyArtifactMetadata(strings, pins));
     }
 
     void spellEngineParity()

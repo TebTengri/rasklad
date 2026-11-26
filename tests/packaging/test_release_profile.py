@@ -56,6 +56,23 @@ class ReleaseProfile(unittest.TestCase):
         approved = tool.build_profile(data)
         self.assertEqual(approved['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.RELEASE_MODIFICATIONS)
 
+    def test_approval_follows_the_product_passport(self):
+        """After update_dictionaries pin the passport says false: no approval is written."""
+        import tempfile
+        tool = load_tool()
+        self.assertTrue(tool.passport_approved())
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'data').mkdir()
+            passport = json.loads((ROOT / 'data/product-profile-sources.json').read_text())
+            tool.ROOT = Path(tmp)
+            for value, review in ((False, None), (True, None), (True, 'data/notices/OTHER.md'), ('true', tool.REVIEW)):
+                p = dict(passport, release_approved=value)
+                p.pop('distribution_review')
+                if review:
+                    p['distribution_review'] = review
+                (Path(tmp) / 'data/product-profile-sources.json').write_text(json.dumps(p))
+                self.assertFalse(tool.passport_approved(), (value, review))
+
     def test_container_and_metadata(self):
         tool = load_tool()
         data = {rel: b'' for rel in tool.SOURCE_PINS}
