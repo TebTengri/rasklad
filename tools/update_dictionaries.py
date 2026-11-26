@@ -618,8 +618,9 @@ def pin_locked(commit, work):
     print('pinned %s (%d files). The new dictionaries are not reviewed for distribution: the addon and the '
           'package refuse them until the owner approves a new distribution review (data/notices/, '
           'data/product-profile-sources.json, src/profileverify.h kDistributionReview and the texts, then '
-          'tools/make_release_profile.py without --source-pins). Next: bin/build, the tests, git diff and '
-          'independent review; the release profile for measurement is %s.' % (commit, len(changed), work / 'release'))
+          'tools/make_release_profile.py without --source-pins); until then the pin tests and the package '
+          'fail by design. Steps: packaging/arch/PROFILE.md, "Обновление словарей". %s is for measurement only.'
+          % (commit, len(changed), work / 'release'))
 
 
 def pin_into(commit, root):
