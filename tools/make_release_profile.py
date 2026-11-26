@@ -9,7 +9,12 @@ things change, so that every distributed copy carries its notices and marks:
   - detector-model.rskn and exact-full-lexicons.rskp are wrapped in the RSKX
     container (wrapNoticeContainer): the full en_US and ru_RU notices, then the
     unchanged RSKN/RSKP payload;
-  - artifact-metadata.json records the new sizes and hashes.
+  - artifact-metadata.json records the new sizes and hashes;
+  - SYS-256 (owner's decision 2026-11-26, DISTRIBUTION-REVIEW-001): the release
+    profile states the distribution approval. MODIFICATIONS.txt becomes
+    RELEASE_MODIFICATIONS and the metadata scope RELEASE_SCOPE, word for word as
+    src/profileverify.h requires. The training passport data/sources.json is the
+    frozen record the model was built from and is not changed.
 
 usage: make_release_profile.py --from <profile root> --out <new dir inside build/>
                                [--source-pins <json> --commit <40-hex>]
@@ -57,6 +62,59 @@ def sha256(data):
 
 DICTIONARY_COMMIT = 'c0865a85eb67dc377f2cf8e8fe2c4fa9e53f0dcb'
 
+REVIEW = 'data/notices/DISTRIBUTION-REVIEW-001.md'
+RELEASE_SCOPE = ('release_approved=true; approved for distribution by the owner after ' + REVIEW +
+                 '; derived from the reviewed training dictionaries')
+RELEASE_MODIFICATIONS = (
+    'Modified numerical artifacts derived from reviewed LibreOffice dictionaries: the detector '
+    'model and the word list (with the full notices inside), and control .aff files without '
+    'their PFX/SFX rules. release_approved=true: distribution approved by the owner after '
+    + REVIEW + '. See data/sources.json and /usr/share/licenses/rasklad-fcitx5/DATA-NOTICE.txt.\n'
+).encode()
+
+
+UNREVIEWED_SCOPE = 'local experiment; release_approved=false; not approved for distribution'
+UNREVIEWED_MODIFICATIONS = (
+    b'Modified numerical artifacts derived from LibreOffice dictionaries not yet reviewed for '
+    b'distribution. Local experiment only, release_approved=false. See data/sources.json.\n')
+
+
+def unique_members(pairs):
+    """json object_pairs_hook: a duplicate member is an error, not last-wins."""
+    names = [name for name, _ in pairs]
+    if len(names) != len(set(names)):
+        raise ValueError('duplicate JSON member')
+    return dict(pairs)
+
+
+def passport_approved():
+    try:
+        passport = json.loads((ROOT / 'data/product-profile-sources.json').read_bytes(),
+                              object_pairs_hook=unique_members)
+    except (OSError, ValueError):
+        return False
+    return passport.get('release_approved') is True and passport.get('distribution_review') == REVIEW
+
+
+def unapprove(data):
+    """Not approved: whatever the source said, the profile says release_approved=false."""
+    meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
+    meta = json.loads(data[meta_rel])
+    meta['scope'] = UNREVIEWED_SCOPE
+    data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
+    data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = UNREVIEWED_MODIFICATIONS
+    return data
+
+
+def approve(data):
+    """The release statement: MODIFICATIONS.txt and the metadata scope."""
+    meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
+    meta = json.loads(data[meta_rel])
+    meta['scope'] = RELEASE_SCOPE
+    data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
+    data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = RELEASE_MODIFICATIONS
+    return data
+
 
 def embedded_notice(what, en, ru, commit=DICTIONARY_COMMIT):
     """en and ru are the verified notice bytes of the source profile."""
@@ -79,7 +137,7 @@ def wrap(notice, payload):
     return b'RSKX' + struct.pack('<I', len(notice)) + notice + payload
 
 
-def build_profile(data, commit=DICTIONARY_COMMIT):
+def build_profile(data, commit=DICTIONARY_COMMIT, approved=True):
     """Returns the release profile (relative path -> bytes) for the reviewed one."""
     data = dict(data)
     en = data['build/experiment-002-artifacts/en_US.NOTICE.txt']
@@ -102,7 +160,7 @@ def build_profile(data, commit=DICTIONARY_COMMIT):
         entry['bytes'] = len(data[rel])
         entry['format'] = f'RSKX v1 notice container around {inner}'
     data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
-    return data
+    return approve(data) if approved else unapprove(data)
 
 
 def main():
@@ -140,7 +198,10 @@ def main():
             raise SystemExit(f'not the reviewed profile: {rel}')
         data[rel] = blob
 
-    data = build_profile(data, commit)
+    # Only the reviewed dictionaries are approved: the product passport must record
+    # the owner's approval, and a dictionary update (--source-pins) never is. After
+    # update_dictionaries pin the passport says false until a new review (SYS-256).
+    data = build_profile(data, commit, approved=args.source_pins is None and passport_approved())
     out.mkdir()
     for rel, blob in data.items():
         target = out / rel

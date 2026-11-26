@@ -20,8 +20,10 @@
 //   * .dic/.aff/control .aff: exact size, SHA-256 and strict UTF-8; the
 //     control .aff equals the deterministic PFX/SFX-row removal of the .aff;
 //   * artifact metadata lists the pinned model/stem files, protocol and
-//     training sources and forbids distribution; notice copies match;
-//     MODIFICATIONS.txt is strict UTF-8 and states release_approved=false;
+//     training sources and states the distribution approval (SYS-256,
+//     DISTRIBUTION-REVIEW-001); notice copies match; the shipped manifests say
+//     release_approved=true with that review; MODIFICATIONS.txt is strict UTF-8
+//     and states release_approved=true;
 //   * model and stem pair: exact size, SHA-256 and serialization round trip.
 // Missing or mismatched data makes the whole profile unavailable; there is no
 // weaker fallback profile.
@@ -120,6 +122,11 @@ struct ProfilePins {
     FilePin stem;
     QString artifactMetadataPath;
     QString modificationsPath;
+    // SYS-256: the addon requires the owner's distribution approval (the product
+    // passport, kReleaseScope, kReleaseModifications). Only tools/product_eval sets
+    // false, to measure a dictionary update that is not reviewed yet: such a profile
+    // must say release_approved=false everywhere instead.
+    bool requireReleaseApproval = true;
 };
 
 // The pins of data/morphology-003-sources.json, data/sources.json,
@@ -162,7 +169,17 @@ struct ProfilePins {
 // Port of tools/hunspellengine isQueryableToken: 1..32 UTF-16, no Cc, no lone surrogates.
 [[nodiscard]] bool isQueryableToken(QStringView token);
 
-// Port of domain::verifyArtifactMetadata with the given pins.
+// SYS-256: the owner approved distribution on 2026-11-26 after this review. The
+// release profile states it in exactly these words (tools/make_release_profile.py
+// RELEASE_SCOPE, RELEASE_MODIFICATIONS; tests/packaging compares them).
+inline constexpr char kDistributionReview[] = "data/notices/DISTRIBUTION-REVIEW-001.md";
+inline constexpr char kReleaseScope[] =
+    "release_approved=true; approved for distribution by the owner after data/notices/DISTRIBUTION-REVIEW-001.md; derived from the reviewed training dictionaries";
+inline constexpr char kReleaseModifications[] =
+    "Modified numerical artifacts derived from reviewed LibreOffice dictionaries: the detector model and the word list (with the full notices inside), and control .aff files without their PFX/SFX rules. release_approved=true: distribution approved by the owner after data/notices/DISTRIBUTION-REVIEW-001.md. See data/sources.json and /usr/share/licenses/rasklad-fcitx5/DATA-NOTICE.txt.\n";
+
+// Port of domain::verifyArtifactMetadata with the given pins, except the scope: the
+// product requires kReleaseScope, the research artifacts keep their local-only scope.
 [[nodiscard]] bool verifyArtifactMetadata(const QByteArray &bytes, const ProfilePins &pins);
 
 // Manifests: pinned SHA-256 first, then fields compared with the pins.

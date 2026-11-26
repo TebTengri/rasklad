@@ -394,8 +394,8 @@ def product_eval(tree, out):
     return out / 'product_eval'
 
 
-def evaluate(binary, root, eval_dir, what):
-    done = subprocess.run([str(binary), '--root', str(root), '--eval-en', str(eval_dir / 'en.tsv'),
+def evaluate(binary, root, eval_dir, what, unreviewed=False):
+    done = subprocess.run([str(binary)] + (['--unreviewed-update'] if unreviewed else []) + ['--root', str(root), '--eval-en', str(eval_dir / 'en.tsv'),
                            '--eval-ru', str(eval_dir / 'ru.tsv')], capture_output=True, text=True)
     report = json.loads(done.stdout) if done.stdout.strip().startswith('{') else {}
     if done.returncode == 3:
@@ -461,7 +461,7 @@ def compare(commit, baseline_profile):
                    snapshot, 'pinned')
     new = evaluate(product_eval(new_tree, work / 'compare/new-bin'),
                    profile_root(fresh_dir(work / 'compare/new-root'), new_tree, work / 'release'),
-                   snapshot, 'new')
+                   snapshot, 'new', unreviewed=True)
     dump_json(work / 'product-baseline.json', old)
     dump_json(work / 'product-report.json', new)
     old, new = rates(old), rates(new)
@@ -615,8 +615,12 @@ def pin_locked(commit, work):
             if os.path.lexists(backup):
                 os.unlink(backup)
             os.rmdir(os.path.dirname(backup))
-    print('pinned %s (%d files). Next: bin/build, the tests, commit (the package builder reads HEAD), tools/build_arch_package.sh %s, the stand; '
-          'then review git diff and send it to independent review.' % (commit, len(changed), work / 'release'))
+    print('pinned %s (%d files). The new dictionaries are not reviewed for distribution: the addon and the '
+          'package refuse them until the owner approves a new distribution review (data/notices/, '
+          'data/product-profile-sources.json, src/profileverify.h kDistributionReview and the texts, then '
+          'tools/make_release_profile.py without --source-pins); until then the pin tests and the package '
+          'fail by design. Steps: packaging/arch/PROFILE.md, "Обновление словарей". %s is for measurement only.'
+          % (commit, len(changed), work / 'release'))
 
 
 def pin_into(commit, root):
@@ -637,6 +641,11 @@ def pin_into(commit, root):
                                ('data/product-profile-sources.json', release)):
         data = load_json(root / manifest)
         data['commit'] = commit
+        if manifest == 'data/product-profile-sources.json':
+            # SYS-256: the owner's approval covers the reviewed dictionaries only.
+            # New ones ship after a new distribution review flips this back.
+            data['release_approved'] = False
+            data.pop('distribution_review', None)
         for lang in data['languages']:
             upstream = 'en/en_US.aff' if lang['language'] == 'en' else 'ru_RU/ru_RU.aff'
             lang['upstream_url'] = RAW.format(commit=commit, path=upstream)

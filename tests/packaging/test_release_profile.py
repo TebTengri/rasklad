@@ -26,6 +26,67 @@ class ReleaseProfile(unittest.TestCase):
         text = ''.join(ast.literal_eval(part) for part in re.findall(r'"(?:[^"\\]|\\.)*"', block))
         self.assertEqual(load_tool().CONTROL_AFF_HEADER, text.encode())
 
+    def test_release_statements_equal_addon_constants(self):
+        """SYS-256: the addon compares the scope and MODIFICATIONS.txt word for word."""
+        header = (ROOT / 'src/profileverify.h').read_text()
+        def constant(name):
+            block = re.search(name + r'\[\] =\s*((?:"(?:[^"\\]|\\.)*"\s*)+);', header).group(1)
+            return ''.join(ast.literal_eval(part) for part in re.findall(r'"(?:[^"\\]|\\.)*"', block))
+        tool = load_tool()
+        self.assertEqual(tool.REVIEW, constant('kDistributionReview'))
+        self.assertEqual(tool.RELEASE_SCOPE, constant('kReleaseScope'))
+        self.assertEqual(tool.RELEASE_MODIFICATIONS, constant('kReleaseModifications').encode())
+        product = json.loads((ROOT / 'data/product-profile-sources.json').read_text())
+        self.assertIs(product['release_approved'], True)
+        self.assertEqual(product['distribution_review'], tool.REVIEW)
+        self.assertTrue((ROOT / tool.REVIEW).is_file())
+        self.assertIn(tool.REVIEW, (ROOT / 'packaging/arch/profile-files.txt').read_text().split())
+
+    def test_update_profile_is_not_approved(self):
+        """A dictionary update keeps release_approved=false until a new review."""
+        tool = load_tool()
+        data = {rel: b'' for rel in tool.SOURCE_PINS}
+        data['build/experiment-002-artifacts/artifact-metadata.json'] = json.dumps(
+            {'artifacts': {'model': {}, 'exactFullLexicons': {}}, 'scope': 'local; release_approved=false'}).encode()
+        data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = b'release_approved=false\n'
+        # Even a source that claims the approval comes out unapproved.
+        data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = tool.RELEASE_MODIFICATIONS
+        data['build/experiment-002-artifacts/artifact-metadata.json'] = json.dumps(
+            {'artifacts': {'model': {}, 'exactFullLexicons': {}}, 'scope': tool.RELEASE_SCOPE}).encode()
+        out = tool.build_profile(data, approved=False)
+        self.assertEqual(out['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.UNREVIEWED_MODIFICATIONS)
+        self.assertIn(b'release_approved=false', tool.UNREVIEWED_MODIFICATIONS)
+        self.assertNotIn(b'release_approved=true', tool.UNREVIEWED_MODIFICATIONS)
+        meta = json.loads(out['build/experiment-002-artifacts/artifact-metadata.json'])
+        self.assertEqual(meta['scope'], tool.UNREVIEWED_SCOPE)
+        approved = tool.build_profile(data)
+        self.assertEqual(approved['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.RELEASE_MODIFICATIONS)
+
+    def test_approval_follows_the_product_passport(self):
+        """After update_dictionaries pin the passport says false: no approval is written."""
+        import tempfile
+        tool = load_tool()
+        self.assertTrue(tool.passport_approved())
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'data').mkdir()
+            passport = json.loads((ROOT / 'data/product-profile-sources.json').read_text())
+            tool.ROOT = Path(tmp)
+            for value, review in ((False, None), (True, None), (True, 'data/notices/OTHER.md'), ('true', tool.REVIEW)):
+                p = dict(passport, release_approved=value)
+                p.pop('distribution_review')
+                if review:
+                    p['distribution_review'] = review
+                (Path(tmp) / 'data/product-profile-sources.json').write_text(json.dumps(p))
+                self.assertFalse(tool.passport_approved(), (value, review))
+            # A duplicate member: Python would keep the last (approving) value.
+            p = dict(passport)
+            text = json.dumps(p)
+            text = '{"release_approved": false, ' + text[1:]
+            (Path(tmp) / 'data/product-profile-sources.json').write_text(text)
+            self.assertFalse(tool.passport_approved())
+            (Path(tmp) / 'data/product-profile-sources.json').write_text(json.dumps(p))
+            self.assertTrue(tool.passport_approved())
+
     def test_container_and_metadata(self):
         tool = load_tool()
         data = {rel: b'' for rel in tool.SOURCE_PINS}

@@ -102,6 +102,10 @@ class Pin(unittest.TestCase):
         # The addon pins the manifests' own bytes: they must be the files as written.
         for rel in ('data/product-profile-sources.json', 'data/sources.json'):
             self.assertIn(sha((self.root / rel).read_bytes()), cpp, rel)
+        # SYS-256: the owner's approval does not carry over to new dictionaries.
+        product = json.loads((self.root / 'data/product-profile-sources.json').read_text())
+        self.assertIs(product['release_approved'], False)
+        self.assertNotIn('distribution_review', product)
         tool = (self.root / 'tools/make_release_profile.py').read_text()
         self.assertIn("DICTIONARY_COMMIT = '%s'" % NEW, tool)
         self.assertIn(new_dic, tool)

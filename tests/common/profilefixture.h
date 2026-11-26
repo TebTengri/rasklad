@@ -147,7 +147,7 @@ struct ProfileFixture {
         if (!writeTraining() || !writeMorph() || !writeMetadata())
             return false;
         p.modificationsPath = QStringLiteral("build/artifacts/MODIFICATIONS.txt");
-        return writeBytes(root, p.modificationsPath, QByteArray("fixture derivative; release_approved=false\n"));
+        return writeBytes(root, p.modificationsPath, QByteArray(profile::kReleaseModifications));
     }
 
     bool writeManifest(const QString &relative, const QByteArray &bytes, profile::FilePin &pin)
@@ -191,7 +191,8 @@ struct ProfileFixture {
         return QJsonObject{{QStringLiteral("schema_version"), 1},
                            {QStringLiteral("status"), QStringLiteral("approved-local-morphology")},
                            {QStringLiteral("scope"), QStringLiteral("local-experiment-only")},
-                           {QStringLiteral("release_approved"), false},
+                           {QStringLiteral("release_approved"), true},
+                           {QStringLiteral("distribution_review"), QString::fromLatin1(profile::kDistributionReview)},
                            {QStringLiteral("commit"), p.dictionaryCommit},
                            {QStringLiteral("hunspell"), hunspell},
                            {QStringLiteral("languages"), QJsonArray{languageEntry(0), languageEntry(1)}}};
@@ -248,7 +249,7 @@ struct ProfileFixture {
             {QStringLiteral("trainingManifestSha256"), p.trainingManifest.sha256},
             {QStringLiteral("trainingSources"), training},
             {QStringLiteral("scope"),
-             QStringLiteral("fixture; release_approved=false; not approved for distribution")}};
+             QString::fromLatin1(profile::kReleaseScope)}};
     }
 
     bool writeMetadata()

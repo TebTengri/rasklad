@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QJsonValue>
+#include <QSet>
 #include <QStringDecoder>
 #include <QStringList>
 
@@ -16,6 +17,7 @@
 #include <initializer_list>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace rasklad::profile {
 
@@ -31,11 +33,58 @@ QString latin(const char *text)
     return QString::fromLatin1(text);
 }
 
+// SYS-256: Qt keeps the last of duplicate members, so a file could carry two
+// contradicting values and pass on the second. Every object of a pinned or checked
+// JSON file must name each member once (keys compared after unescaping). Called on
+// bytes Qt has already parsed, so the structure is valid JSON.
+bool hasDuplicateMembers(const QByteArray &bytes)
+{
+    std::vector<QSet<QString>> objects; // one key set per open object; arrays push none
+    std::vector<bool> isObject;
+    bool expectKey = false;
+    for (qsizetype i = 0; i < bytes.size(); ++i) {
+        const char c = bytes[i];
+        if (c == '{') {
+            isObject.push_back(true);
+            objects.emplace_back();
+            expectKey = true;
+        } else if (c == '[') {
+            isObject.push_back(false);
+            expectKey = false;
+        } else if (c == '}' || c == ']') {
+            if (isObject.empty())
+                return true;
+            if (isObject.back())
+                objects.pop_back();
+            isObject.pop_back();
+            expectKey = false;
+        } else if (c == ',') {
+            expectKey = !isObject.empty() && isObject.back();
+        } else if (c == '"') {
+            qsizetype end = i + 1;
+            while (end < bytes.size() && bytes[end] != '"')
+                end += bytes[end] == '\\' ? 2 : 1;
+            if (end >= bytes.size())
+                return true;
+            if (expectKey) {
+                const QJsonDocument one = QJsonDocument::fromJson('[' + bytes.mid(i, end - i + 1) + ']');
+                const QString name = one.array().at(0).toString();
+                if (objects.back().contains(name))
+                    return true;
+                objects.back().insert(name);
+                expectKey = false;
+            }
+            i = end;
+        }
+    }
+    return false;
+}
+
 bool parseObject(const QByteArray &bytes, QJsonObject &out)
 {
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(bytes, &parseError);
-    if (parseError.error != QJsonParseError::NoError || !document.isObject())
+    if (parseError.error != QJsonParseError::NoError || !document.isObject() || hasDuplicateMembers(bytes))
         return false;
     out = document.object();
     return true;
@@ -75,6 +124,17 @@ bool releaseForbidden(const QJsonObject &o)
 {
     const QJsonValue release = o.value(key("release_approved"));
     return release.isBool() && !release.toBool();
+}
+
+// SYS-256: the product passport records the owner's approval (2026-11-26) and names
+// the review. The training passport (data/sources.json) stays the frozen research
+// record the model was built from: its bytes are pinned and its release_approved
+// stays false (see DISTRIBUTION-REVIEW-001).
+bool releaseApproved(const QJsonObject &o)
+{
+    const QJsonValue release = o.value(key("release_approved"));
+    return release.isBool() && release.toBool()
+        && stringEquals(o, "distribution_review", latin(kDistributionReview));
 }
 
 bool isSafeSegmentChar(QChar ch)
@@ -173,7 +233,7 @@ ProfilePins makeProductionPins()
     // SYS-256: the product's own manifest (the research one, morphology-003, keeps the
     // unmarked control .aff); see tools/make_release_profile.py.
     p.morphManifest = {QStringLiteral("data/product-profile-sources.json"),
-                       QStringLiteral("5d7bb7cb856d94a4a59bf410248d382f1f526d452601afb05db3c4697ece277e"), 0};
+                       QStringLiteral("240be04b9ef252eaccc6ca55fb263da15c03f36e79be4532e1e7e7cc718e522a"), 0};
     p.trainingManifest = {QStringLiteral("data/sources.json"),
                           QStringLiteral("29042aee03f871e0daa7da36e9401f35141594be798f6e9d411e878d8694cd20"), 0};
     p.protocol002 = {QStringLiteral("data/experiment-002-protocol.json"),
@@ -490,8 +550,13 @@ bool verifyArtifactMetadata(const QByteArray &bytes, const ProfilePins &pins)
             return false;
     }
     const QJsonValue scope = root.value(key("scope"));
-    return scope.isString() && scope.toString().contains(QLatin1String("release_approved=false"))
-        && scope.toString().contains(QLatin1String("not approved for distribution"));
+    if (!scope.isString())
+        return false;
+    if (pins.requireReleaseApproval)
+        return scope.toString() == QLatin1String(kReleaseScope);
+    return scope.toString().contains(QLatin1String("release_approved=false"))
+        && scope.toString().contains(QLatin1String("not approved for distribution"))
+        && !scope.toString().contains(QLatin1String("release_approved=true"));
 }
 
 bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
@@ -502,7 +567,9 @@ bool verifyMorphManifest(const QByteArray &bytes, const ProfilePins &pins)
     if (!parseObject(bytes, root))
         return false;
     if (!integerEquals(root, "schema_version", 1) || !stringEquals(root, "status", latin("approved-local-morphology"))
-        || !stringEquals(root, "scope", latin("local-experiment-only")) || !releaseForbidden(root)
+        || !stringEquals(root, "scope", latin("local-experiment-only"))
+        || !(pins.requireReleaseApproval ? releaseApproved(root)
+                                         : releaseForbidden(root) && !root.contains(key("distribution_review")))
         || !stringEquals(root, "commit", pins.dictionaryCommit))
         return false;
     const QJsonValue hunspellValue = root.value(key("hunspell"));
@@ -696,7 +763,10 @@ ProfileError verifyProfileFiles(const QString &projectRoot, const ProfilePins &p
             return ProfileError::MissingFile;
         QByteArray modifications;
         if (!readBounded(modificationsPath, kMaxModificationsBytes, modifications) || modifications.isEmpty()
-            || !isStrictUtf8(modifications) || !modifications.contains("release_approved=false"))
+            || (pins.requireReleaseApproval
+                    ? modifications != QByteArray(kReleaseModifications)
+                    : !isStrictUtf8(modifications) || !modifications.contains("release_approved=false")
+                          || modifications.contains("release_approved=true")))
             return ProfileError::ModificationsMismatch;
     }
 

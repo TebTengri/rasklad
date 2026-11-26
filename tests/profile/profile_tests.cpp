@@ -35,6 +35,9 @@ profile::ProfilePins researchPins()
     p.model.bytes = 88290;
     p.stem.sha256 = QStringLiteral("3bdd740d4b39bf2b5fe361e0d3c670187563ec59f41913db3525340a30887871");
     p.stem.bytes = 1200379;
+    // The research verifier pins the frozen training passport; after a dictionary
+    // update the product's pin moves, the research one does not.
+    p.trainingManifest.sha256 = QString::fromLatin1(domain::kTrainingManifestSha256);
     return p;
 }
 
@@ -61,7 +64,7 @@ QJsonObject productionMetadata()
                        {QStringLiteral("trainingManifestSha256"), p.trainingManifest.sha256},
                        {QStringLiteral("trainingSources"), training},
                        {QStringLiteral("scope"),
-                        QStringLiteral("local experiment; release_approved=false; not approved for distribution")}};
+                        QString::fromLatin1(profile::kReleaseScope)}};
 }
 
 QByteArray bytesOf(const QJsonObject &o)
@@ -235,6 +238,23 @@ private Q_SLOTS:
             variants.push_back(bytesOf(o));
         }
         {
+            QJsonObject o = valid; // approved without naming the review
+            o.insert(QStringLiteral("scope"), QStringLiteral("release_approved=true"));
+            variants.push_back(bytesOf(o));
+        }
+        {
+            QJsonObject o = valid; // contradicting statement appended
+            o.insert(QStringLiteral("scope"), QString::fromLatin1(profile::kReleaseScope) + QStringLiteral("; release_approved=false"));
+            variants.push_back(bytesOf(o));
+        }
+        {
+            QJsonObject o = valid; // another review file
+            o.insert(QStringLiteral("scope"), QString::fromLatin1(profile::kReleaseScope)
+                                                  .replace(QString::fromLatin1(profile::kDistributionReview),
+                                                           QString::fromLatin1(profile::kDistributionReview) + QStringLiteral(".bak")));
+            variants.push_back(bytesOf(o));
+        }
+        {
             QJsonObject o = valid;
             QJsonObject artifacts = o.value(QStringLiteral("artifacts")).toObject();
             QJsonObject model = artifacts.value(QStringLiteral("model")).toObject();
@@ -281,15 +301,49 @@ private Q_SLOTS:
         variants.push_back(QByteArray("{"));
         variants.push_back(bytesOf(valid) + QByteArray(64 * 1024, ' '));
 
+        // SYS-256: the two differ only in the scope statement. The product requires the
+        // distribution approval; research artifacts keep their local-only scope. Every
+        // other field is compared on the same bytes with the research scope put back.
+        const QString approved = valid.value(QStringLiteral("scope")).toString();
+        const QString researchScope =
+            QStringLiteral("local experiment; release_approved=false; not approved for distribution");
         int accepted = 0;
         for (std::size_t i = 0; i < variants.size(); ++i) {
-            const bool research = domain::verifyArtifactMetadata(variants[i], expected)
-                == domain::ArtifactMetadataError::None;
             const bool production = profile::verifyArtifactMetadata(variants[i], pins);
-            QVERIFY2(research == production, QByteArray::number(qulonglong(i)).constData());
+            const QJsonObject o = QJsonDocument::fromJson(variants[i]).object();
+            if (o.value(QStringLiteral("scope")).toString() == approved && variants[i].size() < 64 * 1024) {
+                QJsonObject r = o;
+                r.insert(QStringLiteral("scope"), researchScope);
+                const bool research = domain::verifyArtifactMetadata(bytesOf(r), expected)
+                    == domain::ArtifactMetadataError::None;
+                QVERIFY2(research == production, QByteArray::number(qulonglong(i)).constData());
+            }
             accepted += production ? 1 : 0;
         }
         QCOMPARE(accepted, 2); // valid and valid+extra field
+        QJsonObject research = valid;
+        research.insert(QStringLiteral("scope"), researchScope);
+        QVERIFY(!profile::verifyArtifactMetadata(bytesOf(research), pins)); // not approved: refused
+        // Qt keeps the last duplicate member: an unapproved scope followed by the
+        // approved one, in the object or nested, is refused (SYS-256).
+        QByteArray compact = bytesOf(valid);
+        QVERIFY(profile::verifyArtifactMetadata(compact, pins));
+        QByteArray dup = compact;
+        dup.insert(1, "\"scope\":\"release_approved=false; not approved for distribution\",");
+        QVERIFY(QJsonDocument::fromJson(dup).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(dup, pins));
+        QByteArray escaped = compact;
+        escaped.insert(1, "\"sc\\u006fpe\":\"x\",");
+        QVERIFY(QJsonDocument::fromJson(escaped).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(escaped, pins));
+        QByteArray nested = compact;
+        const qsizetype at = nested.indexOf("\"model\":{") + 9;
+        nested.insert(at, "\"file\":\"other\",");
+        QVERIFY(QJsonDocument::fromJson(nested).isObject());
+        QVERIFY(!profile::verifyArtifactMetadata(nested, pins));
+        QByteArray strings = compact; // braces and quotes inside strings are not structure
+        strings.insert(1, "\"note\":\"{\\\"scope\\\":[}\",");
+        QVERIFY(profile::verifyArtifactMetadata(strings, pins));
     }
 
     void spellEngineParity()
