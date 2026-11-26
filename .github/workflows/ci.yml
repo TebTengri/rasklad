@@ -1,6 +1,7 @@
 # SYS-258: automatic checks on GitHub. Runs tools/ci.sh in an Arch container as an
 # unprivileged user: the product build as PKGBUILD does it, the unit and packaging
-# tests, the rasklad-setup sandbox and the script linters. No secrets, no profile,
+# tests and the script linters (the rasklad-setup sandbox needs bubblewrap and
+# Omarchy, so it stays local with the stand). No secrets, no profile,
 # no real input, nothing written to the repository; the Sway/Fcitx stand stays local.
 name: ci
 on:

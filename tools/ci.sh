@@ -3,12 +3,13 @@
 # SYS-258: the automatic checks, as GitHub Actions runs them (.github/workflows/ci.yml)
 # and as anyone can run them locally from a clean checkout. Builds the product the way
 # PKGBUILD does, runs every unit test that needs no screen, no Fcitx session, no
-# dictionary profile and no network, and lints the scripts. The Sway/Fcitx stand and the
+# dictionary profile and no network, and lints the scripts (locally also the
+# rasklad-setup sandbox). The Sway/Fcitx stand and the
 # profile gate stay local: CI never sees the profile or any real input.
 # usage: tools/ci.sh            (from the repository root; builds into build/ci/)
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-cd "$root"
+cd "$root" || exit 1
 out=build/ci
 mkdir -p "$out"
 jobs=$(nproc 2>/dev/null || echo 2)
@@ -51,8 +52,12 @@ bin/test
 step 'packaging tests'
 python3 -I -m unittest discover -s tests/packaging
 
-step 'rasklad-setup sandbox'
-bash tests/setup/run.sh
+# The rasklad-setup sandbox needs bubblewrap with user namespaces and Omarchy's
+# config files, which a GitHub container lacks; it runs locally (bash tests/setup/run.sh).
+if [[ ${CI:-} != true ]]; then
+  step 'rasklad-setup sandbox'
+  bash tests/setup/run.sh
+fi
 
 step 'scripts'
 # GitHub Actions sets CI=true and installs shellcheck; a local run without it skips.
