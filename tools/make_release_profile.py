@@ -73,12 +73,37 @@ RELEASE_MODIFICATIONS = (
 ).encode()
 
 
+UNREVIEWED_SCOPE = 'local experiment; release_approved=false; not approved for distribution'
+UNREVIEWED_MODIFICATIONS = (
+    b'Modified numerical artifacts derived from LibreOffice dictionaries not yet reviewed for '
+    b'distribution. Local experiment only, release_approved=false. See data/sources.json.\n')
+
+
+def unique_members(pairs):
+    """json object_pairs_hook: a duplicate member is an error, not last-wins."""
+    names = [name for name, _ in pairs]
+    if len(names) != len(set(names)):
+        raise ValueError('duplicate JSON member')
+    return dict(pairs)
+
+
 def passport_approved():
     try:
-        passport = json.loads((ROOT / 'data/product-profile-sources.json').read_bytes())
+        passport = json.loads((ROOT / 'data/product-profile-sources.json').read_bytes(),
+                              object_pairs_hook=unique_members)
     except (OSError, ValueError):
         return False
     return passport.get('release_approved') is True and passport.get('distribution_review') == REVIEW
+
+
+def unapprove(data):
+    """Not approved: whatever the source said, the profile says release_approved=false."""
+    meta_rel = 'build/experiment-002-artifacts/artifact-metadata.json'
+    meta = json.loads(data[meta_rel])
+    meta['scope'] = UNREVIEWED_SCOPE
+    data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
+    data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = UNREVIEWED_MODIFICATIONS
+    return data
 
 
 def approve(data):
@@ -135,7 +160,7 @@ def build_profile(data, commit=DICTIONARY_COMMIT, approved=True):
         entry['bytes'] = len(data[rel])
         entry['format'] = f'RSKX v1 notice container around {inner}'
     data[meta_rel] = (json.dumps(meta, indent=4, sort_keys=True, ensure_ascii=False) + '\n').encode()
-    return approve(data) if approved else data
+    return approve(data) if approved else unapprove(data)
 
 
 def main():

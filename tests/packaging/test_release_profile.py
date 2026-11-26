@@ -49,10 +49,16 @@ class ReleaseProfile(unittest.TestCase):
         data['build/experiment-002-artifacts/artifact-metadata.json'] = json.dumps(
             {'artifacts': {'model': {}, 'exactFullLexicons': {}}, 'scope': 'local; release_approved=false'}).encode()
         data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = b'release_approved=false\n'
+        # Even a source that claims the approval comes out unapproved.
+        data['build/experiment-002-artifacts/MODIFICATIONS.txt'] = tool.RELEASE_MODIFICATIONS
+        data['build/experiment-002-artifacts/artifact-metadata.json'] = json.dumps(
+            {'artifacts': {'model': {}, 'exactFullLexicons': {}}, 'scope': tool.RELEASE_SCOPE}).encode()
         out = tool.build_profile(data, approved=False)
-        self.assertEqual(out['build/experiment-002-artifacts/MODIFICATIONS.txt'], b'release_approved=false\n')
+        self.assertEqual(out['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.UNREVIEWED_MODIFICATIONS)
+        self.assertIn(b'release_approved=false', tool.UNREVIEWED_MODIFICATIONS)
+        self.assertNotIn(b'release_approved=true', tool.UNREVIEWED_MODIFICATIONS)
         meta = json.loads(out['build/experiment-002-artifacts/artifact-metadata.json'])
-        self.assertEqual(meta['scope'], 'local; release_approved=false')
+        self.assertEqual(meta['scope'], tool.UNREVIEWED_SCOPE)
         approved = tool.build_profile(data)
         self.assertEqual(approved['build/experiment-002-artifacts/MODIFICATIONS.txt'], tool.RELEASE_MODIFICATIONS)
 
@@ -72,6 +78,14 @@ class ReleaseProfile(unittest.TestCase):
                     p['distribution_review'] = review
                 (Path(tmp) / 'data/product-profile-sources.json').write_text(json.dumps(p))
                 self.assertFalse(tool.passport_approved(), (value, review))
+            # A duplicate member: Python would keep the last (approving) value.
+            p = dict(passport)
+            text = json.dumps(p)
+            text = '{"release_approved": false, ' + text[1:]
+            (Path(tmp) / 'data/product-profile-sources.json').write_text(text)
+            self.assertFalse(tool.passport_approved())
+            (Path(tmp) / 'data/product-profile-sources.json').write_text(json.dumps(p))
+            self.assertTrue(tool.passport_approved())
 
     def test_container_and_metadata(self):
         tool = load_tool()
