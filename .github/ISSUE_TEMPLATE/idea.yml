@@ -1,6 +1,11 @@
 name: Идея / Idea
 description: Чего не хватает / What is missing
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Не вставляйте сюда свой настоящий набранный текст, переписку и пароли; примеры придумайте.
+        Do not paste real typed text, messages or passwords here; make up any examples.
   - type: textarea
     id: idea
     attributes:

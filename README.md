@@ -75,14 +75,14 @@ Arch-пакет — на странице [Releases](https://github.com/TebTengr
 
 Нужны Arch Linux с Omarchy, Fcitx5, Qt 6 и Hunspell 1.7.
 
-Из готового пакета (страница [Releases](https://github.com/TebTengri/rasklad/releases)):
+Из готового пакета: скачайте со страницы [Releases](https://github.com/TebTengri/rasklad/releases) оба
+файла выпуска (пакет и `.sha256`) в одну папку и запустите там:
 
 ```sh
-sha256sum -c rasklad-fcitx5-*-x86_64.pkg.tar.zst.sha256
-sudo pacman -U rasklad-fcitx5-*-x86_64.pkg.tar.zst
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 && sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # перезапустить Fcitx
 rasklad-setup --install                            # подключить к рабочему столу
-rasklad-settings                                   # включить Rasklad
+rasklad-settings                                   # окно настроек: включите «Rasklad включён»
 ```
 
 Или собрать пакет самому:
@@ -93,7 +93,7 @@ tools/build_arch_package.sh "$profile"             # пакет в build/arch-pa
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # перезапустить Fcitx
 rasklad-setup --install                            # подключить к рабочему столу
-rasklad-settings                                   # включить Rasklad
+rasklad-settings                                   # окно настроек: включите «Rasklad включён»
 ```
 
 После установки Rasklad выключен: аддон загружен, но ничего не делает — ни

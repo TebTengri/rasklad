@@ -76,14 +76,14 @@ usual. Right Alt is not used: Omarchy starts dictation with it.
 
 You need Arch Linux with Omarchy, Fcitx5, Qt 6 and Hunspell 1.7.
 
-From the ready package ([Releases](https://github.com/TebTengri/rasklad/releases)):
+From the ready package: download both release files (the package and its `.sha256`) from
+[Releases](https://github.com/TebTengri/rasklad/releases) into one folder and run there:
 
 ```sh
-sha256sum -c rasklad-fcitx5-*-x86_64.pkg.tar.zst.sha256
-sudo pacman -U rasklad-fcitx5-*-x86_64.pkg.tar.zst
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 && sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # restart Fcitx
 rasklad-setup --install                            # connect it to the desktop
-rasklad-settings                                   # turn Rasklad on
+rasklad-settings                                   # settings window: switch «Rasklad is on» on
 ```
 
 Or build the package yourself:
@@ -94,7 +94,7 @@ tools/build_arch_package.sh "$profile"             # package in build/arch-packa
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # restart Fcitx
 rasklad-setup --install                            # connect it to the desktop
-rasklad-settings                                   # turn Rasklad on
+rasklad-settings                                   # settings window: switch «Rasklad is on» on
 ```
 
 After installation Rasklad is off: the addon is loaded but does nothing — no

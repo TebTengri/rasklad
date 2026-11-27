@@ -22,12 +22,6 @@ body:
     id: what
     attributes:
       label: Что набрали, что получили, что ожидали / Typed, got, expected
-      placeholder: "ghbdtn + пробел → ghbdtn, ожидал привет"
+      placeholder: "ghbdtn + пробел / space → ghbdtn; ожидал / expected привет"
     validations:
       required: true
-  - type: textarea
-    id: check
-    attributes:
-      label: rasklad-setup --check
-      description: Вывод команды (в нём нет набранного текста) / The command's output (it holds no typed text)
-      render: text
