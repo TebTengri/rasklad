@@ -1,9 +1,9 @@
 {
-  "tooltip.on": "Rasklad · %1 · включено",
+  "tooltip.on": "Rasklad · %1 · включён",
   "tooltip.paused": "Rasklad · %1 · пауза",
   "tooltip.broken": "Rasklad · %1 · ошибка профиля",
   "tooltip.off": "Rasklad · %1 · выключен",
   "tooltip.toggleFailed": "Rasklad · %1 · раскладка не переключилась",
-  "tooltip.pauseFailed": "Rasklad · %1 · пауза не переключилась",
+  "tooltip.pauseFailed": "Rasklad · %1 · пауза не сработала",
   "tooltip.unknown": "Rasklad · %1 · состояние неизвестно"
 }
