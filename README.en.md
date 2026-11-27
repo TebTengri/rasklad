@@ -80,11 +80,14 @@ From the ready package: download both release files (the package and its `.sha25
 [Releases](https://github.com/TebTengri/rasklad/releases) into one folder and run there:
 
 ```sh
-sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 && sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst
-fcitx5 -rd                                         # restart Fcitx
-rasklad-setup --install                            # connect it to the desktop
-rasklad-settings                                   # settings window: switch «Rasklad is on» on
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 &&
+  sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst &&
+  fcitx5 -rd &&                                    # restart Fcitx
+  rasklad-setup --install &&                       # connect it to the desktop
+  rasklad-settings                                 # settings window: switch «Rasklad is on» on
 ```
+
+Each step runs only if the one before it succeeded.
 
 Or build the package yourself:
 

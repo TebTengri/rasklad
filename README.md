@@ -79,11 +79,14 @@ Arch-пакет — на странице [Releases](https://github.com/TebTengr
 файла выпуска (пакет и `.sha256`) в одну папку и запустите там:
 
 ```sh
-sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 && sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst
-fcitx5 -rd                                         # перезапустить Fcitx
-rasklad-setup --install                            # подключить к рабочему столу
-rasklad-settings                                   # окно настроек: включите «Rasklad включён»
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 &&
+  sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst &&
+  fcitx5 -rd &&                                    # перезапустить Fcitx
+  rasklad-setup --install &&                       # подключить к рабочему столу
+  rasklad-settings                                 # окно настроек: включите «Rasklad включён»
 ```
+
+Каждый шаг идёт, только если предыдущий удался.
 
 Или собрать пакет самому:
 
