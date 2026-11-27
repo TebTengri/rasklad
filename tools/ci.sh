@@ -13,6 +13,10 @@ cd "$root" || exit 1
 out=build/ci
 mkdir -p "$out"
 jobs=$(nproc 2>/dev/null || echo 2)
+# No real profile, ever: the app test's optional profile check and the pin tests
+# that read build/release-profile stay skipped, locally too.
+unset RASKLAD_TEST_PROFILE_ROOT
+export RASKLAD_CI_NO_PROFILE=1
 step() { printf '\n==> %s\n' "$*"; }
 
 step 'product build (as PKGBUILD build())'

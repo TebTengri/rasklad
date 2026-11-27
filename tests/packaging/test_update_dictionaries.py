@@ -37,7 +37,9 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-@unittest.skipUnless((PROFILE / 'build').is_dir(), 'needs the release profile in build/release-profile')
+# tools/ci.sh sets RASKLAD_CI_NO_PROFILE: CI never reads the real profile (SYS-258).
+@unittest.skipUnless((PROFILE / 'build').is_dir() and not os.environ.get('RASKLAD_CI_NO_PROFILE'),
+                     'needs the release profile in build/release-profile (not under tools/ci.sh)')
 class Pin(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())

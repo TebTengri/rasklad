@@ -28,7 +28,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Checks
+        # The checkout (and its .git, which the action's root cleanup uses) stays
+        # root's; the unprivileged user gets a copy of the tracked files only, in a
+        # fresh repository of its own.
         run: |
-          chown -R ci: "$GITHUB_WORKSPACE"
-          runuser -u ci -- git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          runuser -u ci -- env CI=true QT_QPA_PLATFORM=offscreen bash tools/ci.sh
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          install -d -o ci -g ci /home/ci/src
+          git -C "$GITHUB_WORKSPACE" archive HEAD | runuser -u ci -- tar -x -C /home/ci/src
+          runuser -u ci -- bash -c 'cd /home/ci/src && git init -q && git add -A &&
+            git -c user.name=ci -c user.email=ci@localhost commit -q -m ci'
+          runuser -u ci -- env -C /home/ci/src CI=true QT_QPA_PLATFORM=offscreen bash tools/ci.sh
