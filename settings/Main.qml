@@ -878,6 +878,9 @@ ApplicationWindow {
                     font.bold: true
                 }
                 Hint { text: qsTr("Double Shift changes the layout of a word, or undoes the correction just made. Double Alt switches the layout."); font.pixelSize: 12 }
+                Hint { text: qsTr("The layout icon at the top right: a click or double left Alt switches the layout, a middle click pauses automatic correction and resumes it, a right click opens these settings."); font.pixelSize: 12 }
+                Hint { text: qsTr("A dimmed icon means automatic correction is paused, Rasklad is off, or its state is unknown. When Rasklad is off, there is no correction and no double Shift. If the dictionary profile does not pass verification, correction stays off, and double Shift still converts a word."); font.pixelSize: 12 }
+                Hint { text: qsTr("If the icon says the layout did not switch, it means that Fcitx did not answer, that the current input method is not EN or RU, or that the group lacks one of them. If pausing or resuming fails, Fcitx did not answer."); font.pixelSize: 12 }
                 Hint { text: qsTr("While Rasklad is on, you can turn off automatic correction for a while: switch it off here or middle-click the layout icon at the top right. Double Shift and double Alt keep working."); font.pixelSize: 12 }
                 Hint { text: qsTr("While Rasklad is on, an application appears in the list once you click a text field in it. The list starts over when Fcitx restarts or Rasklad is turned off."); font.pixelSize: 12 }
                 Hint { text: qsTr("A password field that the application does not mark as one looks like ordinary text to Rasklad."); font.pixelSize: 12 }
