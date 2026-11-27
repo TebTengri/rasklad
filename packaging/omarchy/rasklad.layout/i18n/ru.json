@@ -4,6 +4,6 @@
   "tooltip.broken": "Rasklad · %1 · ошибка профиля",
   "tooltip.off": "Rasklad · %1 · выключен",
   "tooltip.toggleFailed": "Rasklad · %1 · раскладка не переключилась",
-  "tooltip.pauseFailed": "Rasklad · %1 · ошибка паузы",
+  "tooltip.pauseFailed": "Rasklad · %1 · ошибка переключения паузы",
   "tooltip.unknown": "Rasklad · %1 · состояние неизвестно"
 }
