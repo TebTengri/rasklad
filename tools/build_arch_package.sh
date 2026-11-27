@@ -23,6 +23,11 @@ if [[ -n $(git -C "$root" status --porcelain -- src tools addon packaging tests 
   echo 'refusing: uncommitted changes would not be in the package' >&2
   exit 1
 fi
+# The neutral build directory for makepkg (see below), reserved before the
+# output directory is emptied, so a refused build leaves the old package.
+work=/tmp/rasklad-build-$(id -u)
+mkdir -m 700 -- "$work" || { echo "refusing: $work exists (a build is running, or remove it)" >&2; exit 1; }
+trap 'rm -rf -- "$work"' EXIT
 find "$out" -mindepth 1 -delete
 git -C "$root" archive --format=tar.gz --prefix="rasklad-${ver}/" -o "$out/rasklad-${ver}.tar.gz" HEAD
 sum=$(sha256sum "$out/rasklad-${ver}.tar.gz" | cut -d' ' -f1)
@@ -56,12 +61,13 @@ export SOURCE_DATE_EPOCH
 # that names no home directory (the same path every time, so the same commit
 # gives the same package), with every makepkg directory pointed there, then move
 # the packages to the output directory.
-work=/tmp/rasklad-build-$(id -u)
-mkdir -m 700 -- "$work" || { echo "refusing: $work exists (a build is running, or remove it)" >&2; exit 1; }
-trap 'rm -rf -- "$work"' EXIT
 cp "$out/PKGBUILD" "$out/rasklad-${ver}.tar.gz" "$out/rasklad-profile-${ver}.tar.gz" \
   "$out/rasklad-fcitx5.install" "$work/"
 (cd "$work" && BUILDDIR="$work" PKGDEST="$work" SRCDEST="$work" SRCPKGDEST="$work" LOGDEST="$work" \
   makepkg --cleanbuild --check --noconfirm >/dev/null)
-mv -f "$work"/rasklad-fcitx5-*"${ver}"-*.pkg.tar.zst "$out/"
+shopt -s nullglob
+for built in "$work"/rasklad-fcitx5-*"${ver}"-*.pkg.tar.zst "$work"/rasklad-fcitx5-*"${ver}"-*.pkg.tar.zst.sig; do
+  mv -f -- "$built" "$out/"   # signatures too, when makepkg.conf signs
+done
+shopt -u nullglob
 ls "$out"/rasklad-fcitx5-"${ver}"-*.pkg.tar.zst
