@@ -49,7 +49,8 @@ psum=$(sha256sum "$out/rasklad-profile-${ver}.tar.gz" | cut -d' ' -f1)
 sed -e "s/@SHA256@/${sum}/" -e "s/@PROFILE_SHA256@/${psum}/" "$root/packaging/arch/PKGBUILD" > "$out/PKGBUILD"
 cp "$root/packaging/arch/rasklad-fcitx5.install" "$out/"  # SYS-270: pacman -R notice
 # Same commit, same package: timestamps come from the commit.
-export SOURCE_DATE_EPOCH=$(git -C "$root" log -1 --format=%ct)
+SOURCE_DATE_EPOCH=$(git -C "$root" log -1 --format=%ct)
+export SOURCE_DATE_EPOCH
 # --check: check() runs the profile gate even if makepkg.conf disables checks.
 (cd "$out" && makepkg --cleanbuild --check --noconfirm >/dev/null)
 ls "$out"/rasklad-fcitx5-"${ver}"-*.pkg.tar.zst
