@@ -52,13 +52,16 @@ cp "$root/packaging/arch/rasklad-fcitx5.install" "$out/"  # SYS-270: pacman -R n
 SOURCE_DATE_EPOCH=$(git -C "$root" log -1 --format=%ct)
 export SOURCE_DATE_EPOCH
 # --check: check() runs the profile gate even if makepkg.conf disables checks.
-# makepkg records its directories in .BUILDINFO; build in a neutral temporary
-# directory so a published package names no home directory, then move the
-# packages to the output directory.
-work=$(mktemp -d /tmp/rasklad-pkg.XXXXXXXX)
+# makepkg records its directories in .BUILDINFO. Build in a fixed directory
+# that names no home directory (the same path every time, so the same commit
+# gives the same package), with every makepkg directory pointed there, then move
+# the packages to the output directory.
+work=/tmp/rasklad-build-$(id -u)
+mkdir -m 700 -- "$work" || { echo "refusing: $work exists (a build is running, or remove it)" >&2; exit 1; }
 trap 'rm -rf -- "$work"' EXIT
 cp "$out/PKGBUILD" "$out/rasklad-${ver}.tar.gz" "$out/rasklad-profile-${ver}.tar.gz" \
   "$out/rasklad-fcitx5.install" "$work/"
-(cd "$work" && makepkg --cleanbuild --check --noconfirm >/dev/null)
+(cd "$work" && BUILDDIR="$work" PKGDEST="$work" SRCDEST="$work" SRCPKGDEST="$work" LOGDEST="$work" \
+  makepkg --cleanbuild --check --noconfirm >/dev/null)
 mv -f "$work"/rasklad-fcitx5-*"${ver}"-*.pkg.tar.zst "$out/"
 ls "$out"/rasklad-fcitx5-"${ver}"-*.pkg.tar.zst
