@@ -4,6 +4,6 @@
   "tooltip.broken": "Rasklad · %1 · profile error",
   "tooltip.off": "Rasklad · %1 · off",
   "tooltip.toggleFailed": "Rasklad · %1 · layout did not switch",
-  "tooltip.pauseFailed": "Rasklad · %1 · pause failed",
+  "tooltip.pauseFailed": "Rasklad · %1 · pause or resume failed",
   "tooltip.unknown": "Rasklad · %1 · state unknown"
 }
