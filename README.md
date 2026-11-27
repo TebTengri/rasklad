@@ -10,8 +10,9 @@
 Rasklad — аддон для [Fcitx5](https://fcitx-im.org) и окно настроек в стиле Omarchy.
 Всё работает локально: словари и модель лежат в пакете, сети нет.
 
-Статус: работает у владельца проекта каждый день, но пока собирается только из
-исходников (Arch-пакет из этого репозитория).
+Статус: первый публичный выпуск, у владельца проекта работает каждый день. Готовый
+Arch-пакет — на странице [Releases](https://github.com/TebTengri/rasklad/releases).
+Замечания и ошибки — в [Issues](https://github.com/TebTengri/rasklad/issues).
 
 ## Что он делает
 
@@ -73,6 +74,18 @@ Rasklad — аддон для [Fcitx5](https://fcitx-im.org) и окно нас�
 ## Установка
 
 Нужны Arch Linux с Omarchy, Fcitx5, Qt 6 и Hunspell 1.7.
+
+Из готового пакета (страница [Releases](https://github.com/TebTengri/rasklad/releases)):
+
+```sh
+sha256sum -c rasklad-fcitx5-*-x86_64.pkg.tar.zst.sha256
+sudo pacman -U rasklad-fcitx5-*-x86_64.pkg.tar.zst
+fcitx5 -rd                                         # перезапустить Fcitx
+rasklad-setup --install                            # подключить к рабочему столу
+rasklad-settings                                   # включить Rasklad
+```
+
+Или собрать пакет самому:
 
 ```sh
 profile="/путь/к/профилю"                          # см. PROFILE.md ниже

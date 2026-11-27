@@ -9,8 +9,9 @@ Rasklad is an add-on for [Fcitx5](https://fcitx-im.org) plus a settings window i
 the Omarchy style. Everything runs locally: the dictionaries and the model ship in
 the package, and nothing uses the network.
 
-Status: in daily use by the project owner, but built from source only (an Arch
-package from this repository). The Russian [README.md](README.md) is the primary
+Status: first public release, in daily use by the project owner. A ready Arch
+package is on the [Releases](https://github.com/TebTengri/rasklad/releases) page.
+Report problems and ideas in [Issues](https://github.com/TebTengri/rasklad/issues). The Russian [README.md](README.md) is the primary
 text; this is its translation.
 
 ## What it does
@@ -74,6 +75,18 @@ usual. Right Alt is not used: Omarchy starts dictation with it.
 ## Install
 
 You need Arch Linux with Omarchy, Fcitx5, Qt 6 and Hunspell 1.7.
+
+From the ready package ([Releases](https://github.com/TebTengri/rasklad/releases)):
+
+```sh
+sha256sum -c rasklad-fcitx5-*-x86_64.pkg.tar.zst.sha256
+sudo pacman -U rasklad-fcitx5-*-x86_64.pkg.tar.zst
+fcitx5 -rd                                         # restart Fcitx
+rasklad-setup --install                            # connect it to the desktop
+rasklad-settings                                   # turn Rasklad on
+```
+
+Or build the package yourself:
 
 ```sh
 profile="/path/to/profile"                         # see PROFILE.md below

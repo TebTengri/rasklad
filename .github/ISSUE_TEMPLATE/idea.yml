@@ -1,0 +1,9 @@
+name: Идея / Idea
+description: Чего не хватает / What is missing
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Идея / Idea
+    validations:
+      required: true
