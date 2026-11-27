@@ -9,8 +9,9 @@ Rasklad is an add-on for [Fcitx5](https://fcitx-im.org) plus a settings window i
 the Omarchy style. Everything runs locally: the dictionaries and the model ship in
 the package, and nothing uses the network.
 
-Status: in daily use by the project owner, but built from source only (an Arch
-package from this repository). The Russian [README.md](README.md) is the primary
+Status: first public release, in daily use by the project owner. A ready Arch
+package is on the [Releases](https://github.com/TebTengri/rasklad/releases) page.
+Report problems and ideas in [Issues](https://github.com/TebTengri/rasklad/issues). The Russian [README.md](README.md) is the primary
 text; this is its translation.
 
 ## What it does
@@ -75,13 +76,28 @@ usual. Right Alt is not used: Omarchy starts dictation with it.
 
 You need Arch Linux with Omarchy, Fcitx5, Qt 6 and Hunspell 1.7.
 
+From the ready package: download both release files (the package and its `.sha256`) from
+[Releases](https://github.com/TebTengri/rasklad/releases) into one folder and run there:
+
+```sh
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 &&
+  sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst &&
+  fcitx5 -rd &&                                    # restart Fcitx
+  rasklad-setup --install &&                       # connect it to the desktop
+  rasklad-settings                                 # settings window: switch «Rasklad is on» on
+```
+
+Each step runs only if the one before it succeeded.
+
+Or build the package yourself:
+
 ```sh
 profile="/path/to/profile"                         # see PROFILE.md below
 tools/build_arch_package.sh "$profile"             # package in build/arch-package/
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # restart Fcitx
 rasklad-setup --install                            # connect it to the desktop
-rasklad-settings                                   # turn Rasklad on
+rasklad-settings                                   # settings window: switch «Rasklad is on» on
 ```
 
 After installation Rasklad is off: the addon is loaded but does nothing — no

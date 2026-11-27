@@ -10,8 +10,9 @@
 Rasklad — аддон для [Fcitx5](https://fcitx-im.org) и окно настроек в стиле Omarchy.
 Всё работает локально: словари и модель лежат в пакете, сети нет.
 
-Статус: работает у владельца проекта каждый день, но пока собирается только из
-исходников (Arch-пакет из этого репозитория).
+Статус: первый публичный выпуск, у владельца проекта работает каждый день. Готовый
+Arch-пакет — на странице [Releases](https://github.com/TebTengri/rasklad/releases).
+Замечания и ошибки — в [Issues](https://github.com/TebTengri/rasklad/issues).
 
 ## Что он делает
 
@@ -74,13 +75,28 @@ Rasklad — аддон для [Fcitx5](https://fcitx-im.org) и окно нас�
 
 Нужны Arch Linux с Omarchy, Fcitx5, Qt 6 и Hunspell 1.7.
 
+Из готового пакета: скачайте со страницы [Releases](https://github.com/TebTengri/rasklad/releases) оба
+файла выпуска (пакет и `.sha256`) в одну папку и запустите там:
+
+```sh
+sha256sum -c rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst.sha256 &&
+  sudo pacman -U rasklad-fcitx5-0.5.33-1-x86_64.pkg.tar.zst &&
+  fcitx5 -rd &&                                    # перезапустить Fcitx
+  rasklad-setup --install &&                       # подключить к рабочему столу
+  rasklad-settings                                 # окно настроек: включите «Rasklad включён»
+```
+
+Каждый шаг идёт, только если предыдущий удался.
+
+Или собрать пакет самому:
+
 ```sh
 profile="/путь/к/профилю"                          # см. PROFILE.md ниже
 tools/build_arch_package.sh "$profile"             # пакет в build/arch-package/
 sudo pacman -U build/arch-package/rasklad-fcitx5-*-x86_64.pkg.tar.zst
 fcitx5 -rd                                         # перезапустить Fcitx
 rasklad-setup --install                            # подключить к рабочему столу
-rasklad-settings                                   # включить Rasklad
+rasklad-settings                                   # окно настроек: включите «Rasklad включён»
 ```
 
 После установки Rasklad выключен: аддон загружен, но ничего не делает — ни

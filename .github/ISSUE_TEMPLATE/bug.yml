@@ -1,0 +1,27 @@
+name: Ошибка / Bug
+description: Rasklad исправил не то, не исправил или что-то сломалось / A wrong, missing or broken correction
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Не вставляйте сюда свой настоящий набранный текст, переписку и пароли. Достаточно одного-двух слов-примеров, придуманных вами.
+        Do not paste real typed text, messages or passwords here. One or two made-up example words are enough.
+  - type: input
+    id: version
+    attributes:
+      label: Версия / Version
+      description: "pacman -Q rasklad-fcitx5"
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: Приложение / Application
+      description: Slack, Chromium, Telegram…
+  - type: textarea
+    id: what
+    attributes:
+      label: Что набрали, что получили, что ожидали / Typed, got, expected
+      placeholder: "ghbdtn + пробел / space → ghbdtn; ожидал / expected привет"
+    validations:
+      required: true
